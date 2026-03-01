@@ -1,9 +1,71 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
+  <meta charset="UTF-8" />
   <title>Scoutly</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      padding: 20px;
+    }
+
+    h1 {
+      color: #22c55e;
+    }
+
+    .card {
+      background: #1e293b;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+  </style>
 </head>
+
 <body>
-  <h1>Scoutly is live 🚀</h1>
+
+  <h1>Scoutly ⚽</h1>
+
+  <div id="games"></div>
+
+  <script>
+    const SUPABASE_URL = "https://zngdcatlxlxamceqpxij.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_gw3BGCEcwhidS2hFbiwxIA_W28KkZ2a";
+
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function loadGames() {
+
+      const { data, error } = await client
+        .from("matches")
+        .select("*")
+        .limit(10);
+
+      if (error) {
+        document.getElementById("games").innerHTML = "Erro ao carregar jogos";
+        console.log(error);
+        return;
+      }
+
+      const container = document.getElementById("games");
+
+      data.forEach(game => {
+        container.innerHTML += `
+          <div class="card">
+            <b>${game.home_team} x ${game.away_team}</b><br>
+            Liga: ${game.league}
+          </div>
+        `;
+      });
+    }
+
+    loadGames();
+  </script>
+
 </body>
 </html>
