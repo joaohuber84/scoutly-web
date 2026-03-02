@@ -1,24 +1,7 @@
-async function loadGames() {
-
-  document.getElementById("games").innerHTML = "Carregando jogos...";
-
-  const { data, error } = await client
-    .from("matches")
-    .select("*")
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    document.getElementById("games").innerHTML = "Erro ao carregar jogos";
-    console.log(error);
-    return;
-  }
-
-  const gamesHTML = data.map(game => `
-    <div class="game">
-      <strong>${game.home_team} x ${game.away_team}</strong><br>
-      Liga: ${game.league || "Não definida"}
-    </div>
-  `).join("");
-
-  document.getElementById("games").innerHTML = gamesHTML;
-}
+const gamesHTML = data.map(game => `
+  <div class="game">
+    <strong>${game.home_team} x ${game.away_team}</strong><br>
+    Liga: ${game.league || "Não definida"}<br>
+    Data: ${game.match_date || "Sem data"}
+  </div>
+`).join("");
