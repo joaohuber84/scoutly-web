@@ -16,7 +16,9 @@
 </head>
 
 <body>
+
   <h1>Scoutly ⚽</h1>
+
   <div id="games">Carregando jogos...</div>
 
   <script>
@@ -26,6 +28,7 @@
     const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     async function loadGames() {
+
       const el = document.getElementById("games");
       el.innerHTML = "Carregando jogos...";
 
@@ -35,7 +38,7 @@
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.log("ERRO SUPABASE:", error);
+        console.log("ERRO:", error);
         el.innerHTML = "Erro ao carregar jogos";
         return;
       }
@@ -50,7 +53,7 @@
           <strong>${game.home_team} x ${game.away_team}</strong>
           <div class="meta">
             Liga: ${game.league || "Não definida"}<br>
-            Data: ${game.match_date || "Sem data"}
+            Data: ${game.match_date ? new Date(game.match_date).toLocaleDateString("pt-BR") : "Sem data"}
           </div>
         </div>
       `).join("");
@@ -60,5 +63,6 @@
 
     loadGames();
   </script>
+
 </body>
 </html>
