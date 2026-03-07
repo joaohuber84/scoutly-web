@@ -1,254 +1,272 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Scoutly</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scoutly</title>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+<style>
 
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #0f172a;
-      color: white;
-      padding: 20px;
-    }
+body{
+font-family: Arial;
+background:#0f172a;
+color:white;
+padding:20px;
+}
 
-    .container {
-      max-width: 760px;
-      margin: 0 auto;
-    }
+.container{
+max-width:800px;
+margin:auto;
+}
 
-    h1 {
-      color: #22c55e;
-      margin: 0 0 24px 0;
-      font-size: 32px;
-      text-align: center;
-    }
+h1{
+color:#22c55e;
+text-align:center;
+margin-bottom:30px;
+}
 
-    .game {
-      background: #111827;
-      border: 1px solid #1f2937;
-      border-radius: 14px;
-      padding: 18px;
-      margin-bottom: 16px;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-    }
+.game{
+background:#111827;
+border-radius:12px;
+padding:20px;
+margin-bottom:18px;
+border:1px solid #1f2937;
+}
 
-    .teams {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      gap: 10px;
-    }
+.teams{
+display:flex;
+justify-content:space-between;
+align-items:center;
+font-size:18px;
+font-weight:bold;
+}
 
-    .team {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+.logo{
+width:34px;
+height:34px;
+object-fit:contain;
+background:white;
+border-radius:50%;
+padding:3px;
+margin-right:8px;
+}
 
-    .team.home {
-      justify-content: flex-start;
-    }
+.team{
+display:flex;
+align-items:center;
+}
 
-    .team.away {
-      justify-content: flex-end;
-      text-align: right;
-    }
+.vs{
+color:#22c55e;
+font-weight:bold;
+}
 
-    .team-name {
-      font-size: 18px;
-      font-weight: bold;
-      line-height: 1.2;
-    }
+.meta{
+margin-top:12px;
+font-size:14px;
+color:#cbd5e1;
+}
 
-    .logo {
-      width: 34px;
-      height: 34px;
-      object-fit: contain;
-      background: white;
-      border-radius: 50%;
-      padding: 2px;
-    }
+.stats{
+display:flex;
+justify-content:space-between;
+margin-top:15px;
+}
 
-    .vs {
-      font-size: 18px;
-      font-weight: bold;
-      color: #22c55e;
-      text-align: center;
-    }
+.stat{
+background:#0b1220;
+padding:10px;
+border-radius:8px;
+text-align:center;
+width:32%;
+}
 
-    .meta {
-      margin-top: 14px;
-      padding-top: 12px;
-      border-top: 1px solid #1f2937;
-      font-size: 14px;
-      color: #cbd5e1;
-      line-height: 1.6;
-      text-align: center;
-    }
+.stat-title{
+font-size:12px;
+color:#94a3b8;
+}
 
-    .label {
-      color: #22c55e;
-      font-weight: bold;
-    }
+.stat-value{
+font-size:18px;
+font-weight:bold;
+}
 
-    .stats {
-      margin-top: 14px;
-      padding-top: 12px;
-      border-top: 1px solid #1f2937;
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      text-align: center;
-    }
+.insight{
+margin-top:14px;
+background:#0b1220;
+padding:10px;
+border-left:4px solid #22c55e;
+border-radius:8px;
+}
 
-    .stat-box {
-      background: #0b1220;
-      border: 1px solid #1e293b;
-      border-radius: 10px;
-      padding: 10px 8px;
-    }
+.probabilities{
+margin-top:15px;
+}
 
-    .stat-title {
-      font-size: 12px;
-      color: #94a3b8;
-      margin-bottom: 6px;
-    }
+.prob-row{
+margin-bottom:8px;
+}
 
-    .stat-value {
-      font-size: 18px;
-      font-weight: bold;
-      color: #ffffff;
-    }
+.bar{
+background:#1f2937;
+height:10px;
+border-radius:6px;
+overflow:hidden;
+}
 
-    .insight {
-      margin-top: 14px;
-      background: #0b1220;
-      border: 1px solid #1e293b;
-      border-left: 4px solid #22c55e;
-      border-radius: 10px;
-      padding: 12px;
-    }
+.fill{
+background:#22c55e;
+height:10px;
+}
 
-    .insight-title {
-      font-size: 13px;
-      color: #22c55e;
-      font-weight: bold;
-      margin-bottom: 6px;
-    }
+.label{
+display:flex;
+justify-content:space-between;
+font-size:12px;
+margin-bottom:3px;
+}
 
-    .insight-text {
-      font-size: 14px;
-      color: #e2e8f0;
-    }
-
-    .loading {
-      text-align: center;
-      color: #cbd5e1;
-      font-size: 16px;
-    }
-
-    .error {
-      text-align: center;
-      color: #f87171;
-      font-size: 16px;
-    }
-  </style>
+</style>
 </head>
 
 <body>
-  <div class="container">
-    <h1>Scoutly ⚽</h1>
-    <div id="games" class="loading">Carregando jogos...</div>
-  </div>
 
-  <script>
-    const SUPABASE_URL = "https://zngdcatlxlxamceqpxij.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_gw3BGCEcwhidS2hFbiwxIA_W28KkZ2a";
+<div class="container">
 
-    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+<h1>Scoutly ⚽</h1>
 
-    async function loadGames() {
-      const el = document.getElementById("games");
-      el.innerHTML = "Carregando jogos...";
-      el.className = "loading";
+<div id="games">Carregando...</div>
 
-      const { data, error } = await client
-        .from("matches")
-        .select("*")
-        .order("match_date", { ascending: true });
+</div>
 
-      if (error) {
-        console.log("ERRO:", error);
-        el.className = "error";
-        el.innerHTML = "Erro ao carregar jogos";
-        return;
-      }
+<script>
 
-      if (!data || data.length === 0) {
-        el.className = "loading";
-        el.innerHTML = "Nenhum jogo encontrado.";
-        return;
-      }
+const SUPABASE_URL="https://zngdcatlxlxamceqpxij.supabase.co"
+const SUPABASE_KEY="sb_publishable_gw3BGCEcwhidS2hFbiwxIA_W28KkZ2a"
 
-      const gamesHTML = data.map(game => `
-        <div class="game">
-          <div class="teams">
-            <div class="team home">
-              <img class="logo" src="${game.home_logo || ""}" onerror="this.style.display='none'">
-              <div class="team-name">${game.home_team || ""}</div>
-            </div>
+const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
 
-            <div class="vs">x</div>
+async function loadGames(){
 
-            <div class="team away">
-              <div class="team-name">${game.away_team || ""}</div>
-              <img class="logo" src="${game.away_logo || ""}" onerror="this.style.display='none'">
-            </div>
-          </div>
+const el=document.getElementById("games")
 
-          <div class="meta">
-            <span class="label">Liga:</span> ${game.league || "Não definida"}<br>
-            <span class="label">Data:</span> ${game.match_date ? new Date(game.match_date).toLocaleDateString("pt-BR") : "Sem data"}
-          </div>
+const {data,error}=await client
+.from("matches")
+.select("*")
+.order("match_date",{ascending:true})
 
-          <div class="stats">
-            <div class="stat-box">
-              <div class="stat-title">Média de gols</div>
-              <div class="stat-value">${game.avg_goals ?? "-"}</div>
-            </div>
+if(error){
 
-            <div class="stat-box">
-              <div class="stat-title">Média de escanteios</div>
-              <div class="stat-value">${game.avg_corners ?? "-"}</div>
-            </div>
+el.innerHTML="Erro carregando jogos"
+return
 
-            <div class="stat-box">
-              <div class="stat-title">Média de chutes</div>
-              <div class="stat-value">${game.avg_shots ?? "-"}</div>
-            </div>
-          </div>
+}
 
-          <div class="insight">
-            <div class="insight-title">Scoutly Insight</div>
-            <div class="insight-text">${game.insight || "Sem insight por enquanto"}</div>
-          </div>
-        </div>
-      `).join("");
+const html=data.map(game=>`
 
-      el.className = "";
-      el.innerHTML = gamesHTML;
-    }
+<div class="game">
 
-    loadGames();
-  </script>
+<div class="teams">
+
+<div class="team">
+<img class="logo" src="${game.home_logo}" onerror="this.style.display='none'">
+${game.home_team}
+</div>
+
+<div class="vs">x</div>
+
+<div class="team">
+${game.away_team}
+<img class="logo" src="${game.away_logo}" onerror="this.style.display='none'">
+</div>
+
+</div>
+
+<div class="meta">
+Liga: ${game.league}<br>
+Data: ${game.match_date ? new Date(game.match_date).toLocaleDateString("pt-BR") : "Sem data"}
+</div>
+
+<div class="stats">
+
+<div class="stat">
+<div class="stat-title">Média gols</div>
+<div class="stat-value">${game.avg_goals ?? "-"}</div>
+</div>
+
+<div class="stat">
+<div class="stat-title">Escanteios</div>
+<div class="stat-value">${game.avg_corners ?? "-"}</div>
+</div>
+
+<div class="stat">
+<div class="stat-title">Chutes</div>
+<div class="stat-value">${game.avg_shots ?? "-"}</div>
+</div>
+
+</div>
+
+<div class="insight">
+<b>Scoutly Insight</b><br>
+${game.insight ?? "Sem insight"}
+</div>
+
+<div class="probabilities">
+
+<div class="prob-row">
+
+<div class="label">
+<span>${game.home_team}</span>
+<span>${game.home_win_prob ?? "-"}%</span>
+</div>
+
+<div class="bar">
+<div class="fill" style="width:${game.home_win_prob ?? 0}%"></div>
+</div>
+
+</div>
+
+<div class="prob-row">
+
+<div class="label">
+<span>Empate</span>
+<span>${game.draw_prob ?? "-"}%</span>
+</div>
+
+<div class="bar">
+<div class="fill" style="width:${game.draw_prob ?? 0}%"></div>
+</div>
+
+</div>
+
+<div class="prob-row">
+
+<div class="label">
+<span>${game.away_team}</span>
+<span>${game.away_win_prob ?? "-"}%</span>
+</div>
+
+<div class="bar">
+<div class="fill" style="width:${game.away_win_prob ?? 0}%"></div>
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+`).join("")
+
+el.innerHTML=html
+
+}
+
+loadGames()
+
+</script>
+
 </body>
 </html>
