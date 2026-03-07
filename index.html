@@ -1,206 +1,284 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Scoutly</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scoutly</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body{
+      background:#0f172a;
+      font-family:Arial, sans-serif;
+      color:white;
+      padding:30px;
+      margin:0;
+    }
 
-<style>
+    .container{
+      max-width:900px;
+      margin:0 auto;
+    }
 
-body{
-background:#0f172a;
-font-family:Arial;
-color:white;
-padding:30px;
-}
+    h1{
+      color:#22c55e;
+      text-align:center;
+      margin-bottom:30px;
+    }
 
-h1{
-color:#22c55e;
-}
+    .match{
+      background:#111827;
+      border:1px solid #1f2937;
+      border-radius:12px;
+      padding:20px;
+      margin-bottom:20px;
+    }
 
-.match{
-background:#111827;
-padding:20px;
-border-radius:12px;
-margin-bottom:20px;
-}
+    .teams{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-size:20px;
+      font-weight:bold;
+      gap:10px;
+    }
 
-.teams{
-display:flex;
-justify-content:space-between;
-align-items:center;
-font-size:20px;
-font-weight:bold;
-}
+    .team{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
 
-.logo{
-width:28px;
-height:28px;
-margin-right:8px;
-}
+    .logo{
+      width:28px;
+      height:28px;
+      object-fit:contain;
+      background:white;
+      border-radius:50%;
+      padding:2px;
+    }
 
-.team{
-display:flex;
-align-items:center;
-}
+    .vs{
+      color:#22c55e;
+      font-weight:bold;
+    }
 
-.meta{
-margin-top:6px;
-opacity:.8;
-}
+    .meta{
+      margin-top:10px;
+      font-size:14px;
+      color:#cbd5e1;
+      line-height:1.5;
+    }
 
-.stats{
-display:flex;
-justify-content:space-between;
-margin-top:16px;
-}
+    .stats{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      margin-top:16px;
+    }
 
-.stat{
-text-align:center;
-}
+    .stat{
+      flex:1;
+      background:#0b1220;
+      border:1px solid #1f2937;
+      border-radius:8px;
+      padding:10px;
+      text-align:center;
+    }
 
-.prob{
-margin-top:12px;
-}
+    .stat-title{
+      font-size:12px;
+      color:#94a3b8;
+      margin-bottom:6px;
+    }
 
-.bar{
-background:#1f2937;
-height:10px;
-border-radius:6px;
-overflow:hidden;
-margin-top:4px;
-}
+    .stat-value{
+      font-size:22px;
+      font-weight:bold;
+    }
 
-.fill{
-background:#22c55e;
-height:100%;
-}
+    .insight{
+      margin-top:14px;
+      background:#0b1220;
+      border-left:4px solid #22c55e;
+      border-radius:8px;
+      padding:12px;
+    }
 
-.pick{
-margin-top:14px;
-color:#22c55e;
-font-weight:bold;
-}
+    .insight-title{
+      color:#22c55e;
+      font-weight:bold;
+      margin-bottom:4px;
+    }
 
-</style>
+    .market-section{
+      margin-top:16px;
+    }
 
+    .market-title{
+      color:#22c55e;
+      font-weight:bold;
+      margin-bottom:10px;
+    }
+
+    .prob{
+      margin-bottom:12px;
+    }
+
+    .prob-label{
+      display:flex;
+      justify-content:space-between;
+      font-size:13px;
+      margin-bottom:4px;
+      color:#e2e8f0;
+    }
+
+    .bar{
+      background:#1f2937;
+      height:10px;
+      border-radius:6px;
+      overflow:hidden;
+    }
+
+    .fill{
+      background:#22c55e;
+      height:100%;
+    }
+
+    .pick{
+      margin-top:14px;
+      background:#0b1220;
+      border:1px solid #1f2937;
+      border-left:4px solid #22c55e;
+      border-radius:8px;
+      padding:12px;
+    }
+
+    .pick-title{
+      color:#22c55e;
+      font-weight:bold;
+      margin-bottom:4px;
+    }
+  </style>
 </head>
-
 <body>
 
-<h1>Scoutly ⚽</h1>
+  <div class="container">
+    <h1>Scoutly ⚽</h1>
+    <div id="matches">Carregando jogos...</div>
+  </div>
 
-<div id="matches">
-Carregando jogos...
-</div>
+  <script>
+    const SUPABASE_URL = "https://zngdcatlxlxamceqpxij.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_gw3BGCEcwhidS2hFbiwxIA_W28KkZ2a";
 
-<script>
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const SUPABASE_URL = "COLE_AQUI_TUA_URL";
-const SUPABASE_ANON_KEY = "COLE_AQUI_TUA_ANON_KEY";
+    async function loadMatches() {
+      const container = document.getElementById("matches");
 
-const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const { data, error } = await client
+        .from("matches")
+        .select("*")
+        .order("match_date", { ascending: true });
 
-async function loadMatches(){
+      if (error) {
+        console.log(error);
+        container.innerHTML = "Erro ao carregar dados";
+        return;
+      }
 
-const { data, error } = await client
-.from("matches")
-.select("*")
-.order("created_at", {ascending:false});
+      const html = data.map(m => `
+        <div class="match">
 
-if(error){
-console.log(error);
-document.getElementById("matches").innerHTML = "Erro ao carregar dados";
-return;
-}
+          <div class="teams">
+            <div class="team">
+              <img class="logo" src="${m.home_logo || ""}" onerror="this.style.display='none'">
+              <span>${m.home_team || "-"}</span>
+            </div>
 
-let html = "";
+            <div class="vs">x</div>
 
-data.forEach(m => {
+            <div class="team">
+              <span>${m.away_team || "-"}</span>
+              <img class="logo" src="${m.away_logo || ""}" onerror="this.style.display='none'">
+            </div>
+          </div>
 
-html += `
+          <div class="meta">
+            Liga: ${m.league || "-"}<br>
+            Data: ${m.match_date ? new Date(m.match_date).toLocaleDateString("pt-BR") : "Sem data"}
+          </div>
 
-<div class="match">
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-title">Média gols</div>
+              <div class="stat-value">${m.avg_goals ?? "-"}</div>
+            </div>
 
-<div class="teams">
+            <div class="stat">
+              <div class="stat-title">Escanteios</div>
+              <div class="stat-value">${m.avg_corners ?? "-"}</div>
+            </div>
 
-<div class="team">
-<img class="logo" src="${m.home_logo}">
-${m.home_team}
-</div>
+            <div class="stat">
+              <div class="stat-title">Chutes</div>
+              <div class="stat-value">${m.avg_shots ?? "-"}</div>
+            </div>
+          </div>
 
-<div>X</div>
+          <div class="insight">
+            <div class="insight-title">Scoutly Insight</div>
+            <div>${m.insight || "Sem insight"}</div>
+          </div>
 
-<div class="team">
-${m.away_team}
-<img class="logo" src="${m.away_logo}">
-</div>
+          <div class="market-section">
+            <div class="market-title">Tendências de Mercado</div>
 
-</div>
+            <div class="prob">
+              <div class="prob-label">
+                <span>Over 2.5</span>
+                <span>${m.over25_prob ?? 0}%</span>
+              </div>
+              <div class="bar">
+                <div class="fill" style="width:${m.over25_prob ?? 0}%"></div>
+              </div>
+            </div>
 
-<div class="meta">
-Liga: ${m.league || "-"}<br>
-Data: ${m.match_date || "-"}
-</div>
+            <div class="prob">
+              <div class="prob-label">
+                <span>BTTS</span>
+                <span>${m.btts_prob ?? 0}%</span>
+              </div>
+              <div class="bar">
+                <div class="fill" style="width:${m.btts_prob ?? 0}%"></div>
+              </div>
+            </div>
 
-<div class="stats">
+            <div class="prob">
+              <div class="prob-label">
+                <span>Over 8.5 Cantos</span>
+                <span>${m.corners_over85_prob ?? 0}%</span>
+              </div>
+              <div class="bar">
+                <div class="fill" style="width:${m.corners_over85_prob ?? 0}%"></div>
+              </div>
+            </div>
+          </div>
 
-<div class="stat">
-<div>Média gols</div>
-<strong>${m.avg_goals || "-"}</strong>
-</div>
+          <div class="pick">
+            <div class="pick-title">Scoutly Pick</div>
+            <div>${m.pick || "-"}</div>
+          </div>
 
-<div class="stat">
-<div>Escanteios</div>
-<strong>${m.avg_corners || "-"}</strong>
-</div>
+        </div>
+      `).join("");
 
-<div class="stat">
-<div>Chutes</div>
-<strong>${m.avg_shots || "-"}</strong>
-</div>
+      container.innerHTML = html;
+    }
 
-</div>
-
-<div class="prob">
-Over 2.5 — ${m.over25_prob || 0}%
-<div class="bar">
-<div class="fill" style="width:${m.over25_prob || 0}%"></div>
-</div>
-</div>
-
-<div class="prob">
-BTTS — ${m.btts_prob || 0}%
-<div class="bar">
-<div class="fill" style="width:${m.btts_prob || 0}%"></div>
-</div>
-</div>
-
-<div class="prob">
-Over 8.5 Cantos — ${m.corners_over85_prob || 0}%
-<div class="bar">
-<div class="fill" style="width:${m.corners_over85_prob || 0}%"></div>
-</div>
-</div>
-
-<div class="pick">
-Scoutly Insight: ${m.pick || "-"}
-</div>
-
-</div>
-
-`;
-
-});
-
-document.getElementById("matches").innerHTML = html;
-
-}
-
-loadMatches();
-
-</script>
+    loadMatches();
+  </script>
 
 </body>
 </html>
