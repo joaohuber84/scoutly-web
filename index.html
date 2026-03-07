@@ -1,118 +1,101 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Scoutly</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Scoutly</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
-<style>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0f172a;
+      color: white;
+      padding: 20px;
+    }
 
-body{
-font-family:Arial;
-background:#0f172a;
-color:white;
-padding:20px;
-}
+    h1 {
+      color: #22c55e;
+      margin-bottom: 20px;
+    }
 
-h1{
-color:#22c55e;
-margin-bottom:20px;
-}
+    .game {
+      background: #111827;
+      padding: 14px;
+      border-radius: 10px;
+      margin-bottom: 12px;
+    }
 
-.game{
-background:#111827;
-padding:14px;
-border-radius:10px;
-margin-bottom:12px;
-}
+    .teams {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: bold;
+      flex-wrap: wrap;
+    }
 
-.teams{
-display:flex;
-align-items:center;
-gap:10px;
-font-size:18px;
-font-weight:bold;
-}
+    .logo {
+      width: 26px;
+      height: 26px;
+      object-fit: contain;
+    }
 
-.logo{
-width:26px;
-height:26px;
-object-fit:contain;
-}
-
-.meta{
-font-size:14px;
-opacity:0.9;
-margin-top:6px;
-}
-
-</style>
+    .meta {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-top: 6px;
+    }
+  </style>
 </head>
 
 <body>
+  <h1>Scoutly ⚽</h1>
 
-<h1>Scoutly ⚽</h1>
+  <div id="games">Carregando jogos...</div>
 
-<div id="games">Carregando jogos...</div>
+  <script>
+    const SUPABASE_URL = "https://zngdcatlxlxamceqpxij.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_gw3BGCEcwhidS2hFbiwxIA_W28KkZ2a";
 
-<script>
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-const SUPABASE_URL="https://zngdcatlxlxamceqpxij.supabase.co"
-const SUPABASE_ANON_KEY="sb_publishable_gw3BGCEcwhidS2hFbiwxIA_W28KkZ2a"
+    async function loadGames() {
+      const el = document.getElementById("games");
 
-const client=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY)
+      const { data, error } = await client
+        .from("matches")
+        .select("*")
+        .order("match_date", { ascending: true });
 
-async function loadGames(){
+      if (error) {
+        console.log("ERRO:", error);
+        el.innerHTML = "Erro ao carregar jogos";
+        return;
+      }
 
-const el=document.getElementById("games")
+      const gamesHTML = data.map(game => `
+        <div class="game">
+          <div class="teams">
+            <img class="logo" src="${game.home_logo || ""}" onerror="this.style.display='none'">
+            <span>${game.home_team}</span>
+            <span>x</span>
+            <span>${game.away_team}</span>
+            <img class="logo" src="${game.away_logo || ""}" onerror="this.style.display='none'">
+          </div>
 
-const {data,error}=await client
-.from("matches")
-.select("*")
-.order("match_date",{ascending:true})
+          <div class="meta">
+            Liga: ${game.league || "Não definida"}<br>
+            Data: ${game.match_date ? new Date(game.match_date).toLocaleDateString("pt-BR") : "Sem data"}
+          </div>
+        </div>
+      `).join("");
 
-if(error){
-el.innerHTML="Erro ao carregar jogos"
-return
-}
+      el.innerHTML = gamesHTML;
+    }
 
-const gamesHTML=data.map(game=>`
-
-<div class="game">
-
-<div class="teams">
-
-<img class="logo" src="${game.home_logo}">
-${game.home_team}
-
-<span>x</span>
-
-${game.away_team}
-<img class="logo" src="${game.away_logo}">
-
-</div>
-
-<div class="meta">
-
-Liga: ${game.league || "Não definida"}<br>
-
-Data: ${game.match_date ? new Date(game.match_date).toLocaleDateString("pt-BR") : "Sem data"}
-
-</div>
-
-</div>
-
-`).join("")
-
-el.innerHTML=gamesHTML
-
-}
-
-loadGames()
-
-</script>
-
+    loadGames();
+  </script>
 </body>
 </html>
