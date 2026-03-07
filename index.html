@@ -2,7 +2,6 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Scoutly</title>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
@@ -10,46 +9,34 @@
 <style>
 
 body{
-font-family: Arial;
 background:#0f172a;
+font-family:Arial;
 color:white;
-padding:20px;
-}
-
-.container{
-max-width:800px;
-margin:auto;
+padding:30px;
 }
 
 h1{
 color:#22c55e;
-text-align:center;
-margin-bottom:30px;
 }
 
-.game{
+.match{
 background:#111827;
-border-radius:12px;
 padding:20px;
-margin-bottom:18px;
-border:1px solid #1f2937;
+border-radius:12px;
+margin-bottom:20px;
 }
 
 .teams{
 display:flex;
 justify-content:space-between;
 align-items:center;
-font-size:18px;
+font-size:20px;
 font-weight:bold;
 }
 
 .logo{
-width:34px;
-height:34px;
-object-fit:contain;
-background:white;
-border-radius:50%;
-padding:3px;
+width:28px;
+height:28px;
 margin-right:8px;
 }
 
@@ -58,55 +45,23 @@ display:flex;
 align-items:center;
 }
 
-.vs{
-color:#22c55e;
-font-weight:bold;
-}
-
 .meta{
-margin-top:12px;
-font-size:14px;
-color:#cbd5e1;
+margin-top:6px;
+opacity:.8;
 }
 
 .stats{
 display:flex;
 justify-content:space-between;
-margin-top:15px;
+margin-top:16px;
 }
 
 .stat{
-background:#0b1220;
-padding:10px;
-border-radius:8px;
 text-align:center;
-width:32%;
 }
 
-.stat-title{
-font-size:12px;
-color:#94a3b8;
-}
-
-.stat-value{
-font-size:18px;
-font-weight:bold;
-}
-
-.insight{
-margin-top:14px;
-background:#0b1220;
-padding:10px;
-border-left:4px solid #22c55e;
-border-radius:8px;
-}
-
-.probabilities{
-margin-top:15px;
-}
-
-.prob-row{
-margin-bottom:8px;
+.prob{
+margin-top:12px;
 }
 
 .bar{
@@ -114,157 +69,136 @@ background:#1f2937;
 height:10px;
 border-radius:6px;
 overflow:hidden;
+margin-top:4px;
 }
 
 .fill{
 background:#22c55e;
-height:10px;
+height:100%;
 }
 
-.label{
-display:flex;
-justify-content:space-between;
-font-size:12px;
-margin-bottom:3px;
+.pick{
+margin-top:14px;
+color:#22c55e;
+font-weight:bold;
 }
 
 </style>
+
 </head>
 
 <body>
 
-<div class="container">
-
 <h1>Scoutly ⚽</h1>
 
-<div id="games">Carregando...</div>
-
+<div id="matches">
+Carregando jogos...
 </div>
 
 <script>
 
-const SUPABASE_URL="https://zngdcatlxlxamceqpxij.supabase.co"
-const SUPABASE_KEY="sb_publishable_gw3BGCEcwhidS2hFbiwxIA_W28KkZ2a"
+const SUPABASE_URL = "COLE_AQUI_TUA_URL";
+const SUPABASE_ANON_KEY = "COLE_AQUI_TUA_ANON_KEY";
 
-const client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
+const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-async function loadGames(){
+async function loadMatches(){
 
-const el=document.getElementById("games")
-
-const {data,error}=await client
+const { data, error } = await client
 .from("matches")
 .select("*")
-.order("match_date",{ascending:true})
+.order("created_at", {ascending:false});
 
 if(error){
-
-el.innerHTML="Erro carregando jogos"
-return
-
+console.log(error);
+document.getElementById("matches").innerHTML = "Erro ao carregar dados";
+return;
 }
 
-const html=data.map(game=>`
+let html = "";
 
-<div class="game">
+data.forEach(m => {
+
+html += `
+
+<div class="match">
 
 <div class="teams">
 
 <div class="team">
-<img class="logo" src="${game.home_logo}" onerror="this.style.display='none'">
-${game.home_team}
+<img class="logo" src="${m.home_logo}">
+${m.home_team}
 </div>
 
-<div class="vs">x</div>
+<div>X</div>
 
 <div class="team">
-${game.away_team}
-<img class="logo" src="${game.away_logo}" onerror="this.style.display='none'">
+${m.away_team}
+<img class="logo" src="${m.away_logo}">
 </div>
 
 </div>
 
 <div class="meta">
-Liga: ${game.league}<br>
-Data: ${game.match_date ? new Date(game.match_date).toLocaleDateString("pt-BR") : "Sem data"}
+Liga: ${m.league || "-"}<br>
+Data: ${m.match_date || "-"}
 </div>
 
 <div class="stats">
 
 <div class="stat">
-<div class="stat-title">Média gols</div>
-<div class="stat-value">${game.avg_goals ?? "-"}</div>
+<div>Média gols</div>
+<strong>${m.avg_goals || "-"}</strong>
 </div>
 
 <div class="stat">
-<div class="stat-title">Escanteios</div>
-<div class="stat-value">${game.avg_corners ?? "-"}</div>
+<div>Escanteios</div>
+<strong>${m.avg_corners || "-"}</strong>
 </div>
 
 <div class="stat">
-<div class="stat-title">Chutes</div>
-<div class="stat-value">${game.avg_shots ?? "-"}</div>
+<div>Chutes</div>
+<strong>${m.avg_shots || "-"}</strong>
 </div>
 
 </div>
 
-<div class="insight">
-<b>Scoutly Insight</b><br>
-${game.insight ?? "Sem insight"}
-</div>
-
-<div class="probabilities">
-
-<div class="prob-row">
-
-<div class="label">
-<span>${game.home_team}</span>
-<span>${game.home_win_prob ?? "-"}%</span>
-</div>
-
+<div class="prob">
+Over 2.5 — ${m.over25_prob || 0}%
 <div class="bar">
-<div class="fill" style="width:${game.home_win_prob ?? 0}%"></div>
+<div class="fill" style="width:${m.over25_prob || 0}%"></div>
+</div>
 </div>
 
-</div>
-
-<div class="prob-row">
-
-<div class="label">
-<span>Empate</span>
-<span>${game.draw_prob ?? "-"}%</span>
-</div>
-
+<div class="prob">
+BTTS — ${m.btts_prob || 0}%
 <div class="bar">
-<div class="fill" style="width:${game.draw_prob ?? 0}%"></div>
+<div class="fill" style="width:${m.btts_prob || 0}%"></div>
+</div>
 </div>
 
-</div>
-
-<div class="prob-row">
-
-<div class="label">
-<span>${game.away_team}</span>
-<span>${game.away_win_prob ?? "-"}%</span>
-</div>
-
+<div class="prob">
+Over 8.5 Cantos — ${m.corners_over85_prob || 0}%
 <div class="bar">
-<div class="fill" style="width:${game.away_win_prob ?? 0}%"></div>
+<div class="fill" style="width:${m.corners_over85_prob || 0}%"></div>
+</div>
+</div>
+
+<div class="pick">
+Scoutly Insight: ${m.pick || "-"}
 </div>
 
 </div>
 
-</div>
+`;
 
-</div>
+});
 
-`).join("")
-
-el.innerHTML=html
+document.getElementById("matches").innerHTML = html;
 
 }
 
-loadGames()
+loadMatches();
 
 </script>
 
