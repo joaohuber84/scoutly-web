@@ -21,7 +21,7 @@
     }
 
     .container {
-      max-width: 700px;
+      max-width: 760px;
       margin: 0 auto;
     }
 
@@ -37,7 +37,7 @@
       border: 1px solid #1f2937;
       border-radius: 14px;
       padding: 18px;
-      margin-bottom: 14px;
+      margin-bottom: 16px;
       box-shadow: 0 4px 14px rgba(0,0,0,0.25);
     }
 
@@ -98,6 +98,56 @@
     .label {
       color: #22c55e;
       font-weight: bold;
+    }
+
+    .stats {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #1f2937;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      text-align: center;
+    }
+
+    .stat-box {
+      background: #0b1220;
+      border: 1px solid #1e293b;
+      border-radius: 10px;
+      padding: 10px 8px;
+    }
+
+    .stat-title {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #ffffff;
+    }
+
+    .insight {
+      margin-top: 14px;
+      background: #0b1220;
+      border: 1px solid #1e293b;
+      border-left: 4px solid #22c55e;
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .insight-title {
+      font-size: 13px;
+      color: #22c55e;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .insight-text {
+      font-size: 14px;
+      color: #e2e8f0;
     }
 
     .loading {
@@ -168,6 +218,28 @@
           <div class="meta">
             <span class="label">Liga:</span> ${game.league || "Não definida"}<br>
             <span class="label">Data:</span> ${game.match_date ? new Date(game.match_date).toLocaleDateString("pt-BR") : "Sem data"}
+          </div>
+
+          <div class="stats">
+            <div class="stat-box">
+              <div class="stat-title">Média de gols</div>
+              <div class="stat-value">${game.avg_goals ?? "-"}</div>
+            </div>
+
+            <div class="stat-box">
+              <div class="stat-title">Média de escanteios</div>
+              <div class="stat-value">${game.avg_corners ?? "-"}</div>
+            </div>
+
+            <div class="stat-box">
+              <div class="stat-title">Média de chutes</div>
+              <div class="stat-value">${game.avg_shots ?? "-"}</div>
+            </div>
+          </div>
+
+          <div class="insight">
+            <div class="insight-title">Scoutly Insight</div>
+            <div class="insight-text">${game.insight || "Sem insight por enquanto"}</div>
           </div>
         </div>
       `).join("");
