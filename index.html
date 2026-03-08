@@ -1,370 +1,587 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
-<title>Scoutly</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scoutly</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <style>
+    body {
+      background: #0f172a;
+      font-family: Arial, sans-serif;
+      color: white;
+      padding: 30px;
+      margin: 0;
+    }
 
-<style>
+    .container {
+      max-width: 950px;
+      margin: 0 auto;
+    }
 
-body{
-background:#0f172a;
-color:white;
-font-family:Arial;
-padding:30px;
-}
+    h1 {
+      color: #22c55e;
+      text-align: center;
+      margin-bottom: 30px;
+    }
 
-.container{
-max-width:900px;
-margin:auto;
-}
+    .match {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
 
-h1{
-color:#22c55e;
-text-align:center;
-margin-bottom:40px;
-}
+    .teams {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 20px;
+      font-weight: bold;
+      gap: 10px;
+    }
 
-.match{
-background:#111827;
-border-radius:10px;
-padding:20px;
-margin-bottom:20px;
-}
+    .team {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-.teams{
-display:flex;
-justify-content:space-between;
-align-items:center;
-font-size:20px;
-font-weight:bold;
-}
+    .logo {
+      width: 28px;
+      height: 28px;
+      object-fit: contain;
+      background: white;
+      border-radius: 50%;
+      padding: 2px;
+    }
 
-.team{
-display:flex;
-align-items:center;
-gap:8px;
-}
+    .vs {
+      color: #22c55e;
+      font-weight: bold;
+    }
 
-.logo{
-width:28px;
-height:28px;
-background:white;
-border-radius:50%;
-padding:2px;
-}
+    .meta {
+      margin-top: 10px;
+      font-size: 14px;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
 
-.vs{
-color:#22c55e;
-}
+    .stats {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 16px;
+    }
 
-.meta{
-margin-top:10px;
-font-size:14px;
-color:#cbd5e1;
-}
+    .stat {
+      flex: 1;
+      background: #0b1220;
+      border: 1px solid #1f2937;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
 
-.stats{
-display:flex;
-gap:10px;
-margin-top:15px;
-}
+    .stat-title {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
 
-.stat{
-flex:1;
-background:#0b1220;
-padding:10px;
-border-radius:8px;
-text-align:center;
-}
+    .stat-value {
+      font-size: 22px;
+      font-weight: bold;
+    }
 
-.stat-title{
-font-size:12px;
-color:#94a3b8;
-}
+    .power {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 15px;
+      background: #0b1220;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #1f2937;
+    }
 
-.stat-value{
-font-size:22px;
-font-weight:bold;
-}
+    .power span {
+      font-weight: bold;
+    }
 
-.power{
-display:flex;
-justify-content:space-between;
-margin-top:15px;
-background:#0b1220;
-padding:10px;
-border-radius:8px;
-}
+    .form-section {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 16px;
+      padding: 12px;
+      background: #0b1220;
+      border: 1px solid #1f2937;
+      border-radius: 8px;
+    }
 
-.power span{
-font-weight:bold;
-}
+    .form-team {
+      flex: 1;
+    }
 
-.form-section{
-display:flex;
-justify-content:space-between;
-margin-top:15px;
-}
+    .form-team-title {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
 
-.form{
-display:flex;
-gap:5px;
-}
+    .form {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
 
-.form span{
-width:22px;
-height:22px;
-display:flex;
-align-items:center;
-justify-content:center;
-border-radius:4px;
-font-size:12px;
-font-weight:bold;
-}
+    .form span {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      border-radius: 5px;
+      font-size: 12px;
+      font-weight: bold;
+      color: white;
+    }
 
-.win{background:#22c55e}
-.draw{background:#eab308;color:black}
-.loss{background:#ef4444}
+    .form-win {
+      background: #22c55e;
+    }
 
-.insight{
-margin-top:15px;
-background:#0b1220;
-border-left:4px solid #22c55e;
-padding:10px;
-border-radius:6px;
-}
+    .form-draw {
+      background: #eab308;
+      color: #111827;
+    }
 
-.market{
-margin-top:15px;
-}
+    .form-loss {
+      background: #ef4444;
+    }
 
-.bar{
-height:10px;
-background:#1f2937;
-border-radius:6px;
-overflow:hidden;
-margin-top:4px;
-}
+    .insight {
+      margin-top: 14px;
+      background: #0b1220;
+      border-left: 4px solid #22c55e;
+      border-radius: 8px;
+      padding: 12px;
+    }
 
-.fill{
-height:100%;
-background:#22c55e;
-}
+    .insight-title {
+      color: #22c55e;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
 
-.pick{
-margin-top:15px;
-border-left:4px solid #22c55e;
-background:#0b1220;
-padding:10px;
-border-radius:6px;
-}
+    .market-section {
+      margin-top: 16px;
+    }
 
-.result-prob{
-margin-top:15px;
-}
+    .market-title {
+      color: #22c55e;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
 
-</style>
+    .prob {
+      margin-bottom: 12px;
+    }
+
+    .prob-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: #e2e8f0;
+    }
+
+    .bar {
+      background: #1f2937;
+      height: 10px;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .fill {
+      background: #22c55e;
+      height: 100%;
+    }
+
+    .result-prob {
+      margin-top: 16px;
+      background: #0b1220;
+      border: 1px solid #1f2937;
+      border-radius: 8px;
+      padding: 12px;
+      line-height: 1.7;
+    }
+
+    .result-prob-title {
+      color: #22c55e;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .edge-section {
+      margin-top: 16px;
+      background: #0b1220;
+      border: 1px solid #1f2937;
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .edge-title {
+      color: #22c55e;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .edge-card {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+
+    .edge-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .edge-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      font-size: 12px;
+      color: #cbd5e1;
+    }
+
+    .edge-value-positive {
+      color: #22c55e;
+      font-weight: bold;
+    }
+
+    .edge-value-negative {
+      color: #ef4444;
+      font-weight: bold;
+    }
+
+    .tag-positive {
+      background: rgba(34,197,94,0.15);
+      color: #22c55e;
+      border: 1px solid rgba(34,197,94,0.35);
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .tag-negative {
+      background: rgba(239,68,68,0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239,68,68,0.35);
+      border-radius: 999px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-weight: bold;
+    }
+
+    .pick {
+      margin-top: 14px;
+      background: #0b1220;
+      border: 1px solid #1f2937;
+      border-left: 4px solid #22c55e;
+      border-radius: 8px;
+      padding: 12px;
+    }
+
+    .pick-title {
+      color: #22c55e;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    @media (max-width: 700px) {
+      .stats,
+      .edge-grid,
+      .teams,
+      .power,
+      .form-section {
+        display: block;
+      }
+
+      .stat,
+      .edge-card,
+      .form-team {
+        margin-bottom: 10px;
+      }
+
+      .team {
+        justify-content: center;
+        margin-bottom: 10px;
+      }
+
+      .vs {
+        text-align: center;
+        display: block;
+        margin: 8px 0;
+      }
+    }
+  </style>
 </head>
-
 <body>
-
-<div class="container">
-
-<h1>Scoutly ⚽</h1>
-
-<div id="matches">
-Carregando jogos...
-</div>
-
-</div>
-
-<script>
-
-const SUPABASE_URL = "https://zngdcatlxlxamceqpxij.supabase.co"
-const SUPABASE_KEY = "sb_publishable_gw3BGCEcwhidS2hFbiwxIA_W28KkZ2a"
-
-const client = supabase.createClient(SUPABASE_URL,SUPABASE_KEY)
-
-function renderForm(form){
-
-if(!form) return ""
-
-return form.split("").map(l=>{
-
-if(l=="W") return `<span class="win">W</span>`
-if(l=="D") return `<span class="draw">D</span>`
-if(l=="L") return `<span class="loss">L</span>`
-
-}).join("")
-
-}
-
-async function loadMatches(){
-
-const container = document.getElementById("matches")
-
-const {data,error} = await client
-.from("matches")
-.select("*")
-.order("match_date",{ascending:true})
-
-if(error){
-
-container.innerHTML="Erro ao carregar"
-
-return
-
-}
-
-let html=""
-
-data.forEach(m=>{
-
-html+=`
-
-<div class="match">
-
-<div class="teams">
-
-<div class="team">
-<img class="logo" src="${m.home_logo}">
-${m.home_team}
-</div>
-
-<div class="vs">x</div>
-
-<div class="team">
-${m.away_team}
-<img class="logo" src="${m.away_logo}">
-</div>
-
-</div>
-
-<div class="meta">
-
-Liga: ${m.league}<br>
-Data: ${new Date(m.match_date).toLocaleDateString("pt-BR")}
-
-</div>
-
-<div class="stats">
-
-<div class="stat">
-<div class="stat-title">Média gols</div>
-<div class="stat-value">${m.avg_goals}</div>
-</div>
-
-<div class="stat">
-<div class="stat-title">Escanteios</div>
-<div class="stat-value">${m.avg_corners}</div>
-</div>
-
-<div class="stat">
-<div class="stat-title">Chutes</div>
-<div class="stat-value">${m.avg_shots}</div>
-</div>
-
-</div>
-
-<div class="power">
-
-<div>
-Power ${m.home_team}: <span>${m.power_home}</span>
-</div>
-
-<div>
-Power ${m.away_team}: <span>${m.power_away}</span>
-</div>
-
-</div>
-
-<div class="form-section">
-
-<div>
-
-${m.home_team} Forma
-
-<div class="form">
-
-${renderForm(m.home_form)}
-
-</div>
-
-</div>
-
-<div>
-
-${m.away_team} Forma
-
-<div class="form">
-
-${renderForm(m.away_form)}
-
-</div>
-
-</div>
-
-</div>
-
-<div class="insight">
-
-<strong>Scoutly Insight</strong><br>
-${m.insight}
-
-</div>
-
-<div class="market">
-
-Over 2.5 ${m.over25_prob}%
-
-<div class="bar">
-<div class="fill" style="width:${m.over25_prob}%"></div>
-</div>
-
-BTTS ${m.btts_prob}%
-
-<div class="bar">
-<div class="fill" style="width:${m.btts_prob}%"></div>
-</div>
-
-Over 8.5 Cantos ${m.corners_over85_prob}%
-
-<div class="bar">
-<div class="fill" style="width:${m.corners_over85_prob}%"></div>
-</div>
-
-</div>
-
-<div class="result-prob">
-
-Vitória ${m.home_team}: ${m.home_result_prob}%<br>
-Empate: ${m.draw_result_prob}%<br>
-Vitória ${m.away_team}: ${m.away_result_prob}%
-
-</div>
-
-<div class="pick">
-
-<strong>Scoutly Pick</strong><br>
-${m.pick}
-
-</div>
-
-</div>
-
-`
-
-})
-
-container.innerHTML=html
-
-}
-
-loadMatches()
-
-</script>
-
+  <div class="container">
+    <h1>Scoutly ⚽</h1>
+    <div id="matches">Carregando jogos...</div>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://zngdcatlxlxamceqpxij.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_gw3BGCEcwhidS2hFbiwxIA_W28KkZ2a";
+
+    const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    function formatForm(form) {
+      if (!form) return "";
+      return form.split("").map(letter => {
+        if (letter === "W") return '<span class="form-win">W</span>';
+        if (letter === "D") return '<span class="form-draw">D</span>';
+        if (letter === "L") return '<span class="form-loss">L</span>';
+        return "";
+      }).join("");
+    }
+
+    function calcFairOdd(probPercent) {
+      const p = Number(probPercent);
+      if (!p || p <= 0) return "-";
+      return (100 / p).toFixed(2);
+    }
+
+    function calcEdge(probPercent, marketOdd) {
+      const p = Number(probPercent);
+      const odd = Number(marketOdd);
+      if (!p || !odd) return null;
+      const fairOdd = 100 / p;
+      const edge = ((odd / fairOdd) - 1) * 100;
+      return edge;
+    }
+
+    function edgeClass(edge) {
+      if (edge === null) return "edge-value-negative";
+      return edge >= 0 ? "edge-value-positive" : "edge-value-negative";
+    }
+
+    function edgeTag(edge) {
+      if (edge === null) return '<span class="tag-negative">SEM DADO</span>';
+      return edge >= 0
+        ? '<span class="tag-positive">VALUE</span>'
+        : '<span class="tag-negative">SEM VALUE</span>';
+    }
+
+    function edgeText(edge) {
+      if (edge === null) return "-";
+      const sign = edge >= 0 ? "+" : "";
+      return `${sign}${edge.toFixed(1)}%`;
+    }
+
+    async function loadMatches() {
+      const container = document.getElementById("matches");
+      container.innerHTML = "Carregando jogos...";
+
+      try {
+        const { data, error } = await client
+          .from("matches")
+          .select("*")
+          .order("match_date", { ascending: true });
+
+        if (error) {
+          console.log("ERRO SUPABASE:", error);
+          container.innerHTML = "Erro ao carregar dados do Supabase";
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          container.innerHTML = "Nenhum jogo encontrado.";
+          return;
+        }
+
+        const html = data.map(m => {
+          const edgeOver25 = calcEdge(m.over25_prob, m.market_odds_over25);
+          const edgeBTTS = calcEdge(m.btts_prob, m.market_odds_btts);
+          const edgeCorners = calcEdge(m.corners_over85_prob, m.market_odds_corners85);
+
+          return `
+            <div class="match">
+
+              <div class="teams">
+                <div class="team">
+                  <img class="logo" src="${m.home_logo || ""}" onerror="this.style.display='none'">
+                  <span>${m.home_team || "-"}</span>
+                </div>
+
+                <div class="vs">x</div>
+
+                <div class="team">
+                  <span>${m.away_team || "-"}</span>
+                  <img class="logo" src="${m.away_logo || ""}" onerror="this.style.display='none'">
+                </div>
+              </div>
+
+              <div class="meta">
+                Liga: ${m.league || "-"}<br>
+                Data: ${m.match_date ? new Date(m.match_date).toLocaleDateString("pt-BR") : "Sem data"}
+              </div>
+
+              <div class="stats">
+                <div class="stat">
+                  <div class="stat-title">Média gols</div>
+                  <div class="stat-value">${m.avg_goals ?? "-"}</div>
+                </div>
+
+                <div class="stat">
+                  <div class="stat-title">Escanteios</div>
+                  <div class="stat-value">${m.avg_corners ?? "-"}</div>
+                </div>
+
+                <div class="stat">
+                  <div class="stat-title">Chutes</div>
+                  <div class="stat-value">${m.avg_shots ?? "-"}</div>
+                </div>
+              </div>
+
+              <div class="power">
+                <div>Power ${m.home_team}: <span>${m.power_home ?? "-"}</span></div>
+                <div>Power ${m.away_team}: <span>${m.power_away ?? "-"}</span></div>
+              </div>
+
+              <div class="form-section">
+                <div class="form-team">
+                  <div class="form-team-title">${m.home_team || "Mandante"} - Forma</div>
+                  <div class="form">${formatForm(m.home_form)}</div>
+                </div>
+
+                <div class="form-team">
+                  <div class="form-team-title">${m.away_team || "Visitante"} - Forma</div>
+                  <div class="form">${formatForm(m.away_form)}</div>
+                </div>
+              </div>
+
+              <div class="insight">
+                <div class="insight-title">Scoutly Insight</div>
+                <div>${m.insight || "Sem insight"}</div>
+              </div>
+
+              <div class="market-section">
+                <div class="market-title">Tendências de Mercado</div>
+
+                <div class="prob">
+                  <div class="prob-label">
+                    <span>Over 2.5</span>
+                    <span>${m.over25_prob ?? 0}%</span>
+                  </div>
+                  <div class="bar">
+                    <div class="fill" style="width:${m.over25_prob ?? 0}%"></div>
+                  </div>
+                </div>
+
+                <div class="prob">
+                  <div class="prob-label">
+                    <span>BTTS</span>
+                    <span>${m.btts_prob ?? 0}%</span>
+                  </div>
+                  <div class="bar">
+                    <div class="fill" style="width:${m.btts_prob ?? 0}%"></div>
+                  </div>
+                </div>
+
+                <div class="prob">
+                  <div class="prob-label">
+                    <span>Over 8.5 Cantos</span>
+                    <span>${m.corners_over85_prob ?? 0}%</span>
+                  </div>
+                  <div class="bar">
+                    <div class="fill" style="width:${m.corners_over85_prob ?? 0}%"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="result-prob">
+                <div class="result-prob-title">Probabilidade de Resultado</div>
+                Vitória ${m.home_team}: ${m.home_result_prob ?? 0}%<br>
+                Empate: ${m.draw_result_prob ?? 0}%<br>
+                Vitória ${m.away_team}: ${m.away_result_prob ?? 0}%
+              </div>
+
+              <div class="edge-section">
+                <div class="edge-title">Scoutly Edge Engine</div>
+
+                <div class="edge-card">
+                  <div class="edge-head">
+                    <span>Over 2.5</span>
+                    ${edgeTag(edgeOver25)}
+                  </div>
+                  <div class="edge-grid">
+                    <div>Prob: <strong>${m.over25_prob ?? "-"}%</strong></div>
+                    <div>Odd justa: <strong>${calcFairOdd(m.over25_prob)}</strong></div>
+                    <div>Mercado: <strong>${m.market_odds_over25 ?? "-"}</strong></div>
+                    <div class="${edgeClass(edgeOver25)}">Edge: <strong>${edgeText(edgeOver25)}</strong></div>
+                  </div>
+                </div>
+
+                <div class="edge-card">
+                  <div class="edge-head">
+                    <span>BTTS</span>
+                    ${edgeTag(edgeBTTS)}
+                  </div>
+                  <div class="edge-grid">
+                    <div>Prob: <strong>${m.btts_prob ?? "-"}%</strong></div>
+                    <div>Odd justa: <strong>${calcFairOdd(m.btts_prob)}</strong></div>
+                    <div>Mercado: <strong>${m.market_odds_btts ?? "-"}</strong></div>
+                    <div class="${edgeClass(edgeBTTS)}">Edge: <strong>${edgeText(edgeBTTS)}</strong></div>
+                  </div>
+                </div>
+
+                <div class="edge-card">
+                  <div class="edge-head">
+                    <span>Over 8.5 Cantos</span>
+                    ${edgeTag(edgeCorners)}
+                  </div>
+                  <div class="edge-grid">
+                    <div>Prob: <strong>${m.corners_over85_prob ?? "-"}%</strong></div>
+                    <div>Odd justa: <strong>${calcFairOdd(m.corners_over85_prob)}</strong></div>
+                    <div>Mercado: <strong>${m.market_odds_corners85 ?? "-"}</strong></div>
+                    <div class="${edgeClass(edgeCorners)}">Edge: <strong>${edgeText(edgeCorners)}</strong></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="pick">
+                <div class="pick-title">Scoutly Pick</div>
+                <div>${m.pick || "-"}</div>
+              </div>
+
+            </div>
+          `;
+        }).join("");
+
+        container.innerHTML = html;
+
+      } catch (err) {
+        console.log("ERRO GERAL:", err);
+        container.innerHTML = "Erro geral no script";
+      }
+    }
+
+    loadMatches();
+  </script>
 </body>
 </html>
