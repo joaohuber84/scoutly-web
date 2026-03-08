@@ -31,6 +31,77 @@
       font-size: 32px;
     }
 
+    .section {
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      color: #22c55e;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .radar-box {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 18px;
+      margin-bottom: 24px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+    }
+
+    .radar-subtitle {
+      color: #cbd5e1;
+      font-size: 14px;
+      margin-bottom: 14px;
+    }
+
+    .radar-item {
+      background: #0b1220;
+      border: 1px solid #1f2937;
+      border-left: 4px solid #22c55e;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .radar-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .radar-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .radar-rank {
+      color: #22c55e;
+      font-weight: bold;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .radar-prob {
+      font-weight: bold;
+      color: #22c55e;
+      white-space: nowrap;
+    }
+
+    .radar-market {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 4px;
+    }
+
+    .radar-game {
+      color: #cbd5e1;
+      font-size: 14px;
+    }
+
     .match {
       background: #111827;
       border: 1px solid #1f2937;
@@ -321,13 +392,34 @@
       .power-box {
         margin-bottom: 10px;
       }
+
+      .radar-head {
+        display: block;
+      }
+
+      .radar-prob {
+        margin-top: 6px;
+        display: inline-block;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>Scoutly ⚽</h1>
-    <div id="matches">Carregando jogos...</div>
+
+    <div class="section">
+      <div class="radar-box">
+        <div class="section-title">🔥 Scoutly Radar</div>
+        <div class="radar-subtitle">Top 10 oportunidades do dia</div>
+        <div id="radar">Carregando radar...</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">⚽ Jogos do dia</div>
+      <div id="matches">Carregando jogos...</div>
+    </div>
   </div>
 
   <script>
@@ -364,9 +456,40 @@
       return markets[0];
     }
 
+    function generateRadar(matches) {
+      let opportunities = [];
+
+      matches.forEach(match => {
+        opportunities.push({
+          market: "Over 2.5 gols",
+          prob: Number(match.over25_prob) || 0,
+          game: `${match.home_team} x ${match.away_team}`
+        });
+
+        opportunities.push({
+          market: "BTTS",
+          prob: Number(match.btts_prob) || 0,
+          game: `${match.home_team} x ${match.away_team}`
+        });
+
+        opportunities.push({
+          market: "Over 8.5 cantos",
+          prob: Number(match.corners_over85_prob) || 0,
+          game: `${match.home_team} x ${match.away_team}`
+        });
+      });
+
+      opportunities.sort((a, b) => b.prob - a.prob);
+
+      return opportunities.slice(0, 10);
+    }
+
     async function loadMatches() {
-      const container = document.getElementById("matches");
-      container.innerHTML = "Carregando jogos...";
+      const radarContainer = document.getElementById("radar");
+      const matchesContainer = document.getElementById("matches");
+
+      radarContainer.innerHTML = "Carregando radar...";
+      matchesContainer.innerHTML = "Carregando jogos...";
 
       try {
         const { data, error } = await client
@@ -376,16 +499,33 @@
 
         if (error) {
           console.log("ERRO SUPABASE:", error);
-          container.innerHTML = "Erro ao carregar dados do Supabase";
+          radarContainer.innerHTML = "Erro ao carregar radar";
+          matchesContainer.innerHTML = "Erro ao carregar jogos";
           return;
         }
 
         if (!data || data.length === 0) {
-          container.innerHTML = "Nenhum jogo encontrado.";
+          radarContainer.innerHTML = "Nenhuma oportunidade encontrada.";
+          matchesContainer.innerHTML = "Nenhum jogo encontrado.";
           return;
         }
 
-        const html = data.map(m => {
+        const radar = generateRadar(data);
+
+        const radarHTML = radar.map((item, index) => `
+          <div class="radar-item">
+            <div class="radar-head">
+              <span class="radar-rank">#${index + 1} oportunidade</span>
+              <span class="radar-prob">${item.prob}%</span>
+            </div>
+            <div class="radar-market">${item.market}</div>
+            <div class="radar-game">${item.game}</div>
+          </div>
+        `).join("");
+
+        radarContainer.innerHTML = radarHTML;
+
+        const matchesHTML = data.map(m => {
           const best = getBestOpportunity(m);
           const confidence = getConfidence(best.prob);
 
@@ -502,11 +642,12 @@
           `;
         }).join("");
 
-        container.innerHTML = html;
+        matchesContainer.innerHTML = matchesHTML;
 
       } catch (err) {
         console.log("ERRO GERAL:", err);
-        container.innerHTML = "Erro geral no script";
+        radarContainer.innerHTML = "Erro geral no radar";
+        matchesContainer.innerHTML = "Erro geral no script";
       }
     }
 
