@@ -21,7 +21,7 @@
     }
 
     .container {
-      max-width: 920px;
+      max-width: 980px;
       margin: 0 auto;
     }
 
@@ -29,17 +29,18 @@
       text-align: center;
       color: #22c55e;
       margin-bottom: 28px;
-      font-size: 32px;
+      font-size: 34px;
     }
 
     .section {
-      margin-bottom: 24px;
+      margin-bottom: 26px;
     }
 
     .section-title {
       font-size: 18px;
       font-weight: bold;
       margin-bottom: 12px;
+      color: #e2e8f0;
     }
 
     .hero-box {
@@ -62,7 +63,7 @@
     }
 
     .hero-market {
-      font-size: 26px;
+      font-size: 28px;
       font-weight: bold;
       margin-bottom: 6px;
     }
@@ -121,7 +122,7 @@
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 12px;
+      margin-bottom: 8px;
     }
 
     .market-title {
@@ -132,21 +133,18 @@
     .market-subtitle {
       font-size: 13px;
       color: #cbd5e1;
-      margin-bottom: 6px;
+      margin-bottom: 10px;
     }
 
-    .theme-goals .market-title,
-    .theme-goals .section-title {
+    .theme-goals .market-title {
       color: #22c55e;
     }
 
-    .theme-corners .market-title,
-    .theme-corners .section-title {
+    .theme-corners .market-title {
       color: #eab308;
     }
 
-    .theme-btts .market-title,
-    .theme-btts .section-title {
+    .theme-btts .market-title {
       color: #38bdf8;
     }
 
@@ -162,7 +160,7 @@
       border-radius: 10px;
       padding: 12px;
       margin-bottom: 10px;
-      transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+      transition: transform 0.15s ease, background 0.15s ease;
       cursor: pointer;
     }
 
@@ -181,10 +179,6 @@
 
     .theme-btts .radar-item {
       border-left: 4px solid #38bdf8;
-    }
-
-    .radar-item:last-child {
-      margin-bottom: 0;
     }
 
     .radar-head {
@@ -218,6 +212,7 @@
 
     .radar-prob {
       font-weight: bold;
+      font-size: 20px;
       white-space: nowrap;
     }
 
@@ -230,6 +225,64 @@
     .radar-game {
       color: #cbd5e1;
       font-size: 14px;
+    }
+
+    .leagues-box {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.16);
+    }
+
+    .league-group {
+      margin-bottom: 18px;
+    }
+
+    .league-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .league-title {
+      color: #e2e8f0;
+      font-size: 16px;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .game-link {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .game-row {
+      background: #0b1220;
+      border: 1px solid #1f2937;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+
+    .game-row:hover {
+      background: #10192e;
+      transform: translateY(-1px);
+    }
+
+    .game-name {
+      font-weight: bold;
+      font-size: 15px;
+    }
+
+    .game-date {
+      font-size: 13px;
+      color: #cbd5e1;
+      white-space: nowrap;
     }
 
     .match {
@@ -276,7 +329,7 @@
       margin-top: 10px;
       color: #cbd5e1;
       font-size: 14px;
-      line-height: 1.5;
+      line-height: 1.6;
     }
 
     .opportunity {
@@ -298,7 +351,7 @@
     }
 
     .opportunity-market {
-      font-size: 22px;
+      font-size: 24px;
       font-weight: bold;
       margin-bottom: 8px;
     }
@@ -311,30 +364,34 @@
       color: #e2e8f0;
     }
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+    .why-box {
       margin-top: 16px;
-    }
-
-    .stat {
       background: #0b1220;
       border: 1px solid #1f2937;
+      border-left: 4px solid #22c55e;
       border-radius: 10px;
-      padding: 12px;
-      text-align: center;
+      padding: 14px;
     }
 
-    .stat-title {
-      font-size: 12px;
-      color: #94a3b8;
-      margin-bottom: 6px;
-    }
-
-    .stat-value {
-      font-size: 20px;
+    .why-title {
+      color: #22c55e;
       font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .why-list {
+      display: grid;
+      gap: 8px;
+      font-size: 14px;
+      color: #e2e8f0;
+    }
+
+    .why-item {
+      background: #111827;
+      border: 1px solid #1f2937;
+      padding: 10px;
+      border-radius: 8px;
     }
 
     .secondary {
@@ -390,6 +447,32 @@
 
     .fill-corners {
       background: #eab308;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .stat {
+      background: #0b1220;
+      border: 1px solid #1f2937;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .stat-title {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: bold;
     }
 
     .form-section {
@@ -480,6 +563,15 @@
       .bar {
         max-width: 100%;
       }
+
+      .game-row {
+        display: block;
+      }
+
+      .game-date {
+        margin-top: 6px;
+        display: block;
+      }
     }
   </style>
 </head>
@@ -519,7 +611,12 @@
     </div>
 
     <div class="section">
-      <div class="section-title">⚽ Jogos do dia</div>
+      <div class="section-title">📅 Jogos do dia</div>
+      <div class="leagues-box" id="games-by-league">Carregando jogos...</div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">📊 Análises dos jogos</div>
       <div id="matches">Carregando jogos...</div>
     </div>
   </div>
@@ -594,7 +691,7 @@
       return opportunities.slice(0, 5);
     }
 
-    function renderRadarList(items, containerId, themeClass) {
+    function renderRadarList(items, containerId) {
       const container = document.getElementById(containerId);
 
       if (!items.length) {
@@ -618,26 +715,81 @@
       container.innerHTML = html;
     }
 
+    function getLeagueFlag(leagueName) {
+      const league = (leagueName || "").toLowerCase();
+
+      if (league.includes("brasileirao") || league.includes("brasileirão")) return "🇧🇷";
+      if (league.includes("serie a") && league.includes("ital")) return "🇮🇹";
+      if (league.includes("la liga")) return "🇪🇸";
+      if (league.includes("premier")) return "🇬🇧";
+      if (league.includes("bundesliga")) return "🇩🇪";
+      if (league.includes("ligue 1")) return "🇫🇷";
+      if (league.includes("mls")) return "🇺🇸";
+      if (league.includes("libertadores")) return "🏆";
+      if (league.includes("champions")) return "🏆";
+      return "🌍";
+    }
+
+    function groupByLeague(matches) {
+      const groups = {};
+
+      matches.forEach(match => {
+        const league = match.league || "Outros";
+        if (!groups[league]) groups[league] = [];
+        groups[league].push(match);
+      });
+
+      return groups;
+    }
+
+    function buildWhyScoutlyLikes(match, best) {
+      const reasons = [];
+
+      if (best.name === "Over 8.5 cantos") {
+        reasons.push(`🚩 Tendência de cantos em ${Number(match.corners_over85_prob) || 0}%`);
+        reasons.push(`📊 Média de cantos esperados: ${match.avg_corners ?? "-"}`);
+        reasons.push(`🎯 Volume de finalizações esperado: ${match.avg_shots ?? "-"}`);
+      }
+
+      if (best.name === "Over 2.5 gols") {
+        reasons.push(`⚽ Tendência de over 2.5 em ${Number(match.over25_prob) || 0}%`);
+        reasons.push(`📊 Média de gols esperados: ${match.avg_goals ?? "-"}`);
+        reasons.push(`🎯 Finalizações esperadas: ${match.avg_shots ?? "-"}`);
+      }
+
+      if (best.name === "BTTS") {
+        reasons.push(`🥅 Tendência de BTTS em ${Number(match.btts_prob) || 0}%`);
+        reasons.push(`📊 Média de gols esperados: ${match.avg_goals ?? "-"}`);
+        reasons.push(`🔥 Forma recente sugere jogo aberto`);
+      }
+
+      return reasons.slice(0, 3);
+    }
+
     async function loadMatches() {
       const heroContainer = document.getElementById("hero");
       const matchesContainer = document.getElementById("matches");
+      const gamesByLeagueContainer = document.getElementById("games-by-league");
 
       try {
         const { data, error } = await client
           .from("matches")
           .select("*")
+          .order("league", { ascending: true })
           .order("match_date", { ascending: true });
 
         if (error) {
           console.log("ERRO SUPABASE:", error);
           heroContainer.innerHTML = "Erro ao carregar.";
           matchesContainer.innerHTML = "Erro ao carregar jogos.";
+          gamesByLeagueContainer.innerHTML = "Erro ao carregar jogos.";
           return;
         }
 
         if (!data || data.length === 0) {
           heroContainer.innerHTML = "Nenhuma oportunidade encontrada.";
           matchesContainer.innerHTML = "Nenhum jogo encontrado.";
+          gamesByLeagueContainer.innerHTML = "Nenhum jogo encontrado.";
           return;
         }
 
@@ -679,13 +831,32 @@
           </div>
         `;
 
-        renderRadarList(buildMarketRadar(data, "goals"), "radar-goals", "theme-goals");
-        renderRadarList(buildMarketRadar(data, "corners"), "radar-corners", "theme-corners");
-        renderRadarList(buildMarketRadar(data, "btts"), "radar-btts", "theme-btts");
+        renderRadarList(buildMarketRadar(data, "goals"), "radar-goals");
+        renderRadarList(buildMarketRadar(data, "corners"), "radar-corners");
+        renderRadarList(buildMarketRadar(data, "btts"), "radar-btts");
+
+        const leagueGroups = groupByLeague(data);
+
+        const leagueHTML = Object.keys(leagueGroups).map(league => `
+          <div class="league-group">
+            <div class="league-title">${getLeagueFlag(league)} ${league}</div>
+            ${leagueGroups[league].map(match => `
+              <a class="game-link" href="#match-${match.id}">
+                <div class="game-row">
+                  <span class="game-name">${match.home_team} x ${match.away_team}</span>
+                  <span class="game-date">📅 ${match.match_date ? new Date(match.match_date).toLocaleDateString("pt-BR") : "Sem data"}</span>
+                </div>
+              </a>
+            `).join("")}
+          </div>
+        `).join("");
+
+        gamesByLeagueContainer.innerHTML = leagueHTML;
 
         const matchesHTML = data.map(m => {
           const best = getBestOpportunity(m);
           const confidence = getConfidence(best.prob);
+          const whyList = buildWhyScoutlyLikes(m, best);
 
           return `
             <div class="match" id="match-${m.id}">
@@ -705,8 +876,8 @@
               </div>
 
               <div class="meta">
-                Liga: ${m.league || "-"}<br>
-                Data: ${m.match_date ? new Date(m.match_date).toLocaleDateString("pt-BR") : "Sem data"}
+                ${getLeagueFlag(m.league)} ${m.league || "-"}<br>
+                📅 ${m.match_date ? new Date(m.match_date).toLocaleDateString("pt-BR") : "Sem data"}
               </div>
 
               <div class="opportunity">
@@ -715,6 +886,13 @@
                 <div class="opportunity-info">
                   <span>Probabilidade: <strong>${best.prob}%</strong></span>
                   <span class="badge ${confidence.className}">${confidence.label}</span>
+                </div>
+              </div>
+
+              <div class="why-box">
+                <div class="why-title">🧠 Por que o Scoutly gosta dessa entrada</div>
+                <div class="why-list">
+                  ${whyList.map(item => `<div class="why-item">${item}</div>`).join("")}
                 </div>
               </div>
 
@@ -764,7 +942,7 @@
                 </div>
 
                 <div class="stat">
-                  <div class="stat-title">🎯 Finalizações</div>
+                  <div class="stat-title">🎯 Finalizações esperadas</div>
                   <div class="stat-value">${m.avg_shots ?? "-"}</div>
                 </div>
               </div>
@@ -791,6 +969,7 @@
         console.log("ERRO GERAL:", err);
         document.getElementById("hero").innerHTML = "Erro geral.";
         matchesContainer.innerHTML = "Erro geral no script.";
+        gamesByLeagueContainer.innerHTML = "Erro geral nos jogos.";
       }
     }
 
