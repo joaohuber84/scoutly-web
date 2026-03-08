@@ -37,25 +37,117 @@
     }
 
     .section-title {
-      color: #22c55e;
       font-size: 18px;
       font-weight: bold;
       margin-bottom: 12px;
     }
 
-    .radar-box {
+    .hero-box {
+      background: linear-gradient(135deg, rgba(34,197,94,0.18), rgba(34,197,94,0.06));
+      border: 1px solid rgba(34,197,94,0.35);
+      border-left: 6px solid #22c55e;
+      border-radius: 16px;
+      padding: 18px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.20);
+    }
+
+    .hero-label {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #22c55e;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .hero-market {
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .hero-game {
+      color: #e2e8f0;
+      margin-bottom: 8px;
+      font-size: 15px;
+    }
+
+    .hero-prob {
+      font-size: 15px;
+      color: #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .conf-high {
+      background: rgba(34,197,94,0.15);
+      color: #22c55e;
+      border: 1px solid rgba(34,197,94,0.35);
+    }
+
+    .conf-medium {
+      background: rgba(234,179,8,0.15);
+      color: #eab308;
+      border: 1px solid rgba(234,179,8,0.35);
+    }
+
+    .conf-low {
+      background: rgba(239,68,68,0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239,68,68,0.35);
+    }
+
+    .market-box {
       background: #111827;
       border: 1px solid #1f2937;
       border-radius: 14px;
-      padding: 18px;
-      margin-bottom: 24px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+      padding: 16px;
+      margin-bottom: 18px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.16);
     }
 
-    .radar-subtitle {
+    .market-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .market-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    .market-subtitle {
+      font-size: 13px;
       color: #cbd5e1;
-      font-size: 14px;
-      margin-bottom: 14px;
+      margin-bottom: 6px;
+    }
+
+    .theme-goals .market-title,
+    .theme-goals .section-title {
+      color: #22c55e;
+    }
+
+    .theme-corners .market-title,
+    .theme-corners .section-title {
+      color: #eab308;
+    }
+
+    .theme-btts .market-title,
+    .theme-btts .section-title {
+      color: #38bdf8;
     }
 
     .radar-link {
@@ -67,18 +159,28 @@
     .radar-item {
       background: #0b1220;
       border: 1px solid #1f2937;
-      border-left: 4px solid #22c55e;
       border-radius: 10px;
       padding: 12px;
       margin-bottom: 10px;
-      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+      transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
       cursor: pointer;
     }
 
     .radar-item:hover {
       transform: translateY(-2px);
-      border-color: #22c55e;
       background: #10192e;
+    }
+
+    .theme-goals .radar-item {
+      border-left: 4px solid #22c55e;
+    }
+
+    .theme-corners .radar-item {
+      border-left: 4px solid #eab308;
+    }
+
+    .theme-btts .radar-item {
+      border-left: 4px solid #38bdf8;
     }
 
     .radar-item:last-child {
@@ -94,15 +196,28 @@
     }
 
     .radar-rank {
-      color: #22c55e;
       font-weight: bold;
       font-size: 12px;
       text-transform: uppercase;
     }
 
+    .theme-goals .radar-rank,
+    .theme-goals .radar-prob {
+      color: #22c55e;
+    }
+
+    .theme-corners .radar-rank,
+    .theme-corners .radar-prob {
+      color: #eab308;
+    }
+
+    .theme-btts .radar-rank,
+    .theme-btts .radar-prob {
+      color: #38bdf8;
+    }
+
     .radar-prob {
       font-weight: bold;
-      color: #22c55e;
       white-space: nowrap;
     }
 
@@ -196,32 +311,6 @@
       color: #e2e8f0;
     }
 
-    .badge {
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: bold;
-    }
-
-    .conf-high {
-      background: rgba(34,197,94,0.15);
-      color: #22c55e;
-      border: 1px solid rgba(34,197,94,0.35);
-    }
-
-    .conf-medium {
-      background: rgba(234,179,8,0.15);
-      color: #eab308;
-      border: 1px solid rgba(234,179,8,0.35);
-    }
-
-    .conf-low {
-      background: rgba(239,68,68,0.15);
-      color: #ef4444;
-      border: 1px solid rgba(239,68,68,0.35);
-    }
-
     .stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -244,7 +333,7 @@
     }
 
     .stat-value {
-      font-size: 22px;
+      font-size: 20px;
       font-weight: bold;
     }
 
@@ -264,7 +353,7 @@
     }
 
     .trend {
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     .trend:last-child {
@@ -281,14 +370,26 @@
 
     .bar {
       background: #1f2937;
-      height: 10px;
+      height: 6px;
       border-radius: 999px;
       overflow: hidden;
+      max-width: 240px;
     }
 
     .fill {
-      background: #22c55e;
       height: 100%;
+    }
+
+    .fill-goals {
+      background: #22c55e;
+    }
+
+    .fill-btts {
+      background: #38bdf8;
+    }
+
+    .fill-corners {
+      background: #eab308;
     }
 
     .form-section {
@@ -344,50 +445,9 @@
       background: #ef4444;
     }
 
-    .power-section {
-      margin-top: 16px;
-      background: #0b1220;
-      border: 1px solid #1f2937;
-      border-radius: 10px;
-      padding: 14px;
-    }
-
-    .power-title {
-      color: #22c55e;
-      font-weight: bold;
-      margin-bottom: 10px;
-      font-size: 14px;
-    }
-
-    .power-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-
-    .power-box {
-      background: #111827;
-      border: 1px solid #1f2937;
-      border-radius: 8px;
-      padding: 10px;
-      text-align: center;
-    }
-
-    .power-name {
-      font-size: 12px;
-      color: #94a3b8;
-      margin-bottom: 4px;
-    }
-
-    .power-value {
-      font-size: 22px;
-      font-weight: bold;
-    }
-
     @media (max-width: 700px) {
       .teams,
       .form-section,
-      .power-grid,
       .stats {
         display: block;
       }
@@ -404,8 +464,7 @@
       }
 
       .stat,
-      .form-team,
-      .power-box {
+      .form-team {
         margin-bottom: 10px;
       }
 
@@ -417,6 +476,10 @@
         margin-top: 6px;
         display: inline-block;
       }
+
+      .bar {
+        max-width: 100%;
+      }
     }
   </style>
 </head>
@@ -424,11 +487,34 @@
   <div class="container">
     <h1>Scoutly ⚽</h1>
 
+    <div class="hero-box">
+      <div class="hero-label">⭐ Oportunidade do dia</div>
+      <div id="hero">Carregando melhor oportunidade...</div>
+    </div>
+
     <div class="section">
-      <div class="radar-box">
-        <div class="section-title">🔥 Scoutly Radar</div>
-        <div class="radar-subtitle">Top 10 oportunidades do dia</div>
-        <div id="radar">Carregando radar...</div>
+      <div class="market-box theme-goals">
+        <div class="market-header">
+          <div class="market-title">🔥 Radar Gols</div>
+        </div>
+        <div class="market-subtitle">Top 5 oportunidades de gols</div>
+        <div id="radar-goals">Carregando...</div>
+      </div>
+
+      <div class="market-box theme-corners">
+        <div class="market-header">
+          <div class="market-title">🚩 Radar Cantos</div>
+        </div>
+        <div class="market-subtitle">Top 5 oportunidades de cantos</div>
+        <div id="radar-corners">Carregando...</div>
+      </div>
+
+      <div class="market-box theme-btts">
+        <div class="market-header">
+          <div class="market-title">🥅 Radar BTTS</div>
+        </div>
+        <div class="market-subtitle">Top 5 oportunidades de ambas marcam</div>
+        <div id="radar-btts">Carregando...</div>
       </div>
     </div>
 
@@ -463,52 +549,78 @@
 
     function getBestOpportunity(match) {
       const markets = [
-        { name: "Over 2.5 gols", prob: Number(match.over25_prob) || 0 },
-        { name: "BTTS", prob: Number(match.btts_prob) || 0 },
-        { name: "Over 8.5 cantos", prob: Number(match.corners_over85_prob) || 0 }
+        { name: "Over 2.5 gols", prob: Number(match.over25_prob) || 0, type: "goals" },
+        { name: "BTTS", prob: Number(match.btts_prob) || 0, type: "btts" },
+        { name: "Over 8.5 cantos", prob: Number(match.corners_over85_prob) || 0, type: "corners" }
       ];
 
       markets.sort((a, b) => b.prob - a.prob);
       return markets[0];
     }
 
-    function generateRadar(matches) {
+    function buildMarketRadar(matches, type) {
       let opportunities = [];
 
       matches.forEach(match => {
-        opportunities.push({
-          matchId: match.id,
-          market: "Over 2.5 gols",
-          prob: Number(match.over25_prob) || 0,
-          game: `${match.home_team} x ${match.away_team}`
-        });
+        if (type === "goals") {
+          opportunities.push({
+            matchId: match.id,
+            market: "Over 2.5 gols",
+            prob: Number(match.over25_prob) || 0,
+            game: `${match.home_team} x ${match.away_team}`
+          });
+        }
 
-        opportunities.push({
-          matchId: match.id,
-          market: "BTTS",
-          prob: Number(match.btts_prob) || 0,
-          game: `${match.home_team} x ${match.away_team}`
-        });
+        if (type === "corners") {
+          opportunities.push({
+            matchId: match.id,
+            market: "Over 8.5 cantos",
+            prob: Number(match.corners_over85_prob) || 0,
+            game: `${match.home_team} x ${match.away_team}`
+          });
+        }
 
-        opportunities.push({
-          matchId: match.id,
-          market: "Over 8.5 cantos",
-          prob: Number(match.corners_over85_prob) || 0,
-          game: `${match.home_team} x ${match.away_team}`
-        });
+        if (type === "btts") {
+          opportunities.push({
+            matchId: match.id,
+            market: "BTTS",
+            prob: Number(match.btts_prob) || 0,
+            game: `${match.home_team} x ${match.away_team}`
+          });
+        }
       });
 
       opportunities.sort((a, b) => b.prob - a.prob);
+      return opportunities.slice(0, 5);
+    }
 
-      return opportunities.slice(0, 10);
+    function renderRadarList(items, containerId, themeClass) {
+      const container = document.getElementById(containerId);
+
+      if (!items.length) {
+        container.innerHTML = "Nenhuma oportunidade encontrada.";
+        return;
+      }
+
+      const html = items.map((item, index) => `
+        <a class="radar-link" href="#match-${item.matchId}">
+          <div class="radar-item">
+            <div class="radar-head">
+              <span class="radar-rank">${index === 0 ? "🥇 Top 1" : index === 1 ? "🥈 Top 2" : index === 2 ? "🥉 Top 3" : `#${index + 1}`}</span>
+              <span class="radar-prob">${item.prob}%</span>
+            </div>
+            <div class="radar-market">${item.market}</div>
+            <div class="radar-game">${item.game}</div>
+          </div>
+        </a>
+      `).join("");
+
+      container.innerHTML = html;
     }
 
     async function loadMatches() {
-      const radarContainer = document.getElementById("radar");
+      const heroContainer = document.getElementById("hero");
       const matchesContainer = document.getElementById("matches");
-
-      radarContainer.innerHTML = "Carregando radar...";
-      matchesContainer.innerHTML = "Carregando jogos...";
 
       try {
         const { data, error } = await client
@@ -518,33 +630,58 @@
 
         if (error) {
           console.log("ERRO SUPABASE:", error);
-          radarContainer.innerHTML = "Erro ao carregar radar";
-          matchesContainer.innerHTML = "Erro ao carregar jogos";
+          heroContainer.innerHTML = "Erro ao carregar.";
+          matchesContainer.innerHTML = "Erro ao carregar jogos.";
           return;
         }
 
         if (!data || data.length === 0) {
-          radarContainer.innerHTML = "Nenhuma oportunidade encontrada.";
+          heroContainer.innerHTML = "Nenhuma oportunidade encontrada.";
           matchesContainer.innerHTML = "Nenhum jogo encontrado.";
           return;
         }
 
-        const radar = generateRadar(data);
+        const allOpportunities = [];
 
-        const radarHTML = radar.map((item, index) => `
-          <a class="radar-link" href="#match-${item.matchId}">
-            <div class="radar-item">
-              <div class="radar-head">
-                <span class="radar-rank">#${index + 1} oportunidade</span>
-                <span class="radar-prob">${item.prob}%</span>
-              </div>
-              <div class="radar-market">${item.market}</div>
-              <div class="radar-game">${item.game}</div>
-            </div>
-          </a>
-        `).join("");
+        data.forEach(match => {
+          allOpportunities.push({
+            matchId: match.id,
+            game: `${match.home_team} x ${match.away_team}`,
+            market: "Over 2.5 gols",
+            prob: Number(match.over25_prob) || 0
+          });
 
-        radarContainer.innerHTML = radarHTML;
+          allOpportunities.push({
+            matchId: match.id,
+            game: `${match.home_team} x ${match.away_team}`,
+            market: "BTTS",
+            prob: Number(match.btts_prob) || 0
+          });
+
+          allOpportunities.push({
+            matchId: match.id,
+            game: `${match.home_team} x ${match.away_team}`,
+            market: "Over 8.5 cantos",
+            prob: Number(match.corners_over85_prob) || 0
+          });
+        });
+
+        allOpportunities.sort((a, b) => b.prob - a.prob);
+        const topOpportunity = allOpportunities[0];
+        const topConfidence = getConfidence(topOpportunity.prob);
+
+        heroContainer.innerHTML = `
+          <div class="hero-market">${topOpportunity.market}</div>
+          <div class="hero-game">${topOpportunity.game}</div>
+          <div class="hero-prob">
+            <span>Probabilidade: <strong>${topOpportunity.prob}%</strong></span>
+            <span class="badge ${topConfidence.className}">${topConfidence.label}</span>
+          </div>
+        `;
+
+        renderRadarList(buildMarketRadar(data, "goals"), "radar-goals", "theme-goals");
+        renderRadarList(buildMarketRadar(data, "corners"), "radar-corners", "theme-corners");
+        renderRadarList(buildMarketRadar(data, "btts"), "radar-btts", "theme-btts");
 
         const matchesHTML = data.map(m => {
           const best = getBestOpportunity(m);
@@ -581,33 +718,16 @@
                 </div>
               </div>
 
-              <div class="stats">
-                <div class="stat">
-                  <div class="stat-title">Média gols</div>
-                  <div class="stat-value">${m.avg_goals ?? "-"}</div>
-                </div>
-
-                <div class="stat">
-                  <div class="stat-title">Escanteios</div>
-                  <div class="stat-value">${m.avg_corners ?? "-"}</div>
-                </div>
-
-                <div class="stat">
-                  <div class="stat-title">Chutes</div>
-                  <div class="stat-value">${m.avg_shots ?? "-"}</div>
-                </div>
-              </div>
-
               <div class="secondary">
-                <div class="secondary-title">Outras Tendências</div>
+                <div class="secondary-title">Tendências do jogo</div>
 
                 <div class="trend">
                   <div class="trend-label">
-                    <span>Over 2.5</span>
+                    <span>Over 2.5 gols</span>
                     <span>${m.over25_prob ?? 0}%</span>
                   </div>
                   <div class="bar">
-                    <div class="fill" style="width:${m.over25_prob ?? 0}%"></div>
+                    <div class="fill fill-goals" style="width:${m.over25_prob ?? 0}%"></div>
                   </div>
                 </div>
 
@@ -617,18 +737,35 @@
                     <span>${m.btts_prob ?? 0}%</span>
                   </div>
                   <div class="bar">
-                    <div class="fill" style="width:${m.btts_prob ?? 0}%"></div>
+                    <div class="fill fill-btts" style="width:${m.btts_prob ?? 0}%"></div>
                   </div>
                 </div>
 
                 <div class="trend">
                   <div class="trend-label">
-                    <span>Over 8.5 Cantos</span>
+                    <span>Over 8.5 cantos</span>
                     <span>${m.corners_over85_prob ?? 0}%</span>
                   </div>
                   <div class="bar">
-                    <div class="fill" style="width:${m.corners_over85_prob ?? 0}%"></div>
+                    <div class="fill fill-corners" style="width:${m.corners_over85_prob ?? 0}%"></div>
                   </div>
+                </div>
+              </div>
+
+              <div class="stats">
+                <div class="stat">
+                  <div class="stat-title">⚽ Gols esperados</div>
+                  <div class="stat-value">${m.avg_goals ?? "-"}</div>
+                </div>
+
+                <div class="stat">
+                  <div class="stat-title">🚩 Cantos esperados</div>
+                  <div class="stat-value">${m.avg_corners ?? "-"}</div>
+                </div>
+
+                <div class="stat">
+                  <div class="stat-title">🎯 Finalizações</div>
+                  <div class="stat-value">${m.avg_shots ?? "-"}</div>
                 </div>
               </div>
 
@@ -644,21 +781,6 @@
                 </div>
               </div>
 
-              <div class="power-section">
-                <div class="power-title">Power Rating</div>
-                <div class="power-grid">
-                  <div class="power-box">
-                    <div class="power-name">${m.home_team || "-"}</div>
-                    <div class="power-value">${m.power_home ?? "-"}</div>
-                  </div>
-
-                  <div class="power-box">
-                    <div class="power-name">${m.away_team || "-"}</div>
-                    <div class="power-value">${m.power_away ?? "-"}</div>
-                  </div>
-                </div>
-              </div>
-
             </div>
           `;
         }).join("");
@@ -667,8 +789,8 @@
 
       } catch (err) {
         console.log("ERRO GERAL:", err);
-        radarContainer.innerHTML = "Erro geral no radar";
-        matchesContainer.innerHTML = "Erro geral no script";
+        document.getElementById("hero").innerHTML = "Erro geral.";
+        matchesContainer.innerHTML = "Erro geral no script.";
       }
     }
 
