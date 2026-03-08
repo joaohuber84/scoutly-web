@@ -7,40 +7,46 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      background: #0f172a;
-      font-family: Arial, sans-serif;
-      color: white;
-      padding: 30px;
       margin: 0;
+      padding: 24px;
+      background: #0f172a;
+      color: white;
+      font-family: Arial, sans-serif;
     }
 
     .container {
-      max-width: 950px;
+      max-width: 920px;
       margin: 0 auto;
     }
 
     h1 {
-      color: #22c55e;
       text-align: center;
-      margin-bottom: 30px;
+      color: #22c55e;
+      margin-bottom: 28px;
+      font-size: 32px;
     }
 
     .match {
       background: #111827;
       border: 1px solid #1f2937;
-      border-radius: 12px;
+      border-radius: 14px;
       padding: 20px;
-      margin-bottom: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
     }
 
     .teams {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 12px;
       font-size: 20px;
       font-weight: bold;
-      gap: 10px;
     }
 
     .team {
@@ -50,8 +56,8 @@
     }
 
     .logo {
-      width: 28px;
-      height: 28px;
+      width: 30px;
+      height: 30px;
       object-fit: contain;
       background: white;
       border-radius: 50%;
@@ -61,28 +67,86 @@
     .vs {
       color: #22c55e;
       font-weight: bold;
+      font-size: 18px;
     }
 
     .meta {
       margin-top: 10px;
-      font-size: 14px;
       color: #cbd5e1;
+      font-size: 14px;
       line-height: 1.5;
     }
 
-    .stats {
+    .opportunity {
+      margin-top: 18px;
+      background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(34,197,94,0.05));
+      border: 1px solid rgba(34,197,94,0.35);
+      border-left: 5px solid #22c55e;
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .opportunity-title {
+      color: #22c55e;
+      font-size: 13px;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }
+
+    .opportunity-market {
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .opportunity-info {
       display: flex;
-      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 14px;
+      color: #e2e8f0;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .conf-high {
+      background: rgba(34,197,94,0.15);
+      color: #22c55e;
+      border: 1px solid rgba(34,197,94,0.35);
+    }
+
+    .conf-medium {
+      background: rgba(234,179,8,0.15);
+      color: #eab308;
+      border: 1px solid rgba(234,179,8,0.35);
+    }
+
+    .conf-low {
+      background: rgba(239,68,68,0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239,68,68,0.35);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
       gap: 12px;
       margin-top: 16px;
     }
 
     .stat {
-      flex: 1;
       background: #0b1220;
       border: 1px solid #1f2937;
-      border-radius: 8px;
-      padding: 10px;
+      border-radius: 10px;
+      padding: 12px;
       text-align: center;
     }
 
@@ -97,29 +161,58 @@
       font-weight: bold;
     }
 
-    .power {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 15px;
+    .secondary {
+      margin-top: 16px;
       background: #0b1220;
-      padding: 10px 12px;
-      border-radius: 8px;
       border: 1px solid #1f2937;
+      border-radius: 10px;
+      padding: 14px;
     }
 
-    .power span {
+    .secondary-title {
+      color: #22c55e;
       font-weight: bold;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .trend {
+      margin-bottom: 12px;
+    }
+
+    .trend:last-child {
+      margin-bottom: 0;
+    }
+
+    .trend-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 4px;
+      color: #e2e8f0;
+    }
+
+    .bar {
+      background: #1f2937;
+      height: 10px;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .fill {
+      background: #22c55e;
+      height: 100%;
     }
 
     .form-section {
       display: flex;
       justify-content: space-between;
-      gap: 20px;
+      gap: 16px;
       margin-top: 16px;
-      padding: 12px;
       background: #0b1220;
       border: 1px solid #1f2937;
-      border-radius: 8px;
+      border-radius: 10px;
+      padding: 14px;
     }
 
     .form-team {
@@ -164,165 +257,52 @@
       background: #ef4444;
     }
 
-    .insight {
-      margin-top: 14px;
-      background: #0b1220;
-      border-left: 4px solid #22c55e;
-      border-radius: 8px;
-      padding: 12px;
-    }
-
-    .insight-title {
-      color: #22c55e;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-
-    .market-section {
-      margin-top: 16px;
-    }
-
-    .market-title {
-      color: #22c55e;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-
-    .prob {
-      margin-bottom: 12px;
-    }
-
-    .prob-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 13px;
-      margin-bottom: 4px;
-      color: #e2e8f0;
-    }
-
-    .bar {
-      background: #1f2937;
-      height: 10px;
-      border-radius: 6px;
-      overflow: hidden;
-    }
-
-    .fill {
-      background: #22c55e;
-      height: 100%;
-    }
-
-    .result-prob {
+    .power-section {
       margin-top: 16px;
       background: #0b1220;
       border: 1px solid #1f2937;
-      border-radius: 8px;
-      padding: 12px;
-      line-height: 1.7;
+      border-radius: 10px;
+      padding: 14px;
     }
 
-    .result-prob-title {
-      color: #22c55e;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-
-    .edge-section {
-      margin-top: 16px;
-      background: #0b1220;
-      border: 1px solid #1f2937;
-      border-radius: 8px;
-      padding: 12px;
-    }
-
-    .edge-title {
+    .power-title {
       color: #22c55e;
       font-weight: bold;
       margin-bottom: 10px;
+      font-size: 14px;
     }
 
-    .edge-card {
+    .power-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .power-box {
       background: #111827;
       border: 1px solid #1f2937;
       border-radius: 8px;
       padding: 10px;
-      margin-bottom: 10px;
+      text-align: center;
     }
 
-    .edge-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-weight: bold;
-      margin-bottom: 8px;
-    }
-
-    .edge-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
+    .power-name {
       font-size: 12px;
-      color: #cbd5e1;
-    }
-
-    .edge-value-positive {
-      color: #22c55e;
-      font-weight: bold;
-    }
-
-    .edge-value-negative {
-      color: #ef4444;
-      font-weight: bold;
-    }
-
-    .tag-positive {
-      background: rgba(34,197,94,0.15);
-      color: #22c55e;
-      border: 1px solid rgba(34,197,94,0.35);
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-size: 11px;
-      font-weight: bold;
-    }
-
-    .tag-negative {
-      background: rgba(239,68,68,0.15);
-      color: #ef4444;
-      border: 1px solid rgba(239,68,68,0.35);
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-size: 11px;
-      font-weight: bold;
-    }
-
-    .pick {
-      margin-top: 14px;
-      background: #0b1220;
-      border: 1px solid #1f2937;
-      border-left: 4px solid #22c55e;
-      border-radius: 8px;
-      padding: 12px;
-    }
-
-    .pick-title {
-      color: #22c55e;
-      font-weight: bold;
+      color: #94a3b8;
       margin-bottom: 4px;
     }
 
-    @media (max-width: 700px) {
-      .stats,
-      .edge-grid,
-      .teams,
-      .power,
-      .form-section {
-        display: block;
-      }
+    .power-value {
+      font-size: 22px;
+      font-weight: bold;
+    }
 
-      .stat,
-      .edge-card,
-      .form-team {
-        margin-bottom: 10px;
+    @media (max-width: 700px) {
+      .teams,
+      .form-section,
+      .power-grid,
+      .stats {
+        display: block;
       }
 
       .team {
@@ -331,9 +311,15 @@
       }
 
       .vs {
-        text-align: center;
         display: block;
-        margin: 8px 0;
+        text-align: center;
+        margin: 10px 0;
+      }
+
+      .stat,
+      .form-team,
+      .power-box {
+        margin-bottom: 10px;
       }
     }
   </style>
@@ -360,37 +346,22 @@
       }).join("");
     }
 
-    function calcFairOdd(probPercent) {
-      const p = Number(probPercent);
-      if (!p || p <= 0) return "-";
-      return (100 / p).toFixed(2);
+    function getConfidence(prob) {
+      const p = Number(prob) || 0;
+      if (p >= 65) return { label: "Confiança Alta", className: "conf-high" };
+      if (p >= 55) return { label: "Confiança Média", className: "conf-medium" };
+      return { label: "Confiança Baixa", className: "conf-low" };
     }
 
-    function calcEdge(probPercent, marketOdd) {
-      const p = Number(probPercent);
-      const odd = Number(marketOdd);
-      if (!p || !odd) return null;
-      const fairOdd = 100 / p;
-      const edge = ((odd / fairOdd) - 1) * 100;
-      return edge;
-    }
+    function getBestOpportunity(match) {
+      const markets = [
+        { name: "Over 2.5 gols", prob: Number(match.over25_prob) || 0 },
+        { name: "BTTS", prob: Number(match.btts_prob) || 0 },
+        { name: "Over 8.5 cantos", prob: Number(match.corners_over85_prob) || 0 }
+      ];
 
-    function edgeClass(edge) {
-      if (edge === null) return "edge-value-negative";
-      return edge >= 0 ? "edge-value-positive" : "edge-value-negative";
-    }
-
-    function edgeTag(edge) {
-      if (edge === null) return '<span class="tag-negative">SEM DADO</span>';
-      return edge >= 0
-        ? '<span class="tag-positive">VALUE</span>'
-        : '<span class="tag-negative">SEM VALUE</span>';
-    }
-
-    function edgeText(edge) {
-      if (edge === null) return "-";
-      const sign = edge >= 0 ? "+" : "";
-      return `${sign}${edge.toFixed(1)}%`;
+      markets.sort((a, b) => b.prob - a.prob);
+      return markets[0];
     }
 
     async function loadMatches() {
@@ -415,9 +386,8 @@
         }
 
         const html = data.map(m => {
-          const edgeOver25 = calcEdge(m.over25_prob, m.market_odds_over25);
-          const edgeBTTS = calcEdge(m.btts_prob, m.market_odds_btts);
-          const edgeCorners = calcEdge(m.corners_over85_prob, m.market_odds_corners85);
+          const best = getBestOpportunity(m);
+          const confidence = getConfidence(best.prob);
 
           return `
             <div class="match">
@@ -441,6 +411,15 @@
                 Data: ${m.match_date ? new Date(m.match_date).toLocaleDateString("pt-BR") : "Sem data"}
               </div>
 
+              <div class="opportunity">
+                <div class="opportunity-title">Scoutly Opportunity</div>
+                <div class="opportunity-market">${best.name}</div>
+                <div class="opportunity-info">
+                  <span>Probabilidade: <strong>${best.prob}%</strong></span>
+                  <span class="badge ${confidence.className}">${confidence.label}</span>
+                </div>
+              </div>
+
               <div class="stats">
                 <div class="stat">
                   <div class="stat-title">Média gols</div>
@@ -458,9 +437,38 @@
                 </div>
               </div>
 
-              <div class="power">
-                <div>Power ${m.home_team}: <span>${m.power_home ?? "-"}</span></div>
-                <div>Power ${m.away_team}: <span>${m.power_away ?? "-"}</span></div>
+              <div class="secondary">
+                <div class="secondary-title">Outras Tendências</div>
+
+                <div class="trend">
+                  <div class="trend-label">
+                    <span>Over 2.5</span>
+                    <span>${m.over25_prob ?? 0}%</span>
+                  </div>
+                  <div class="bar">
+                    <div class="fill" style="width:${m.over25_prob ?? 0}%"></div>
+                  </div>
+                </div>
+
+                <div class="trend">
+                  <div class="trend-label">
+                    <span>BTTS</span>
+                    <span>${m.btts_prob ?? 0}%</span>
+                  </div>
+                  <div class="bar">
+                    <div class="fill" style="width:${m.btts_prob ?? 0}%"></div>
+                  </div>
+                </div>
+
+                <div class="trend">
+                  <div class="trend-label">
+                    <span>Over 8.5 Cantos</span>
+                    <span>${m.corners_over85_prob ?? 0}%</span>
+                  </div>
+                  <div class="bar">
+                    <div class="fill" style="width:${m.corners_over85_prob ?? 0}%"></div>
+                  </div>
+                </div>
               </div>
 
               <div class="form-section">
@@ -475,98 +483,19 @@
                 </div>
               </div>
 
-              <div class="insight">
-                <div class="insight-title">Scoutly Insight</div>
-                <div>${m.insight || "Sem insight"}</div>
-              </div>
-
-              <div class="market-section">
-                <div class="market-title">Tendências de Mercado</div>
-
-                <div class="prob">
-                  <div class="prob-label">
-                    <span>Over 2.5</span>
-                    <span>${m.over25_prob ?? 0}%</span>
+              <div class="power-section">
+                <div class="power-title">Power Rating</div>
+                <div class="power-grid">
+                  <div class="power-box">
+                    <div class="power-name">${m.home_team || "-"}</div>
+                    <div class="power-value">${m.power_home ?? "-"}</div>
                   </div>
-                  <div class="bar">
-                    <div class="fill" style="width:${m.over25_prob ?? 0}%"></div>
+
+                  <div class="power-box">
+                    <div class="power-name">${m.away_team || "-"}</div>
+                    <div class="power-value">${m.power_away ?? "-"}</div>
                   </div>
                 </div>
-
-                <div class="prob">
-                  <div class="prob-label">
-                    <span>BTTS</span>
-                    <span>${m.btts_prob ?? 0}%</span>
-                  </div>
-                  <div class="bar">
-                    <div class="fill" style="width:${m.btts_prob ?? 0}%"></div>
-                  </div>
-                </div>
-
-                <div class="prob">
-                  <div class="prob-label">
-                    <span>Over 8.5 Cantos</span>
-                    <span>${m.corners_over85_prob ?? 0}%</span>
-                  </div>
-                  <div class="bar">
-                    <div class="fill" style="width:${m.corners_over85_prob ?? 0}%"></div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="result-prob">
-                <div class="result-prob-title">Probabilidade de Resultado</div>
-                Vitória ${m.home_team}: ${m.home_result_prob ?? 0}%<br>
-                Empate: ${m.draw_result_prob ?? 0}%<br>
-                Vitória ${m.away_team}: ${m.away_result_prob ?? 0}%
-              </div>
-
-              <div class="edge-section">
-                <div class="edge-title">Scoutly Edge Engine</div>
-
-                <div class="edge-card">
-                  <div class="edge-head">
-                    <span>Over 2.5</span>
-                    ${edgeTag(edgeOver25)}
-                  </div>
-                  <div class="edge-grid">
-                    <div>Prob: <strong>${m.over25_prob ?? "-"}%</strong></div>
-                    <div>Odd justa: <strong>${calcFairOdd(m.over25_prob)}</strong></div>
-                    <div>Mercado: <strong>${m.market_odds_over25 ?? "-"}</strong></div>
-                    <div class="${edgeClass(edgeOver25)}">Edge: <strong>${edgeText(edgeOver25)}</strong></div>
-                  </div>
-                </div>
-
-                <div class="edge-card">
-                  <div class="edge-head">
-                    <span>BTTS</span>
-                    ${edgeTag(edgeBTTS)}
-                  </div>
-                  <div class="edge-grid">
-                    <div>Prob: <strong>${m.btts_prob ?? "-"}%</strong></div>
-                    <div>Odd justa: <strong>${calcFairOdd(m.btts_prob)}</strong></div>
-                    <div>Mercado: <strong>${m.market_odds_btts ?? "-"}</strong></div>
-                    <div class="${edgeClass(edgeBTTS)}">Edge: <strong>${edgeText(edgeBTTS)}</strong></div>
-                  </div>
-                </div>
-
-                <div class="edge-card">
-                  <div class="edge-head">
-                    <span>Over 8.5 Cantos</span>
-                    ${edgeTag(edgeCorners)}
-                  </div>
-                  <div class="edge-grid">
-                    <div>Prob: <strong>${m.corners_over85_prob ?? "-"}%</strong></div>
-                    <div>Odd justa: <strong>${calcFairOdd(m.corners_over85_prob)}</strong></div>
-                    <div>Mercado: <strong>${m.market_odds_corners85 ?? "-"}</strong></div>
-                    <div class="${edgeClass(edgeCorners)}">Edge: <strong>${edgeText(edgeCorners)}</strong></div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="pick">
-                <div class="pick-title">Scoutly Pick</div>
-                <div>${m.pick || "-"}</div>
               </div>
 
             </div>
