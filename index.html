@@ -9,6 +9,7 @@
   <style>
     * {
       box-sizing: border-box;
+      scroll-behavior: smooth;
     }
 
     body {
@@ -57,6 +58,12 @@
       margin-bottom: 14px;
     }
 
+    .radar-link {
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
     .radar-item {
       background: #0b1220;
       border: 1px solid #1f2937;
@@ -64,6 +71,14 @@
       border-radius: 10px;
       padding: 12px;
       margin-bottom: 10px;
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+      cursor: pointer;
+    }
+
+    .radar-item:hover {
+      transform: translateY(-2px);
+      border-color: #22c55e;
+      background: #10192e;
     }
 
     .radar-item:last-child {
@@ -109,6 +124,7 @@
       padding: 20px;
       margin-bottom: 18px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+      scroll-margin-top: 20px;
     }
 
     .teams {
@@ -461,18 +477,21 @@
 
       matches.forEach(match => {
         opportunities.push({
+          matchId: match.id,
           market: "Over 2.5 gols",
           prob: Number(match.over25_prob) || 0,
           game: `${match.home_team} x ${match.away_team}`
         });
 
         opportunities.push({
+          matchId: match.id,
           market: "BTTS",
           prob: Number(match.btts_prob) || 0,
           game: `${match.home_team} x ${match.away_team}`
         });
 
         opportunities.push({
+          matchId: match.id,
           market: "Over 8.5 cantos",
           prob: Number(match.corners_over85_prob) || 0,
           game: `${match.home_team} x ${match.away_team}`
@@ -513,14 +532,16 @@
         const radar = generateRadar(data);
 
         const radarHTML = radar.map((item, index) => `
-          <div class="radar-item">
-            <div class="radar-head">
-              <span class="radar-rank">#${index + 1} oportunidade</span>
-              <span class="radar-prob">${item.prob}%</span>
+          <a class="radar-link" href="#match-${item.matchId}">
+            <div class="radar-item">
+              <div class="radar-head">
+                <span class="radar-rank">#${index + 1} oportunidade</span>
+                <span class="radar-prob">${item.prob}%</span>
+              </div>
+              <div class="radar-market">${item.market}</div>
+              <div class="radar-game">${item.game}</div>
             </div>
-            <div class="radar-market">${item.market}</div>
-            <div class="radar-game">${item.game}</div>
-          </div>
+          </a>
         `).join("");
 
         radarContainer.innerHTML = radarHTML;
@@ -530,7 +551,7 @@
           const confidence = getConfidence(best.prob);
 
           return `
-            <div class="match">
+            <div class="match" id="match-${m.id}">
 
               <div class="teams">
                 <div class="team">
