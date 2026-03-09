@@ -1,1 +1,123 @@
-<!DOCTYPE html> <html> <head> <title>Scoutly</title> <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> <style> body{ background:#0f172a; color:white; font-family:Arial; padding:40px; } h1{ color:#22c55e; } .game{ background:#1e293b; padding:20px; margin-top:20px; border-radius:10px; } .stat{ color:#94a3b8; } </style> </head> <body> <h1>Scoutly ⚽</h1> <div id="games"></div> <script> const SUPABASE_URL = "https://zngdcatlxlxamceqpxij.supabase.co" /* ========================================= COLE SUA KEY AQUI ENTRE AS ASPAS ========================================= */ const SUPABASE_KEY = "sb_publishable_gw3BGCEcwhidS2hFbiwxIA_W28KkZ2a" /* ========================================= */ const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY) async function loadGames(){ const { data, error } = await client .from("matches") .select("*") if(error){ console.log(error) return } const container = document.getElementById("games") container.innerHTML = "" data.forEach(match => { const div = document.createElement("div") div.className = "game" div.innerHTML = ` <h2>${match.home_team} vs ${match.away_team}</h2> <div class="stat">Gols esperados: ${match.avg_goals ?? "-"}</div> <div class="stat">Cantos esperados: ${match.avg_corners ?? "-"}</div> <div class="stat">Finalizações esperadas: ${match.avg_shots ?? "-"}</div> <div class="stat">Over 2.5: ${match.over25_prob ?? "-"}%</div> <div class="stat">BTTS: ${match.btts_prob ?? "-"}%</div> ` container.appendChild(div) }) } loadGames() </script> </body> </html>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scoutly</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body{
+      margin:0;
+      font-family:Arial,sans-serif;
+      background:#0f172a;
+      color:white;
+      padding:30px;
+    }
+    h1{ color:#22c55e; }
+    .box{
+      background:#1e293b;
+      border-radius:12px;
+      padding:16px;
+      margin-top:16px;
+    }
+    .ok{
+      background:#052e16;
+      color:#bbf7d0;
+      border:1px solid #166534;
+    }
+    .err{
+      background:#450a0a;
+      color:#fecaca;
+      border:1px solid #991b1b;
+    }
+    .game{
+      background:#1e293b;
+      border-radius:12px;
+      padding:16px;
+      margin-top:12px;
+    }
+    .muted{ color:#94a3b8; }
+  </style>
+</head>
+<body>
+
+  <h1>Scoutly ⚽</h1>
+
+  <div id="status" class="box">Iniciando script...</div>
+  <div id="games"></div>
+
+  <script>
+    const statusEl = document.getElementById("status");
+    const gamesEl = document.getElementById("games");
+
+    function setStatus(text, type="ok"){
+      statusEl.className = "box " + type;
+      statusEl.innerText = text;
+    }
+
+    setStatus("Script carregou. Agora tentando conectar no Supabase...", "ok");
+
+    const SUPABASE_URL = "https://zngdcatlxlxamceqpxij.supabase.co";
+
+    // ============================
+    // COLE SOMENTE SUA KEY AQUI
+    // a que começa com sb_publishable_
+    // ============================
+    const SUPABASE_KEY = "sb_publishable_gw3BGCEcwhidS2hFbiwxIA_W28KkZ2a";
+    // ============================
+
+    async function loadGames(){
+      try {
+        if (SUPABASE_KEY.includes("COLE_SUA_PUBLISHABLE_KEY_AQUI")) {
+          setStatus("Você ainda não colou a publishable key no código.", "err");
+          return;
+        }
+
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        setStatus("Conectado. Tentando ler a tabela matches...", "ok");
+
+        const { data, error } = await client
+          .from("matches")
+          .select("*");
+
+        if (error) {
+          setStatus("Erro ao ler tabela matches: " + error.message, "err");
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          setStatus("Conexão OK, mas a tabela matches voltou vazia.", "err");
+          return;
+        }
+
+        setStatus("Conexão OK. Jogos encontrados: " + data.length, "ok");
+
+        gamesEl.innerHTML = "";
+
+        data.forEach(match => {
+          const div = document.createElement("div");
+          div.className = "game";
+          div.innerHTML = `
+            <h2>${match.home_team ?? "-"} x ${match.away_team ?? "-"}</h2>
+            <div class="muted">Liga: ${match.league ?? "-"}</div>
+            <div class="muted">Data: ${match.match_date ?? "-"}</div>
+            <div class="muted">Gols esperados: ${match.avg_goals ?? "-"}</div>
+            <div class="muted">Cantos esperados: ${match.avg_corners ?? "-"}</div>
+            <div class="muted">Finalizações esperadas: ${match.avg_shots ?? "-"}</div>
+            <div class="muted">Over 2.5: ${match.over25_prob ?? "-"}%</div>
+            <div class="muted">BTTS: ${match.btts_prob ?? "-"}%</div>
+          `;
+          gamesEl.appendChild(div);
+        });
+
+      } catch (err) {
+        setStatus("Erro geral no script: " + err.message, "err");
+      }
+    }
+
+    loadGames();
+  </script>
+
+</body>
+</html>
