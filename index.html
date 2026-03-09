@@ -21,10 +21,31 @@
       margin: 0 auto;
     }
 
-    h1 {
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+
+    .brand img {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      border-radius: 14px;
+    }
+
+    .brand-text h1 {
       color: #22c55e;
-      margin: 0 0 20px;
+      margin: 0;
       font-size: 38px;
+      line-height: 1;
+    }
+
+    .brand-text p {
+      margin: 6px 0 0 0;
+      color: #94a3b8;
+      font-size: 14px;
     }
 
     .status {
@@ -162,8 +183,24 @@
       opacity: 0.92;
     }
 
+    .btn-secondary {
+      background: transparent;
+      color: #cbd5e1;
+      border: 1px solid #475569;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
     .analysis-box {
       margin-top: 24px;
+      display: none;
     }
 
     .stats-grid {
@@ -246,12 +283,31 @@
       .stats-grid {
         grid-template-columns: 1fr;
       }
+
+      .brand {
+        align-items: flex-start;
+      }
+
+      .brand img {
+        width: 58px;
+        height: 58px;
+      }
+
+      .brand-text h1 {
+        font-size: 30px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Scoutly ⚽</h1>
+    <div class="brand">
+      <img src="logo-scoutly.png" alt="Scoutly Logo" onerror="this.style.display='none'">
+      <div class="brand-text">
+        <h1>Scoutly</h1>
+        <p>Radar inteligente de oportunidades</p>
+      </div>
+    </div>
 
     <div id="status" class="status ok">Iniciando Scoutly...</div>
 
@@ -302,13 +358,7 @@
     }
 
     const SUPABASE_URL = "https://zngdcatlxlxamceqpxij.supabase.co";
-
-    /* =========================================================
-       TROQUE SOMENTE A LINHA ABAIXO PELA SUA KEY PÚBLICA
-       a que começa com sb_publishable_
-       ========================================================= */
     const SUPABASE_KEY = "sb_publishable_gw3BGCEcwhidS2hFbiwxIA_W28KkZ2a";
-    /* ========================================================= */
 
     function formatDate(dateValue) {
       if (!dateValue) return "Sem data";
@@ -321,7 +371,9 @@
 
     function getLeagueFlag(league = "") {
       const l = String(league).toLowerCase();
-      if (l.includes("brasile")) return "🇧🇷";
+
+      if (l.includes("brasileirao") || l.includes("brasileirão")) return "🇧🇷";
+      if (l.includes("serie a") && (l.includes("br") || l.includes("brasile"))) return "🇧🇷";
       if (l.includes("arg")) return "🇦🇷";
       if (l.includes("libert")) return "🏆";
       if (l.includes("sul")) return "🏆";
@@ -333,6 +385,7 @@
       if (l.includes("ligue")) return "🇫🇷";
       if (l.includes("saudi")) return "🇸🇦";
       if (l.includes("mls")) return "🇺🇸";
+
       return "🌍";
     }
 
@@ -369,27 +422,19 @@
     }
 
     function buildTopOpportunities(matches) {
-      const items = matches.map(match => {
+      return matches.map(match => {
         const best = getBestOverallPick(match);
-        return {
-          match,
-          market: best.name,
-          prob: best.prob
-        };
-      }).sort((a, b) => b.prob - a.prob);
-
-      return items.slice(0, 5);
+        return { match, market: best.name, prob: best.prob };
+      }).sort((a, b) => b.prob - a.prob).slice(0, 5);
     }
 
     function buildGoalsRadar(matches) {
       return matches.map(match => {
         const best = getBestGoalsPick(match);
-        return {
-          match,
-          market: best.name,
-          prob: best.prob
-        };
-      }).sort((a, b) => b.prob - a.prob).slice(0, 5);
+        return { match, market: best.name, prob: best.prob };
+      }).filter(x => x.prob > 0)
+        .sort((a, b) => b.prob - a.prob)
+        .slice(0, 5);
     }
 
     function buildBTTSRadar(matches) {
@@ -475,9 +520,16 @@
       });
     }
 
+    function closeAnalysis() {
+      analysisEl.style.display = "none";
+      analysisEl.innerHTML = "";
+    }
+
     function showAnalysis(match) {
       const best = getBestOverallPick(match);
       const conf = getConfidence(best.prob);
+
+      analysisEl.style.display = "block";
 
       analysisEl.innerHTML = `
         <div class="section-title">📊 Análise do jogo</div>
@@ -488,6 +540,8 @@
           <div class="muted">${getLeagueFlag(match.league)} ${match.league || "-"} • 📅 ${formatDate(match.match_date)}</div>
           <div class="prob">Probabilidade: ${best.prob}%</div>
           <span class="pill ${conf.className}">${conf.label}</span>
+
+          <button class="btn-secondary" onclick="closeAnalysis()">Fechar análise</button>
 
           <div class="why-box">
             <div class="why-title">🧠 Por que o Scoutly gosta dessa entrada</div>
@@ -519,10 +573,7 @@
         </div>
       `;
 
-      window.scrollTo({
-        top: document.body.scrollHeight,
-        behavior: "smooth"
-      });
+      analysisEl.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
     async function loadScoutly() {
@@ -571,4 +622,3 @@
   </script>
 </body>
 </html>
-
