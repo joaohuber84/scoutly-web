@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Scoutly</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     * { box-sizing: border-box; }
 
@@ -17,41 +18,49 @@
     }
 
     .wrap {
-      max-width: 1000px;
+      max-width: 1100px;
       margin: 0 auto;
     }
 
-    .brand {
+    .header {
       display: flex;
       align-items: center;
       gap: 14px;
       margin-bottom: 20px;
     }
 
-    .brand img {
-      width: 72px;
-      height: 72px;
+    .logo-img {
+      width: 76px;
+      height: 76px;
       object-fit: contain;
-      border-radius: 14px;
+      border-radius: 16px;
+      background: transparent;
     }
 
-    .brand-text h1 {
+    .logo-fallback {
+      display: none;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo-title {
       color: #22c55e;
+      font-size: 40px;
+      font-weight: 800;
       margin: 0;
-      font-size: 38px;
       line-height: 1;
     }
 
-    .brand-text p {
-      margin: 6px 0 0 0;
+    .logo-sub {
       color: #94a3b8;
-      font-size: 14px;
+      font-size: 13px;
+      margin-top: 4px;
     }
 
     .status {
       padding: 14px;
       border-radius: 12px;
-      margin-bottom: 18px;
+      margin-bottom: 20px;
       font-weight: bold;
     }
 
@@ -68,13 +77,20 @@
     }
 
     .section {
-      margin-bottom: 24px;
+      margin-bottom: 28px;
     }
 
     .section-title {
-      font-size: 22px;
-      font-weight: bold;
-      margin-bottom: 12px;
+      font-size: 24px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+
+    .section-subtitle {
+      font-size: 14px;
+      color: #cbd5e1;
+      margin-bottom: 14px;
+      line-height: 1.5;
     }
 
     .card {
@@ -90,10 +106,6 @@
       background: linear-gradient(135deg, rgba(34,197,94,0.16), rgba(34,197,94,0.06));
       border-left: 5px solid #22c55e;
     }
-
-    .market-goals { border-left: 5px solid #22c55e; }
-    .market-btts { border-left: 5px solid #38bdf8; }
-    .market-corners { border-left: 5px solid #eab308; }
 
     .small-label {
       font-size: 12px;
@@ -128,18 +140,27 @@
       font-weight: bold;
     }
 
-    .grid {
+    .radar-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 16px;
     }
 
-    .list-card {
-      background: rgba(15, 23, 42, 0.75);
+    .radar-item {
+      background: rgba(15, 23, 42, 0.78);
       border: 1px solid #334155;
       border-radius: 12px;
       padding: 14px;
       margin-bottom: 10px;
+    }
+
+    .radar-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
     }
 
     .rank {
@@ -147,7 +168,6 @@
       color: #94a3b8;
       font-weight: bold;
       text-transform: uppercase;
-      margin-bottom: 6px;
     }
 
     .pick-line {
@@ -156,9 +176,26 @@
       margin-bottom: 4px;
     }
 
-    .prob-line {
-      font-size: 15px;
+    .strength-label {
+      margin-top: 10px;
+      font-size: 13px;
+      color: #cbd5e1;
       font-weight: bold;
+    }
+
+    .strength-bar {
+      margin-top: 6px;
+      width: 100%;
+      height: 10px;
+      background: #1e293b;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid #334155;
+    }
+
+    .strength-fill {
+      height: 100%;
+      border-radius: 999px;
     }
 
     .games-list .game-item {
@@ -167,6 +204,20 @@
       align-items: center;
       gap: 16px;
       flex-wrap: wrap;
+    }
+
+    .league-group {
+      margin-bottom: 18px;
+    }
+
+    .league-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #e2e8f0;
     }
 
     .btn {
@@ -183,24 +234,32 @@
       opacity: 0.92;
     }
 
-    .btn-secondary {
-      background: transparent;
-      color: #cbd5e1;
-      border: 1px solid #475569;
+    .btn-close {
+      background: #dc2626;
+      color: white;
+      border: none;
       border-radius: 10px;
       padding: 10px 14px;
       font-weight: bold;
       cursor: pointer;
-      margin-top: 12px;
     }
 
-    .btn-secondary:hover {
-      background: rgba(255,255,255,0.05);
+    .btn-close:hover {
+      opacity: 0.92;
     }
 
     .analysis-box {
       margin-top: 24px;
       display: none;
+    }
+
+    .analysis-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
     }
 
     .stats-grid {
@@ -279,60 +338,50 @@
     }
 
     @media (max-width: 900px) {
-      .grid,
+      .radar-grid,
       .stats-grid {
         grid-template-columns: 1fr;
-      }
-
-      .brand {
-        align-items: flex-start;
-      }
-
-      .brand img {
-        width: 58px;
-        height: 58px;
-      }
-
-      .brand-text h1 {
-        font-size: 30px;
       }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="brand">
-      <img src="logo-scoutly.png" alt="Scoutly Logo" onerror="this.style.display='none'">
-      <div class="brand-text">
-        <h1>Scoutly</h1>
-        <p>Radar inteligente de oportunidades</p>
+
+    <div class="header">
+      <img
+        src="logo-scoutly.png"
+        alt="Scoutly"
+        class="logo-img"
+        onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';"
+      />
+
+      <div id="logo-fallback" class="logo-fallback">
+        <div>
+          <div class="logo-title">Scoutly ⚽</div>
+          <div class="logo-sub">Football Intelligence</div>
+        </div>
+      </div>
+
+      <div id="logo-text">
+        <div class="logo-title">Scoutly</div>
+        <div class="logo-sub">Football Intelligence</div>
       </div>
     </div>
 
     <div id="status" class="status ok">Iniciando Scoutly...</div>
 
     <div class="section">
-      <div class="section-title">🔥 Top oportunidades do dia</div>
-      <div id="top-opportunities"></div>
+      <div class="section-title">🔥 Oportunidade do dia</div>
+      <div id="day-opportunity"></div>
     </div>
 
     <div class="section">
-      <div class="grid">
-        <div>
-          <div class="section-title">⚽ Radar de gols</div>
-          <div id="goals-radar"></div>
-        </div>
-
-        <div>
-          <div class="section-title">🥅 Radar BTTS</div>
-          <div id="btts-radar"></div>
-        </div>
-
-        <div>
-          <div class="section-title">🚩 Radar cantos</div>
-          <div id="corners-radar"></div>
-        </div>
+      <div class="section-title">🎯 Radar Scoutly — melhores oportunidades do dia</div>
+      <div class="section-subtitle">
+        O Scoutly analisa os jogos do dia e destaca aqui os picks com maior força estatística.
       </div>
+      <div id="radar-scoutly" class="radar-grid"></div>
     </div>
 
     <div class="section">
@@ -345,10 +394,8 @@
 
   <script>
     const statusEl = document.getElementById("status");
-    const topEl = document.getElementById("top-opportunities");
-    const goalsEl = document.getElementById("goals-radar");
-    const bttsEl = document.getElementById("btts-radar");
-    const cornersEl = document.getElementById("corners-radar");
+    const dayOpportunityEl = document.getElementById("day-opportunity");
+    const radarScoutlyEl = document.getElementById("radar-scoutly");
     const gamesEl = document.getElementById("games");
     const analysisEl = document.getElementById("analysis");
 
@@ -372,17 +419,16 @@
     function getLeagueFlag(league = "") {
       const l = String(league).toLowerCase();
 
-      if (l.includes("brasileirao") || l.includes("brasileirão")) return "🇧🇷";
-      if (l.includes("serie a") && (l.includes("br") || l.includes("brasile"))) return "🇧🇷";
+      if (l.includes("brasileirão") || l.includes("brasileirao") || l.includes("brasileiro")) return "🇧🇷";
       if (l.includes("arg")) return "🇦🇷";
-      if (l.includes("libert")) return "🏆";
-      if (l.includes("sul")) return "🏆";
       if (l.includes("mex")) return "🇲🇽";
       if (l.includes("premier")) return "🏴";
       if (l.includes("la liga")) return "🇪🇸";
       if (l.includes("serie a")) return "🇮🇹";
       if (l.includes("bundes")) return "🇩🇪";
       if (l.includes("ligue")) return "🇫🇷";
+      if (l.includes("libert")) return "🏆";
+      if (l.includes("sul-amer")) return "🏆";
       if (l.includes("saudi")) return "🇸🇦";
       if (l.includes("mls")) return "🇺🇸";
 
@@ -391,125 +437,189 @@
 
     function getConfidence(prob) {
       const p = Number(prob || 0);
-      if (p >= 90) return { label: "ELITE PICK", className: "elite" };
-      if (p >= 80) return { label: "STRONG PICK", className: "strong" };
-      return { label: "GOOD PICK", className: "good" };
+      if (p >= 70) return { label: "Muito forte", className: "elite" };
+      if (p >= 60) return { label: "Forte", className: "strong" };
+      return { label: "Boa", className: "good" };
+    }
+
+    function getStrengthText(prob) {
+      const p = Number(prob || 0);
+      if (p >= 70) return "Muito forte";
+      if (p >= 60) return "Forte";
+      if (p >= 50) return "Boa";
+      if (p >= 45) return "Moderada";
+      return "Arriscada";
+    }
+
+    function getStrengthColor(prob) {
+      const p = Number(prob || 0);
+      if (p >= 70) return "#22c55e";
+      if (p >= 60) return "#4ade80";
+      if (p >= 50) return "#eab308";
+      if (p >= 45) return "#f97316";
+      return "#ef4444";
+    }
+
+    function strengthPercent(prob) {
+      const p = Number(prob || 0);
+      if (p <= 0) return 0;
+      return Math.max(8, Math.min(100, p));
+    }
+
+    function getMarketEmoji(marketName) {
+      const m = String(marketName).toLowerCase();
+      if (m.includes("gols")) return "⚽";
+      if (m.includes("ambas")) return "🤝";
+      if (m.includes("escanteios")) return "🚩";
+      return "📊";
     }
 
     function getGoalsMarkets(match) {
       return [
-        { name: "Over 1.5 gols", prob: Number(match.over15_prob || 0) },
-        { name: "Over 2.5 gols", prob: Number(match.over25_prob || 0) },
-        { name: "Under 2.5 gols", prob: Number(match.under25_prob || 0) },
-        { name: "Under 3.5 gols", prob: Number(match.under35_prob || 0) }
+        { name: "Mais de 1.5 gols", prob: Number(match.over15_prob || 0) },
+        { name: "Mais de 2.5 gols", prob: Number(match.over25_prob || 0) },
+        { name: "Menos de 2.5 gols", prob: Number(match.under25_prob || 0) },
+        { name: "Menos de 3.5 gols", prob: Number(match.under35_prob || 0) }
       ].filter(x => x.prob > 0);
     }
 
-    function getBestGoalsPick(match) {
-      const list = getGoalsMarkets(match).sort((a, b) => b.prob - a.prob);
+    function getBTTSMarkets(match) {
+      const yesProb = Number(match.btts_prob || 0);
+      const noProb = yesProb > 0 ? 100 - yesProb : 0;
+
+      const list = [];
+      if (yesProb > 0) list.push({ name: "Ambas marcam", prob: yesProb });
+      if (noProb > 0) list.push({ name: "Ambas NÃO marcam", prob: noProb });
+
+      return list;
+    }
+
+    function getCornersMarkets(match) {
+      const over85 = Number(match.corners_over85_prob || 0);
+      const under85 = over85 > 0 ? 100 - over85 : 0;
+
+      const list = [];
+      if (over85 > 0) list.push({ name: "Mais de 8.5 escanteios", prob: over85 });
+      if (under85 > 0) list.push({ name: "Menos de 8.5 escanteios", prob: under85 });
+
+      return list;
+    }
+
+    function getBestMarket(markets) {
+      const list = [...markets].sort((a, b) => b.prob - a.prob);
       return list[0] || { name: "Sem mercado", prob: 0 };
     }
 
     function getBestOverallPick(match) {
       const allMarkets = [
         ...getGoalsMarkets(match),
-        { name: "BTTS", prob: Number(match.btts_prob || 0) },
-        { name: "Over 8.5 cantos", prob: Number(match.corners_over85_prob || 0) }
+        ...getBTTSMarkets(match),
+        ...getCornersMarkets(match)
       ].filter(x => x.prob > 0);
 
-      allMarkets.sort((a, b) => b.prob - a.prob);
-      return allMarkets[0] || { name: "Sem mercado", prob: 0 };
+      return getBestMarket(allMarkets);
     }
 
-    function buildTopOpportunities(matches) {
-      return matches.map(match => {
-        const best = getBestOverallPick(match);
-        return { match, market: best.name, prob: best.prob };
-      }).sort((a, b) => b.prob - a.prob).slice(0, 5);
-    }
-
-    function buildGoalsRadar(matches) {
-      return matches.map(match => {
-        const best = getBestGoalsPick(match);
-        return { match, market: best.name, prob: best.prob };
-      }).filter(x => x.prob > 0)
-        .sort((a, b) => b.prob - a.prob)
-        .slice(0, 5);
-    }
-
-    function buildBTTSRadar(matches) {
+    function buildRadarItems(matches) {
       return matches
-        .map(match => ({
-          match,
-          market: "BTTS",
-          prob: Number(match.btts_prob || 0)
-        }))
+        .map(match => {
+          const best = getBestOverallPick(match);
+          return {
+            id: `${match.id}-${best.name}`,
+            match,
+            market: best.name,
+            prob: best.prob
+          };
+        })
         .filter(x => x.prob > 0)
-        .sort((a, b) => b.prob - a.prob)
-        .slice(0, 5);
+        .sort((a, b) => b.prob - a.prob);
     }
 
-    function buildCornersRadar(matches) {
-      return matches
-        .map(match => ({
-          match,
-          market: "Over 8.5 cantos",
-          prob: Number(match.corners_over85_prob || 0)
-        }))
-        .filter(x => x.prob > 0)
-        .sort((a, b) => b.prob - a.prob)
-        .slice(0, 5);
-    }
-
-    function renderMiniList(container, items, marketClass) {
-      if (!items.length) {
-        container.innerHTML = `<div class="card">Nenhum dado encontrado.</div>`;
+    function renderDayOpportunity(item) {
+      if (!item) {
+        dayOpportunityEl.innerHTML = `<div class="card">Nenhuma oportunidade encontrada.</div>`;
         return;
       }
 
-      container.innerHTML = items.map((item, index) => `
-        <div class="list-card ${marketClass}">
-          <div class="rank">Top ${index + 1}</div>
-          <div class="pick-line">${item.market}</div>
-          <div class="muted">${item.match.home_team} x ${item.match.away_team}</div>
-          <div class="prob-line">${item.prob}%</div>
-        </div>
-      `).join("");
-    }
+      const conf = getConfidence(item.prob);
 
-    function renderTopOpportunities(items) {
-      if (!items.length) {
-        topEl.innerHTML = `<div class="card">Nenhuma oportunidade encontrada.</div>`;
-        return;
-      }
-
-      const top = items[0];
-      const topConf = getConfidence(top.prob);
-
-      topEl.innerHTML = `
+      dayOpportunityEl.innerHTML = `
         <div class="card hero">
-          <div class="small-label">Oportunidade do dia</div>
-          <div class="big-pick">${top.market}</div>
-          <div class="match-name">${top.match.home_team} x ${top.match.away_team}</div>
-          <div class="muted">${getLeagueFlag(top.match.league)} ${top.match.league || "-"} • 📅 ${formatDate(top.match.match_date)}</div>
-          <div class="prob">Probabilidade: ${top.prob}%</div>
-          <span class="pill ${topConf.className}">${topConf.label}</span>
+          <div class="small-label">Pick principal do Scoutly hoje</div>
+          <div class="big-pick">${getMarketEmoji(item.market)} ${item.market}</div>
+          <div class="match-name">${item.match.home_team} x ${item.match.away_team}</div>
+          <div class="muted">${getLeagueFlag(item.match.league)} ${item.match.league || "-"} • 📅 ${formatDate(item.match.match_date)}</div>
+          <div class="prob">Força da oportunidade: ${item.prob}%</div>
+          <span class="pill ${conf.className}">${conf.label}</span>
+
+          <div class="strength-label">Barra de força — ${getStrengthText(item.prob)}</div>
+          <div class="strength-bar">
+            <div class="strength-fill" style="width:${strengthPercent(item.prob)}%; background:${getStrengthColor(item.prob)};"></div>
+          </div>
         </div>
       `;
     }
 
-    function renderGames(matches) {
-      gamesEl.innerHTML = matches.map(match => `
-        <div class="card">
-          <div class="games-list game-item">
-            <div>
-              <div class="match-name">${match.home_team} x ${match.away_team}</div>
-              <div class="muted">${getLeagueFlag(match.league)} ${match.league || "-"} • 📅 ${formatDate(match.match_date)}</div>
-            </div>
-            <button class="btn" data-id="${match.id}">Ver análise →</button>
+    function renderRadarScoutly(items) {
+      if (!items.length) {
+        radarScoutlyEl.innerHTML = `<div class="card">Nenhuma oportunidade encontrada.</div>`;
+        return;
+      }
+
+      radarScoutlyEl.innerHTML = items.map((item, index) => `
+        <div class="radar-item">
+          <div class="radar-top">
+            <div class="rank">Top ${index + 1}</div>
+          </div>
+
+          <div class="pick-line">${getMarketEmoji(item.market)} ${item.market}</div>
+          <div class="match-name">${item.match.home_team} x ${item.match.away_team}</div>
+          <div class="muted">${getLeagueFlag(item.match.league)} ${item.match.league || "-"} • 📅 ${formatDate(item.match.match_date)}</div>
+
+          <div class="strength-label">Força da oportunidade — ${getStrengthText(item.prob)} (${item.prob}%)</div>
+          <div class="strength-bar">
+            <div class="strength-fill" style="width:${strengthPercent(item.prob)}%; background:${getStrengthColor(item.prob)};"></div>
           </div>
         </div>
       `).join("");
+    }
+
+    function groupByLeague(matches) {
+      const groups = {};
+      matches.forEach(match => {
+        const leagueName = match.league || "Sem liga";
+        if (!groups[leagueName]) groups[leagueName] = [];
+        groups[leagueName].push(match);
+      });
+      return groups;
+    }
+
+    function renderGames(matches) {
+      const groups = groupByLeague(matches);
+      const leagueNames = Object.keys(groups);
+
+      gamesEl.innerHTML = leagueNames.map(leagueName => {
+        const leagueMatches = groups[leagueName];
+
+        const leagueBlock = leagueMatches.map(match => `
+          <div class="card">
+            <div class="games-list game-item">
+              <div>
+                <div class="match-name">${match.home_team} x ${match.away_team}</div>
+                <div class="muted">${getLeagueFlag(match.league)} ${match.league || "-"} • 📅 ${formatDate(match.match_date)}</div>
+              </div>
+              <button class="btn" data-id="${match.id}">Ver análise →</button>
+            </div>
+          </div>
+        `).join("");
+
+        return `
+          <div class="league-group">
+            <div class="league-header">${getLeagueFlag(leagueName)} ${leagueName}</div>
+            ${leagueBlock}
+          </div>
+        `;
+      }).join("");
 
       const buttons = gamesEl.querySelectorAll(".btn");
       buttons.forEach(btn => {
@@ -523,37 +633,66 @@
     function closeAnalysis() {
       analysisEl.style.display = "none";
       analysisEl.innerHTML = "";
+      window.scrollTo({
+        top: document.body.scrollHeight - 400,
+        behavior: "smooth"
+      });
+    }
+
+    function getTopGameMarkets(match) {
+      const allMarkets = [
+        ...getGoalsMarkets(match),
+        ...getBTTSMarkets(match),
+        ...getCornersMarkets(match)
+      ]
+      .filter(x => x.prob > 0)
+      .sort((a, b) => b.prob - a.prob);
+
+      return allMarkets.slice(0, 3);
     }
 
     function showAnalysis(match) {
       const best = getBestOverallPick(match);
       const conf = getConfidence(best.prob);
+      const topGameMarkets = getTopGameMarkets(match);
 
       analysisEl.style.display = "block";
 
       analysisEl.innerHTML = `
         <div class="section-title">📊 Análise do jogo</div>
         <div class="card hero">
-          <div class="small-label">Scoutly opportunity</div>
-          <div class="big-pick">${best.name}</div>
-          <div class="match-name">${match.home_team} x ${match.away_team}</div>
-          <div class="muted">${getLeagueFlag(match.league)} ${match.league || "-"} • 📅 ${formatDate(match.match_date)}</div>
-          <div class="prob">Probabilidade: ${best.prob}%</div>
-          <span class="pill ${conf.className}">${conf.label}</span>
+          <div class="analysis-topbar">
+            <div>
+              <div class="small-label">Scoutly opportunity</div>
+              <div class="big-pick">${getMarketEmoji(best.name)} ${best.name}</div>
+              <div class="match-name">${match.home_team} x ${match.away_team}</div>
+              <div class="muted">${getLeagueFlag(match.league)} ${match.league || "-"} • 📅 ${formatDate(match.match_date)}</div>
+              <div class="prob">Força da oportunidade: ${best.prob}%</div>
+              <span class="pill ${conf.className}">${conf.label}</span>
 
-          <button class="btn-secondary" onclick="closeAnalysis()">Fechar análise</button>
+              <div class="strength-label">Barra de força — ${getStrengthText(best.prob)}</div>
+              <div class="strength-bar" style="max-width:360px;">
+                <div class="strength-fill" style="width:${strengthPercent(best.prob)}%; background:${getStrengthColor(best.prob)};"></div>
+              </div>
+            </div>
+
+            <button class="btn-close" onclick="closeAnalysis()">Fechar ✕</button>
+          </div>
 
           <div class="why-box">
-            <div class="why-title">🧠 Por que o Scoutly gosta dessa entrada</div>
-            <div class="why-item">• Gols esperados: <strong>${match.avg_goals ?? "-"}</strong></div>
-            <div class="why-item">• Cantos esperados: <strong>${match.avg_corners ?? "-"}</strong></div>
-            <div class="why-item">• Finalizações esperadas: <strong>${match.avg_shots ?? "-"}</strong></div>
-            <div class="why-item">• Over 1.5: <strong>${match.over15_prob ?? "-"}%</strong></div>
-            <div class="why-item">• Over 2.5: <strong>${match.over25_prob ?? "-"}%</strong></div>
-            <div class="why-item">• Under 2.5: <strong>${match.under25_prob ?? "-"}%</strong></div>
-            <div class="why-item">• Under 3.5: <strong>${match.under35_prob ?? "-"}%</strong></div>
-            <div class="why-item">• BTTS: <strong>${match.btts_prob ?? "-"}%</strong></div>
-            <div class="why-item">• Cantos: <strong>${match.corners_over85_prob ?? "-"}%</strong></div>
+            <div class="why-title">📊 O que os números indicam</div>
+            <div class="why-item">⚽ Tendência de gols — gols esperados: <strong>${match.avg_goals ?? "-"}</strong></div>
+            <div class="why-item">🚩 Tendência de escanteios — escanteios esperados: <strong>${match.avg_corners ?? "-"}</strong></div>
+            <div class="why-item">🔥 Intensidade ofensiva — finalizações esperadas: <strong>${match.avg_shots ?? "-"}</strong></div>
+          </div>
+
+          <div class="why-box">
+            <div class="why-title">🎯 Melhores entradas deste jogo</div>
+            ${topGameMarkets.map((item, index) => `
+              <div class="why-item">
+                Top ${index + 1} — ${getMarketEmoji(item.name)} <strong>${item.name}</strong> (${item.prob}%)
+              </div>
+            `).join("")}
           </div>
 
           <div class="stats-grid">
@@ -562,7 +701,7 @@
               <div class="stat-value">${match.avg_goals ?? "-"}</div>
             </div>
             <div class="stat-box">
-              <div class="stat-title">🚩 Cantos esperados</div>
+              <div class="stat-title">🚩 Escanteios esperados</div>
               <div class="stat-value">${match.avg_corners ?? "-"}</div>
             </div>
             <div class="stat-box">
@@ -573,7 +712,10 @@
         </div>
       `;
 
-      analysisEl.scrollIntoView({ behavior: "smooth", block: "start" });
+      analysisEl.scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+      });
     }
 
     async function loadScoutly() {
@@ -602,15 +744,15 @@
 
         setStatus("Conexão OK. Jogos encontrados: " + data.length, "ok");
 
-        const topItems = buildTopOpportunities(data);
-        const goalsItems = buildGoalsRadar(data);
-        const bttsItems = buildBTTSRadar(data);
-        const cornersItems = buildCornersRadar(data);
+        const allRadarItems = buildRadarItems(data);
+        const dayOpportunity = allRadarItems[0] || null;
 
-        renderTopOpportunities(topItems);
-        renderMiniList(goalsEl, goalsItems, "market-goals");
-        renderMiniList(bttsEl, bttsItems, "market-btts");
-        renderMiniList(cornersEl, cornersItems, "market-corners");
+        const radarItems = allRadarItems
+          .filter(item => !dayOpportunity || item.id !== dayOpportunity.id)
+          .slice(0, 5);
+
+        renderDayOpportunity(dayOpportunity);
+        renderRadarScoutly(radarItems);
         renderGames(data);
 
       } catch (err) {
