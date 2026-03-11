@@ -2,8 +2,6 @@ name: Scoutly Sync
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: "0 */6 * * *"
 
 jobs:
   sync:
@@ -21,9 +19,16 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run Scoutly brain
+      - name: Run Scoutly sync
         env:
           APISPORTS_KEY: ${{ secrets.APISPORTS_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/scoutly-sync.js
+
+      - name: Run Scoutly brain
+        env:
+          APISPORTS_KEY: ${{ secrets.APISPORTS_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/scoutly-brain.js
