@@ -8,7 +8,13 @@ if (!APISPORTS_KEY || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
   throw new Error("Faltam variáveis de ambiente.");
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const supabase = createClient(
+  SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE_KEY,
+  {
+    auth: { persistSession: false }
+  }
+);
 
 async function fetchJson(url) {
   const res = await fetch(url, {
