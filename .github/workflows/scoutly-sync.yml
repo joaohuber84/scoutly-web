@@ -1,0 +1,19 @@
+name: Scoutly Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/30 * * * *"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Call API Football
+        run: |
+          curl -X GET "https://v3.football.api-sports.io/fixtures?next=20" \
+          -H "x-apisports-key: ${{ secrets.APISPORTS_KEY }}"
