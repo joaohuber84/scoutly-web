@@ -1,27 +1,30 @@
-import { createClient } from '@supabase/supabase-js'
+const { createClient } = require('@supabase/supabase-js')
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
 async function runScoutlyBrain() {
+  console.log('🧠 Scoutly Brain iniciado')
 
-  console.log("Scoutly Brain iniciado")
+  const { data: matches, error: matchesError } = await supabase
+    .from('matches')
+    .select('*')
 
-  const { data: matches } = await supabase
-    .from("matches")
-    .select("*")
+  if (matchesError) {
+    console.error('Erro ao buscar matches:', matchesError)
+    process.exit(1)
+  }
 
   if (!matches || matches.length === 0) {
-    console.log("Nenhum jogo encontrado")
+    console.log('Nenhum jogo encontrado')
     return
   }
 
-  console.log("Jogos encontrados:", matches.length)
+  console.log('Jogos encontrados:', matches.length)
 
   for (const match of matches) {
-
     const home_strength = Math.random() * 2
     const away_strength = Math.random() * 2
 
@@ -44,12 +47,12 @@ async function runScoutlyBrain() {
     const prob_sot = Math.random()
     const prob_cards = Math.random()
 
-    const best_pick_1 = "Over 2.5 Goals"
-    const best_pick_2 = "BTTS"
-    const best_pick_3 = "Over 8.5 Corners"
+    const best_pick_1 = 'Over 2.5 Goals'
+    const best_pick_2 = 'BTTS'
+    const best_pick_3 = 'Over 8.5 Corners'
 
-    await supabase
-      .from("match_analysis")
+    const { error: insertError } = await supabase
+      .from('match_analysis')
       .insert({
         match_id: match.id,
         home_strength,
@@ -73,9 +76,12 @@ async function runScoutlyBrain() {
         best_pick_3
       })
 
+    if (insertError) {
+      console.error(`Erro ao inserir análise do jogo ${match.id}:`, insertError)
+    }
   }
 
-  console.log("Scoutly Brain finalizado")
+  console.log('✅ Scoutly Brain finalizado')
 }
 
 runScoutlyBrain()
