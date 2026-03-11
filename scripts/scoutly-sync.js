@@ -19,8 +19,8 @@ const supabase = createClient(
 async function fetchJson(url) {
   const res = await fetch(url, {
     headers: {
-      "x-apisports-key": APISPORTS_KEY,
-    },
+      "x-apisports-key": APISPORTS_KEY
+    }
   });
 
   if (!res.ok) {
@@ -51,7 +51,7 @@ async function main() {
     return;
   }
 
-  const matches = fixtures.map((item) => ({
+  const games = fixtures.map((item) => ({
     home_team: item.teams?.home?.name || null,
     away_team: item.teams?.away?.name || null,
     league: item.league?.name || null,
@@ -62,7 +62,6 @@ async function main() {
     home_logo: item.teams?.home?.logo || null,
     away_logo: item.teams?.away?.logo || null,
 
-    // campos extras opcionais, enviados como null por enquanto
     avg_goals: null,
     avg_corners: null,
     avg_shots: null,
@@ -86,32 +85,22 @@ async function main() {
     market_odds_corners85: null,
     over15_prob: null,
     under25_prob: null,
-    under35_prob: null,
+    under35_prob: null
   }));
 
-  console.log(`Limpando tabela matches antes de inserir ${matches.length} jogos...`);
-
-  const { error: deleteError } = await supabase
-    .from("matches")
-    .delete()
-    .not("id", "is", null);
-
-  if (deleteError) {
-    throw new Error(`Erro ao limpar matches: ${deleteError.message}`);
-  }
-
-  console.log(`Gravando ${matches.length} jogos no Supabase...`);
+  console.log(`Gravando ${games.length} jogos no Supabase...`);
 
   const chunkSize = 50;
-  for (let i = 0; i < matches.length; i += chunkSize) {
-    const chunk = matches.slice(i, i + chunkSize);
 
-    const { error: insertError } = await supabase
+  for (let i = 0; i < games.length; i += chunkSize) {
+    const chunk = games.slice(i, i + chunkSize);
+
+    const { error } = await supabase
       .from("matches")
       .insert(chunk);
 
-    if (insertError) {
-      throw new Error(`Erro ao gravar lote no Supabase: ${insertError.message}`);
+    if (error) {
+      throw new Error(`Erro ao gravar lote no Supabase: ${error.message}`);
     }
 
     console.log(
