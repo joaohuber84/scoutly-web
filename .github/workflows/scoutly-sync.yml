@@ -3,7 +3,7 @@ name: Scoutly Sync
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "0 */6 * * *"
 
 jobs:
   sync:
@@ -13,7 +13,17 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Call API Football
-        run: |
-          curl -X GET "https://v3.football.api-sports.io/fixtures?next=20" \
-          -H "x-apisports-key: ${{ secrets.APISPORTS_KEY }}"
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run Scoutly brain
+        env:
+          APISPORTS_KEY: ${{ secrets.APISPORTS_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/scoutly-sync.js
