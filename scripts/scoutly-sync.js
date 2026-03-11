@@ -25,108 +25,19 @@ async function fetchJson(url) {
   return res.json();
 }
 
-function isoDateParts(date = new Date()) {
-  const y = date.getUTCFullYear();
-  const m = String(date.getUTCMonth() + 1).padStart(2, "0");
-  const d = String(date.getUTCDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
-}
-
-function normalizeLeagueName(league) {
-  return league?.name || "Sem liga";
-}
-
-function buildLogoUrl(team) {
-  return team?.logo || null;
-}
-
-function formFromLastFive(fixtures, teamId) {
-  if (!fixtures || !Array.isArray(fixtures)) return null;
-
-  const finished = fixtures
-    .filter((f) => ["FT", "AET", "PEN"].includes(f?.fixture?.status?.short))
-    .slice(0, 5);
-
-  if (!finished.length) return null;
-
-  return finished
-    .map((f) => {
-      const isHome = f.teams.home.id === teamId;
-      const goalsFor = isHome ? f.goals.home : f.goals.away;
-      const goalsAgainst = isHome ? f.goals.away : f.goals.home;
-
-      if (goalsFor > goalsAgainst) return "W";
-      if (goalsFor < goalsAgainst) return "L";
-      return "D";
-    })
-    .join("");
-}
-
-function avgFromFixtures(fixtures, selector) {
-  if (!fixtures || !fixtures.length) return null;
-  const values = fixtures
-    .map(selector)
-    .filter((v) => typeof v === "number" && !Number.isNaN(v));
-
-  if (!values.length) return null;
-
-  return Number(
-    (values.reduce((acc, value) => acc + value, 0) / values.length).toFixed(1)
-  );
-}
-
-function confidenceLabel(prob) {
-  if (prob >= 70) return "Muito forte";
-  if (prob >= 60) return "Forte";
-  if (prob >= 50) return "Boa";
-  if (prob >= 40) return "Moderada";
-  return "Arriscada";
-}
-
-function pickFromRow(row) {
-  const options = [
-    {
-      label: "Mais de 2.5 gols",
-      prob: row.over25_prob ?? 0,
-    },
-    {
-      label: "Ambas marcam",
-      prob: row.btts_prob ?? 0,
-    },
-    {
-      label: "Ambas NÃO marcam",
-      prob: row.btts_prob != null ? 100 - row.btts_prob : 0,
-    },
-    {
-      label: "Mais de 8.5 escanteios",
-      prob: row.corners_over85_prob ?? 0,
-    },
-    {
-      label: "Mandante para vencer",
-      prob: row.home_result_prob ?? row.home_win_prob ?? 0,
-    },
-  ];
-
-  options.sort((a, b) => b.prob - a.prob);
-  return options[0];
-}
-
-async function fetchTeamLastFixtures(teamId, leagueId, season) {
-  const url = `https://v3.football.api-sports.io/fixtures?team=${teamId}&league=${leagueId}&season=${season}&last=5`;
-  const data = await fetchJson(url);
-  return data.response || [];
+function isoDateParts() {
+  return new Date().toISOString().split("T")[0];
 }
 
 async function main() {
-  const today = new Date().toISOString().split("T")[0];
+  const today = isoDateParts();
 
   console.log("Buscando jogos reais do dia:", today);
 
-  // PUXA OS JOGOS DO DIA
   const fixturesUrl = `https://v3.football.api-sports.io/fixtures?date=${today}`;
   const fixturesData = await fetchJson(fixturesUrl);
-  const fixtures = fixturesData.response || [];
 
+  const fixtures = fixturesData.response || [];
   console.log("Quantidade de jogos encontrados:", fixtures.length);
 
   if (!fixtures.length) {
@@ -134,147 +45,78 @@ async function main() {
     return;
   }
 
-  const rows = [];
+  const matches = fixtures.map((item) => ({
+    home_team: item.teams?.home?.name || null,
+    away_team: item.teams?.away?.name || null,
+    league: item.league?.name || null,
+    match_date: item.fixture?.date
+      ? new Date(item.fixture.date).toISOString().slice(0, 10)
+      : null,
+    kickoff: item.fixture?.date || null,
+    home_logo: item.teams?.home?.logo || null,
+    away_logo: item.teams?.away?.logo || null,
 
-  for (const f of fixtures) {
-    try {
-      const fixtureId = f.fixture.id;
-      const leagueId = f.league.id;
-      const season = f.league.season;
-      const homeTeamId = f.teams.home.id;
-      const awayTeamId = f.teams.away.id;
+    // campos extras opcionais, enviados como null por enquanto
+    avg_goals: null,
+    avg_corners: null,
+    avg_shots: null,
+    insight: null,
+    home_win_prob: null,
+    draw_prob: null,
+    away_win_prob: null,
+    home_form: null,
+    away_form: null,
+    over25_prob: null,
+    btts_prob: null,
+    corners_over85_prob: null,
+    pick: null,
+    power_home: null,
+    power_away: null,
+    home_result_prob: null,
+    draw_result_prob: null,
+    away_result_prob: null,
+    market_odds_over25: null,
+    market_odds_btts: null,
+    market_odds_corners85: null,
+    over15_prob: null,
+    under25_prob: null,
+    under35_prob: null,
+  }));
 
-      const [homeLast, awayLast] = await Promise.all([
-        fetchTeamLastFixtures(homeTeamId, leagueId, season),
-        fetchTeamLastFixtures(awayTeamId, leagueId, season),
-      ]);
+  console.log(`Limpando tabela matches antes de inserir ${matches.length} jogos...`);
 
-      const homeForm = formFromLastFive(homeLast, homeTeamId);
-      const awayForm = formFromLastFive(awayLast, awayTeamId);
-
-      const avgGoalsHome = avgFromFixtures(homeLast, (x) => {
-        const isHome = x.teams.home.id === homeTeamId;
-        return isHome ? x.goals.home : x.goals.away;
-      });
-
-      const avgGoalsAway = avgFromFixtures(awayLast, (x) => {
-        const isHome = x.teams.home.id === awayTeamId;
-        return isHome ? x.goals.home : x.goals.away;
-      });
-
-      const avgGoals = avgFromFixtures(
-        [...homeLast, ...awayLast],
-        (x) => (x.goals.home ?? 0) + (x.goals.away ?? 0)
-      );
-
-      let homeStrength = 50;
-      let awayStrength = 50;
-
-      const formScore = (form) =>
-        (form || "").split("").reduce((acc, c) => {
-          if (c === "W") return acc + 3;
-          if (c === "D") return acc + 1;
-          return acc;
-        }, 0);
-
-      const homeFormScore = formScore(homeForm);
-      const awayFormScore = formScore(awayForm);
-
-      homeStrength = Math.min(90, 40 + homeFormScore * 2);
-      awayStrength = Math.min(90, 40 + awayFormScore * 2);
-
-      const homeWinProb = Math.max(
-        15,
-        Math.min(75, 50 + Math.round((homeStrength - awayStrength) / 2))
-      );
-
-      const drawProb = Math.max(
-        15,
-        Math.min(30, 30 - Math.round(Math.abs(homeStrength - awayStrength) / 4))
-      );
-
-      const awayWinProb = Math.max(10, 100 - homeWinProb - drawProb);
-
-      const over25Prob =
-        avgGoals != null
-          ? Math.max(20, Math.min(80, Math.round(avgGoals * 22)))
-          : null;
-
-      const bttsProb =
-        avgGoalsHome != null && avgGoalsAway != null
-          ? Math.max(
-              15,
-              Math.min(80, Math.round(((avgGoalsHome + avgGoalsAway) / 2) * 30))
-            )
-          : null;
-
-      const row = {
-        id: fixtureId,
-        created_at: new Date().toISOString(),
-        match_date: f.fixture.date ? f.fixture.date.slice(0, 10) : today,
-        kickoff: f.fixture.date || null,
-        home_team: f.teams.home.name,
-        away_team: f.teams.away.name,
-        league: normalizeLeagueName(f.league),
-        home_logo: buildLogoUrl(f.teams.home),
-        away_logo: buildLogoUrl(f.teams.away),
-
-        avg_goals: avgGoals,
-        avg_corners: null,
-        avg_shots: null,
-
-        insight: null,
-        home_win_prob: homeWinProb,
-        draw_prob: drawProb,
-        away_win_prob: awayWinProb,
-        home_form: homeForm,
-        away_form: awayForm,
-        over25_prob: over25Prob,
-        btts_prob: bttsProb,
-        corners_over85_prob: null,
-        pick: null,
-        power_home: homeStrength,
-        power_away: awayStrength,
-        home_result_prob: homeWinProb,
-        away_result_prob: awayWinProb,
-
-        market_odds_over25: null,
-        market_odds_btts: null,
-        market_odds_corners85: null,
-        over15_prob: null,
-        under25_prob: over25Prob != null ? 100 - over25Prob : null,
-        under35_prob: null,
-      };
-
-      const bestPick = pickFromRow(row);
-      row.pick = bestPick.label;
-      row.insight = `Força da oportunidade — ${confidenceLabel(bestPick.prob)} (${bestPick.prob}%)`;
-
-      rows.push(row);
-    } catch (err) {
-      console.error("Erro ao processar fixture:", f?.fixture?.id, err.message);
-    }
-  }
-
-  if (!rows.length) {
-    console.log("Nenhuma linha pronta para gravar.");
-    return;
-  }
-
-  console.log(`Gravando ${rows.length} jogos no Supabase...`);
-
-  const { error } = await supabase
+  const { error: deleteError } = await supabase
     .from("matches")
-    .upsert(rows, { onConflict: "id" });
+    .delete()
+    .not("id", "is", null);
 
-  if (error) {
-    throw new Error(`Erro ao gravar no Supabase: ${error.message}`);
+  if (deleteError) {
+    throw new Error(`Erro ao limpar matches: ${deleteError.message}`);
   }
 
-  console.log("Scoutly Sync concluído com sucesso.");
+  console.log(`Gravando ${matches.length} jogos no Supabase...`);
+
+  const chunkSize = 50;
+  for (let i = 0; i < matches.length; i += chunkSize) {
+    const chunk = matches.slice(i, i + chunkSize);
+
+    const { error: insertError } = await supabase
+      .from("matches")
+      .insert(chunk);
+
+    if (insertError) {
+      throw new Error(`Erro ao gravar lote no Supabase: ${insertError.message}`);
+    }
+
+    console.log(
+      `Lote ${Math.floor(i / chunkSize) + 1} gravado com sucesso (${chunk.length} jogos).`
+    );
+  }
+
+  console.log("Jogos salvos com sucesso no Supabase.");
 }
 
 main().catch((err) => {
-  console.error(err);
+  console.error("Erro geral no Scoutly Sync:", err.message || err);
   process.exit(1);
 });
