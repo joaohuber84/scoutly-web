@@ -275,9 +275,7 @@
     .confidence-fill {
       height: 100%;
       border-radius: 999px;
-      background: linear-gradient(90deg, #00ff88, #2effa3);
       width: 0%;
-      box-shadow: 0 0 16px rgba(0,255,136,0.18);
     }
 
     .radar-list {
@@ -620,7 +618,9 @@
       text-align: center;
     }
 
-    .hidden { display: none !important; }
+    .hidden {
+      display: none !important;
+    }
 
     .footer-note {
       margin-top: 24px;
@@ -761,15 +761,7 @@
         <div class="analysis-highlight">
           <div class="pick-match" id="analysisMatchSmall">-</div>
           <div class="analysis-market" id="analysisBestPick">-</div>
-          <div class="strength-row">
-            <div class="strength-badge">
-              <span class="strength-dot"></span>
-              <span id="analysisStrengthText">Leitura moderada</span>
-            </div>
-          </div>
-          <div class="confidence-bar">
-            <div class="confidence-fill" id="analysisBestConfidence"></div>
-          </div>
+          <div id="analysisBestStrength"></div>
         </div>
 
         <div class="analysis-grid">
@@ -786,7 +778,7 @@
               </div>
 
               <div class="stat-item">
-                <div class="stat-label">Média de escanteios</div>
+                <div class="stat-label">Média de escanteios projetada</div>
                 <div class="stat-value" id="avgCornersValue">-</div>
               </div>
 
@@ -803,7 +795,7 @@
           </div>
 
           <div class="box">
-            <h3 class="box-title">Mercados avaliados</h3>
+            <h3 class="box-title">Top 3 mercados fortes</h3>
             <div id="marketsList" class="markets-list"></div>
           </div>
         </div>
@@ -908,16 +900,31 @@
       return 48
     }
 
+    function strengthColor(prob) {
+      const p = Number(prob || 0)
+      if (p < 0.58) return '#ff5f57'
+      if (p < 0.68) return '#ffbd2e'
+      if (p < 0.80) return '#7dff7a'
+      return '#00ff88'
+    }
+
     function renderStrength(prob) {
+      const p = Number(prob || 0)
+      const label = getStrengthLabel(p)
+      const color = strengthColor(p)
+
       return `
         <div class="strength-row">
           <div class="strength-badge">
-            <span class="strength-dot"></span>
-            <span>${getStrengthLabel(prob)}</span>
+            <span class="strength-dot" style="background:${color}"></span>
+            <span>${label}</span>
           </div>
         </div>
         <div class="confidence-bar">
-          <div class="confidence-fill" style="width:${confidenceWidth(prob)}%"></div>
+          <div
+            class="confidence-fill"
+            style="width:${confidenceWidth(p)}%; background:${color}; box-shadow:0 0 16px ${color}55;"
+          ></div>
         </div>
       `
     }
@@ -1114,20 +1121,15 @@
     }
 
     function buildAnalysisMarkets(match) {
-      return [
-        { name: 'Vitória mandante', prob: match.home_result_prob ?? match.home_win_prob },
-        { name: 'Empate', prob: match.draw_result_prob ?? match.draw_prob },
-        { name: 'Vitória visitante', prob: match.away_result_prob ?? match.away_win_prob },
-        { name: 'Mais de 1.5 gols', prob: match.over15_prob },
-        { name: 'Mais de 2.5 gols', prob: match.over25_prob },
-        { name: 'Menos de 2.5 gols', prob: match.under25_prob },
-        { name: 'Menos de 3.5 gols', prob: match.under35_prob },
-        { name: 'Ambas marcam', prob: match.btts_prob },
-        { name: 'Mais de 8.5 escanteios', prob: match.corners_over85_prob },
-        { name: 'Menos de 8.5 escanteios', prob: 1 - Number(match.corners_over85_prob || 0.5) }
+      const topMarkets = [
+        { name: match.top_market_1, prob: match.top_market_1_prob },
+        { name: match.top_market_2, prob: match.top_market_2_prob },
+        { name: match.top_market_3, prob: match.top_market_3_prob }
       ]
-      .filter(item => item.prob !== undefined && item.prob !== null)
-      .sort((a, b) => Number(b.prob) - Number(a.prob))
+        .filter(item => item.name && item.prob !== null && item.prob !== undefined)
+        .sort((a, b) => Number(b.prob) - Number(a.prob))
+
+      return topMarkets
     }
 
     function openAnalysis(matchId) {
@@ -1136,7 +1138,11 @@
 
       const pickFromRadar = state.dailyPicks.find(p => String(p.match_id) === String(matchId))
       const bestPick = pickFromRadar?.market || match.pick || 'Sem mercado'
-      const bestProb = pickFromRadar?.probability ?? match.over25_prob ?? 0.60
+      const bestProb =
+        pickFromRadar?.probability ||
+        match.top_market_1_prob ||
+        match.over15_prob ||
+        0.60
 
       document.getElementById('analysisTitle').textContent = `${match.home_team || '-'} x ${match.away_team || '-'}`
       document.getElementById('analysisSubtitle').textContent =
@@ -1146,13 +1152,13 @@
       document.getElementById('analysisInsight').textContent =
         match.insight || 'Leitura do modelo baseada nos dados ofensivos, forma e equilíbrio do confronto.'
 
-      document.getElementById('analysisStrengthText').textContent = match.strength_label || getStrengthLabel(bestProb)
-      document.getElementById('analysisBestConfidence').style.width = `${confidenceWidth(bestProb)}%`
+      document.getElementById('analysisBestStrength').innerHTML = renderStrength(bestProb)
 
       document.getElementById('avgGoalsValue').textContent = formatDecimal(match.avg_goals)
       document.getElementById('avgCornersValue').textContent = formatDecimal(match.avg_corners)
       document.getElementById('avgShotsValue').textContent = formatDecimal(match.avg_shots)
-      document.getElementById('formsValue').textContent = `${match.home_form || '-'} / ${match.away_form || '-'}`
+      document.getElementById('formsValue').textContent =
+        `${match.home_form || 'Equilibrado'} / ${match.away_form || 'Equilibrado'}`
 
       const marketLines = buildAnalysisMarkets(match).map(item => `
         <div class="market-line">
@@ -1161,7 +1167,9 @@
         </div>
       `).join('')
 
-      document.getElementById('marketsList').innerHTML = marketLines
+      document.getElementById('marketsList').innerHTML =
+        marketLines || `<div class="empty-state">Nenhum mercado forte encontrado para este jogo.</div>`
+
       document.getElementById('analysisOverlay').classList.add('open')
     }
 
