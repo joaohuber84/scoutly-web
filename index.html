@@ -30,8 +30,8 @@
     }
 
     .logo-img {
-      width: 76px;
-      height: 76px;
+      width: 90px;
+      height: 90px;
       object-fit: contain;
       border-radius: 16px;
       background: transparent;
@@ -99,11 +99,11 @@
       border-radius: 14px;
       padding: 16px;
       margin-bottom: 12px;
-      box-shadow: 0 10px 24px rgba(0,0,0,0.16);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
     }
 
     .hero {
-      background: linear-gradient(135deg, rgba(34,197,94,0.16), rgba(34,197,94,0.06));
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.16), rgba(34, 197, 94, 0.06));
       border-left: 5px solid #22c55e;
     }
 
@@ -140,39 +140,61 @@
       font-weight: bold;
     }
 
-    .radar-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
+    .pill {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: bold;
     }
 
-    .radar-item {
-      background: rgba(15, 23, 42, 0.78);
+    .elite {
+      background: rgba(34, 197, 94, 0.15);
+      color: #86efac;
+      border: 1px solid rgba(34, 197, 94, 0.35);
+    }
+
+    .strong {
+      background: rgba(56, 189, 248, 0.15);
+      color: #7dd3fc;
+      border: 1px solid rgba(56, 189, 248, 0.35);
+    }
+
+    .good {
+      background: rgba(234, 179, 8, 0.15);
+      color: #fde68a;
+      border: 1px solid rgba(234, 179, 8, 0.35);
+    }
+
+    .radar-board {
+      background: rgba(30, 41, 59, 0.95);
       border: 1px solid #334155;
-      border-radius: 12px;
-      padding: 14px;
-      margin-bottom: 10px;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
     }
 
-    .radar-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 8px;
-      flex-wrap: wrap;
+    .radar-row {
+      padding: 14px 0;
+      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
     }
 
-    .rank {
+    .radar-row:last-child {
+      border-bottom: none;
+    }
+
+    .radar-rank {
       font-size: 12px;
       color: #94a3b8;
       font-weight: bold;
       text-transform: uppercase;
+      margin-bottom: 6px;
     }
 
-    .pick-line {
+    .radar-market {
       font-size: 18px;
-      font-weight: bold;
+      font-weight: 800;
       margin-bottom: 4px;
     }
 
@@ -242,6 +264,7 @@
       padding: 10px 14px;
       font-weight: bold;
       cursor: pointer;
+      flex-shrink: 0;
     }
 
     .btn-close:hover {
@@ -308,39 +331,37 @@
       margin-bottom: 8px;
       color: #cbd5e1;
       font-size: 14px;
+      line-height: 1.5;
     }
 
-    .pill {
-      display: inline-block;
-      margin-top: 10px;
-      padding: 6px 10px;
-      border-radius: 999px;
+    .analysis-markets {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .analysis-market-row {
+      background: rgba(30, 41, 59, 0.85);
+      border: 1px solid #334155;
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .analysis-market-rank {
       font-size: 12px;
+      color: #94a3b8;
       font-weight: bold;
-    }
-
-    .elite {
-      background: rgba(34,197,94,0.15);
-      color: #86efac;
-      border: 1px solid rgba(34,197,94,0.35);
-    }
-
-    .strong {
-      background: rgba(56,189,248,0.15);
-      color: #7dd3fc;
-      border: 1px solid rgba(56,189,248,0.35);
-    }
-
-    .good {
-      background: rgba(234,179,8,0.15);
-      color: #fde68a;
-      border: 1px solid rgba(234,179,8,0.35);
+      text-transform: uppercase;
+      margin-bottom: 4px;
     }
 
     @media (max-width: 900px) {
-      .radar-grid,
       .stats-grid {
         grid-template-columns: 1fr;
+      }
+
+      .logo-title {
+        font-size: 34px;
       }
     }
   </style>
@@ -353,7 +374,7 @@
         src="logo-scoutly.png"
         alt="Scoutly"
         class="logo-img"
-        onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';"
+        onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex'; document.getElementById('logo-text').style.display='block';"
       />
 
       <div id="logo-fallback" class="logo-fallback">
@@ -363,7 +384,7 @@
         </div>
       </div>
 
-      <div id="logo-text">
+      <div id="logo-text" style="display:none;">
         <div class="logo-title">Scoutly</div>
         <div class="logo-sub">Football Intelligence</div>
       </div>
@@ -381,7 +402,7 @@
       <div class="section-subtitle">
         O Scoutly analisa os jogos do dia e destaca aqui os picks com maior força estatística.
       </div>
-      <div id="radar-scoutly" class="radar-grid"></div>
+      <div id="radar-scoutly"></div>
     </div>
 
     <div class="section">
@@ -416,8 +437,29 @@
       }
     }
 
+    function normalizeLeagueName(league = "") {
+      const l = String(league).trim();
+      const low = l.toLowerCase();
+
+      if (
+        low.includes("brasileirao serie a") ||
+        low.includes("brasileirão série a") ||
+        low.includes("br brasileirao serie a") ||
+        low.includes("br brasileirão série a")
+      ) return "Brasileirão Série A";
+
+      if (
+        low === "br brasileirao" ||
+        low === "br brasileirão" ||
+        low === "brasileirao" ||
+        low === "brasileirão"
+      ) return "Brasileirão";
+
+      return l || "Sem liga";
+    }
+
     function getLeagueFlag(league = "") {
-      const l = String(league).toLowerCase();
+      const l = normalizeLeagueName(league).toLowerCase();
 
       if (l.includes("brasileirão") || l.includes("brasileirao") || l.includes("brasileiro")) return "🇧🇷";
       if (l.includes("arg")) return "🇦🇷";
@@ -521,18 +563,28 @@
     }
 
     function buildRadarItems(matches) {
-      return matches
-        .map(match => {
-          const best = getBestOverallPick(match);
-          return {
-            id: `${match.id}-${best.name}`,
-            match,
-            market: best.name,
-            prob: best.prob
-          };
-        })
-        .filter(x => x.prob > 0)
-        .sort((a, b) => b.prob - a.prob);
+      const allItems = [];
+
+      matches.forEach(match => {
+        const allMarkets = [
+          ...getGoalsMarkets(match),
+          ...getBTTSMarkets(match),
+          ...getCornersMarkets(match)
+        ];
+
+        allMarkets.forEach(market => {
+          if (market.prob > 0) {
+            allItems.push({
+              id: `${match.id}-${market.name}`,
+              match,
+              market: market.name,
+              prob: market.prob
+            });
+          }
+        });
+      });
+
+      return allItems.sort((a, b) => b.prob - a.prob);
     }
 
     function renderDayOpportunity(item) {
@@ -548,7 +600,7 @@
           <div class="small-label">Pick principal do Scoutly hoje</div>
           <div class="big-pick">${getMarketEmoji(item.market)} ${item.market}</div>
           <div class="match-name">${item.match.home_team} x ${item.match.away_team}</div>
-          <div class="muted">${getLeagueFlag(item.match.league)} ${item.match.league || "-"} • 📅 ${formatDate(item.match.match_date)}</div>
+          <div class="muted">${getLeagueFlag(item.match.league)} ${normalizeLeagueName(item.match.league)} • 📅 ${formatDate(item.match.match_date)}</div>
           <div class="prob">Força da oportunidade: ${item.prob}%</div>
           <span class="pill ${conf.className}">${conf.label}</span>
 
@@ -566,28 +618,29 @@
         return;
       }
 
-      radarScoutlyEl.innerHTML = items.map((item, index) => `
-        <div class="radar-item">
-          <div class="radar-top">
-            <div class="rank">Top ${index + 1}</div>
-          </div>
+      radarScoutlyEl.innerHTML = `
+        <div class="radar-board">
+          ${items.map((item, index) => `
+            <div class="radar-row">
+              <div class="radar-rank">Top ${index + 1}</div>
+              <div class="radar-market">${getMarketEmoji(item.market)} ${item.market}</div>
+              <div class="match-name">${item.match.home_team} x ${item.match.away_team}</div>
+              <div class="muted">${getLeagueFlag(item.match.league)} ${normalizeLeagueName(item.match.league)} • 📅 ${formatDate(item.match.match_date)}</div>
 
-          <div class="pick-line">${getMarketEmoji(item.market)} ${item.market}</div>
-          <div class="match-name">${item.match.home_team} x ${item.match.away_team}</div>
-          <div class="muted">${getLeagueFlag(item.match.league)} ${item.match.league || "-"} • 📅 ${formatDate(item.match.match_date)}</div>
-
-          <div class="strength-label">Força da oportunidade — ${getStrengthText(item.prob)} (${item.prob}%)</div>
-          <div class="strength-bar">
-            <div class="strength-fill" style="width:${strengthPercent(item.prob)}%; background:${getStrengthColor(item.prob)};"></div>
-          </div>
+              <div class="strength-label">Força da oportunidade — ${getStrengthText(item.prob)} (${item.prob}%)</div>
+              <div class="strength-bar">
+                <div class="strength-fill" style="width:${strengthPercent(item.prob)}%; background:${getStrengthColor(item.prob)};"></div>
+              </div>
+            </div>
+          `).join("")}
         </div>
-      `).join("");
+      `;
     }
 
     function groupByLeague(matches) {
       const groups = {};
       matches.forEach(match => {
-        const leagueName = match.league || "Sem liga";
+        const leagueName = normalizeLeagueName(match.league || "Sem liga");
         if (!groups[leagueName]) groups[leagueName] = [];
         groups[leagueName].push(match);
       });
@@ -606,7 +659,7 @@
             <div class="games-list game-item">
               <div>
                 <div class="match-name">${match.home_team} x ${match.away_team}</div>
-                <div class="muted">${getLeagueFlag(match.league)} ${match.league || "-"} • 📅 ${formatDate(match.match_date)}</div>
+                <div class="muted">${getLeagueFlag(match.league)} ${normalizeLeagueName(match.league)} • 📅 ${formatDate(match.match_date)}</div>
               </div>
               <button class="btn" data-id="${match.id}">Ver análise →</button>
             </div>
@@ -645,8 +698,8 @@
         ...getBTTSMarkets(match),
         ...getCornersMarkets(match)
       ]
-      .filter(x => x.prob > 0)
-      .sort((a, b) => b.prob - a.prob);
+        .filter(x => x.prob > 0)
+        .sort((a, b) => b.prob - a.prob);
 
       return allMarkets.slice(0, 3);
     }
@@ -666,7 +719,7 @@
               <div class="small-label">Scoutly opportunity</div>
               <div class="big-pick">${getMarketEmoji(best.name)} ${best.name}</div>
               <div class="match-name">${match.home_team} x ${match.away_team}</div>
-              <div class="muted">${getLeagueFlag(match.league)} ${match.league || "-"} • 📅 ${formatDate(match.match_date)}</div>
+              <div class="muted">${getLeagueFlag(match.league)} ${normalizeLeagueName(match.league)} • 📅 ${formatDate(match.match_date)}</div>
               <div class="prob">Força da oportunidade: ${best.prob}%</div>
               <span class="pill ${conf.className}">${conf.label}</span>
 
@@ -688,11 +741,17 @@
 
           <div class="why-box">
             <div class="why-title">🎯 Melhores entradas deste jogo</div>
-            ${topGameMarkets.map((item, index) => `
-              <div class="why-item">
-                Top ${index + 1} — ${getMarketEmoji(item.name)} <strong>${item.name}</strong> (${item.prob}%)
-              </div>
-            `).join("")}
+            <div class="analysis-markets">
+              ${topGameMarkets.length
+                ? topGameMarkets.map((item, index) => `
+                  <div class="analysis-market-row">
+                    <div class="analysis-market-rank">Top ${index + 1}</div>
+                    <div class="why-item">${getMarketEmoji(item.name)} <strong>${item.name}</strong> — ${item.prob}%</div>
+                  </div>
+                `).join("")
+                : `<div class="why-item">Nenhuma entrada encontrada para este jogo.</div>`
+              }
+            </div>
           </div>
 
           <div class="stats-grid">
