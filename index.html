@@ -7,819 +7,1290 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: linear-gradient(180deg, #0f172a 0%, #111827 100%);
-      color: white;
-      padding: 24px;
+    :root {
+      --bg: #07111f;
+      --bg-2: #0b1830;
+      --card: rgba(14, 26, 48, 0.92);
+      --card-2: rgba(20, 37, 67, 0.96);
+      --border: rgba(112, 154, 255, 0.18);
+      --text: #eef4ff;
+      --muted: #9ab0d3;
+      --green: #4cff96;
+      --green-2: #1edb72;
+      --yellow: #ffd66b;
+      --red: #ff6b7a;
+      --blue: #69a7ff;
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+      --radius-xl: 24px;
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --max-width: 1180px;
     }
 
-    .wrap {
-      max-width: 1100px;
+    * {
+      box-sizing: border-box;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: Inter, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(76, 255, 150, 0.08), transparent 25%),
+        radial-gradient(circle at top right, rgba(105, 167, 255, 0.10), transparent 24%),
+        linear-gradient(180deg, #06101d 0%, #0a1425 35%, #0e1a31 100%);
+      min-height: 100vh;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .app-shell {
+      width: 100%;
+      padding: 24px 16px 60px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: var(--max-width);
       margin: 0 auto;
     }
 
-    .header {
+    .topbar {
       display: flex;
       align-items: center;
-      gap: 14px;
-      margin-bottom: 20px;
-    }
-
-    .logo-img {
-      width: 90px;
-      height: 90px;
-      object-fit: contain;
-      border-radius: 16px;
-      background: transparent;
-    }
-
-    .logo-fallback {
-      display: none;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .logo-title {
-      color: #22c55e;
-      font-size: 40px;
-      font-weight: 800;
-      margin: 0;
-      line-height: 1;
-    }
-
-    .logo-sub {
-      color: #94a3b8;
-      font-size: 13px;
-      margin-top: 4px;
-    }
-
-    .status {
-      padding: 14px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      font-weight: bold;
-    }
-
-    .status.ok {
-      background: rgba(34, 197, 94, 0.15);
-      border: 1px solid rgba(34, 197, 94, 0.35);
-      color: #bbf7d0;
-    }
-
-    .status.err {
-      background: rgba(239, 68, 68, 0.15);
-      border: 1px solid rgba(239, 68, 68, 0.35);
-      color: #fecaca;
-    }
-
-    .section {
-      margin-bottom: 28px;
-    }
-
-    .section-title {
-      font-size: 24px;
-      font-weight: 800;
-      margin-bottom: 10px;
-    }
-
-    .section-subtitle {
-      font-size: 14px;
-      color: #cbd5e1;
-      margin-bottom: 14px;
-      line-height: 1.5;
-    }
-
-    .card {
-      background: rgba(30, 41, 59, 0.95);
-      border: 1px solid #334155;
-      border-radius: 14px;
-      padding: 16px;
-      margin-bottom: 12px;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
-    }
-
-    .hero {
-      background: linear-gradient(135deg, rgba(34, 197, 94, 0.16), rgba(34, 197, 94, 0.06));
-      border-left: 5px solid #22c55e;
-    }
-
-    .small-label {
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.7px;
-      color: #94a3b8;
-      margin-bottom: 6px;
-      font-weight: bold;
-    }
-
-    .big-pick {
-      font-size: 28px;
-      font-weight: 800;
-      margin-bottom: 6px;
-    }
-
-    .match-name {
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 4px;
-    }
-
-    .muted {
-      color: #cbd5e1;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .prob {
-      margin-top: 8px;
-      font-size: 15px;
-      font-weight: bold;
-    }
-
-    .pill {
-      display: inline-block;
-      margin-top: 10px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: bold;
-    }
-
-    .elite {
-      background: rgba(34, 197, 94, 0.15);
-      color: #86efac;
-      border: 1px solid rgba(34, 197, 94, 0.35);
-    }
-
-    .strong {
-      background: rgba(56, 189, 248, 0.15);
-      color: #7dd3fc;
-      border: 1px solid rgba(56, 189, 248, 0.35);
-    }
-
-    .good {
-      background: rgba(234, 179, 8, 0.15);
-      color: #fde68a;
-      border: 1px solid rgba(234, 179, 8, 0.35);
-    }
-
-    .radar-board {
-      background: rgba(30, 41, 59, 0.95);
-      border: 1px solid #334155;
-      border-radius: 14px;
-      padding: 16px;
-      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.16);
-    }
-
-    .radar-row {
-      padding: 14px 0;
-      border-bottom: 1px solid rgba(148, 163, 184, 0.18);
-    }
-
-    .radar-row:last-child {
-      border-bottom: none;
-    }
-
-    .radar-rank {
-      font-size: 12px;
-      color: #94a3b8;
-      font-weight: bold;
-      text-transform: uppercase;
-      margin-bottom: 6px;
-    }
-
-    .radar-market {
-      font-size: 18px;
-      font-weight: 800;
-      margin-bottom: 4px;
-    }
-
-    .strength-label {
-      margin-top: 10px;
-      font-size: 13px;
-      color: #cbd5e1;
-      font-weight: bold;
-    }
-
-    .strength-bar {
-      margin-top: 6px;
-      width: 100%;
-      height: 10px;
-      background: #1e293b;
-      border-radius: 999px;
-      overflow: hidden;
-      border: 1px solid #334155;
-    }
-
-    .strength-fill {
-      height: 100%;
-      border-radius: 999px;
-    }
-
-    .games-list .game-item {
-      display: flex;
       justify-content: space-between;
-      align-items: center;
       gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .league-group {
       margin-bottom: 18px;
     }
 
-    .league-header {
+    .brand {
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 18px;
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #e2e8f0;
+      gap: 14px;
     }
 
-    .btn {
-      background: #22c55e;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .btn:hover {
-      opacity: 0.92;
-    }
-
-    .btn-close {
-      background: #dc2626;
-      color: white;
-      border: none;
-      border-radius: 10px;
-      padding: 10px 14px;
-      font-weight: bold;
-      cursor: pointer;
+    .brand-badge {
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, #1eff89, #19c565);
+      display: grid;
+      place-items: center;
+      color: #092014;
+      font-weight: 900;
+      font-size: 28px;
+      box-shadow: 0 10px 24px rgba(30, 219, 114, 0.3);
       flex-shrink: 0;
     }
 
-    .btn-close:hover {
-      opacity: 0.92;
+    .brand-text h1 {
+      margin: 0;
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: -0.03em;
     }
 
-    .analysis-box {
-      margin-top: 24px;
-      display: none;
+    .brand-text p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
     }
 
-    .analysis-topbar {
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .status-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 0 6px rgba(76, 255, 150, 0.12);
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 22px 22px 0;
+    }
+
+    .eyebrow {
+      color: var(--green);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: -0.04em;
+    }
+
+    .panel-subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .panel-body {
+      padding: 20px 22px 22px;
+    }
+
+    .opportunity-card {
       display: flex;
+      flex-direction: column;
+      gap: 14px;
+      min-height: 270px;
       justify-content: space-between;
-      align-items: flex-start;
-      gap: 12px;
-      margin-bottom: 12px;
+    }
+
+    .match-head {
+      display: flex;
+      align-items: center;
+      gap: 14px;
       flex-wrap: wrap;
     }
 
-    .stats-grid {
+    .team-pair {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .team-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 700;
+      min-width: 0;
+    }
+
+    .team-logo {
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      object-fit: cover;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      flex-shrink: 0;
+    }
+
+    .team-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .league-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      align-self: flex-start;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #d8e5ff;
+      font-size: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .pick-spotlight {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: end;
+      background: linear-gradient(135deg, rgba(76,255,150,0.13), rgba(105,167,255,0.10));
+      border: 1px solid rgba(76,255,150,0.16);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+    }
+
+    .pick-label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 8px;
+      font-weight: 700;
+    }
+
+    .pick-name {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      margin: 0;
+    }
+
+    .prob-badge {
+      min-width: 88px;
+      height: 88px;
+      border-radius: 22px;
+      display: grid;
+      place-items: center;
+      background: rgba(7,17,31,0.45);
+      border: 1px solid rgba(255,255,255,0.08);
+      font-weight: 900;
+      font-size: 24px;
+      color: var(--green);
+    }
+
+    .mini-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .mini-stat {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .mini-stat-label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    .mini-stat-value {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .radar-list {
+      display: grid;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .radar-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 14px;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .radar-item:hover,
+    .competition-card:hover,
+    .game-card:hover,
+    .analysis-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(105, 167, 255, 0.32);
+    }
+
+    .radar-rank {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: rgba(76,255,150,0.10);
+      border: 1px solid rgba(76,255,150,0.16);
+      color: var(--green);
+      font-weight: 900;
+    }
+
+    .radar-main {
+      min-width: 0;
+    }
+
+    .radar-main .teams {
+      font-size: 15px;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .radar-main .meta {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .radar-prob {
+      font-weight: 900;
+      color: var(--green);
+      font-size: 18px;
+    }
+
+    .section {
+      margin-top: 22px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .section-title {
+      margin: 0;
+      font-size: 26px;
+      letter-spacing: -0.04em;
+    }
+
+    .section-copy {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .ghost-button,
+    .primary-button {
+      border: 0;
+      cursor: pointer;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 14px;
+      transition: 0.2s ease;
+    }
+
+    .ghost-button {
+      background: rgba(255,255,255,0.05);
+      color: #d7e3fa;
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+    }
+
+    .ghost-button:hover {
+      background: rgba(255,255,255,0.08);
+    }
+
+    .primary-button {
+      background: linear-gradient(180deg, var(--green), var(--green-2));
+      color: #082012;
+      padding: 12px 18px;
+      box-shadow: 0 12px 24px rgba(30, 219, 114, 0.22);
+    }
+
+    .primary-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .competitions-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .competition-card {
+      background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .competition-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .competition-flag {
+      font-size: 24px;
+    }
+
+    .competition-count {
+      font-size: 12px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      padding: 8px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .competition-name {
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.25;
+    }
+
+    .competition-bottom {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 10px;
+    }
+
+    .games-grid {
+      display: grid;
       gap: 12px;
       margin-top: 14px;
     }
 
-    .stat-box {
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid #334155;
-      border-radius: 12px;
+    .game-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      box-shadow: var(--shadow);
+      transition: 0.2s ease;
+    }
+
+    .game-main {
+      min-width: 0;
+    }
+
+    .game-teams {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .game-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .game-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    .analysis-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 8, 16, 0.70);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      z-index: 50;
+    }
+
+    .analysis-overlay.open {
+      display: flex;
+    }
+
+    .analysis-card {
+      width: 100%;
+      max-width: 980px;
+      max-height: 90vh;
+      overflow: auto;
+      background: linear-gradient(180deg, rgba(19, 33, 60, 0.98), rgba(10, 18, 34, 0.98));
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .analysis-header {
+      padding: 24px 24px 0;
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .analysis-title {
+      margin: 8px 0 0;
+      font-size: 34px;
+      line-height: 1.05;
+      letter-spacing: -0.05em;
+    }
+
+    .close-button {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      font-size: 18px;
+      cursor: pointer;
+    }
+
+    .analysis-body {
+      padding: 24px;
+    }
+
+    .analysis-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .insight-box,
+    .market-box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+    }
+
+    .box-title {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .insight-copy {
+      color: #dbe6fb;
+      line-height: 1.65;
+      font-size: 15px;
+    }
+
+    .market-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .market-stat {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 16px;
       padding: 14px;
-      text-align: center;
     }
 
-    .stat-title {
+    .market-stat-label {
+      color: var(--muted);
       font-size: 12px;
-      color: #94a3b8;
-      margin-bottom: 6px;
-      font-weight: bold;
+      margin-bottom: 8px;
     }
 
-    .stat-value {
-      font-size: 24px;
+    .market-stat-value {
+      font-size: 18px;
       font-weight: 800;
     }
 
-    .why-box {
-      margin-top: 16px;
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid #334155;
-      border-radius: 12px;
-      padding: 14px;
-    }
-
-    .why-title {
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #86efac;
-    }
-
-    .why-item {
-      margin-bottom: 8px;
-      color: #cbd5e1;
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .analysis-markets {
+    .markets-list {
       display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
+      gap: 10px;
     }
 
-    .analysis-market-row {
-      background: rgba(30, 41, 59, 0.85);
-      border: 1px solid #334155;
-      border-radius: 10px;
-      padding: 12px;
+    .market-line {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
     }
 
-    .analysis-market-rank {
+    .market-line-name {
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .market-line-value {
+      font-size: 14px;
+      font-weight: 900;
+      color: var(--green);
+    }
+
+    .empty-state,
+    .loading-state {
+      background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));
+      border: 1px dashed rgba(112, 154, 255, 0.22);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .footer-note {
+      margin-top: 24px;
+      color: var(--muted);
       font-size: 12px;
-      color: #94a3b8;
-      font-weight: bold;
-      text-transform: uppercase;
-      margin-bottom: 4px;
+      text-align: center;
+      line-height: 1.6;
+      opacity: 0.9;
     }
 
-    @media (max-width: 900px) {
-      .stats-grid {
+    .hidden {
+      display: none !important;
+    }
+
+    @media (max-width: 1024px) {
+      .hero-grid,
+      .analysis-grid,
+      .competitions-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 720px) {
+      .app-shell {
+        padding: 18px 12px 42px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .brand-text h1 {
+        font-size: 26px;
+      }
+
+      .panel-title,
+      .section-title {
+        font-size: 24px;
+      }
+
+      .pick-name {
+        font-size: 24px;
+      }
+
+      .pick-spotlight,
+      .game-card,
+      .radar-item {
         grid-template-columns: 1fr;
       }
 
-      .logo-title {
-        font-size: 34px;
+      .prob-badge {
+        width: 100%;
+        height: auto;
+        min-height: 72px;
+      }
+
+      .mini-stats,
+      .market-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .analysis-title {
+        font-size: 28px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="wrap">
+  <div class="app-shell">
+    <div class="container">
+      <div class="topbar">
+        <div class="brand">
+          <div class="brand-badge">T</div>
+          <div class="brand-text">
+            <h1>Scoutly</h1>
+            <p>Football Intelligence</p>
+          </div>
+        </div>
 
-    <div class="header">
-      <img
-        src="logo-scoutly.png"
-        alt="Scoutly"
-        class="logo-img"
-        onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex'; document.getElementById('logo-text').style.display='block';"
-      />
-
-      <div id="logo-fallback" class="logo-fallback">
-        <div>
-          <div class="logo-title">Scoutly ⚽</div>
-          <div class="logo-sub">Football Intelligence</div>
+        <div class="status-chip" id="statusChip">
+          <span class="status-dot"></span>
+          <span id="statusText">Conectando ao Scoutly...</span>
         </div>
       </div>
 
-      <div id="logo-text" style="display:none;">
-        <div class="logo-title">Scoutly</div>
-        <div class="logo-sub">Football Intelligence</div>
+      <div class="hero-grid">
+        <div class="panel">
+          <div class="panel-header">
+            <div class="eyebrow">Opportunity of the day</div>
+            <h2 class="panel-title">Scoutly Radar</h2>
+            <p class="panel-subtitle">
+              O Scoutly analisa os jogos do dia e destaca as oportunidades com maior força estatística.
+            </p>
+          </div>
+
+          <div class="panel-body">
+            <div id="opportunityContainer" class="opportunity-card">
+              <div class="loading-state">Carregando oportunidade do dia...</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <div class="eyebrow">Top 5 picks</div>
+            <h2 class="panel-title">Radar do dia</h2>
+            <p class="panel-subtitle">
+              As cinco melhores entradas entre todos os jogos e mercados analisados hoje.
+            </p>
+          </div>
+
+          <div class="panel-body">
+            <div id="radarList" class="radar-list">
+              <div class="loading-state">Carregando top picks...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <div>
+            <h2 class="section-title">Competitions Today</h2>
+            <p class="section-copy">
+              Navegue pelos jogos do dia por competição, sem rolagem infinita e com uma visão muito mais limpa.
+            </p>
+          </div>
+
+          <button class="ghost-button hidden" id="backToCompetitionsBtn">
+            ← Voltar para competições
+          </button>
+        </div>
+
+        <div id="competitionsWrap">
+          <div id="competitionsGrid" class="competitions-grid">
+            <div class="loading-state">Carregando competições...</div>
+          </div>
+        </div>
+
+        <div id="gamesWrap" class="hidden">
+          <div class="section-head" style="margin-top: 8px;">
+            <div>
+              <h3 class="section-title" id="selectedCompetitionTitle">Jogos da competição</h3>
+              <p class="section-copy" id="selectedCompetitionCopy">Selecione um jogo para ver a análise.</p>
+            </div>
+          </div>
+
+          <div id="gamesGrid" class="games-grid"></div>
+        </div>
+      </div>
+
+      <div class="footer-note">
+        Scoutly fornece insights estatísticos e recomendações baseadas em probabilidade. <br />
+        Não oferece serviços de aposta e não garante resultados.
       </div>
     </div>
+  </div>
 
-    <div id="status" class="status ok">Iniciando Scoutly...</div>
+  <div class="analysis-overlay" id="analysisOverlay">
+    <div class="analysis-card">
+      <div class="analysis-header">
+        <div>
+          <div class="eyebrow">Scoutly match analysis</div>
+          <h2 class="analysis-title" id="analysisTitle">Análise do jogo</h2>
+          <p class="panel-subtitle" id="analysisSubtitle">Carregando detalhes...</p>
+        </div>
 
-    <div class="section">
-      <div class="section-title">🔥 Oportunidade do dia</div>
-      <div id="day-opportunity"></div>
-    </div>
-
-    <div class="section">
-      <div class="section-title">🎯 Radar Scoutly — melhores oportunidades do dia</div>
-      <div class="section-subtitle">
-        O Scoutly analisa os jogos do dia e destaca aqui os picks com maior força estatística.
+        <button class="close-button" id="closeAnalysisBtn">✕</button>
       </div>
-      <div id="radar-scoutly"></div>
-    </div>
 
-    <div class="section">
-      <div class="section-title">📅 Análises dos jogos do dia</div>
-      <div id="games" class="games-list"></div>
-    </div>
+      <div class="analysis-body">
+        <div class="pick-spotlight" id="analysisHighlight">
+          <div>
+            <div class="pick-label">Melhor recomendação</div>
+            <h3 class="pick-name" id="analysisBestPick">-</h3>
+          </div>
 
-    <div id="analysis" class="analysis-box"></div>
+          <div class="prob-badge" id="analysisBestProb">-</div>
+        </div>
+
+        <div class="analysis-grid">
+          <div class="insight-box">
+            <h3 class="box-title">O que os números indicam</h3>
+            <div class="insight-copy" id="analysisInsight">
+              Nenhum insight disponível para este jogo.
+            </div>
+
+            <div class="market-grid" style="margin-top: 16px;">
+              <div class="market-stat">
+                <div class="market-stat-label">Média de gols</div>
+                <div class="market-stat-value" id="avgGoalsValue">-</div>
+              </div>
+
+              <div class="market-stat">
+                <div class="market-stat-label">Média de escanteios</div>
+                <div class="market-stat-value" id="avgCornersValue">-</div>
+              </div>
+
+              <div class="market-stat">
+                <div class="market-stat-label">Média de finalizações</div>
+                <div class="market-stat-value" id="avgShotsValue">-</div>
+              </div>
+
+              <div class="market-stat">
+                <div class="market-stat-label">Forma do mandante / visitante</div>
+                <div class="market-stat-value" id="formsValue">-</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="market-box">
+            <h3 class="box-title">Mercados avaliados</h3>
+            <div id="marketsList" class="markets-list"></div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <script>
-    const statusEl = document.getElementById("status");
-    const dayOpportunityEl = document.getElementById("day-opportunity");
-    const radarScoutlyEl = document.getElementById("radar-scoutly");
-    const gamesEl = document.getElementById("games");
-    const analysisEl = document.getElementById("analysis");
+    const SUPABASE_URL = 'https://zngdcatlxlxamceqpxij.supabase.com'
+    const SUPABASE_ANON_KEY = 'sb_publishable_gw3BGCEcwhidS2hFbiwxIA_W28KkZ2a'
 
-    function setStatus(text, type = "ok") {
-      statusEl.className = "status " + type;
-      statusEl.innerText = text;
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+    const state = {
+      dailyPicks: [],
+      matches: [],
+      competitions: [],
+      selectedLeague: null
     }
 
-    const SUPABASE_URL = "https://zngdcatlxlxamceqpxij.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_gw3BGCEcwhidS2hFbiwxIA_W28KkZ2a";
+    const flagMap = {
+      'Premier League': '🇬🇧',
+      'La Liga': '🇪🇸',
+      'Copa del Rey': '🇪🇸',
+      'Serie A': '🇮🇹',
+      'Coppa Italia': '🇮🇹',
+      'Bundesliga': '🇩🇪',
+      'Ligue 1': '🇫🇷',
+      'Eredivisie': '🇳🇱',
+      'Super Lig': '🇹🇷',
+      'Süper Lig': '🇹🇷',
+      'Super League 1': '🇬🇷',
+      'Pro League': '🇸🇦',
+      'Saudi Pro League': '🇸🇦',
+      'Liga Profesional Argentina': '🇦🇷',
+      'Primera Division': '🇨🇱',
+      'Primera División': '🇨🇱',
+      'Serie B': '🇧🇷',
+      'Copa do Brasil': '🇧🇷',
+      'CONMEBOL Libertadores': '🏆',
+      'CONMEBOL Sudamericana': '🏆',
+      'UEFA Champions League': '🏆',
+      'UEFA Europa League': '🏆',
+      'UEFA Europa Conference League': '🏆',
+      'CONCACAF Champions Cup': '🏆',
+      'AFC Champions League': '🏆',
+      'AFC Champions League Elite': '🏆'
+    }
 
-    function formatDate(dateValue) {
-      if (!dateValue) return "Sem data";
-      try {
-        return new Date(dateValue).toLocaleDateString("pt-BR");
-      } catch {
-        return String(dateValue);
+    function setStatus(text, ok = true) {
+      const chip = document.getElementById('statusChip')
+      const txt = document.getElementById('statusText')
+      txt.textContent = text
+      chip.style.borderColor = ok ? 'rgba(76,255,150,0.18)' : 'rgba(255,107,122,0.22)'
+    }
+
+    function formatProb(value) {
+      if (value === null || value === undefined || Number.isNaN(Number(value))) return '-'
+      return `${Math.round(Number(value) * 100)}%`
+    }
+
+    function formatDecimal(value) {
+      if (value === null || value === undefined || Number.isNaN(Number(value))) return '-'
+      return Number(value).toFixed(2)
+    }
+
+    function formatKickoff(value) {
+      if (!value) return 'Horário não disponível'
+      const d = new Date(value)
+      if (Number.isNaN(d.getTime())) return 'Horário não disponível'
+      return d.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    }
+
+    function confidenceLabel(prob) {
+      const p = Number(prob || 0)
+      if (p >= 0.75) return 'Muito forte'
+      if (p >= 0.65) return 'Forte'
+      if (p >= 0.55) return 'Boa'
+      return 'Arriscada'
+    }
+
+    function getFlag(leagueName) {
+      return flagMap[leagueName] || '🏟️'
+    }
+
+    function renderOpportunity() {
+      const container = document.getElementById('opportunityContainer')
+      const opportunity = state.dailyPicks.find(item => item.is_opportunity) || state.dailyPicks[0]
+
+      if (!opportunity) {
+        container.innerHTML = `
+          <div class="empty-state">
+            Nenhuma oportunidade do dia encontrada.
+          </div>
+        `
+        return
       }
+
+      const match = state.matches.find(m => String(m.id) === String(opportunity.match_id))
+
+      const homeLogo = match?.home_logo || ''
+      const awayLogo = match?.away_logo || ''
+      const leagueName = opportunity.league || match?.league || '-'
+      const kickoff = match?.kickoff ? formatKickoff(match.kickoff) : 'Horário não disponível'
+      const confidence = confidenceLabel(opportunity.probability)
+
+      container.innerHTML = `
+        <div class="match-head">
+          <div class="team-pair">
+            <div class="team-row">
+              ${homeLogo ? `<img class="team-logo" src="${homeLogo}" alt="">` : ''}
+              <span class="team-name">${opportunity.home_team || '-'}</span>
+            </div>
+            <div class="team-row">
+              ${awayLogo ? `<img class="team-logo" src="${awayLogo}" alt="">` : ''}
+              <span class="team-name">${opportunity.away_team || '-'}</span>
+            </div>
+          </div>
+
+          <div class="league-pill">
+            <span>${getFlag(leagueName)}</span>
+            <span>${leagueName}</span>
+          </div>
+        </div>
+
+        <div class="pick-spotlight">
+          <div>
+            <div class="pick-label">Melhor entrada do dia</div>
+            <h3 class="pick-name">${opportunity.market || '-'}</h3>
+          </div>
+
+          <div class="prob-badge">${formatProb(opportunity.probability)}</div>
+        </div>
+
+        <div class="mini-stats">
+          <div class="mini-stat">
+            <div class="mini-stat-label">Confiança</div>
+            <div class="mini-stat-value">${confidence}</div>
+          </div>
+
+          <div class="mini-stat">
+            <div class="mini-stat-label">Competição</div>
+            <div class="mini-stat-value">${leagueName}</div>
+          </div>
+
+          <div class="mini-stat">
+            <div class="mini-stat-label">Kickoff</div>
+            <div class="mini-stat-value">${kickoff}</div>
+          </div>
+        </div>
+      `
     }
 
-    function normalizeLeagueName(league = "") {
-      const l = String(league).trim();
-      const low = l.toLowerCase();
+    function renderRadar() {
+      const list = document.getElementById('radarList')
 
-      if (
-        low.includes("brasileirao serie a") ||
-        low.includes("brasileirão série a") ||
-        low.includes("br brasileirao serie a") ||
-        low.includes("br brasileirão série a")
-      ) return "Brasileirão Série A";
+      if (!state.dailyPicks.length) {
+        list.innerHTML = `<div class="empty-state">Nenhum pick encontrado para hoje.</div>`
+        return
+      }
 
-      if (
-        low === "br brasileirao" ||
-        low === "br brasileirão" ||
-        low === "brasileirao" ||
-        low === "brasileirão"
-      ) return "Brasileirão";
+      list.innerHTML = state.dailyPicks
+        .slice()
+        .sort((a, b) => Number(a.rank || 999) - Number(b.rank || 999))
+        .map(item => {
+          const leagueName = item.league || '-'
+          return `
+            <div class="radar-item" data-match-id="${item.match_id}">
+              <div class="radar-rank">${item.rank || '-'}</div>
 
-      return l || "Sem liga";
+              <div class="radar-main">
+                <div class="teams">${item.home_team || '-'} x ${item.away_team || '-'}</div>
+                <div class="meta">${getFlag(leagueName)} ${leagueName} • ${item.market || '-'}</div>
+              </div>
+
+              <div class="radar-prob">${formatProb(item.probability)}</div>
+            </div>
+          `
+        })
+        .join('')
+
+      list.querySelectorAll('.radar-item').forEach(el => {
+        el.addEventListener('click', () => {
+          openAnalysis(el.dataset.matchId)
+        })
+      })
     }
 
-    function getLeagueFlag(league = "") {
-      const l = normalizeLeagueName(league).toLowerCase();
+    function buildCompetitions() {
+      const map = new Map()
 
-      if (l.includes("brasileirão") || l.includes("brasileirao") || l.includes("brasileiro")) return "🇧🇷";
-      if (l.includes("arg")) return "🇦🇷";
-      if (l.includes("mex")) return "🇲🇽";
-      if (l.includes("premier")) return "🏴";
-      if (l.includes("la liga")) return "🇪🇸";
-      if (l.includes("serie a")) return "🇮🇹";
-      if (l.includes("bundes")) return "🇩🇪";
-      if (l.includes("ligue")) return "🇫🇷";
-      if (l.includes("libert")) return "🏆";
-      if (l.includes("sul-amer")) return "🏆";
-      if (l.includes("saudi")) return "🇸🇦";
-      if (l.includes("mls")) return "🇺🇸";
+      for (const match of state.matches) {
+        const league = match.league || '-'
+        if (!map.has(league)) {
+          map.set(league, {
+            league,
+            count: 0,
+            matches: []
+          })
+        }
 
-      return "🌍";
+        const item = map.get(league)
+        item.count += 1
+        item.matches.push(match)
+      }
+
+      state.competitions = Array.from(map.values()).sort((a, b) => a.league.localeCompare(b.league))
     }
 
-    function getConfidence(prob) {
-      const p = Number(prob || 0);
-      if (p >= 70) return { label: "Muito forte", className: "elite" };
-      if (p >= 60) return { label: "Forte", className: "strong" };
-      return { label: "Boa", className: "good" };
+    function renderCompetitions() {
+      buildCompetitions()
+
+      const grid = document.getElementById('competitionsGrid')
+
+      if (!state.competitions.length) {
+        grid.innerHTML = `<div class="empty-state">Nenhuma competição encontrada para hoje.</div>`
+        return
+      }
+
+      grid.innerHTML = state.competitions
+        .map(comp => `
+          <div class="competition-card" data-league="${encodeURIComponent(comp.league)}">
+            <div class="competition-top">
+              <div class="competition-flag">${getFlag(comp.league)}</div>
+              <div class="competition-count">${comp.count} jogo(s)</div>
+            </div>
+
+            <div class="competition-name">${comp.league}</div>
+            <div class="competition-bottom">Toque para ver os jogos desta competição.</div>
+          </div>
+        `)
+        .join('')
+
+      grid.querySelectorAll('.competition-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const league = decodeURIComponent(card.dataset.league)
+          openCompetition(league)
+        })
+      })
     }
 
-    function getStrengthText(prob) {
-      const p = Number(prob || 0);
-      if (p >= 70) return "Muito forte";
-      if (p >= 60) return "Forte";
-      if (p >= 50) return "Boa";
-      if (p >= 45) return "Moderada";
-      return "Arriscada";
+    function openCompetition(league) {
+      state.selectedLeague = league
+
+      const competition = state.competitions.find(c => c.league === league)
+      const matches = competition?.matches || []
+
+      document.getElementById('competitionsWrap').classList.add('hidden')
+      document.getElementById('gamesWrap').classList.remove('hidden')
+      document.getElementById('backToCompetitionsBtn').classList.remove('hidden')
+
+      document.getElementById('selectedCompetitionTitle').textContent = league
+      document.getElementById('selectedCompetitionCopy').textContent = `${matches.length} jogo(s) nesta competição hoje.`
+
+      const gamesGrid = document.getElementById('gamesGrid')
+
+      if (!matches.length) {
+        gamesGrid.innerHTML = `<div class="empty-state">Nenhum jogo encontrado.</div>`
+        return
+      }
+
+      gamesGrid.innerHTML = matches
+        .sort((a, b) => {
+          const ka = a.kickoff ? new Date(a.kickoff).getTime() : 0
+          const kb = b.kickoff ? new Date(b.kickoff).getTime() : 0
+          return ka - kb
+        })
+        .map(match => `
+          <div class="game-card">
+            <div class="game-main">
+              <div class="game-teams">
+                <div class="team-row">
+                  ${match.home_logo ? `<img class="team-logo" src="${match.home_logo}" alt="">` : ''}
+                  <span class="team-name">${match.home_team || '-'}</span>
+                </div>
+
+                <div class="team-row">
+                  ${match.away_logo ? `<img class="team-logo" src="${match.away_logo}" alt="">` : ''}
+                  <span class="team-name">${match.away_team || '-'}</span>
+                </div>
+              </div>
+
+              <div class="game-meta">
+                <span>${getFlag(match.league)} ${match.league || '-'}</span>
+                <span>${formatKickoff(match.kickoff)}</span>
+              </div>
+            </div>
+
+            <div class="game-actions">
+              <button class="primary-button" data-analyze-id="${match.id}">
+                Ver análise →
+              </button>
+            </div>
+          </div>
+        `)
+        .join('')
+
+      gamesGrid.querySelectorAll('[data-analyze-id]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          openAnalysis(btn.dataset.analyzeId)
+        })
+      })
     }
 
-    function getStrengthColor(prob) {
-      const p = Number(prob || 0);
-      if (p >= 70) return "#22c55e";
-      if (p >= 60) return "#4ade80";
-      if (p >= 50) return "#eab308";
-      if (p >= 45) return "#f97316";
-      return "#ef4444";
+    function backToCompetitions() {
+      state.selectedLeague = null
+      document.getElementById('competitionsWrap').classList.remove('hidden')
+      document.getElementById('gamesWrap').classList.add('hidden')
+      document.getElementById('backToCompetitionsBtn').classList.add('hidden')
     }
 
-    function strengthPercent(prob) {
-      const p = Number(prob || 0);
-      if (p <= 0) return 0;
-      return Math.max(8, Math.min(100, p));
-    }
-
-    function getMarketEmoji(marketName) {
-      const m = String(marketName).toLowerCase();
-      if (m.includes("gols")) return "⚽";
-      if (m.includes("ambas")) return "🤝";
-      if (m.includes("escanteios")) return "🚩";
-      return "📊";
-    }
-
-    function getGoalsMarkets(match) {
+    function buildMarketRows(match) {
       return [
-        { name: "Mais de 1.5 gols", prob: Number(match.over15_prob || 0) },
-        { name: "Mais de 2.5 gols", prob: Number(match.over25_prob || 0) },
-        { name: "Menos de 2.5 gols", prob: Number(match.under25_prob || 0) },
-        { name: "Menos de 3.5 gols", prob: Number(match.under35_prob || 0) }
-      ].filter(x => x.prob > 0);
+        { name: 'Vitória mandante', value: formatProb(match.home_result_prob ?? match.home_win_prob) },
+        { name: 'Empate', value: formatProb(match.draw_result_prob ?? match.draw_prob) },
+        { name: 'Vitória visitante', value: formatProb(match.away_result_prob ?? match.away_win_prob) },
+        { name: 'Over 2.5 gols', value: formatProb(match.over25_prob) },
+        { name: 'BTTS', value: formatProb(match.btts_prob) },
+        { name: 'Over 8.5 escanteios', value: formatProb(match.corners_over85_prob) },
+        { name: 'Over 1.5 gols', value: formatProb(match.over15_prob) },
+        { name: 'Under 2.5 gols', value: formatProb(match.under25_prob) },
+        { name: 'Under 3.5 gols', value: formatProb(match.under35_prob) }
+      ]
     }
 
-    function getBTTSMarkets(match) {
-      const yesProb = Number(match.btts_prob || 0);
-      const noProb = yesProb > 0 ? 100 - yesProb : 0;
+    function openAnalysis(matchId) {
+      const match = state.matches.find(m => String(m.id) === String(matchId))
+      if (!match) return
 
-      const list = [];
-      if (yesProb > 0) list.push({ name: "Ambas marcam", prob: yesProb });
-      if (noProb > 0) list.push({ name: "Ambas NÃO marcam", prob: noProb });
+      const pickFromRadar = state.dailyPicks.find(p => String(p.match_id) === String(matchId))
+      const bestPick = pickFromRadar?.market || match.pick || 'Sem mercado'
+      const bestProb = pickFromRadar?.probability ?? null
 
-      return list;
-    }
+      document.getElementById('analysisTitle').textContent = `${match.home_team || '-'} x ${match.away_team || '-'}`
+      document.getElementById('analysisSubtitle').textContent = `${getFlag(match.league)} ${match.league || '-'} • ${formatKickoff(match.kickoff)}`
+      document.getElementById('analysisBestPick').textContent = bestPick
+      document.getElementById('analysisBestProb').textContent = bestProb !== null ? formatProb(bestProb) : '-'
 
-    function getCornersMarkets(match) {
-      const over85 = Number(match.corners_over85_prob || 0);
-      const under85 = over85 > 0 ? 100 - over85 : 0;
+      document.getElementById('analysisInsight').textContent =
+        match.insight || 'Scoutly ainda não encontrou um insight detalhado para este confronto.'
 
-      const list = [];
-      if (over85 > 0) list.push({ name: "Mais de 8.5 escanteios", prob: over85 });
-      if (under85 > 0) list.push({ name: "Menos de 8.5 escanteios", prob: under85 });
+      document.getElementById('avgGoalsValue').textContent = formatDecimal(match.avg_goals)
+      document.getElementById('avgCornersValue').textContent = formatDecimal(match.avg_corners)
+      document.getElementById('avgShotsValue').textContent = formatDecimal(match.avg_shots)
+      document.getElementById('formsValue').textContent =
+        `${match.home_form || '-'} / ${match.away_form || '-'}`
 
-      return list;
-    }
-
-    function getBestMarket(markets) {
-      const list = [...markets].sort((a, b) => b.prob - a.prob);
-      return list[0] || { name: "Sem mercado", prob: 0 };
-    }
-
-    function getBestOverallPick(match) {
-      const allMarkets = [
-        ...getGoalsMarkets(match),
-        ...getBTTSMarkets(match),
-        ...getCornersMarkets(match)
-      ].filter(x => x.prob > 0);
-
-      return getBestMarket(allMarkets);
-    }
-
-    function buildRadarItems(matches) {
-      const allItems = [];
-
-      matches.forEach(match => {
-        const allMarkets = [
-          ...getGoalsMarkets(match),
-          ...getBTTSMarkets(match),
-          ...getCornersMarkets(match)
-        ];
-
-        allMarkets.forEach(market => {
-          if (market.prob > 0) {
-            allItems.push({
-              id: `${match.id}-${market.name}`,
-              match,
-              market: market.name,
-              prob: market.prob
-            });
-          }
-        });
-      });
-
-      return allItems.sort((a, b) => b.prob - a.prob);
-    }
-
-    function renderDayOpportunity(item) {
-      if (!item) {
-        dayOpportunityEl.innerHTML = `<div class="card">Nenhuma oportunidade encontrada.</div>`;
-        return;
-      }
-
-      const conf = getConfidence(item.prob);
-
-      dayOpportunityEl.innerHTML = `
-        <div class="card hero">
-          <div class="small-label">Pick principal do Scoutly hoje</div>
-          <div class="big-pick">${getMarketEmoji(item.market)} ${item.market}</div>
-          <div class="match-name">${item.match.home_team} x ${item.match.away_team}</div>
-          <div class="muted">${getLeagueFlag(item.match.league)} ${normalizeLeagueName(item.match.league)} • 📅 ${formatDate(item.match.match_date)}</div>
-          <div class="prob">Força da oportunidade: ${item.prob}%</div>
-          <span class="pill ${conf.className}">${conf.label}</span>
-
-          <div class="strength-label">Barra de força — ${getStrengthText(item.prob)}</div>
-          <div class="strength-bar">
-            <div class="strength-fill" style="width:${strengthPercent(item.prob)}%; background:${getStrengthColor(item.prob)};"></div>
+      const markets = buildMarketRows(match)
+      document.getElementById('marketsList').innerHTML = markets
+        .map(item => `
+          <div class="market-line">
+            <div class="market-line-name">${item.name}</div>
+            <div class="market-line-value">${item.value}</div>
           </div>
-        </div>
-      `;
-    }
+        `)
+        .join('')
 
-    function renderRadarScoutly(items) {
-      if (!items.length) {
-        radarScoutlyEl.innerHTML = `<div class="card">Nenhuma oportunidade encontrada.</div>`;
-        return;
-      }
-
-      radarScoutlyEl.innerHTML = `
-        <div class="radar-board">
-          ${items.map((item, index) => `
-            <div class="radar-row">
-              <div class="radar-rank">Top ${index + 1}</div>
-              <div class="radar-market">${getMarketEmoji(item.market)} ${item.market}</div>
-              <div class="match-name">${item.match.home_team} x ${item.match.away_team}</div>
-              <div class="muted">${getLeagueFlag(item.match.league)} ${normalizeLeagueName(item.match.league)} • 📅 ${formatDate(item.match.match_date)}</div>
-
-              <div class="strength-label">Força da oportunidade — ${getStrengthText(item.prob)} (${item.prob}%)</div>
-              <div class="strength-bar">
-                <div class="strength-fill" style="width:${strengthPercent(item.prob)}%; background:${getStrengthColor(item.prob)};"></div>
-              </div>
-            </div>
-          `).join("")}
-        </div>
-      `;
-    }
-
-    function groupByLeague(matches) {
-      const groups = {};
-      matches.forEach(match => {
-        const leagueName = normalizeLeagueName(match.league || "Sem liga");
-        if (!groups[leagueName]) groups[leagueName] = [];
-        groups[leagueName].push(match);
-      });
-      return groups;
-    }
-
-    function renderGames(matches) {
-      const groups = groupByLeague(matches);
-      const leagueNames = Object.keys(groups);
-
-      gamesEl.innerHTML = leagueNames.map(leagueName => {
-        const leagueMatches = groups[leagueName];
-
-        const leagueBlock = leagueMatches.map(match => `
-          <div class="card">
-            <div class="games-list game-item">
-              <div>
-                <div class="match-name">${match.home_team} x ${match.away_team}</div>
-                <div class="muted">${getLeagueFlag(match.league)} ${normalizeLeagueName(match.league)} • 📅 ${formatDate(match.match_date)}</div>
-              </div>
-              <button class="btn" data-id="${match.id}">Ver análise →</button>
-            </div>
-          </div>
-        `).join("");
-
-        return `
-          <div class="league-group">
-            <div class="league-header">${getLeagueFlag(leagueName)} ${leagueName}</div>
-            ${leagueBlock}
-          </div>
-        `;
-      }).join("");
-
-      const buttons = gamesEl.querySelectorAll(".btn");
-      buttons.forEach(btn => {
-        btn.addEventListener("click", () => {
-          const match = matches.find(x => String(x.id) === String(btn.dataset.id));
-          if (match) showAnalysis(match);
-        });
-      });
+      document.getElementById('analysisOverlay').classList.add('open')
     }
 
     function closeAnalysis() {
-      analysisEl.style.display = "none";
-      analysisEl.innerHTML = "";
-      window.scrollTo({
-        top: document.body.scrollHeight - 400,
-        behavior: "smooth"
-      });
+      document.getElementById('analysisOverlay').classList.remove('open')
     }
 
-    function getTopGameMarkets(match) {
-      const allMarkets = [
-        ...getGoalsMarkets(match),
-        ...getBTTSMarkets(match),
-        ...getCornersMarkets(match)
-      ]
-        .filter(x => x.prob > 0)
-        .sort((a, b) => b.prob - a.prob);
+    async function loadDailyPicks() {
+      const { data, error } = await supabaseClient
+        .from('daily_picks')
+        .select('*')
+        .order('rank', { ascending: true })
 
-      return allMarkets.slice(0, 3);
+      if (error) throw error
+      state.dailyPicks = data || []
     }
 
-    function showAnalysis(match) {
-      const best = getBestOverallPick(match);
-      const conf = getConfidence(best.prob);
-      const topGameMarkets = getTopGameMarkets(match);
+    async function loadMatches() {
+      const { data, error } = await supabaseClient
+        .from('matches')
+        .select('*')
+        .order('league', { ascending: true })
+        .order('kickoff', { ascending: true })
 
-      analysisEl.style.display = "block";
-
-      analysisEl.innerHTML = `
-        <div class="section-title">📊 Análise do jogo</div>
-        <div class="card hero">
-          <div class="analysis-topbar">
-            <div>
-              <div class="small-label">Scoutly opportunity</div>
-              <div class="big-pick">${getMarketEmoji(best.name)} ${best.name}</div>
-              <div class="match-name">${match.home_team} x ${match.away_team}</div>
-              <div class="muted">${getLeagueFlag(match.league)} ${normalizeLeagueName(match.league)} • 📅 ${formatDate(match.match_date)}</div>
-              <div class="prob">Força da oportunidade: ${best.prob}%</div>
-              <span class="pill ${conf.className}">${conf.label}</span>
-
-              <div class="strength-label">Barra de força — ${getStrengthText(best.prob)}</div>
-              <div class="strength-bar" style="max-width:360px;">
-                <div class="strength-fill" style="width:${strengthPercent(best.prob)}%; background:${getStrengthColor(best.prob)};"></div>
-              </div>
-            </div>
-
-            <button class="btn-close" onclick="closeAnalysis()">Fechar ✕</button>
-          </div>
-
-          <div class="why-box">
-            <div class="why-title">📊 O que os números indicam</div>
-            <div class="why-item">⚽ Tendência de gols — gols esperados: <strong>${match.avg_goals ?? "-"}</strong></div>
-            <div class="why-item">🚩 Tendência de escanteios — escanteios esperados: <strong>${match.avg_corners ?? "-"}</strong></div>
-            <div class="why-item">🔥 Intensidade ofensiva — finalizações esperadas: <strong>${match.avg_shots ?? "-"}</strong></div>
-          </div>
-
-          <div class="why-box">
-            <div class="why-title">🎯 Melhores entradas deste jogo</div>
-            <div class="analysis-markets">
-              ${topGameMarkets.length
-                ? topGameMarkets.map((item, index) => `
-                  <div class="analysis-market-row">
-                    <div class="analysis-market-rank">Top ${index + 1}</div>
-                    <div class="why-item">${getMarketEmoji(item.name)} <strong>${item.name}</strong> — ${item.prob}%</div>
-                  </div>
-                `).join("")
-                : `<div class="why-item">Nenhuma entrada encontrada para este jogo.</div>`
-              }
-            </div>
-          </div>
-
-          <div class="stats-grid">
-            <div class="stat-box">
-              <div class="stat-title">⚽ Gols esperados</div>
-              <div class="stat-value">${match.avg_goals ?? "-"}</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-title">🚩 Escanteios esperados</div>
-              <div class="stat-value">${match.avg_corners ?? "-"}</div>
-            </div>
-            <div class="stat-box">
-              <div class="stat-title">🎯 Finalizações</div>
-              <div class="stat-value">${match.avg_shots ?? "-"}</div>
-            </div>
-          </div>
-        </div>
-      `;
-
-      analysisEl.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
+      if (error) throw error
+      state.matches = data || []
     }
 
-    async function loadScoutly() {
+    async function initialize() {
       try {
-        if (SUPABASE_KEY.includes("COLE_SUA_PUBLISHABLE_KEY_AQUI")) {
-          setStatus("Falta colar a publishable key no código.", "err");
-          return;
-        }
+        setStatus('Conectando ao Scoutly...', true)
 
-        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        await Promise.all([
+          loadDailyPicks(),
+          loadMatches()
+        ])
 
-        const { data, error } = await client
-          .from("matches")
-          .select("*")
-          .order("match_date", { ascending: true });
+        renderOpportunity()
+        renderRadar()
+        renderCompetitions()
 
-        if (error) {
-          setStatus("Erro ao ler tabela matches: " + error.message, "err");
-          return;
-        }
+        setStatus(`Conexão OK. Jogos encontrados: ${state.matches.length}`, true)
+      } catch (error) {
+        console.error(error)
+        setStatus('Erro ao carregar dados do Scoutly.', false)
 
-        if (!data || data.length === 0) {
-          setStatus("Conexão OK, mas não há jogos na tabela matches.", "err");
-          return;
-        }
-
-        setStatus("Conexão OK. Jogos encontrados: " + data.length, "ok");
-
-        const allRadarItems = buildRadarItems(data);
-        const dayOpportunity = allRadarItems[0] || null;
-
-        const radarItems = allRadarItems
-          .filter(item => !dayOpportunity || item.id !== dayOpportunity.id)
-          .slice(0, 5);
-
-        renderDayOpportunity(dayOpportunity);
-        renderRadarScoutly(radarItems);
-        renderGames(data);
-
-      } catch (err) {
-        setStatus("Erro geral: " + err.message, "err");
+        document.getElementById('opportunityContainer').innerHTML = `
+          <div class="empty-state">Não foi possível carregar a oportunidade do dia.</div>
+        `
+        document.getElementById('radarList').innerHTML = `
+          <div class="empty-state">Não foi possível carregar o radar.</div>
+        `
+        document.getElementById('competitionsGrid').innerHTML = `
+          <div class="empty-state">Não foi possível carregar as competições.</div>
+        `
       }
     }
 
-    loadScoutly();
+    document.getElementById('backToCompetitionsBtn').addEventListener('click', backToCompetitions)
+    document.getElementById('closeAnalysisBtn').addEventListener('click', closeAnalysis)
+    document.getElementById('analysisOverlay').addEventListener('click', (e) => {
+      if (e.target.id === 'analysisOverlay') closeAnalysis()
+    })
+
+    initialize()
   </script>
 </body>
 </html>
