@@ -118,7 +118,7 @@ async function fetchTeamLastFixtures(teamId, leagueId, season) {
 }
 
 async function main() {
-  const today = isoDateParts();
+  const today = new Date().toISOString().split("T")[0];
 
   console.log("Buscando jogos reais do dia:", today);
 
