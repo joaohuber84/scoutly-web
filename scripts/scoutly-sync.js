@@ -64,9 +64,15 @@ function formFromLastFive(fixtures, teamId) {
 
 function avgFromFixtures(fixtures, selector) {
   if (!fixtures || !fixtures.length) return null;
-  const values = fixtures.map(selector).filter((v) => typeof v === "number" && !Number.isNaN(v));
+  const values = fixtures
+    .map(selector)
+    .filter((v) => typeof v === "number" && !Number.isNaN(v));
+
   if (!values.length) return null;
-  return Number((values.reduce((a, b) => a + b, 0) / values.length).toFixed(1));
+
+  return Number(
+    (values.reduce((acc, value) => acc + value, 0) / values.length).toFixed(1)
+  );
 }
 
 function confidenceLabel(prob) {
@@ -116,16 +122,17 @@ async function main() {
 
   console.log("Buscando jogos reais do dia:", today);
 
+  // PUXA OS JOGOS DO DIA
   const fixturesUrl = `https://v3.football.api-sports.io/fixtures?date=${today}`;
   const fixturesData = await fetchJson(fixturesUrl);
   const fixtures = fixturesData.response || [];
+
+  console.log("Quantidade de jogos encontrados:", fixtures.length);
 
   if (!fixtures.length) {
     console.log("Nenhum jogo encontrado para hoje.");
     return;
   }
-
-  console.log(`Jogos encontrados: ${fixtures.length}`);
 
   const rows = [];
 
@@ -156,19 +163,9 @@ async function main() {
       });
 
       const avgGoals = avgFromFixtures(
-        [
-          ...(homeLast || []),
-          ...(awayLast || []),
-        ],
-        (x) => {
-          const home = x.goals.home ?? 0;
-          const away = x.goals.away ?? 0;
-          return home + away;
-        }
+        [...homeLast, ...awayLast],
+        (x) => (x.goals.home ?? 0) + (x.goals.away ?? 0)
       );
-
-      const avgShots = null;
-      const avgCorners = null;
 
       let homeStrength = 50;
       let awayStrength = 50;
@@ -186,20 +183,32 @@ async function main() {
       homeStrength = Math.min(90, 40 + homeFormScore * 2);
       awayStrength = Math.min(90, 40 + awayFormScore * 2);
 
-      const drawProb = 100 - Math.min(80, Math.max(20, homeStrength + awayStrength - 60));
-      const homeWinProb = Math.max(15, Math.min(75, 50 + Math.round((homeStrength - awayStrength) / 2)));
+      const homeWinProb = Math.max(
+        15,
+        Math.min(75, 50 + Math.round((homeStrength - awayStrength) / 2))
+      );
+
+      const drawProb = Math.max(
+        15,
+        Math.min(30, 30 - Math.round(Math.abs(homeStrength - awayStrength) / 4))
+      );
+
       const awayWinProb = Math.max(10, 100 - homeWinProb - drawProb);
 
-      const over25Prob = avgGoals != null ? Math.max(20, Math.min(80, Math.round(avgGoals * 22))) : null;
+      const over25Prob =
+        avgGoals != null
+          ? Math.max(20, Math.min(80, Math.round(avgGoals * 22)))
+          : null;
 
       const bttsProb =
         avgGoalsHome != null && avgGoalsAway != null
-          ? Math.max(15, Math.min(80, Math.round(((avgGoalsHome + avgGoalsAway) / 2) * 30)))
+          ? Math.max(
+              15,
+              Math.min(80, Math.round(((avgGoalsHome + avgGoalsAway) / 2) * 30))
+            )
           : null;
 
-      const cornersOver85Prob = avgCorners != null ? Math.max(20, Math.min(80, Math.round(avgCorners * 7))) : null;
-
-      const rowBase = {
+      const row = {
         id: fixtureId,
         created_at: new Date().toISOString(),
         match_date: f.fixture.date ? f.fixture.date.slice(0, 10) : today,
@@ -209,37 +218,39 @@ async function main() {
         league: normalizeLeagueName(f.league),
         home_logo: buildLogoUrl(f.teams.home),
         away_logo: buildLogoUrl(f.teams.away),
+
         avg_goals: avgGoals,
-        avg_corners: avgCorners,
-        avg_shots: avgShots,
+        avg_corners: null,
+        avg_shots: null,
+
+        insight: null,
         home_win_prob: homeWinProb,
         draw_prob: drawProb,
         away_win_prob: awayWinProb,
-        home_result_prob: homeWinProb,
-        away_result_prob: awayWinProb,
-        over25_prob: over25Prob,
-        btts_prob: bttsProb,
-        corners_over85_prob: cornersOver85Prob,
         home_form: homeForm,
         away_form: awayForm,
+        over25_prob: over25Prob,
+        btts_prob: bttsProb,
+        corners_over85_prob: null,
+        pick: null,
         power_home: homeStrength,
         power_away: awayStrength,
+        home_result_prob: homeWinProb,
+        away_result_prob: awayWinProb,
+
         market_odds_over25: null,
         market_odds_btts: null,
         market_odds_corners85: null,
         over15_prob: null,
         under25_prob: over25Prob != null ? 100 - over25Prob : null,
         under35_prob: null,
-        insight: null,
-        pick: null,
       };
 
-      const bestPick = pickFromRow(rowBase);
+      const bestPick = pickFromRow(row);
+      row.pick = bestPick.label;
+      row.insight = `Força da oportunidade — ${confidenceLabel(bestPick.prob)} (${bestPick.prob}%)`;
 
-      rowBase.pick = bestPick.label;
-      rowBase.insight = `Força da oportunidade — ${confidenceLabel(bestPick.prob)} (${bestPick.prob}%)`;
-
-      rows.push(rowBase);
+      rows.push(row);
     } catch (err) {
       console.error("Erro ao processar fixture:", f?.fixture?.id, err.message);
     }
@@ -252,7 +263,9 @@ async function main() {
 
   console.log(`Gravando ${rows.length} jogos no Supabase...`);
 
-  const { error } = await supabase.from("matches").upsert(rows, { onConflict: "id" });
+  const { error } = await supabase
+    .from("matches")
+    .upsert(rows, { onConflict: "id" });
 
   if (error) {
     throw new Error(`Erro ao gravar no Supabase: ${error.message}`);
