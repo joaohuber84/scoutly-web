@@ -74,23 +74,6 @@ function probabilityToStrength(prob) {
   return 'Leitura fraca'
 }
 
-function normalizeFormLabel(originalText, numericValue) {
-  if (typeof originalText === 'string' && originalText.trim()) {
-    const t = originalText.trim().toLowerCase()
-    if (t.includes('very strong')) return 'Muito forte'
-    if (t.includes('strong')) return 'Forte'
-    if (t.includes('average')) return 'Equilibrado'
-    if (t.includes('weak')) return 'Fraco'
-    return originalText
-  }
-
-  const n = Number(numericValue) || 1
-  if (n >= 1.22) return 'Muito forte'
-  if (n >= 1.05) return 'Forte'
-  if (n >= 0.90) return 'Equilibrado'
-  return 'Fraco'
-}
-
 function isUpcomingMatch(match) {
   const raw = match.kickoff || match.match_date
   if (!raw) return false
@@ -292,17 +275,25 @@ function buildMarketBoard(match) {
     })
   }
 
-  const enriched = board.map(item => ({
-    ...item,
-    probability: clamp(item.probability, 0.05, 0.97),
-    strength_label: probabilityToStrength(item.probability),
-    score: marketScore(item)
-  }))
-
-  const bestPick = [...enriched].sort((a, b) => b.score - a.score)[0]
-  const topThree = [...enriched]
+  const enriched = board
+    .filter(item => item.market && item.probability !== null && item.probability !== undefined)
+    .map(item => ({
+      ...item,
+      probability: clamp(item.probability, 0.05, 0.97),
+      strength_label: probabilityToStrength(item.probability),
+      score: marketScore(item)
+    }))
     .sort((a, b) => b.score - a.score)
-    .slice(0, 3)
+
+  const bestPick = enriched[0] || {
+    market: 'Mercado em revisão',
+    probability: 0.60,
+    family: 'resultado',
+    strength_label: 'Leitura moderada',
+    score: 0.50
+  }
+
+  const topThree = enriched.slice(0, 3)
 
   return {
     result,
@@ -358,7 +349,11 @@ function buildInsight(bestPick, computed, match) {
     return `Leitura de confronto equilibrado, com chance real de divisão de pontos.`
   }
 
-  return `Leitura baseada na média de ${avgGoals} gols do confronto e nos pesos ofensivos do modelo.`
+  if (avgGoals > 0) {
+    return `Leitura baseada na média de ${avgGoals} gols do confronto e nos pesos ofensivos do modelo.`
+  }
+
+  return `Leitura do modelo baseada nos dados ofensivos e no equilíbrio do confronto.`
 }
 
 async function loadAllMatches() {
@@ -416,12 +411,9 @@ async function updateMatchesBrain() {
 
       avg_corners: round(computed.cornersProjection, 2),
 
-      home_form: normalizeFormLabel(match.home_form, match.power_home),
-      away_form: normalizeFormLabel(match.away_form, match.power_away),
-
-      pick: bestPick.market,
+      pick: bestPick.market || 'Mercado em revisão',
       insight: buildInsight(bestPick, computed, match),
-      strength_label: bestPick.strength_label
+      strength_label: bestPick.strength_label || 'Leitura moderada'
     }
 
     const { error } = await supabase
@@ -433,6 +425,23 @@ async function updateMatchesBrain() {
       console.error(`Erro ao atualizar match ${match.id}: ${error.message}`)
     }
   }
+}
+
+function marketExactKey(market) {
+  if (!market) return 'desconhecido'
+
+  if (market.includes(' ou empate')) return 'dupla_chance'
+  if (market.includes('escanteios')) return market
+  if (market.includes('Mais de 1.5 gols')) return 'mais_1_5_gols'
+  if (market.includes('Mais de 2.5 gols')) return 'mais_2_5_gols'
+  if (market.includes('Menos de 2.5 gols')) return 'menos_2_5_gols'
+  if (market.includes('Menos de 3.5 gols')) return 'menos_3_5_gols'
+  if (market.includes('Ambas marcam')) return 'ambas_marcam'
+  if (market.includes('Vitória mandante')) return 'vitoria_mandante'
+  if (market.includes('Vitória visitante')) return 'vitoria_visitante'
+  if (market.includes('Empate')) return 'empate'
+
+  return market
 }
 
 async function rebuildDailyPicks() {
@@ -453,25 +462,72 @@ async function rebuildDailyPicks() {
     match => ALLOWED_LEAGUES.includes(match.league) && isUpcomingMatch(match)
   )
 
-  const rows = upcoming
-    .map(match => {
-      const computed = buildMarketBoard(match)
-      const bestPick = computed.bestPick
+  const candidates = []
 
-      return {
+  for (const match of upcoming) {
+    const computed = buildMarketBoard(match)
+
+    computed.topThree.forEach((market, idx) => {
+      candidates.push({
         match_id: match.id,
         home_team: match.home_team,
         away_team: match.away_team,
         league: match.league,
-        market: bestPick.market,
-        probability: round(clamp(bestPick.probability, 0.55, 0.88)),
-        score: bestPick.score
-      }
+        market: market.market,
+        family: market.family,
+        probability: round(clamp(market.probability, 0.55, 0.88)),
+        base_score: market.score,
+        adjusted_score: market.score - idx * 0.035,
+        market_key: marketExactKey(market.market)
+      })
     })
+  }
+
+  candidates.sort((a, b) => {
+    if (b.adjusted_score !== a.adjusted_score) return b.adjusted_score - a.adjusted_score
+    if (b.probability !== a.probability) return b.probability - a.probability
+    return String(a.league).localeCompare(String(b.league))
+  })
+
+  const selected = []
+  const usedMatches = new Set()
+  const familyCount = {}
+  const exactMarketCount = {}
+
+  function trySelect(candidate, strict = true) {
+    if (usedMatches.has(candidate.match_id)) return false
+
+    const family = candidate.family || 'outros'
+    const exact = candidate.market_key || 'outros'
+
+    if (strict) {
+      if ((familyCount[family] || 0) >= 2) return false
+      if ((exactMarketCount[exact] || 0) >= 2) return false
+    } else {
+      if ((exactMarketCount[exact] || 0) >= 3) return false
+    }
+
+    selected.push(candidate)
+    usedMatches.add(candidate.match_id)
+    familyCount[family] = (familyCount[family] || 0) + 1
+    exactMarketCount[exact] = (exactMarketCount[exact] || 0) + 1
+    return true
+  }
+
+  for (const candidate of candidates) {
+    if (selected.length >= 6) break
+    trySelect(candidate, true)
+  }
+
+  for (const candidate of candidates) {
+    if (selected.length >= 6) break
+    trySelect(candidate, false)
+  }
+
+  const rows = selected
     .sort((a, b) => {
-      if (b.score !== a.score) return b.score - a.score
-      if (b.probability !== a.probability) return b.probability - a.probability
-      return String(a.league).localeCompare(String(b.league))
+      if (b.adjusted_score !== a.adjusted_score) return b.adjusted_score - a.adjusted_score
+      return b.probability - a.probability
     })
     .slice(0, 6)
     .map((item, index) => ({
@@ -501,12 +557,12 @@ async function rebuildDailyPicks() {
 
 async function run() {
   try {
-    console.log('Iniciando Scoutly Brain V5...')
+    console.log('Iniciando Scoutly Brain V5.1...')
     await updateMatchesBrain()
     await rebuildDailyPicks()
-    console.log('Scoutly Brain V5 finalizado com sucesso.')
+    console.log('Scoutly Brain V5.1 finalizado com sucesso.')
   } catch (error) {
-    console.error('Erro no Scoutly Brain V5:', error)
+    console.error('Erro no Scoutly Brain V5.1:', error)
     process.exit(1)
   }
 }
