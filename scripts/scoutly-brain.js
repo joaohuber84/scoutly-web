@@ -1,133 +1,93 @@
-function generateOpportunities(matches) {
+const { createClient } = require('@supabase/supabase-js')
 
-  const leaguesWhitelist = [
-    "Premier League",
-    "La Liga",
-    "Bundesliga",
-    "Serie A",
-    "Ligue 1",
-    "Eredivisie",
-    "Brasileirão Série A",
-    "Brasileirão Série B",
-    "MLS",
-    "Liga Argentina",
-    "Champions League",
-    "Europa League",
-    "Conference League",
-    "Libertadores",
-    "Sul-Americana",
-    "Copa do Brasil"
-  ];
+const supabase = createClient(
+process.env.SUPABASE_URL,
+process.env.SUPABASE_SERVICE_ROLE_KEY
+)
 
-  const opportunities = [];
+function generateOpportunities(matches){
 
-  matches.forEach(match => {
+const leaguesWhitelist = [
+"Premier League",
+"La Liga",
+"Bundesliga",
+"Serie A",
+"Ligue 1",
+"Eredivisie",
+"Brasileirão Série A",
+"Brasileirão Série B",
+"MLS",
+"Liga Argentina",
+"Champions League",
+"Europa League",
+"Conference League"
+]
 
-    if (!leaguesWhitelist.includes(match.league)) return;
+let opportunities = []
 
-    const goalsProjection =
-      (match.home_goals_avg + match.away_goals_avg) / 2;
+for(const match of matches){
 
-    const cornersProjection =
-      (match.home_corners_avg + match.away_corners_avg);
+if(!leaguesWhitelist.includes(match.league)) continue
 
-    const shotsProjection =
-      (match.home_shots_avg + match.away_shots_avg);
+let score = 0
 
-    const markets = [];
+if(match.avg_goals >= 2.5) score += 2
+if(match.avg_shots >= 20) score += 2
+if(match.avg_corners >= 9) score += 2
+if(match.home_form > match.away_form) score += 1
 
-    if (goalsProjection > 2.6) {
-      markets.push({
-        market: "Mais de 2.5 gols",
-        strength: "muito_forte",
-        score: goalsProjection
-      });
-    }
+if(score >= 4){
 
-    if (goalsProjection < 2.3) {
-      markets.push({
-        market: "Menos de 3.5 gols",
-        strength: "boa",
-        score: goalsProjection
-      });
-    }
-
-    if (cornersProjection > 9.5) {
-      markets.push({
-        market: "Mais de 9.5 escanteios",
-        strength: "boa",
-        score: cornersProjection
-      });
-    }
-
-    if (cornersProjection < 8.5) {
-      markets.push({
-        market: "Menos de 10.5 escanteios",
-        strength: "moderada",
-        score: cornersProjection
-      });
-    }
-
-    if (shotsProjection > 22) {
-      markets.push({
-        market: "Mais de 1.5 gols",
-        strength: "muito_forte",
-        score: shotsProjection
-      });
-    }
-
-    if (match.home_form > match.away_form + 2) {
-      markets.push({
-        market: `Vitória do ${match.home_team}`,
-        strength: "boa",
-        score: match.home_form
-      });
-    }
-
-    if (match.away_form > match.home_form + 2) {
-      markets.push({
-        market: `Vitória do ${match.away_team}`,
-        strength: "boa",
-        score: match.away_form
-      });
-    }
-
-    if (Math.abs(match.home_form - match.away_form) < 2) {
-      markets.push({
-        market: `Dupla chance ${match.home_team} ou empate`,
-        strength: "moderada",
-        score: 5
-      });
-    }
-
-    markets.sort((a, b) => b.score - a.score);
-
-    const topMarkets = markets.slice(0, 3);
-
-    if (topMarkets.length > 0) {
-
-      opportunities.push({
-        league: match.league,
-        home_team: match.home_team,
-        away_team: match.away_team,
-        kickoff: match.kickoff,
-        main_market: topMarkets[0],
-        other_markets: topMarkets.slice(1),
-        goals_projection: goalsProjection.toFixed(1),
-        corners_projection: cornersProjection.toFixed(1),
-        shots_projection: shotsProjection.toFixed(0)
-      });
-
-    }
-
-  });
-
-  opportunities.sort((a, b) => b.main_market.score - a.main_market.score);
-
-  return {
-    tip_of_day: opportunities[0],
-    top5: opportunities.slice(1, 6),
-    matches: opportunities
-  };
+opportunities.push({
+match_id: match.id,
+home_team: match.home_team,
+away_team: match.away_team,
+league: match.league,
+pick: "Over 1.5 Goals",
+confidence: score
+})
 
 }
+
+}
+
+return opportunities
+
+}
+
+async function run(){
+
+const { data: matches } = await supabase
+.from("matches")
+.select("*")
+
+if(!matches){
+console.log("No matches found")
+return
+}
+
+const opportunities = generateOpportunities(matches)
+
+console.log("Generated opportunities:", opportunities.length)
+
+for(const opp of opportunities){
+
+await supabase
+.from("daily_picks")
+.insert({
+match_id: opp.match_id,
+home_team: opp.home_team,
+away_team: opp.away_team,
+league: opp.league,
+market: opp.pick,
+probability: opp.confidence/5,
+is_opportunity: true
+})
+
+}
+
+console.log("Daily picks updated")
+
+}
+
+run()
