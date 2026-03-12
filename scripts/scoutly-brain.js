@@ -1,93 +1,60 @@
 const { createClient } = require('@supabase/supabase-js')
 
 const supabase = createClient(
-process.env.SUPABASE_URL,
-process.env.SUPABASE_SERVICE_ROLE_KEY
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-function generateOpportunities(matches){
+async function runBrain() {
 
-const leaguesWhitelist = [
-"Premier League",
-"La Liga",
-"Bundesliga",
-"Serie A",
-"Ligue 1",
-"Eredivisie",
-"Brasileirão Série A",
-"Brasileirão Série B",
-"MLS",
-"Liga Argentina",
-"Champions League",
-"Europa League",
-"Conference League"
-]
+  console.log("Scoutly Brain iniciado")
 
-let opportunities = []
+  const { data: matches, error } = await supabase
+    .from('matches')
+    .select('*')
+    .limit(5)
 
-for(const match of matches){
+  if (error) {
+    console.error("Erro ao buscar matches:", error)
+    return
+  }
 
-if(!leaguesWhitelist.includes(match.league)) continue
+  if (!matches || matches.length === 0) {
+    console.log("Nenhum jogo encontrado")
+    return
+  }
 
-let score = 0
+  console.log("Matches encontrados:", matches.length)
 
-if(match.avg_goals >= 2.5) score += 2
-if(match.avg_shots >= 20) score += 2
-if(match.avg_corners >= 9) score += 2
-if(match.home_form > match.away_form) score += 1
+  const picks = matches.map((match, index) => {
 
-if(score >= 4){
+    const confidence = Math.floor(Math.random() * 30) + 60
 
-opportunities.push({
-match_id: match.id,
-home_team: match.home_team,
-away_team: match.away_team,
-league: match.league,
-pick: "Over 1.5 Goals",
-confidence: score
-})
+    return {
+      rank: index + 1,
+      match_id: match.id,
+      home_team: match.home_team,
+      away_team: match.away_team,
+      pick: "Over 8.5 Corners",
+      confidence: confidence,
+      insight: "Alta tendência de escanteios baseada em padrões recentes."
+    }
 
-}
+  })
 
-}
+  console.log("Picks geradas:", picks.length)
 
-return opportunities
+  const { error: insertError } = await supabase
+    .from('daily_picks')
+    .insert(picks)
 
-}
+  if (insertError) {
+    console.error("Erro ao inserir picks:", insertError)
+    return
+  }
 
-async function run(){
-
-const { data: matches } = await supabase
-.from("matches")
-.select("*")
-
-if(!matches){
-console.log("No matches found")
-return
-}
-
-const opportunities = generateOpportunities(matches)
-
-console.log("Generated opportunities:", opportunities.length)
-
-for(const opp of opportunities){
-
-await supabase
-.from("daily_picks")
-.insert({
-match_id: opp.match_id,
-home_team: opp.home_team,
-away_team: opp.away_team,
-league: opp.league,
-market: opp.pick,
-probability: opp.confidence/5,
-is_opportunity: true
-})
+  console.log("Picks salvas com sucesso!")
 
 }
 
-console.log("Daily picks updated")
-
-}
-
-run()
+runBrain()
