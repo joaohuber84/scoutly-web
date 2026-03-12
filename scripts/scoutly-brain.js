@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js')
+const { createClient } = require("@supabase/supabase-js")
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -9,52 +9,56 @@ async function runBrain() {
 
   console.log("Scoutly Brain iniciado")
 
-  const { data: matches, error } = await supabase
-    .from('matches')
-    .select('*')
-    .limit(5)
+  // limpa picks antigas
+  await supabase
+    .from("daily_picks")
+    .delete()
+    .neq("id", 0)
 
-  if (error) {
-    console.error("Erro ao buscar matches:", error)
-    return
-  }
+  console.log("Tabela daily_picks limpa")
 
-  if (!matches || matches.length === 0) {
+  // pega jogos
+  const { data: matches } = await supabase
+    .from("matches")
+    .select("*")
+    .limit(20)
+
+  if (!matches) {
     console.log("Nenhum jogo encontrado")
     return
   }
 
-  console.log("Matches encontrados:", matches.length)
+  let rank = 1
 
-  const picks = matches.map((match, index) => {
+  for (const game of matches) {
 
-    const confidence = Math.floor(Math.random() * 30) + 60
+    // lógica simples inicial
+    const probability = Math.random()
 
-    return {
-      rank: index + 1,
-      match_id: match.id,
-      home_team: match.home_team,
-      away_team: match.away_team,
-      pick: "Over 8.5 Corners",
-      confidence: confidence,
-      insight: "Alta tendência de escanteios baseada em padrões recentes."
+    if (probability > 0.65) {
+
+      const pick = {
+        rank: rank,
+        match_id: game.id,
+        home_team: game.home_team,
+        away_team: game.away_team,
+        league: game.league || "Unknown",
+        market: "Over 8.5 corners",
+        probability: probability,
+        is_opportunity: true
+      }
+
+      await supabase
+        .from("daily_picks")
+        .insert(pick)
+
+      console.log("Pick inserida:", pick)
+
+      rank++
     }
-
-  })
-
-  console.log("Picks geradas:", picks.length)
-
-  const { error: insertError } = await supabase
-    .from('daily_picks')
-    .insert(picks)
-
-  if (insertError) {
-    console.error("Erro ao inserir picks:", insertError)
-    return
   }
 
-  console.log("Picks salvas com sucesso!")
-
+  console.log("Brain finalizado")
 }
 
 runBrain()
