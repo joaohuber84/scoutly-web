@@ -70,9 +70,11 @@ function normalizeText(text) {
 
 function normalizeLeague(rawLeague) {
   const raw = normalizeText(rawLeague)
-  if (!raw) return firstString({ v: rawLeague }, ['v'], 'Liga não informada')
+  const original = firstString({ v: rawLeague }, ['v'], 'Liga não informada')
 
-  if (raw.includes('premier league') && (raw.includes('england') || raw.includes('english') || raw.includes('epl') || raw === 'premier league')) {
+  if (!raw) return original
+
+  if (raw.includes('premier league') && (raw.includes('england') || raw.includes('english') || raw.includes('epl'))) {
     return 'Premier League'
   }
 
@@ -160,7 +162,7 @@ function normalizeLeague(rawLeague) {
     return 'CONCACAF Champions Cup'
   }
 
-  return firstString({ v: rawLeague }, ['v'], 'Liga não informada')
+  return original
 }
 
 function getMetrics(match) {
@@ -579,7 +581,6 @@ async function loadAllMatches() {
 
 async function updateMatchesBrain() {
   const matches = await loadAllMatches()
-
   const filtered = matches.filter((match) => isUpcomingMatch(match))
 
   console.log(`Jogos futuros encontrados: ${filtered.length}`)
@@ -594,7 +595,7 @@ async function updateMatchesBrain() {
     if (!primary) continue
 
     const payload = {
-      league: normalizedLeague || firstString(match, ['league'], 'Liga não informada'),
+      league: normalizedLeague,
       pick: primary.market,
       strength_label: primary.strength_label,
       insight: buildGameReading(metrics, primary),
@@ -653,7 +654,7 @@ async function rebuildDailyPicks() {
       match_id: match.id,
       home_team: match.home_team,
       away_team: match.away_team,
-      league: normalizeLeague(match.league) || firstString(match, ['league'], 'Liga não informada'),
+      league: normalizeLeague(match.league),
       market: match.pick,
       probability: round((firstNumber(match, ['top_market_1_score'], 70) || 70) / 100, 4),
       score: firstNumber(match, ['top_market_1_score'], 70) || 70,
@@ -715,12 +716,12 @@ async function rebuildDailyPicks() {
 
 async function run() {
   try {
-    console.log('Iniciando Scoutly Brain V2.2...')
+    console.log('Iniciando Scoutly Rollback Limpo...')
     await updateMatchesBrain()
     await rebuildDailyPicks()
-    console.log('Scoutly Brain V2.2 finalizado com sucesso.')
+    console.log('Scoutly Rollback Limpo finalizado com sucesso.')
   } catch (error) {
-    console.error('Erro no Scoutly Brain V2.2:', error)
+    console.error('Erro no Scoutly Rollback Limpo:', error)
     process.exit(1)
   }
 }
