@@ -5,39 +5,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-const ALLOWED_LEAGUES = [
-  // Europa principal
-  'Premier League',
-  'La Liga',
-  'Bundesliga',
-  'Serie A',
-  'Ligue 1',
-  'Eredivisie',
-  'Primeira Liga',
-  'Belgian Pro League',
-  'Super Lig',
-  'Super League',
-
-  // América
-  'Brasileirão Série A',
-  'Brasileirão Série B',
-  'Liga Profesional Argentina',
-  'MLS',
-  'Liga MX',
-
-  // Oriente Médio
-  'Saudi Pro League',
-
-  // Copas
-  'UEFA Champions League',
-  'UEFA Europa League',
-  'UEFA Europa Conference League',
-  'CONMEBOL Libertadores',
-  'CONMEBOL Sudamericana',
-  'Copa do Brasil',
-  'CONCACAF Champions Cup'
-]
-
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value))
 }
@@ -103,150 +70,97 @@ function normalizeText(text) {
 
 function normalizeLeague(rawLeague) {
   const raw = normalizeText(rawLeague)
-  if (!raw) return null
+  if (!raw) return firstString({ v: rawLeague }, ['v'], 'Liga não informada')
 
-  // Inglaterra
-  if (
-    raw.includes('premier league') &&
-    (
-      raw.includes('england') ||
-      raw.includes('english') ||
-      raw.includes('epl') ||
-      raw === 'premier league'
-    )
-  ) return 'Premier League'
+  if (raw.includes('premier league') && (raw.includes('england') || raw.includes('english') || raw.includes('epl') || raw === 'premier league')) {
+    return 'Premier League'
+  }
 
-  // Espanha
-  if (
-    raw.includes('la liga') ||
-    raw.includes('primera division spain') ||
-    raw.includes('spanish la liga')
-  ) return 'La Liga'
+  if (raw.includes('la liga') || raw.includes('primera division spain') || raw.includes('spanish la liga')) {
+    return 'La Liga'
+  }
 
-  // Alemanha
   if (raw.includes('bundesliga')) return 'Bundesliga'
 
-  // Itália
-  if (
-    raw === 'serie a' ||
-    raw.includes('italy serie a') ||
-    raw.includes('italian serie a')
-  ) return 'Serie A'
+  if (raw === 'serie a' || raw.includes('italy serie a') || raw.includes('italian serie a')) {
+    return 'Serie A'
+  }
 
-  // França
-  if (
-    raw === 'ligue 1' ||
-    raw.includes('france ligue 1') ||
-    raw.includes('french ligue 1')
-  ) return 'Ligue 1'
+  if (raw === 'ligue 1' || raw.includes('france ligue 1') || raw.includes('french ligue 1')) {
+    return 'Ligue 1'
+  }
 
-  // Holanda
   if (raw.includes('eredi')) return 'Eredivisie'
 
-  // Portugal
-  if (
-    raw.includes('primeira liga') ||
-    raw.includes('liga portugal') ||
-    raw.includes('portugal primeira')
-  ) return 'Primeira Liga'
+  if (raw.includes('primeira liga') || raw.includes('liga portugal') || raw.includes('portugal primeira')) {
+    return 'Primeira Liga'
+  }
 
-  // Bélgica
-  if (
-    raw.includes('belgian pro league') ||
-    raw.includes('jupiler pro league') ||
-    raw.includes('belgium pro league')
-  ) return 'Belgian Pro League'
+  if (raw.includes('belgian pro league') || raw.includes('jupiler pro league') || raw.includes('belgium pro league')) {
+    return 'Belgian Pro League'
+  }
 
-  // Turquia
-  if (
-    raw.includes('super lig') ||
-    raw.includes('turkish super league')
-  ) return 'Super Lig'
+  if (raw.includes('super lig') || raw.includes('turkish super league')) {
+    return 'Super Lig'
+  }
 
-  // Grécia
-  if (
-    raw.includes('greek super league') ||
-    raw === 'super league greece'
-  ) return 'Super League'
+  if (raw.includes('greek super league') || raw === 'super league greece') {
+    return 'Super League'
+  }
 
-  // Brasil A
-  if (
-    raw.includes('brasileirao serie a') ||
-    raw.includes('brazil serie a') ||
-    raw.includes('serie a brazil')
-  ) return 'Brasileirão Série A'
+  if (raw.includes('brasileirao serie a') || raw.includes('brazil serie a') || raw.includes('serie a brazil')) {
+    return 'Brasileirão Série A'
+  }
 
-  // Brasil B
-  if (
-    raw.includes('brasileirao serie b') ||
-    raw.includes('brazil serie b')
-  ) return 'Brasileirão Série B'
+  if (raw.includes('brasileirao serie b') || raw.includes('brazil serie b')) {
+    return 'Brasileirão Série B'
+  }
 
-  // Argentina
-  if (
-    raw.includes('liga profesional argentina') ||
-    raw.includes('argentina primera division') ||
-    raw.includes('argentine primera')
-  ) return 'Liga Profesional Argentina'
+  if (raw.includes('liga profesional argentina') || raw.includes('argentina primera division') || raw.includes('argentine primera')) {
+    return 'Liga Profesional Argentina'
+  }
 
-  // MLS
-  if (
-    raw === 'mls' ||
-    raw.includes('major league soccer')
-  ) return 'MLS'
+  if (raw === 'mls' || raw.includes('major league soccer')) {
+    return 'MLS'
+  }
 
-  // México
-  if (
-    raw.includes('liga mx') ||
-    raw.includes('mexican primera')
-  ) return 'Liga MX'
+  if (raw.includes('liga mx') || raw.includes('mexican primera')) {
+    return 'Liga MX'
+  }
 
-  // Saudita
-  if (
-    raw.includes('saudi pro league') ||
-    raw.includes('saudi professional league')
-  ) return 'Saudi Pro League'
+  if (raw.includes('saudi pro league') || raw.includes('saudi professional league')) {
+    return 'Saudi Pro League'
+  }
 
-  // Champions
-  if (
-    raw.includes('uefa champions league') ||
-    raw === 'champions league'
-  ) return 'UEFA Champions League'
+  if (raw.includes('uefa champions league') || raw === 'champions league') {
+    return 'UEFA Champions League'
+  }
 
-  // Europa League
-  if (
-    raw.includes('uefa europa league') ||
-    raw === 'europa league'
-  ) return 'UEFA Europa League'
+  if (raw.includes('uefa europa league') || raw === 'europa league') {
+    return 'UEFA Europa League'
+  }
 
-  // Conference
-  if (
-    raw.includes('uefa europa conference league') ||
-    raw === 'conference league'
-  ) return 'UEFA Europa Conference League'
+  if (raw.includes('uefa europa conference league') || raw === 'conference league') {
+    return 'UEFA Europa Conference League'
+  }
 
-  // Libertadores
-  if (
-    raw.includes('conmebol libertadores') ||
-    raw.includes('copa libertadores')
-  ) return 'CONMEBOL Libertadores'
+  if (raw.includes('conmebol libertadores') || raw.includes('copa libertadores')) {
+    return 'CONMEBOL Libertadores'
+  }
 
-  // Sudamericana
-  if (
-    raw.includes('conmebol sudamericana') ||
-    raw.includes('copa sudamericana')
-  ) return 'CONMEBOL Sudamericana'
+  if (raw.includes('conmebol sudamericana') || raw.includes('copa sudamericana')) {
+    return 'CONMEBOL Sudamericana'
+  }
 
-  // Copa do Brasil
-  if (raw.includes('copa do brasil')) return 'Copa do Brasil'
+  if (raw.includes('copa do brasil')) {
+    return 'Copa do Brasil'
+  }
 
-  // Concacaf
-  if (
-    raw.includes('concacaf champions cup') ||
-    raw.includes('concacaf champions league')
-  ) return 'CONCACAF Champions Cup'
+  if (raw.includes('concacaf champions cup') || raw.includes('concacaf champions league')) {
+    return 'CONCACAF Champions Cup'
+  }
 
-  return null
+  return firstString({ v: rawLeague }, ['v'], 'Liga não informada')
 }
 
 function getMetrics(match) {
@@ -482,7 +396,6 @@ function buildScores(match, metrics) {
 
   const markets = []
 
-  // Gols
   if (metrics.goalsExpected >= 3.0) {
     markets.push({
       family: 'gols',
@@ -503,7 +416,6 @@ function buildScores(match, metrics) {
     })
   }
 
-  // Escanteios
   if (metrics.cornersExpected >= 10.8) {
     markets.push({
       family: 'escanteios',
@@ -530,7 +442,6 @@ function buildScores(match, metrics) {
     })
   }
 
-  // Resultado / proteção
   if (homeDominanceScore >= 82) {
     markets.push({
       family: 'resultado',
@@ -557,7 +468,6 @@ function buildScores(match, metrics) {
     })
   }
 
-  // Ambas
   if (metrics.goalsExpected >= 2.7 && metrics.shotsOnTargetExpected >= 8) {
     markets.push({
       family: 'ambas',
@@ -670,12 +580,9 @@ async function loadAllMatches() {
 async function updateMatchesBrain() {
   const matches = await loadAllMatches()
 
-  const filtered = matches.filter((match) => {
-    const normalizedLeague = normalizeLeague(match.league)
-    return normalizedLeague && isUpcomingMatch(match)
-  })
+  const filtered = matches.filter((match) => isUpcomingMatch(match))
 
-  console.log(`Jogos filtrados no escopo principal: ${filtered.length}`)
+  console.log(`Jogos futuros encontrados: ${filtered.length}`)
 
   for (const match of filtered) {
     const normalizedLeague = normalizeLeague(match.league)
@@ -687,7 +594,7 @@ async function updateMatchesBrain() {
     if (!primary) continue
 
     const payload = {
-      league: normalizedLeague,
+      league: normalizedLeague || firstString(match, ['league'], 'Liga não informada'),
       pick: primary.market,
       strength_label: primary.strength_label,
       insight: buildGameReading(metrics, primary),
@@ -734,8 +641,6 @@ async function rebuildDailyPicks() {
   if (error) throw error
 
   const usable = (matches || []).filter((match) => {
-    const normalizedLeague = normalizeLeague(match.league)
-    if (!normalizedLeague) return false
     if (!isUpcomingMatch(match)) return false
     if (!match.pick) return false
     return true
@@ -748,7 +653,7 @@ async function rebuildDailyPicks() {
       match_id: match.id,
       home_team: match.home_team,
       away_team: match.away_team,
-      league: normalizeLeague(match.league),
+      league: normalizeLeague(match.league) || firstString(match, ['league'], 'Liga não informada'),
       market: match.pick,
       probability: round((firstNumber(match, ['top_market_1_score'], 70) || 70) / 100, 4),
       score: firstNumber(match, ['top_market_1_score'], 70) || 70,
@@ -773,7 +678,6 @@ async function rebuildDailyPicks() {
     usedMarkets[item.market_key] = (usedMarkets[item.market_key] || 0) + 1
   }
 
-  // fallback mais solto
   for (const item of candidates) {
     if (selected.length >= 6) break
     if (usedMatches.has(item.match_id)) continue
@@ -811,12 +715,12 @@ async function rebuildDailyPicks() {
 
 async function run() {
   try {
-    console.log('Iniciando Scoutly Brain V2.1...')
+    console.log('Iniciando Scoutly Brain V2.2...')
     await updateMatchesBrain()
     await rebuildDailyPicks()
-    console.log('Scoutly Brain V2.1 finalizado com sucesso.')
+    console.log('Scoutly Brain V2.2 finalizado com sucesso.')
   } catch (error) {
-    console.error('Erro no Scoutly Brain V2.1:', error)
+    console.error('Erro no Scoutly Brain V2.2:', error)
     process.exit(1)
   }
 }
