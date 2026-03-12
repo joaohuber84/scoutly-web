@@ -1598,7 +1598,7 @@
     function renderRadar() {
       const list = document.getElementById('radarList')
       const radarItems = state.dailyPicks
-        .filter(item => !item.is_opportunity)
+        .filter(item => Number(item.rank || 999) > 1)
         .sort((a, b) => Number(a.rank || 999) - Number(b.rank || 999))
         .slice(0, 5)
 
