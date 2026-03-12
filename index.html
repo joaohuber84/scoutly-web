@@ -530,7 +530,7 @@
 
     .analysis-grid {
       display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
+      grid-template-columns: 1.05fr 0.95fr;
       gap: 16px;
       margin-top: 18px;
     }
@@ -659,7 +659,7 @@
           <img
             id="brandLogo"
             class="brand-logo"
-            src="logo-scoutly.png"
+            src="logo-scoutly.jpg"
             alt="Scoutly"
             onload="this.style.display='block';document.getElementById('brandFallback').style.display='none';"
             onerror="this.style.display='none';document.getElementById('brandFallback').style.display='grid';"
@@ -780,16 +780,6 @@
               <div class="stat-item">
                 <div class="stat-label">Média de escanteios projetada</div>
                 <div class="stat-value" id="avgCornersValue">-</div>
-              </div>
-
-              <div class="stat-item">
-                <div class="stat-label">Média de finalizações</div>
-                <div class="stat-value" id="avgShotsValue">-</div>
-              </div>
-
-              <div class="stat-item">
-                <div class="stat-label">Forma</div>
-                <div class="stat-value" id="formsValue">-</div>
               </div>
             </div>
           </div>
@@ -934,6 +924,73 @@
       const d = new Date(value)
       if (Number.isNaN(d.getTime())) return false
       return d.getTime() >= (Date.now() - 2 * 60 * 60 * 1000)
+    }
+
+    function logistic(x) {
+      return 1 / (1 + Math.exp(-x))
+    }
+
+    function projectedCornersFromMatch(match) {
+      const baseCorners = Number(match.avg_corners)
+      const avgGoals = Number(match.avg_goals) || 2.4
+
+      if (!Number.isNaN(baseCorners) && baseCorners > 6.5 && baseCorners < 15) {
+        return baseCorners
+      }
+
+      return Math.max(6.8, Math.min(14.8, 7.2 + avgGoals * 0.35))
+    }
+
+    function cornerCandidates(match) {
+      const projection = projectedCornersFromMatch(match)
+      const lines = [7.5, 8.5, 9.5, 10.5]
+
+      const candidates = []
+
+      for (const line of lines) {
+        const overProb = Math.max(0.08, Math.min(0.92, logistic((projection - line) / 1.15)))
+        const underProb = Math.max(0.08, Math.min(0.92, 1 - overProb))
+
+        candidates.push({ market: `Mais de ${line} escanteios`, prob: overProb })
+        candidates.push({ market: `Menos de ${line} escanteios`, prob: underProb })
+      }
+
+      return candidates
+    }
+
+    function buildAnalysisMarkets(match) {
+      const base = [
+        { name: 'Vitória mandante', prob: match.home_result_prob ?? match.home_win_prob },
+        { name: 'Empate', prob: match.draw_result_prob ?? match.draw_prob },
+        { name: 'Vitória visitante', prob: match.away_result_prob ?? match.away_win_prob },
+
+        { name: 'Mandante ou empate', prob: Math.min(0.97, Number(match.home_result_prob ?? match.home_win_prob ?? 0) + Number(match.draw_result_prob ?? match.draw_prob ?? 0)) },
+        { name: 'Visitante ou empate', prob: Math.min(0.97, Number(match.away_result_prob ?? match.away_win_prob ?? 0) + Number(match.draw_result_prob ?? match.draw_prob ?? 0)) },
+        { name: 'Sem empate', prob: Math.min(0.97, Number(match.home_result_prob ?? match.home_win_prob ?? 0) + Number(match.away_result_prob ?? match.away_win_prob ?? 0)) },
+
+        { name: 'Mais de 1.5 gols', prob: match.over15_prob },
+        { name: 'Mais de 2.5 gols', prob: match.over25_prob },
+        { name: 'Menos de 2.5 gols', prob: match.under25_prob },
+        { name: 'Menos de 3.5 gols', prob: match.under35_prob },
+        { name: 'Ambas marcam', prob: match.btts_prob },
+
+        ...cornerCandidates(match)
+      ]
+        .filter(item => item.prob !== null && item.prob !== undefined && !Number.isNaN(Number(item.prob)))
+        .map(item => ({ ...item, prob: Number(item.prob) }))
+
+      function playabilityScore(prob) {
+        const idealCenter = 0.74
+        const distancePenalty = Math.abs(prob - idealCenter) * 0.9
+        const weakPenalty = prob < 0.57 ? 0.35 : 0
+        const tooSafePenalty = prob > 0.89 ? 0.18 : 0
+        return prob - distancePenalty - weakPenalty - tooSafePenalty
+      }
+
+      return base
+        .map(item => ({ ...item, score: playabilityScore(item.prob) }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3)
     }
 
     function renderOpportunity() {
@@ -1120,47 +1177,27 @@
       document.getElementById('backToCompetitionsBtn').classList.add('hidden')
     }
 
-    function buildAnalysisMarkets(match) {
-      const topMarkets = [
-        { name: match.top_market_1, prob: match.top_market_1_prob },
-        { name: match.top_market_2, prob: match.top_market_2_prob },
-        { name: match.top_market_3, prob: match.top_market_3_prob }
-      ]
-        .filter(item => item.name && item.prob !== null && item.prob !== undefined)
-        .sort((a, b) => Number(b.prob) - Number(a.prob))
-
-      return topMarkets
-    }
-
     function openAnalysis(matchId) {
       const match = state.matches.find(m => String(m.id) === String(matchId))
       if (!match) return
 
-      const pickFromRadar = state.dailyPicks.find(p => String(p.match_id) === String(matchId))
-      const bestPick = pickFromRadar?.market || match.pick || 'Sem mercado'
-      const bestProb =
-        pickFromRadar?.probability ||
-        match.top_market_1_prob ||
-        match.over15_prob ||
-        0.60
+      const computedTopMarkets = buildAnalysisMarkets(match)
+      const bestMarket = computedTopMarkets[0]?.name || match.pick || 'Sem mercado'
+      const bestProb = computedTopMarkets[0]?.prob || match.over15_prob || 0.60
 
       document.getElementById('analysisTitle').textContent = `${match.home_team || '-'} x ${match.away_team || '-'}`
       document.getElementById('analysisSubtitle').textContent =
         `${getLeagueFlag(match.league)} ${getLeagueDisplay(match.league)} • ${formatKickoff(match.kickoff)}`
       document.getElementById('analysisMatchSmall').textContent = `${match.home_team || '-'} x ${match.away_team || '-'}`
-      document.getElementById('analysisBestPick').textContent = bestPick
+      document.getElementById('analysisBestPick').textContent = bestMarket
       document.getElementById('analysisInsight').textContent =
-        match.insight || 'Leitura do modelo baseada nos dados ofensivos, forma e equilíbrio do confronto.'
+        match.insight || 'Leitura do modelo baseada nos dados ofensivos e no equilíbrio do confronto.'
 
       document.getElementById('analysisBestStrength').innerHTML = renderStrength(bestProb)
-
       document.getElementById('avgGoalsValue').textContent = formatDecimal(match.avg_goals)
-      document.getElementById('avgCornersValue').textContent = formatDecimal(match.avg_corners)
-      document.getElementById('avgShotsValue').textContent = formatDecimal(match.avg_shots)
-      document.getElementById('formsValue').textContent =
-        `${match.home_form || 'Equilibrado'} / ${match.away_form || 'Equilibrado'}`
+      document.getElementById('avgCornersValue').textContent = formatDecimal(projectedCornersFromMatch(match))
 
-      const marketLines = buildAnalysisMarkets(match).map(item => `
+      const marketLines = computedTopMarkets.map(item => `
         <div class="market-line">
           <div class="market-line-name">${item.name}</div>
           ${renderStrength(item.prob)}
