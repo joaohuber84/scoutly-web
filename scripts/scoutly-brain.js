@@ -62,6 +62,46 @@ function cumulativePoisson(lambda, maxK = 10) {
   return arr
 }
 
+function logistic(x) {
+  return 1 / (1 + Math.exp(-x))
+}
+
+function probabilityToStrength(prob) {
+  const p = Number(prob || 0)
+  if (p >= 0.80) return 'Leitura forte'
+  if (p >= 0.68) return 'Leitura boa'
+  if (p >= 0.58) return 'Leitura moderada'
+  return 'Leitura fraca'
+}
+
+function normalizeFormLabel(originalText, numericValue) {
+  if (typeof originalText === 'string' && originalText.trim()) {
+    const t = originalText.trim().toLowerCase()
+    if (t.includes('very strong')) return 'Muito forte'
+    if (t.includes('strong')) return 'Forte'
+    if (t.includes('average')) return 'Equilibrado'
+    if (t.includes('weak')) return 'Fraco'
+    return originalText
+  }
+
+  const n = Number(numericValue) || 1
+  if (n >= 1.22) return 'Muito forte'
+  if (n >= 1.05) return 'Forte'
+  if (n >= 0.90) return 'Equilibrado'
+  return 'Fraco'
+}
+
+function isUpcomingMatch(match) {
+  const raw = match.kickoff || match.match_date
+  if (!raw) return false
+
+  const kickoff = new Date(raw)
+  if (Number.isNaN(kickoff.getTime())) return false
+
+  const now = new Date()
+  return kickoff.getTime() >= now.getTime() - 2 * 60 * 60 * 1000
+}
+
 function resultProbabilities(homeXg, awayXg, maxGoals = 8) {
   const homeDist = cumulativePoisson(homeXg, maxGoals)
   const awayDist = cumulativePoisson(awayXg, maxGoals)
@@ -118,34 +158,6 @@ function totalGoalsProbabilities(homeXg, awayXg, maxGoals = 10) {
   }
 }
 
-function logistic(x) {
-  return 1 / (1 + Math.exp(-x))
-}
-
-function projectedCorners(match) {
-  const existingCorners = Number(match.avg_corners)
-  const avgShots = clamp(Number(match.avg_shots) || 19, 8, 34)
-  const avgGoals = clamp(Number(match.avg_goals) || 2.4, 0.8, 5.2)
-
-  if (!Number.isNaN(existingCorners) && existingCorners >= 7 && existingCorners <= 14.5) {
-    // usa o dado existente, mas dá um pequeno ajuste com shots/goals para evitar valores mortos
-    const blend = existingCorners * 0.7 + (7.2 + avgShots * 0.11 + avgGoals * 0.35) * 0.3
-    return clamp(blend, 6.8, 14.8)
-  }
-
-  // fallback mais realista que o anterior
-  const projection = 7.2 + avgShots * 0.11 + avgGoals * 0.35
-  return clamp(projection, 6.8, 14.8)
-}
-
-function cornersCandidateProb(projection, line, type) {
-  const spread = 1.15
-  const diff = projection - line
-  const over = clamp(logistic(diff / spread), 0.08, 0.92)
-  const under = clamp(1 - over, 0.08, 0.92)
-  return type === 'over' ? over : under
-}
-
 function buildExpectedGoals(match) {
   const avgGoals = clamp(Number(match.avg_goals) || 2.4, 0.8, 5.2)
   const powerHome = clamp(Number(match.power_home) || 1, 0.45, 2.2)
@@ -171,22 +183,74 @@ function buildExpectedGoals(match) {
   }
 }
 
-function probabilityToStrength(prob) {
-  const p = Number(prob || 0)
-  if (p >= 0.80) return 'Leitura forte'
-  if (p >= 0.68) return 'Leitura boa'
-  if (p >= 0.58) return 'Leitura moderada'
-  return 'Leitura fraca'
+function projectedCorners(match) {
+  const existingCorners = Number(match.avg_corners)
+  const avgShots = clamp(Number(match.avg_shots) || 19, 8, 34)
+  const avgGoals = clamp(Number(match.avg_goals) || 2.4, 0.8, 5.2)
+
+  if (!Number.isNaN(existingCorners) && existingCorners >= 7 && existingCorners <= 14.5) {
+    const blend = existingCorners * 0.7 + (7.2 + avgShots * 0.11 + avgGoals * 0.35) * 0.3
+    return clamp(blend, 6.8, 14.8)
+  }
+
+  const projection = 7.2 + avgShots * 0.11 + avgGoals * 0.35
+  return clamp(projection, 6.8, 14.8)
 }
 
-function playabilityScore(prob) {
-  const p = Number(prob || 0)
-  // evita que tudo vire "dupla chance 1X" ou aposta trivial
-  const idealCenter = 0.74
-  const distancePenalty = Math.abs(p - idealCenter) * 0.9
-  const weakPenalty = p < 0.57 ? 0.35 : 0
-  const tooSafePenalty = p > 0.89 ? 0.18 : 0
-  return p - distancePenalty - weakPenalty - tooSafePenalty
+function cornersCandidateProb(projection, line, type) {
+  const spread = 1.15
+  const diff = projection - line
+  const over = clamp(logistic(diff / spread), 0.08, 0.92)
+  const under = clamp(1 - over, 0.08, 0.92)
+  return type === 'over' ? over : under
+}
+
+function marketWeight(market, family) {
+  if (market === 'Mais de 1.5 gols') return 1.00
+  if (market === 'Menos de 3.5 gols') return 0.99
+  if (family === 'dupla_chance') return 0.97
+  if (family === 'escanteios') return 0.95
+  if (market === 'Ambas marcam') return 0.91
+  if (family === 'resultado') {
+    if (market === 'Empate') return 0.72
+    return 0.87
+  }
+  if (market === 'Mais de 2.5 gols') return 0.90
+  if (market === 'Menos de 2.5 gols') return 0.92
+  return 0.88
+}
+
+function marketClarityBonus(market, probability) {
+  let bonus = 0
+
+  if (market === 'Mais de 1.5 gols' && probability >= 0.70) bonus += 0.06
+  if (market === 'Menos de 3.5 gols' && probability >= 0.68) bonus += 0.05
+  if (market.includes(' ou empate') && probability >= 0.70) bonus += 0.04
+  if (market.includes('escanteios') && probability >= 0.67) bonus += 0.03
+  if (market === 'Empate') bonus -= 0.10
+
+  return bonus
+}
+
+function marketRiskPenalty(market, probability) {
+  let penalty = 0
+
+  if (probability < 0.57) penalty += 0.20
+  if (probability > 0.89) penalty += 0.10
+
+  if (market === 'Mais de 2.5 gols' && probability < 0.66) penalty += 0.05
+  if (market === 'Empate') penalty += 0.08
+
+  return penalty
+}
+
+function marketScore(item) {
+  const base = Number(item.probability || 0)
+  const weight = marketWeight(item.market, item.family)
+  const clarity = marketClarityBonus(item.market, base)
+  const risk = marketRiskPenalty(item.market, base)
+
+  return base * weight + clarity - risk
 }
 
 function buildMarketBoard(match) {
@@ -197,97 +261,89 @@ function buildMarketBoard(match) {
 
   const homeOrDraw = clamp(result.homeWin + result.draw, 0, 0.97)
   const awayOrDraw = clamp(result.awayWin + result.draw, 0, 0.97)
-  const noDraw = clamp(result.homeWin + result.awayWin, 0, 0.97)
 
   const cornerLines = [7.5, 8.5, 9.5, 10.5]
-
-  const cornerMarkets = []
-  for (const line of cornerLines) {
-    cornerMarkets.push({
-      market: `Mais de ${line} escanteios`,
-      probability: cornersCandidateProb(cornersProjection, line, 'over'),
-      family: 'escanteios'
-    })
-    cornerMarkets.push({
-      market: `Menos de ${line} escanteios`,
-      probability: cornersCandidateProb(cornersProjection, line, 'under'),
-      family: 'escanteios'
-    })
-  }
-
   const board = [
     { market: 'Vitória mandante', probability: result.homeWin, family: 'resultado' },
     { market: 'Empate', probability: result.draw, family: 'resultado' },
     { market: 'Vitória visitante', probability: result.awayWin, family: 'resultado' },
 
-    { market: 'Mandante ou empate', probability: homeOrDraw, family: 'dupla_chance' },
-    { market: 'Visitante ou empate', probability: awayOrDraw, family: 'dupla_chance' },
-    { market: 'Sem empate', probability: noDraw, family: 'dupla_chance' },
+    { market: `${match.home_team} ou empate`, probability: homeOrDraw, family: 'dupla_chance' },
+    { market: `${match.away_team} ou empate`, probability: awayOrDraw, family: 'dupla_chance' },
 
     { market: 'Mais de 1.5 gols', probability: totals.over15, family: 'gols' },
     { market: 'Mais de 2.5 gols', probability: totals.over25, family: 'gols' },
     { market: 'Menos de 2.5 gols', probability: totals.under25, family: 'gols' },
     { market: 'Menos de 3.5 gols', probability: totals.under35, family: 'gols' },
 
-    { market: 'Ambas marcam', probability: totals.btts, family: 'ambas' },
+    { market: 'Ambas marcam', probability: totals.btts, family: 'ambas' }
+  ]
 
-    ...cornerMarkets
-  ].map(item => ({
+  for (const line of cornerLines) {
+    board.push({
+      market: `Mais de ${line} escanteios`,
+      probability: cornersCandidateProb(cornersProjection, line, 'over'),
+      family: 'escanteios'
+    })
+    board.push({
+      market: `Menos de ${line} escanteios`,
+      probability: cornersCandidateProb(cornersProjection, line, 'under'),
+      family: 'escanteios'
+    })
+  }
+
+  const enriched = board.map(item => ({
     ...item,
     probability: clamp(item.probability, 0.05, 0.97),
     strength_label: probabilityToStrength(item.probability),
-    score: playabilityScore(item.probability)
+    score: marketScore(item)
   }))
 
-  const bestPick = [...board].sort((a, b) => b.score - a.score)[0]
+  const bestPick = [...enriched].sort((a, b) => b.score - a.score)[0]
+  const topThree = [...enriched]
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
 
   return {
     result,
     totals,
     cornersProjection,
-    board,
-    bestPick
+    board: enriched,
+    bestPick,
+    topThree
   }
 }
 
 function buildInsight(bestPick, computed, match) {
   const avgGoals = round(Number(match.avg_goals) || 0, 2)
-  const cornersProjection = round(computed.cornersProjection || 0, 2)
+  const projected = round(computed.cornersProjection || 0, 2)
 
   if (bestPick.market === 'Mais de 1.5 gols') {
-    return `Leitura favorável para pelo menos 2 gols. O modelo vê esse corte como mais sólido do que linhas mais agressivas.`
+    return `Leitura favorável para pelo menos 2 gols. O modelo vê essa linha como mais sólida do que cortes mais agressivos.`
   }
 
   if (bestPick.market === 'Mais de 2.5 gols') {
-    return `Leitura ofensiva positiva, mas exigindo um jogo mais aberto para chegar a 3 gols.`
+    return `Leitura ofensiva positiva, mas exigindo um jogo mais aberto para atingir 3 gols.`
   }
 
   if (bestPick.market === 'Menos de 2.5 gols') {
-    return `Leitura de confronto mais travado, com menor espaço para placar alto.`
+    return `Leitura de confronto mais travado, com menos espaço para um placar alto.`
   }
 
   if (bestPick.market === 'Menos de 3.5 gols') {
-    return `Leitura de placar controlado, sem necessidade de um jogo muito explosivo.`
+    return `Leitura de placar controlado, sem necessidade de um jogo explosivo para bater.`
   }
 
   if (bestPick.market === 'Ambas marcam') {
-    return `Leitura de gol para os dois lados, com ataque suficiente dos dois times para sustentar esse mercado.`
+    return `Leitura de gol para os dois lados, sustentada por ataque suficiente das duas equipes.`
+  }
+
+  if (bestPick.family === 'dupla_chance') {
+    return `Leitura mais protegida para resultado, priorizando consistência em vez de depender de vitória seca.`
   }
 
   if (bestPick.family === 'escanteios') {
-    return `Projeção de aproximadamente ${cornersProjection} escanteios no jogo. A melhor linha foi escolhida a partir dessa faixa projetada.`
-  }
-
-  if (bestPick.market === 'Mandante ou empate') {
-    return `Leitura de proteção a favor do mandante, reduzindo o risco de depender de vitória seca.`
-  }
-
-  if (bestPick.market === 'Visitante ou empate') {
-    return `Leitura de proteção a favor do visitante, reduzindo o risco de depender de vitória seca.`
-  }
-
-  if (bestPick.market === 'Sem empate') {
-    return `Leitura de jogo com tendência mais forte a definição de vencedor do que empate.`
+    return `Projeção de aproximadamente ${projected} escanteios no jogo, usada para definir a linha mais coerente.`
   }
 
   if (bestPick.market === 'Vitória mandante') {
@@ -303,17 +359,6 @@ function buildInsight(bestPick, computed, match) {
   }
 
   return `Leitura baseada na média de ${avgGoals} gols do confronto e nos pesos ofensivos do modelo.`
-}
-
-function isUpcomingMatch(match) {
-  const raw = match.kickoff || match.match_date
-  if (!raw) return false
-
-  const kickoff = new Date(raw)
-  if (Number.isNaN(kickoff.getTime())) return false
-
-  const now = new Date()
-  return kickoff.getTime() >= now.getTime() - 2 * 60 * 60 * 1000
 }
 
 async function loadAllMatches() {
@@ -370,6 +415,9 @@ async function updateMatchesBrain() {
       btts_prob: round(computed.totals.btts),
 
       avg_corners: round(computed.cornersProjection, 2),
+
+      home_form: normalizeFormLabel(match.home_form, match.power_home),
+      away_form: normalizeFormLabel(match.away_form, match.power_away),
 
       pick: bestPick.market,
       insight: buildInsight(bestPick, computed, match),
@@ -453,14 +501,16 @@ async function rebuildDailyPicks() {
 
 async function run() {
   try {
-    console.log('Iniciando Scoutly Brain V4...')
+    console.log('Iniciando Scoutly Brain V5...')
     await updateMatchesBrain()
     await rebuildDailyPicks()
-    console.log('Scoutly Brain V4 finalizado com sucesso.')
+    console.log('Scoutly Brain V5 finalizado com sucesso.')
   } catch (error) {
-    console.error('Erro no Scoutly Brain V4:', error)
+    console.error('Erro no Scoutly Brain V5:', error)
     process.exit(1)
   }
 }
 
 run()
+
+
