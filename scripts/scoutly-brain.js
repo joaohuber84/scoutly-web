@@ -6,7 +6,7 @@ const supabase = createClient(
 )
 
 const ALLOWED_LEAGUES = [
-  // Europa
+  // Europa principal
   'Premier League',
   'La Liga',
   'Bundesliga',
@@ -38,87 +38,12 @@ const ALLOWED_LEAGUES = [
   'CONCACAF Champions Cup'
 ]
 
-const LEAGUE_ALIASES = {
-  'Premier League': 'Premier League',
-  'English Premier League': 'Premier League',
-  'EPL': 'Premier League',
-
-  'La Liga': 'La Liga',
-  'Primera Division': 'La Liga',
-
-  'Bundesliga': 'Bundesliga',
-  'Serie A': 'Serie A',
-  'Ligue 1': 'Ligue 1',
-  'Eredivisie': 'Eredivisie',
-
-  'Primeira Liga': 'Primeira Liga',
-  'Liga Portugal': 'Primeira Liga',
-
-  'Belgian Pro League': 'Belgian Pro League',
-  'Jupiler Pro League': 'Belgian Pro League',
-
-  'Super Lig': 'Super Lig',
-  'Turkish Super League': 'Super Lig',
-
-  'Super League': 'Super League',
-  'Greek Super League': 'Super League',
-
-  'Brasileirão Série A': 'Brasileirão Série A',
-  'Brazil Serie A': 'Brasileirão Série A',
-  'Serie A Brazil': 'Brasileirão Série A',
-
-  'Brasileirão Série B': 'Brasileirão Série B',
-  'Brazil Serie B': 'Brasileirão Série B',
-
-  'Liga Profesional Argentina': 'Liga Profesional Argentina',
-  'Argentina Primera Division': 'Liga Profesional Argentina',
-
-  'MLS': 'MLS',
-  'Major League Soccer': 'MLS',
-
-  'Liga MX': 'Liga MX',
-  'Mexican Primera League': 'Liga MX',
-
-  'Saudi Pro League': 'Saudi Pro League',
-  'Saudi Professional League': 'Saudi Pro League',
-
-  'UEFA Champions League': 'UEFA Champions League',
-  'Champions League': 'UEFA Champions League',
-
-  'UEFA Europa League': 'UEFA Europa League',
-  'Europa League': 'UEFA Europa League',
-
-  'UEFA Europa Conference League': 'UEFA Europa Conference League',
-  'Conference League': 'UEFA Europa Conference League',
-
-  'CONMEBOL Libertadores': 'CONMEBOL Libertadores',
-  'Copa Libertadores': 'CONMEBOL Libertadores',
-
-  'CONMEBOL Sudamericana': 'CONMEBOL Sudamericana',
-  'Copa Sudamericana': 'CONMEBOL Sudamericana',
-
-  'Copa do Brasil': 'Copa do Brasil',
-
-  'CONCACAF Champions Cup': 'CONCACAF Champions Cup',
-  'CONCACAF Champions League': 'CONCACAF Champions Cup'
-}
-
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value))
 }
 
 function round(value, decimals = 2) {
   return Number(Number(value).toFixed(decimals))
-}
-
-function logistic(x) {
-  return 1 / (1 + Math.exp(-x))
-}
-
-function normalizeLeague(rawLeague) {
-  if (!rawLeague) return null
-  const normalized = LEAGUE_ALIASES[rawLeague] || rawLeague
-  return ALLOWED_LEAGUES.includes(normalized) ? normalized : null
 }
 
 function firstNumber(obj, keys, fallback = null) {
@@ -152,15 +77,176 @@ function weightedValue(recent, season, recentWeight = 0.65) {
   return null
 }
 
-function isUpcomingMatch(match) {
-  const raw = match.kickoff || match.match_date || match.start_time
-  if (!raw) return false
+function safeDate(raw) {
+  if (!raw) return null
+  const d = new Date(raw)
+  if (Number.isNaN(d.getTime())) return null
+  return d
+}
 
-  const kickoff = new Date(raw)
-  if (Number.isNaN(kickoff.getTime())) return false
+function isUpcomingMatch(match) {
+  const raw = match.kickoff || match.match_date || match.start_time || match.date
+  const kickoff = safeDate(raw)
+  if (!kickoff) return false
 
   const now = new Date()
   return kickoff.getTime() >= now.getTime() - 2 * 60 * 60 * 1000
+}
+
+function normalizeText(text) {
+  return String(text || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+}
+
+function normalizeLeague(rawLeague) {
+  const raw = normalizeText(rawLeague)
+  if (!raw) return null
+
+  // Inglaterra
+  if (
+    raw.includes('premier league') &&
+    (
+      raw.includes('england') ||
+      raw.includes('english') ||
+      raw.includes('epl') ||
+      raw === 'premier league'
+    )
+  ) return 'Premier League'
+
+  // Espanha
+  if (
+    raw.includes('la liga') ||
+    raw.includes('primera division spain') ||
+    raw.includes('spanish la liga')
+  ) return 'La Liga'
+
+  // Alemanha
+  if (raw.includes('bundesliga')) return 'Bundesliga'
+
+  // Itália
+  if (
+    raw === 'serie a' ||
+    raw.includes('italy serie a') ||
+    raw.includes('italian serie a')
+  ) return 'Serie A'
+
+  // França
+  if (
+    raw === 'ligue 1' ||
+    raw.includes('france ligue 1') ||
+    raw.includes('french ligue 1')
+  ) return 'Ligue 1'
+
+  // Holanda
+  if (raw.includes('eredi')) return 'Eredivisie'
+
+  // Portugal
+  if (
+    raw.includes('primeira liga') ||
+    raw.includes('liga portugal') ||
+    raw.includes('portugal primeira')
+  ) return 'Primeira Liga'
+
+  // Bélgica
+  if (
+    raw.includes('belgian pro league') ||
+    raw.includes('jupiler pro league') ||
+    raw.includes('belgium pro league')
+  ) return 'Belgian Pro League'
+
+  // Turquia
+  if (
+    raw.includes('super lig') ||
+    raw.includes('turkish super league')
+  ) return 'Super Lig'
+
+  // Grécia
+  if (
+    raw.includes('greek super league') ||
+    raw === 'super league greece'
+  ) return 'Super League'
+
+  // Brasil A
+  if (
+    raw.includes('brasileirao serie a') ||
+    raw.includes('brazil serie a') ||
+    raw.includes('serie a brazil')
+  ) return 'Brasileirão Série A'
+
+  // Brasil B
+  if (
+    raw.includes('brasileirao serie b') ||
+    raw.includes('brazil serie b')
+  ) return 'Brasileirão Série B'
+
+  // Argentina
+  if (
+    raw.includes('liga profesional argentina') ||
+    raw.includes('argentina primera division') ||
+    raw.includes('argentine primera')
+  ) return 'Liga Profesional Argentina'
+
+  // MLS
+  if (
+    raw === 'mls' ||
+    raw.includes('major league soccer')
+  ) return 'MLS'
+
+  // México
+  if (
+    raw.includes('liga mx') ||
+    raw.includes('mexican primera')
+  ) return 'Liga MX'
+
+  // Saudita
+  if (
+    raw.includes('saudi pro league') ||
+    raw.includes('saudi professional league')
+  ) return 'Saudi Pro League'
+
+  // Champions
+  if (
+    raw.includes('uefa champions league') ||
+    raw === 'champions league'
+  ) return 'UEFA Champions League'
+
+  // Europa League
+  if (
+    raw.includes('uefa europa league') ||
+    raw === 'europa league'
+  ) return 'UEFA Europa League'
+
+  // Conference
+  if (
+    raw.includes('uefa europa conference league') ||
+    raw === 'conference league'
+  ) return 'UEFA Europa Conference League'
+
+  // Libertadores
+  if (
+    raw.includes('conmebol libertadores') ||
+    raw.includes('copa libertadores')
+  ) return 'CONMEBOL Libertadores'
+
+  // Sudamericana
+  if (
+    raw.includes('conmebol sudamericana') ||
+    raw.includes('copa sudamericana')
+  ) return 'CONMEBOL Sudamericana'
+
+  // Copa do Brasil
+  if (raw.includes('copa do brasil')) return 'Copa do Brasil'
+
+  // Concacaf
+  if (
+    raw.includes('concacaf champions cup') ||
+    raw.includes('concacaf champions league')
+  ) return 'CONCACAF Champions Cup'
+
+  return null
 }
 
 function getMetrics(match) {
@@ -178,12 +264,12 @@ function getMetrics(match) {
     'home_goals_avg',
     'home_avg_goals',
     'home_goals_for_avg'
-  ], 1.2)
+  ], 1.25)
   const awayGoalsSeason = firstNumber(match, [
     'away_goals_avg',
     'away_avg_goals',
     'away_goals_for_avg'
-  ], 1.1)
+  ], 1.10)
 
   const homeGoalsAgainstRecent = firstNumber(match, [
     'home_goals_against_avg_recent',
@@ -196,11 +282,11 @@ function getMetrics(match) {
   const homeGoalsAgainstSeason = firstNumber(match, [
     'home_goals_against_avg',
     'home_avg_goals_against'
-  ], 1.1)
+  ], 1.10)
   const awayGoalsAgainstSeason = firstNumber(match, [
     'away_goals_against_avg',
     'away_avg_goals_against'
-  ], 1.2)
+  ], 1.15)
 
   const homeCornersRecent = firstNumber(match, [
     'home_corners_avg_recent',
@@ -213,11 +299,11 @@ function getMetrics(match) {
   const homeCornersSeason = firstNumber(match, [
     'home_corners_avg',
     'home_avg_corners'
-  ], 4.8)
+  ], 4.9)
   const awayCornersSeason = firstNumber(match, [
     'away_corners_avg',
     'away_avg_corners'
-  ], 4.3)
+  ], 4.4)
 
   const homeShotsRecent = firstNumber(match, [
     'home_shots_avg_recent',
@@ -230,11 +316,11 @@ function getMetrics(match) {
   const homeShotsSeason = firstNumber(match, [
     'home_shots_avg',
     'home_avg_shots'
-  ], 11.5)
+  ], 11.8)
   const awayShotsSeason = firstNumber(match, [
     'away_shots_avg',
     'away_avg_shots'
-  ], 10.3)
+  ], 10.6)
 
   const homeShotsOnTargetRecent = firstNumber(match, [
     'home_shots_on_target_avg_recent',
@@ -250,12 +336,12 @@ function getMetrics(match) {
     'home_shots_on_target_avg',
     'home_avg_shots_on_target',
     'home_sot_avg'
-  ], 4)
+  ], 4.2)
   const awayShotsOnTargetSeason = firstNumber(match, [
     'away_shots_on_target_avg',
     'away_avg_shots_on_target',
     'away_sot_avg'
-  ], 3.6)
+  ], 3.7)
 
   const homeForm = firstNumber(match, [
     'home_form_score',
@@ -279,44 +365,28 @@ function getMetrics(match) {
     'team_away_power'
   ], 1)
 
-  const hg = weightedValue(homeGoalsRecent, homeGoalsSeason, 0.68) ?? 1.2
-  const ag = weightedValue(awayGoalsRecent, awayGoalsSeason, 0.68) ?? 1.1
-  const hga = weightedValue(homeGoalsAgainstRecent, homeGoalsAgainstSeason, 0.66) ?? 1.1
-  const aga = weightedValue(awayGoalsAgainstRecent, awayGoalsAgainstSeason, 0.66) ?? 1.2
+  const hg = weightedValue(homeGoalsRecent, homeGoalsSeason, 0.68) ?? 1.25
+  const ag = weightedValue(awayGoalsRecent, awayGoalsSeason, 0.68) ?? 1.10
+  const hga = weightedValue(homeGoalsAgainstRecent, homeGoalsAgainstSeason, 0.66) ?? 1.10
+  const aga = weightedValue(awayGoalsAgainstRecent, awayGoalsAgainstSeason, 0.66) ?? 1.15
 
-  const hc = weightedValue(homeCornersRecent, homeCornersSeason, 0.64) ?? 4.8
-  const ac = weightedValue(awayCornersRecent, awayCornersSeason, 0.64) ?? 4.3
+  const hc = weightedValue(homeCornersRecent, homeCornersSeason, 0.64) ?? 4.9
+  const ac = weightedValue(awayCornersRecent, awayCornersSeason, 0.64) ?? 4.4
 
-  const hs = weightedValue(homeShotsRecent, homeShotsSeason, 0.65) ?? 11.5
-  const as = weightedValue(awayShotsRecent, awayShotsSeason, 0.65) ?? 10.3
+  const hs = weightedValue(homeShotsRecent, homeShotsSeason, 0.65) ?? 11.8
+  const as = weightedValue(awayShotsRecent, awayShotsSeason, 0.65) ?? 10.6
 
-  const hsot = weightedValue(homeShotsOnTargetRecent, homeShotsOnTargetSeason, 0.65) ?? 4
-  const asot = weightedValue(awayShotsOnTargetRecent, awayShotsOnTargetSeason, 0.65) ?? 3.6
+  const hsot = weightedValue(homeShotsOnTargetRecent, homeShotsOnTargetSeason, 0.65) ?? 4.2
+  const asot = weightedValue(awayShotsOnTargetRecent, awayShotsOnTargetSeason, 0.65) ?? 3.7
 
-  const goalsExpected = clamp(
-    (hg + ag + hga + aga) / 2,
-    1.2,
-    4.5
-  )
-
-  const cornersExpected = clamp(
-    hc + ac + (hs + as) * 0.04,
-    6.0,
-    15.5
-  )
-
-  const shotsExpected = clamp(hs + as, 10, 32)
-  const shotsOnTargetExpected = clamp(hsot + asot, 2, 12)
+  const goalsExpected = clamp((hg + ag + hga + aga) / 2, 1.1, 4.6)
+  const cornersExpected = clamp(hc + ac + (hs + as) * 0.04, 6.0, 15.8)
+  const shotsExpected = clamp(hs + as, 10, 33)
+  const shotsOnTargetExpected = clamp(hsot + asot, 2, 13)
 
   const strengthDiff = homeStrength - awayStrength
   const formDiff = homeForm - awayForm
   const balanceIndex = Math.abs(strengthDiff) + Math.abs(formDiff / 20)
-
-  const bttsBase = clamp(
-    ((hg + ag) / 2 + (hga + aga) / 2) / 2.2,
-    0.15,
-    0.85
-  )
 
   let profile = 'equilibrado'
   if (goalsExpected >= 2.9 && shotsExpected >= 22) profile = 'ofensivo'
@@ -334,7 +404,7 @@ function getMetrics(match) {
     awayStrength,
     strengthDiff,
     formDiff,
-    bttsBase,
+    balanceIndex,
     profile
   }
 }
@@ -359,8 +429,8 @@ function buildScores(match, metrics) {
 
   const goalAttackScore = clamp(
     metrics.goalsExpected * 22 +
-    metrics.shotsOnTargetExpected * 3 +
-    metrics.shotsExpected * 0.7,
+      metrics.shotsOnTargetExpected * 3 +
+      metrics.shotsExpected * 0.7,
     0,
     100
   )
@@ -372,8 +442,7 @@ function buildScores(match, metrics) {
   )
 
   const cornerOverScore = clamp(
-    metrics.cornersExpected * 8 +
-    metrics.shotsExpected * 0.7,
+    metrics.cornersExpected * 8 + metrics.shotsExpected * 0.7,
     0,
     100
   )
@@ -400,7 +469,7 @@ function buildScores(match, metrics) {
   const drawProtectionAwayScore = clamp(awayDominanceScore + 10, 0, 100)
 
   const bttsYesScore = clamp(
-    metrics.bttsBase * 100 + metrics.shotsOnTargetExpected * 2,
+    metrics.goalsExpected * 22 + metrics.shotsOnTargetExpected * 4,
     0,
     100
   )
@@ -414,17 +483,17 @@ function buildScores(match, metrics) {
   const markets = []
 
   // Gols
-  if (metrics.goalsExpected >= 2.95) {
+  if (metrics.goalsExpected >= 3.0) {
     markets.push({
       family: 'gols',
       market: 'Mais de 2.5 gols',
       score: goalAttackScore
     })
-  } else if (metrics.goalsExpected >= 2.3) {
+  } else if (metrics.goalsExpected >= 2.35) {
     markets.push({
       family: 'gols',
       market: 'Mais de 1.5 gols',
-      score: goalAttackScore
+      score: goalAttackScore - 4
     })
   } else {
     markets.push({
@@ -435,23 +504,23 @@ function buildScores(match, metrics) {
   }
 
   // Escanteios
-  if (metrics.cornersExpected >= 10.6) {
+  if (metrics.cornersExpected >= 10.8) {
     markets.push({
       family: 'escanteios',
       market: 'Mais de 9.5 escanteios',
       score: cornerOverScore
     })
-  } else if (metrics.cornersExpected >= 9.2) {
+  } else if (metrics.cornersExpected >= 9.4) {
     markets.push({
       family: 'escanteios',
       market: 'Mais de 8.5 escanteios',
-      score: cornerOverScore - 3
+      score: cornerOverScore - 4
     })
-  } else if (metrics.cornersExpected <= 8.4) {
+  } else if (metrics.cornersExpected <= 8.2) {
     markets.push({
       family: 'escanteios',
       market: 'Menos de 10.5 escanteios',
-      score: cornerUnderScore + 6
+      score: cornerUnderScore + 5
     })
   } else {
     markets.push({
@@ -462,13 +531,13 @@ function buildScores(match, metrics) {
   }
 
   // Resultado / proteção
-  if (homeDominanceScore >= 80) {
+  if (homeDominanceScore >= 82) {
     markets.push({
       family: 'resultado',
       market: `Vitória do ${home}`,
       score: homeDominanceScore
     })
-  } else if (awayDominanceScore >= 80) {
+  } else if (awayDominanceScore >= 82) {
     markets.push({
       family: 'resultado',
       market: `Vitória do ${away}`,
@@ -504,13 +573,30 @@ function buildScores(match, metrics) {
   }
 
   return markets
-    .map(item => ({
-      ...item,
-      score: round(clamp(item.score, 40, 96), 2),
-      tier: tierFromScore(item.score),
-      strength_label: labelFromScore(item.score)
-    }))
+    .map((item) => {
+      const adjusted = round(clamp(item.score, 42, 96), 2)
+      return {
+        ...item,
+        score: adjusted,
+        tier: tierFromScore(adjusted),
+        strength_label: labelFromScore(adjusted)
+      }
+    })
     .sort((a, b) => b.score - a.score)
+}
+
+function buildTopMarkets(markets) {
+  const usedFamilies = new Set()
+  const selected = []
+
+  for (const market of markets) {
+    if (usedFamilies.has(market.family)) continue
+    usedFamilies.add(market.family)
+    selected.push(market)
+    if (selected.length === 4) break
+  }
+
+  return selected
 }
 
 function buildGameReading(metrics, primaryMarket) {
@@ -545,6 +631,17 @@ function buildGameReading(metrics, primaryMarket) {
   return `O modelo combinou forma recente, produção ofensiva e equilíbrio do confronto para destacar esse mercado como a leitura principal da partida.`
 }
 
+function marketKey(market) {
+  if (!market) return 'desconhecido'
+  const text = normalizeText(market)
+  if (text.includes('escanteio')) return 'escanteios'
+  if (text.includes('gol')) return 'gols'
+  if (text.includes('ambas')) return 'ambas'
+  if (text.includes('dupla chance')) return 'dupla_chance'
+  if (text.includes('vitoria')) return 'vitoria'
+  return text
+}
+
 async function loadAllMatches() {
   let page = 0
   const pageSize = 500
@@ -570,24 +667,10 @@ async function loadAllMatches() {
   return all
 }
 
-function buildTopMarkets(markets) {
-  const usedFamilies = new Set()
-  const selected = []
-
-  for (const market of markets) {
-    if (usedFamilies.has(market.family)) continue
-    usedFamilies.add(market.family)
-    selected.push(market)
-    if (selected.length === 4) break
-  }
-
-  return selected
-}
-
 async function updateMatchesBrain() {
   const matches = await loadAllMatches()
 
-  const filtered = matches.filter(match => {
+  const filtered = matches.filter((match) => {
     const normalizedLeague = normalizeLeague(match.league)
     return normalizedLeague && isUpcomingMatch(match)
   })
@@ -605,7 +688,6 @@ async function updateMatchesBrain() {
 
     const payload = {
       league: normalizedLeague,
-
       pick: primary.market,
       strength_label: primary.strength_label,
       insight: buildGameReading(metrics, primary),
@@ -637,16 +719,6 @@ async function updateMatchesBrain() {
   }
 }
 
-function marketKey(market) {
-  if (!market) return 'desconhecido'
-  if (market.includes('escanteios')) return 'escanteios'
-  if (market.includes('gols')) return 'gols'
-  if (market.includes('Ambas')) return 'ambas'
-  if (market.includes('Dupla chance')) return 'dupla_chance'
-  if (market.includes('Vitória')) return 'vitoria'
-  return market
-}
-
 async function rebuildDailyPicks() {
   const { error: deleteError } = await supabase
     .from('daily_picks')
@@ -661,26 +733,28 @@ async function rebuildDailyPicks() {
 
   if (error) throw error
 
-  const usable = (matches || []).filter(match => {
+  const usable = (matches || []).filter((match) => {
     const normalizedLeague = normalizeLeague(match.league)
     if (!normalizedLeague) return false
     if (!isUpcomingMatch(match)) return false
     if (!match.pick) return false
-    if (!match.expected_goals || !match.expected_corners) return false
     return true
   })
 
-  const candidates = usable.map(match => ({
-    match_id: match.id,
-    home_team: match.home_team,
-    away_team: match.away_team,
-    league: normalizeLeague(match.league),
-    market: match.pick,
-    probability: round(firstNumber(match, ['top_market_1_score'], 70) / 100, 4),
-    score: firstNumber(match, ['top_market_1_score'], 70),
-    market_key: marketKey(match.pick)
-  }))
-  .sort((a, b) => b.score - a.score)
+  console.log(`Jogos utilizáveis para daily picks: ${usable.length}`)
+
+  const candidates = usable
+    .map((match) => ({
+      match_id: match.id,
+      home_team: match.home_team,
+      away_team: match.away_team,
+      league: normalizeLeague(match.league),
+      market: match.pick,
+      probability: round((firstNumber(match, ['top_market_1_score'], 70) || 70) / 100, 4),
+      score: firstNumber(match, ['top_market_1_score'], 70) || 70,
+      market_key: marketKey(match.pick)
+    }))
+    .sort((a, b) => b.score - a.score)
 
   const selected = []
   const usedMatches = new Set()
@@ -699,7 +773,7 @@ async function rebuildDailyPicks() {
     usedMarkets[item.market_key] = (usedMarkets[item.market_key] || 0) + 1
   }
 
-  // fallback relaxado
+  // fallback mais solto
   for (const item of candidates) {
     if (selected.length >= 6) break
     if (usedMatches.has(item.match_id)) continue
@@ -719,6 +793,8 @@ async function rebuildDailyPicks() {
     is_opportunity: index === 0
   }))
 
+  console.log(`Daily picks geradas: ${rows.length}`)
+
   if (!rows.length) {
     console.log('Nenhuma daily pick encontrada.')
     return
@@ -735,15 +811,14 @@ async function rebuildDailyPicks() {
 
 async function run() {
   try {
-    console.log('Iniciando Scoutly Brain V2...')
+    console.log('Iniciando Scoutly Brain V2.1...')
     await updateMatchesBrain()
     await rebuildDailyPicks()
-    console.log('Scoutly Brain V2 finalizado com sucesso.')
+    console.log('Scoutly Brain V2.1 finalizado com sucesso.')
   } catch (error) {
-    console.error('Erro no Scoutly Brain V2:', error)
+    console.error('Erro no Scoutly Brain V2.1:', error)
     process.exit(1)
   }
 }
 
 run()
-   
