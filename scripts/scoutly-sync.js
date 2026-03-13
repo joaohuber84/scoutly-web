@@ -5,7 +5,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-const API_KEY = process.env.API_FOOTBALL_KEY
+const API_KEY = process.env.APISPORTS_KEY
 const API_BASE = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
 
