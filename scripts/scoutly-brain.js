@@ -126,14 +126,12 @@ function sanitizeStats(match, stats) {
 
   let inconsistency = 0
 
-  // Fallback para chutes totais
   if (homeShots <= 0 && awayShots <= 0 && avgShots > 0) {
     homeShots = round(avgShots * 0.52)
     awayShots = round(avgShots * 0.48)
     inconsistency += 4
   }
 
-  // Fallback para chutes no gol
   if (homeSot <= 0 && awaySot <= 0) {
     const totalShots = homeShots + awayShots
     const estimatedSot = totalShots > 0 ? Math.max(2, round(totalShots * 0.32)) : 0
@@ -142,7 +140,6 @@ function sanitizeStats(match, stats) {
     inconsistency += 5
   }
 
-  // Nunca deixar SOT > shots
   if (homeSot > homeShots) {
     homeSot = homeShots
     inconsistency += 12
@@ -153,38 +150,33 @@ function sanitizeStats(match, stats) {
     inconsistency += 12
   }
 
-  // Se total SOT > total shots, corta
   let totalShots = homeShots + awayShots
   let totalSot = homeSot + awaySot
 
   if (totalSot > totalShots) {
     totalSot = totalShots
     homeSot = round(totalSot * 0.52)
-    awaySot = totalShots - homeSot
+    awaySot = Math.max(0, totalShots - homeSot)
     inconsistency += 15
   }
 
-  // Fallback corners
   if (homeCorners <= 0 && awayCorners <= 0 && avgCorners > 0) {
     homeCorners = round(avgCorners * 0.52)
     awayCorners = round(avgCorners * 0.48)
     inconsistency += 4
   }
 
-  // Cartões fallback
   if (homeCards <= 0 && awayCards <= 0) {
     homeCards = 2
     awayCards = 2
     inconsistency += 3
   }
 
-  // Coerência: gols esperados baixos com muito SOT pode indicar dado torto
   if (avgGoals > 0 && totalSot > 0) {
     if (avgGoals < 1.2 && totalSot >= 7) inconsistency += 10
     if (avgGoals < 1.0 && totalSot >= 6) inconsistency += 8
   }
 
-  // Coerência: muito pouco chute com muito escanteio ou vice-versa
   if (totalShots > 0 && (homeCorners + awayCorners) > 0) {
     if (totalShots <= 10 && (homeCorners + awayCorners) >= 11) inconsistency += 8
     if (totalShots >= 24 && (homeCorners + awayCorners) <= 4) inconsistency += 6
@@ -314,7 +306,6 @@ function makePick({ market, confidence, category }) {
 function buildCandidates(match, cleanStats) {
   const avgGoals = toNum(match.avg_goals)
   const avgCorners = toNum(match.avg_corners)
-  const avgShots = toNum(match.avg_shots)
 
   const over15 = toNum(match.over15_prob)
   const over25 = toNum(match.over25_prob)
@@ -342,7 +333,6 @@ function buildCandidates(match, cleanStats) {
 
   const candidates = []
 
-  // GOLS
   if (over15 >= 0.68) {
     let conf = pct(over15) + 3
     if (avgGoals >= 2.0) conf += 3
@@ -352,11 +342,7 @@ function buildCandidates(match, cleanStats) {
     conf -= leaguePenalty
     conf -= inconsistencyPenalty
 
-    candidates.push(makePick({
-      market: "Mais de 1.5 gols",
-      confidence: conf,
-      category: "gols"
-    }))
+    candidates.push(makePick({ market: "Mais de 1.5 gols", confidence: conf, category: "gols" }))
   }
 
   if (over25 >= 0.60) {
@@ -368,11 +354,7 @@ function buildCandidates(match, cleanStats) {
     conf -= leaguePenalty
     conf -= inconsistencyPenalty
 
-    candidates.push(makePick({
-      market: "Mais de 2.5 gols",
-      confidence: conf,
-      category: "gols"
-    }))
+    candidates.push(makePick({ market: "Mais de 2.5 gols", confidence: conf, category: "gols" }))
   }
 
   if (under35 >= 0.68) {
@@ -382,11 +364,7 @@ function buildCandidates(match, cleanStats) {
     conf -= leaguePenalty
     conf -= inconsistencyPenalty
 
-    candidates.push(makePick({
-      market: "Menos de 3.5 gols",
-      confidence: conf,
-      category: "gols"
-    }))
+    candidates.push(makePick({ market: "Menos de 3.5 gols", confidence: conf, category: "gols" }))
   }
 
   if (under25 >= 0.60) {
@@ -397,11 +375,7 @@ function buildCandidates(match, cleanStats) {
     conf -= leaguePenalty
     conf -= inconsistencyPenalty
 
-    candidates.push(makePick({
-      market: "Menos de 2.5 gols",
-      confidence: conf,
-      category: "gols"
-    }))
+    candidates.push(makePick({ market: "Menos de 2.5 gols", confidence: conf, category: "gols" }))
   }
 
   if (btts >= 0.60) {
@@ -411,11 +385,7 @@ function buildCandidates(match, cleanStats) {
     conf -= leaguePenalty
     conf -= inconsistencyPenalty
 
-    candidates.push(makePick({
-      market: "Ambas marcam",
-      confidence: conf,
-      category: "gols"
-    }))
+    candidates.push(makePick({ market: "Ambas marcam", confidence: conf, category: "gols" }))
   }
 
   if (btts > 0 && btts <= 0.42) {
@@ -425,14 +395,9 @@ function buildCandidates(match, cleanStats) {
     conf -= leaguePenalty
     conf -= inconsistencyPenalty
 
-    candidates.push(makePick({
-      market: "Ambas não marcam",
-      confidence: conf,
-      category: "gols"
-    }))
+    candidates.push(makePick({ market: "Ambas não marcam", confidence: conf, category: "gols" }))
   }
 
-  // ESCANTEIOS
   if (avgCorners >= 7.8) {
     let conf = 63 + (avgCorners - 7.8) * 8
     conf -= lineInflationPenalty(avgCorners, 7.5)
@@ -440,11 +405,7 @@ function buildCandidates(match, cleanStats) {
     conf -= leaguePenalty
     conf -= inconsistencyPenalty
 
-    candidates.push(makePick({
-      market: "Mais de 7.5 escanteios",
-      confidence: conf,
-      category: "escanteios"
-    }))
+    candidates.push(makePick({ market: "Mais de 7.5 escanteios", confidence: conf, category: "escanteios" }))
   }
 
   if (corners85 >= 0.60) {
@@ -455,11 +416,7 @@ function buildCandidates(match, cleanStats) {
     conf -= leaguePenalty
     conf -= inconsistencyPenalty
 
-    candidates.push(makePick({
-      market: "Mais de 8.5 escanteios",
-      confidence: conf,
-      category: "escanteios"
-    }))
+    candidates.push(makePick({ market: "Mais de 8.5 escanteios", confidence: conf, category: "escanteios" }))
   }
 
   if (avgCorners >= 9.8) {
@@ -469,11 +426,7 @@ function buildCandidates(match, cleanStats) {
     conf -= leaguePenalty
     conf -= inconsistencyPenalty
 
-    candidates.push(makePick({
-      market: "Mais de 9.5 escanteios",
-      confidence: conf,
-      category: "escanteios"
-    }))
+    candidates.push(makePick({ market: "Mais de 9.5 escanteios", confidence: conf, category: "escanteios" }))
   }
 
   if (avgCorners > 0 && avgCorners <= 10.2) {
@@ -482,11 +435,7 @@ function buildCandidates(match, cleanStats) {
     conf -= leaguePenalty
     conf -= inconsistencyPenalty
 
-    candidates.push(makePick({
-      market: "Menos de 11.5 escanteios",
-      confidence: conf,
-      category: "escanteios"
-    }))
+    candidates.push(makePick({ market: "Menos de 11.5 escanteios", confidence: conf, category: "escanteios" }))
   }
 
   if (cleanStats.homeCorners >= 3.8) {
@@ -496,11 +445,7 @@ function buildCandidates(match, cleanStats) {
     conf -= leaguePenalty
     conf -= inconsistencyPenalty
 
-    candidates.push(makePick({
-      market: "Casa mais de 3.5 escanteios",
-      confidence: conf,
-      category: "escanteios"
-    }))
+    candidates.push(makePick({ market: "Casa mais de 3.5 escanteios", confidence: conf, category: "escanteios" }))
   }
 
   if (cleanStats.awayCorners >= 3.8) {
@@ -510,14 +455,9 @@ function buildCandidates(match, cleanStats) {
     conf -= leaguePenalty
     conf -= inconsistencyPenalty
 
-    candidates.push(makePick({
-      market: "Visitante mais de 3.5 escanteios",
-      confidence: conf,
-      category: "escanteios"
-    }))
+    candidates.push(makePick({ market: "Visitante mais de 3.5 escanteios", confidence: conf, category: "escanteios" }))
   }
 
-  // SEGURANÇA
   if (homeWin + draw >= 0.72) {
     let conf = pct(homeWin + draw) + 2
     if (powerHome >= powerAway) conf += 2
@@ -526,11 +466,7 @@ function buildCandidates(match, cleanStats) {
     conf -= leaguePenalty
     conf -= inconsistencyPenalty
 
-    candidates.push(makePick({
-      market: "Dupla chance casa ou empate",
-      confidence: conf,
-      category: "seguranca"
-    }))
+    candidates.push(makePick({ market: "Dupla chance casa ou empate", confidence: conf, category: "seguranca" }))
   }
 
   if (awayWin + draw >= 0.72) {
@@ -541,11 +477,7 @@ function buildCandidates(match, cleanStats) {
     conf -= leaguePenalty
     conf -= inconsistencyPenalty
 
-    candidates.push(makePick({
-      market: "Dupla chance visitante ou empate",
-      confidence: conf,
-      category: "seguranca"
-    }))
+    candidates.push(makePick({ market: "Dupla chance visitante ou empate", confidence: conf, category: "seguranca" }))
   }
 
   if (homeWin >= 0.57 && (powerHome - powerAway) >= 0.20) {
@@ -554,11 +486,7 @@ function buildCandidates(match, cleanStats) {
     conf -= leaguePenalty
     conf -= inconsistencyPenalty
 
-    candidates.push(makePick({
-      market: `Vitória ${match.home_team}`,
-      confidence: conf,
-      category: "seguranca"
-    }))
+    candidates.push(makePick({ market: `Vitória ${match.home_team}`, confidence: conf, category: "seguranca" }))
   }
 
   if (awayWin >= 0.57 && (powerAway - powerHome) >= 0.20) {
@@ -567,11 +495,7 @@ function buildCandidates(match, cleanStats) {
     conf -= leaguePenalty
     conf -= inconsistencyPenalty
 
-    candidates.push(makePick({
-      market: `Vitória ${match.away_team}`,
-      confidence: conf,
-      category: "seguranca"
-    }))
+    candidates.push(makePick({ market: `Vitória ${match.away_team}`, confidence: conf, category: "seguranca" }))
   }
 
   return {
@@ -830,10 +754,12 @@ async function runBrainV2() {
 
   const sorted = analyses.sort((a, b) => b.score - a.score)
 
+  const tipOfDay = sorted[0] || null
+
   const top = []
   const categoryCount = { gols: 0, escanteios: 0, seguranca: 0 }
 
-  for (const item of sorted) {
+  for (const item of sorted.slice(1)) {
     if (top.length >= TOP_LIMIT) break
 
     const cat = item.picks[0].category
@@ -852,24 +778,42 @@ async function runBrainV2() {
   }
 
   if (top.length < TOP_LIMIT) {
-    for (const item of sorted) {
+    for (const item of sorted.slice(1)) {
       if (top.length >= TOP_LIMIT) break
       if (top.some(x => x.match.id === item.match.id)) continue
       top.push(item)
     }
   }
 
-  const dailyRows = top.map((item, index) => ({
-    created_at: new Date().toISOString(),
-    rank: index + 1,
-    match_id: item.match.id,
-    home_team: item.match.home_team,
-    away_team: item.match.away_team,
-    league: item.match.league,
-    market: item.picks[0].market,
-    probability: round(item.picks[0].confidence / 100, 4),
-    is_opportunity: true
-  }))
+  const dailyRows = []
+
+  if (tipOfDay) {
+    dailyRows.push({
+      created_at: new Date().toISOString(),
+      rank: 0,
+      match_id: tipOfDay.match.id,
+      home_team: tipOfDay.match.home_team,
+      away_team: tipOfDay.match.away_team,
+      league: tipOfDay.match.league,
+      market: tipOfDay.picks[0].market,
+      probability: round(tipOfDay.picks[0].confidence / 100, 4),
+      is_opportunity: true
+    })
+  }
+
+  top.forEach((item, index) => {
+    dailyRows.push({
+      created_at: new Date().toISOString(),
+      rank: index + 1,
+      match_id: item.match.id,
+      home_team: item.match.home_team,
+      away_team: item.match.away_team,
+      league: item.match.league,
+      market: item.picks[0].market,
+      probability: round(item.picks[0].confidence / 100, 4),
+      is_opportunity: true
+    })
+  })
 
   const analysisRows = analyses.map(item => ({
     match_id: item.match.id,
@@ -903,7 +847,8 @@ async function runBrainV2() {
   await replaceMatchAnalysis(analysisRows, matchIds)
 
   console.log(`Jogos analisados: ${analyses.length}`)
-  console.log(`Top salvo: ${dailyRows.length}`)
+  console.log(`Dica do dia: ${tipOfDay ? `${tipOfDay.match.home_team} x ${tipOfDay.match.away_team}` : "nenhuma"}`)
+  console.log(`Top 5 salvo: ${top.length}`)
   console.log("Scoutly Brain V2 finalizado com sucesso")
 }
 
