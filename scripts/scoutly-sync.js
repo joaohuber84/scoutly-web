@@ -5,7 +5,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-const API_KEY = process.env.APISPORTS_KEY
+const API_KEY = process.env.API_FOOTBALL_KEY
 const API_BASE = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
 
@@ -13,45 +13,40 @@ if (!API_KEY) {
   throw new Error("APISPORTS_KEY não encontrada nas variáveis de ambiente.")
 }
 
-const ALLOWED_LEAGUES = {
-  "premier league": "Premier League",
-  "la liga": "La Liga",
-  "serie a": "Serie A",
-  "bundesliga": "Bundesliga",
-  "ligue 1": "Ligue 1",
-  "primeira liga": "Liga Portugal",
-  "eredivisie": "Eredivisie",
-  "super lig": "Super Lig",
-  "super league 1": "Super League 1",
-  "uefa champions league": "UEFA Champions League",
-  "uefa europa league": "UEFA Europa League",
-  "uefa europa conference league": "UEFA Europa Conference League",
-  "fa cup": "FA Cup",
-  "copa del rey": "Copa del Rey",
-  "coppa italia": "Coppa Italia",
-  "copa do brasil": "Copa do Brasil",
-  "campeonato brasileiro serie a": "Brasileirão Série A",
-  "campeonato brasileiro serie b": "Brasileirão Série B",
-  "brasileiro serie a": "Brasileirão Série A",
-  "brasileiro serie b": "Brasileirão Série B",
-  "liga profesional argentina": "Liga Profesional Argentina",
-  "major league soccer": "MLS",
-  "conmebol libertadores": "CONMEBOL Libertadores",
-  "conmebol sudamericana": "CONMEBOL Sudamericana"
-}
+const LEAGUES = [
+  // EUROPA
+  { id: 39, name: "Premier League", country: "England", season: 2025 },
+  { id: 140, name: "La Liga", country: "Spain", season: 2025 },
+  { id: 78, name: "Bundesliga", country: "Germany", season: 2025 },
+  { id: 135, name: "Serie A", country: "Italy", season: 2025 },
+  { id: 61, name: "Ligue 1", country: "France", season: 2025 },
+  { id: 94, name: "Liga Portugal", country: "Portugal", season: 2025 },
+  { id: 88, name: "Eredivisie", country: "Netherlands", season: 2025 },
+  { id: 203, name: "Super Lig", country: "Turkey", season: 2025 },
 
-function normalizeText(value) {
-  return String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase()
-}
+  // EUROPA - COMPETIÇÕES
+  { id: 2, name: "UEFA Champions League", country: "Europe", season: 2025 },
+  { id: 3, name: "UEFA Europa League", country: "Europe", season: 2025 },
+  { id: 848, name: "UEFA Europa Conference League", country: "Europe", season: 2025 },
 
-function normalizeLeagueName(name) {
-  const key = normalizeText(name)
-  return ALLOWED_LEAGUES[key] || null
-}
+  // COPAS
+  { id: 45, name: "FA Cup", country: "England", season: 2025 },
+  { id: 143, name: "Copa del Rey", country: "Spain", season: 2025 },
+  { id: 137, name: "Coppa Italia", country: "Italy", season: 2025 },
+
+  // BRASIL
+  { id: 71, name: "Brasileirão Série A", country: "Brazil", season: 2026 },
+  { id: 72, name: "Brasileirão Série B", country: "Brazil", season: 2026 },
+  { id: 73, name: "Copa do Brasil", country: "Brazil", season: 2026 },
+
+  // AMÉRICA DO SUL
+  { id: 128, name: "Liga Profesional Argentina", country: "Argentina", season: 2026 },
+  { id: 13, name: "CONMEBOL Libertadores", country: "South America", season: 2026 },
+  { id: 11, name: "CONMEBOL Sudamericana", country: "South America", season: 2026 },
+
+  // EUA
+  { id: 253, name: "MLS", country: "USA", season: 2026 }
+]
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value))
@@ -116,9 +111,7 @@ async function apiGet(path, params = {}) {
 
 function getStatValue(statistics = [], labels = []) {
   for (const label of labels) {
-    const found = statistics.find(
-      item => normalizeText(item.type) === normalizeText(label)
-    )
+    const found = statistics.find(item => item.type === label)
 
     if (found) {
       const raw = found.value
@@ -149,17 +142,20 @@ async function getFixtureStatistics(fixtureId) {
   return response
 }
 
-async function getRecentFixtures(teamId) {
-  if (teamFixturesCache.has(teamId)) return teamFixturesCache.get(teamId)
+async function getRecentFixtures(teamId, season) {
+  const cacheKey = `${teamId}-${season}`
+
+  if (teamFixturesCache.has(cacheKey)) return teamFixturesCache.get(cacheKey)
 
   const fixtures = await apiGet("/fixtures", {
     team: teamId,
+    season,
     last: 10,
     status: "FT",
     timezone: TIMEZONE
   })
 
-  teamFixturesCache.set(teamId, fixtures)
+  teamFixturesCache.set(cacheKey, fixtures)
   return fixtures
 }
 
@@ -169,8 +165,8 @@ function buildPoints(goalsFor, goalsAgainst) {
   return 0
 }
 
-async function buildTeamProfile(teamId, venue = "home") {
-  const fixtures = await getRecentFixtures(teamId)
+async function buildTeamProfile(teamId, season, venue = "home") {
+  const fixtures = await getRecentFixtures(teamId, season)
   const rows = []
 
   for (const fx of fixtures) {
@@ -178,7 +174,6 @@ async function buildTeamProfile(teamId, venue = "home") {
     if (!fixtureId) continue
 
     const isHome = fx.teams?.home?.id === teamId
-
     const goalsFor = Number(isHome ? fx.goals?.home : fx.goals?.away) || 0
     const goalsAgainst = Number(isHome ? fx.goals?.away : fx.goals?.home) || 0
 
@@ -205,6 +200,25 @@ async function buildTeamProfile(teamId, venue = "home") {
       conceded: goalsAgainst > 0 ? 1 : 0,
       btts: goalsFor > 0 && goalsAgainst > 0 ? 1 : 0
     })
+  }
+
+  if (!rows.length) {
+    return {
+      goalsFor: 1.2,
+      goalsAgainst: 1.2,
+      shotsFor: 11,
+      shotsOnTargetFor: 4,
+      cornersFor: 4.5,
+      yellowFor: 2,
+      shotsAgainst: 11,
+      shotsOnTargetAgainst: 4,
+      cornersAgainst: 4.5,
+      formScore: 50,
+      scoredRate: 0.6,
+      concededRate: 0.6,
+      bttsRate: 0.45,
+      power: 1.2
+    }
   }
 
   const recent5 = rows.slice(0, 5)
@@ -372,17 +386,32 @@ function buildMatchMetrics(homeProfile, awayProfile) {
 
 async function fetchTodayFixtures() {
   const date = todayDateInTimezone(TIMEZONE)
+  const all = []
 
-  const fixtures = await apiGet("/fixtures", {
-    date,
-    timezone: TIMEZONE
-  })
+  for (const league of LEAGUES) {
+    console.log(`Buscando ${league.name} (${league.country})`)
 
-  return fixtures.filter(fx => {
-    const leagueName = normalizeLeagueName(fx.league?.name)
-    const status = fx.fixture?.status?.short
-    return leagueName && ["NS", "TBD", "PST"].includes(status)
-  })
+    const fixtures = await apiGet("/fixtures", {
+      league: league.id,
+      season: league.season,
+      date,
+      timezone: TIMEZONE
+    })
+
+    const valid = fixtures.filter(fx => {
+      const status = fx.fixture?.status?.short
+      return ["NS", "TBD", "PST"].includes(status)
+    })
+
+    for (const fx of valid) {
+      all.push({
+        leagueMeta: league,
+        fixture: fx
+      })
+    }
+  }
+
+  return all
 }
 
 async function replaceTodayData(fixturesIds) {
@@ -406,6 +435,15 @@ async function replaceTodayData(fixturesIds) {
     console.error("Erro ao limpar match_stats:", statsError)
   }
 
+  const { error: analysisError } = await supabase
+    .from("match_analysis")
+    .delete()
+    .in("match_id", fixturesIds)
+
+  if (analysisError) {
+    console.error("Erro ao limpar match_analysis:", analysisError)
+  }
+
   const { error: matchesError } = await supabase
     .from("matches")
     .delete()
@@ -416,26 +454,28 @@ async function replaceTodayData(fixturesIds) {
   }
 }
 
-async function runSyncV2() {
-  console.log("Scoutly Sync V2 iniciado")
+async function runSyncV21() {
+  console.log("Scoutly Sync V2.1 iniciado")
 
-  const fixtures = await fetchTodayFixtures()
-  console.log("Jogos elegíveis hoje:", fixtures.length)
+  const wrappedFixtures = await fetchTodayFixtures()
+  console.log("Jogos elegíveis hoje:", wrappedFixtures.length)
 
-  if (!fixtures.length) {
+  if (!wrappedFixtures.length) {
     console.log("Nenhum jogo elegível encontrado hoje.")
     return
   }
 
-  const fixtureIds = fixtures.map(fx => fx.fixture.id)
+  const fixtureIds = wrappedFixtures.map(item => item.fixture.fixture.id)
   await replaceTodayData(fixtureIds)
 
   const matchRows = []
   const statsRows = []
 
-  for (const fx of fixtures) {
+  for (const item of wrappedFixtures) {
+    const fx = item.fixture
+    const league = item.leagueMeta
+
     const fixtureId = fx.fixture?.id
-    const league = normalizeLeagueName(fx.league?.name) || fx.league?.name
     const homeTeamId = fx.teams?.home?.id
     const awayTeamId = fx.teams?.away?.id
 
@@ -443,8 +483,8 @@ async function runSyncV2() {
 
     console.log(`Processando ${fx.teams?.home?.name} x ${fx.teams?.away?.name}`)
 
-    const homeProfile = await buildTeamProfile(homeTeamId, "home")
-    const awayProfile = await buildTeamProfile(awayTeamId, "away")
+    const homeProfile = await buildTeamProfile(homeTeamId, league.season, "home")
+    const awayProfile = await buildTeamProfile(awayTeamId, league.season, "away")
     const metrics = buildMatchMetrics(homeProfile, awayProfile)
     const nowIso = new Date().toISOString()
 
@@ -453,7 +493,7 @@ async function runSyncV2() {
       created_at: nowIso,
       home_team: fx.teams?.home?.name || null,
       away_team: fx.teams?.away?.name || null,
-      league: league || null,
+      league: league.name,
       match_date: todayDateInTimezone(TIMEZONE),
       kickoff: fx.fixture?.date || null,
       home_logo: fx.teams?.home?.logo || null,
@@ -534,10 +574,10 @@ async function runSyncV2() {
     }
   }
 
-  console.log("Scoutly Sync V2 finalizado com sucesso")
+  console.log("Scoutly Sync V2.1 finalizado com sucesso")
 }
 
-runSyncV2().catch(err => {
-  console.error("Erro fatal no Scoutly Sync V2:", err)
+runSyncV21().catch(err => {
+  console.error("Erro fatal no Scoutly Sync V2.1:", err)
   process.exit(1)
 })
