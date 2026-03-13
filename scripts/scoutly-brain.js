@@ -6,7 +6,6 @@ const supabase = createClient(
 )
 
 const TODAY = new Date().toISOString().slice(0, 10)
-
 const MAX_TOP_PICKS = 5
 const MIN_CONFIDENCE_FOR_MAIN = 0.58
 
@@ -55,13 +54,6 @@ function confidenceLabel(score) {
   return "Oportunidade extra"
 }
 
-function confidenceColor(score) {
-  if (score >= 0.78) return "Muito forte"
-  if (score >= 0.66) return "Boa"
-  if (score >= 0.56) return "Moderada"
-  return "Oportunidade extra"
-}
-
 function offensiveRhythm(totalShots, totalSot, expectedGoals) {
   const score =
     Number(totalShots || 0) * 0.45 +
@@ -77,7 +69,6 @@ function offensiveRhythm(totalShots, totalSot, expectedGoals) {
 function buildMainInsight(pickName, homeTeam, awayTeam, metrics) {
   const totalGoals = round1(metrics.totalExpectedGoals)
   const totalCorners = round1(metrics.expectedCorners)
-  const totalShots = Math.round(metrics.expectedShots)
   const rhythm = offensiveRhythm(
     metrics.expectedShots,
     metrics.expectedSot,
@@ -144,30 +135,31 @@ function dedupePickNames(picks) {
 
 function diversifyPicks(allMatches) {
   const usedMarkets = new Map()
-  const finalList = []
+  const adjusted = allMatches.map((match) => ({ ...match }))
 
-  for (const match of allMatches) {
+  for (const match of adjusted) {
     const marketKey = match.main_pick_market
     const alreadyUsed = usedMarkets.get(marketKey) || 0
-
-    // Penaliza repetição exagerada do mesmo mercado
     const diversityPenalty = alreadyUsed * 0.035
     match.final_score = round2(match.final_score - diversityPenalty)
+    usedMarkets.set(marketKey, alreadyUsed + 1)
   }
 
-  const sorted = [...allMatches].sort((a, b) => {
+  const finalList = []
+  const marketCount = new Map()
+
+  const sorted = [...adjusted].sort((a, b) => {
     if (b.final_score !== a.final_score) return b.final_score - a.final_score
-    return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime()
+    return new Date(a.kickoff || 0).getTime() - new Date(b.kickoff || 0).getTime()
   })
 
   for (const item of sorted) {
     const marketKey = item.main_pick_market
-    const count = usedMarkets.get(marketKey) || 0
+    const count = marketCount.get(marketKey) || 0
 
-    // deixa repetir, mas controla melhor
     if (count >= 3 && item.final_score < 0.74) continue
 
-    usedMarkets.set(marketKey, count + 1)
+    marketCount.set(marketKey, count + 1)
     finalList.push(item)
   }
 
@@ -192,7 +184,6 @@ function buildCandidatePicks(row) {
   const expectedHomeGoals = Number(row.expected_home_goals || 0)
   const expectedAwayGoals = Number(row.expected_away_goals || 0)
   const expectedGoals = expectedHomeGoals + expectedAwayGoals
-
   const expectedCorners = Number(row.expected_corners || 0)
 
   const goalGap = Math.abs(expectedHomeGoals - expectedAwayGoals)
@@ -340,7 +331,6 @@ function buildPickRecord(matchRow) {
   const countryCode = getCountryCodeFromLeague(matchRow.league)
   const leagueLabel = normalizeLeagueLabel(matchRow.league)
 
-  // score final para ranking geral
   const finalScore =
     mainStrength +
     (metrics.totalExpectedGoals >= 2 ? 0.03 : 0) +
@@ -391,7 +381,7 @@ function buildPickRecord(matchRow) {
   }
 }
 
-async function loadUpcomingMatchesWithAnalysis() {
+async function loadUpcomingMatches() {
   const { data, error } = await supabase
     .from("matches")
     .select(`
@@ -402,49 +392,73 @@ async function loadUpcomingMatchesWithAnalysis() {
       kickoff,
       home_logo,
       away_logo,
-      match_date,
-      match_analysis (
-        match_id,
-        home_strength,
-        away_strength,
-        home_win_prob,
-        draw_prob,
-        away_win_prob,
-        home_result_prob,
-        draw_result_prob,
-        away_result_prob,
-        expected_home_goals,
-        expected_away_goals,
-        expected_home_shots,
-        expected_away_shots,
-        expected_home_sot,
-        expected_away_sot,
-        expected_corners,
-        expected_cards,
-        prob_over25,
-        prob_btts,
-        prob_corners,
-        prob_shots,
-        prob_sot,
-        prob_cards
-      )
+      match_date
     `)
     .gte("match_date", TODAY)
     .order("kickoff", { ascending: true })
 
   if (error) throw error
+  return data || []
+}
+
+async function loadMatchAnalysis(matchIds) {
+  if (!matchIds.length) return []
+
+  const { data, error } = await supabase
+    .from("match_analysis")
+    .select(`
+      match_id,
+      home_strength,
+      away_strength,
+      home_win_prob,
+      draw_prob,
+      away_win_prob,
+      home_result_prob,
+      draw_result_prob,
+      away_result_prob,
+      expected_home_goals,
+      expected_away_goals,
+      expected_home_shots,
+      expected_away_shots,
+      expected_home_sot,
+      expected_away_sot,
+      expected_corners,
+      expected_cards,
+      prob_over25,
+      prob_btts,
+      prob_corners,
+      prob_shots,
+      prob_sot,
+      prob_cards,
+      over25_prob,
+      btts_prob,
+      corners_over85_prob
+    `)
+    .in("match_id", matchIds)
+
+  if (error) throw error
+  return data || []
+}
+
+async function loadUpcomingMatchesWithAnalysis() {
+  const matches = await loadUpcomingMatches()
+  if (!matches.length) return []
+
+  const matchIds = matches.map((m) => m.match_id)
+  const analyses = await loadMatchAnalysis(matchIds)
+
+  const analysisMap = new Map()
+  for (const row of analyses) {
+    analysisMap.set(row.match_id, row)
+  }
 
   const rows = []
-
-  for (const row of data || []) {
-    const analysis = Array.isArray(row.match_analysis)
-      ? row.match_analysis[0]
-      : row.match_analysis
-
+  for (const match of matches) {
+    const analysis = analysisMap.get(match.match_id)
     if (!analysis) continue
 
     rows.push({
-      ...row,
+      ...match,
       ...analysis
     })
   }
@@ -509,7 +523,6 @@ async function saveDailyPicks(picks) {
   }))
 
   const { error } = await supabase.from("daily_picks").insert(rows)
-
   if (error) throw error
 }
 
@@ -533,20 +546,17 @@ async function runScoutlyBrain() {
       return
     }
 
-    // Ordena por score, mas mantém kickoff como critério secundário
     const rankedBase = diversifyPicks(built)
       .sort((a, b) => {
         if (b.final_score !== a.final_score) return b.final_score - a.final_score
-        return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime()
+        return new Date(a.kickoff || 0).getTime() - new Date(b.kickoff || 0).getTime()
       })
 
-    // Dica do dia = melhor score absoluto
     const featured = rankedBase[0]
 
-    // Top 5 = sem repetir a dica do dia, ordenado por horário
     const topFive = rankedBase
       .filter((item) => item.match_id !== featured.match_id)
-      .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime())
+      .sort((a, b) => new Date(a.kickoff || 0).getTime() - new Date(b.kickoff || 0).getTime())
       .slice(0, MAX_TOP_PICKS)
 
     const finalRows = [
