@@ -910,3 +910,4 @@ async function runBrainV2() {
 runBrainV2().catch(error => {
   console.error("Erro fatal no Scoutly Brain V2:", error)
   process.exit(1)
+})
