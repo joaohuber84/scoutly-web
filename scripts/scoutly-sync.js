@@ -416,7 +416,7 @@ async function runSyncV2() {
 
   for (const fx of fixtures) {
     const fixtureId = fx.fixture?.id
-    const league = normalizeLeagueName(fx.league?.name)
+    const league = normalizeLeagueName(fx.league?.name)  || fx.league?.name
 
     const homeTeamId = fx.teams?.home?.id
     const awayTeamId = fx.teams?.away?.id
