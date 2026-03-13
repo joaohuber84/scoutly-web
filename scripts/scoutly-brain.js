@@ -5,576 +5,691 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-const TODAY = new Date().toISOString().slice(0, 10)
-const MAX_TOP_PICKS = 5
-const MIN_CONFIDENCE_FOR_MAIN = 0.58
+const TIMEZONE = "America/Sao_Paulo"
 
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value))
+function zonedNow() {
+  return new Date(
+    new Date().toLocaleString("en-US", { timeZone: TIMEZONE })
+  )
 }
 
-function round1(value) {
-  if (value == null || Number.isNaN(Number(value))) return 0
-  return Math.round(Number(value) * 10) / 10
+function formatDateKey(dateLike) {
+  if (!dateLike) return null
+  const d = new Date(dateLike)
+  if (Number.isNaN(d.getTime())) return null
+  const local = new Date(d.toLocaleString("en-US", { timeZone: TIMEZONE }))
+  const y = local.getFullYear()
+  const m = String(local.getMonth() + 1).padStart(2, "0")
+  const day = String(local.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
 }
 
-function round2(value) {
-  if (value == null || Number.isNaN(Number(value))) return 0
-  return Math.round(Number(value) * 100) / 100
+function safeNumber(value, fallback = 0) {
+  const n = Number(value)
+  return Number.isFinite(n) ? n : fallback
 }
 
-function normalizeLeagueLabel(league) {
-  if (!league) return "Competição"
-  return String(league).trim()
+function clamp(n, min = 0, max = 1) {
+  return Math.max(min, Math.min(max, n))
 }
 
-function getCountryCodeFromLeague(league) {
-  const l = String(league || "").toLowerCase()
-
-  if (l.includes("premier league")) return "EN"
-  if (l.includes("la liga")) return "ES"
-  if (l.includes("brasileirão")) return "BR"
-  if (l.includes("liga profesional argentina")) return "AR"
-  if (l.includes("bundesliga")) return "DE"
-  if (l.includes("ligue 1")) return "FR"
-  if (l.includes("eredivisie")) return "NL"
-  if (l.includes("super lig")) return "TR"
-  if (l.includes("serie a")) return "IT"
-  if (l.includes("champions")) return "EU"
-  if (l.includes("europa league")) return "EU"
-  if (l.includes("conference league")) return "EU"
-
-  return "INT"
+function round1(n) {
+  return Math.round(safeNumber(n) * 10) / 10
 }
 
-function confidenceLabel(score) {
-  if (score >= 0.78) return "Muito forte"
-  if (score >= 0.66) return "Boa"
-  if (score >= 0.56) return "Moderada"
+function round2(n) {
+  return Math.round(safeNumber(n) * 100) / 100
+}
+
+function pct(n) {
+  return round1(safeNumber(n) * 100)
+}
+
+function normalizeText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+}
+
+function getKickoff(row) {
+  return row.kickoff || row.Kickoff || row.match_date || null
+}
+
+function kickoffDate(row) {
+  const k = getKickoff(row)
+  return k ? new Date(k) : null
+}
+
+function kickoffLabel(row) {
+  const k = getKickoff(row)
+  if (!k) return "Horário não disponível"
+
+  const d = new Date(k)
+  if (Number.isNaN(d.getTime())) return "Horário não disponível"
+
+  return d.toLocaleString("pt-BR", {
+    timeZone: TIMEZONE,
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+}
+
+function getLeagueCode(league) {
+  const text = normalizeText(league)
+
+  if (text.includes("premier league")) return "EN"
+  if (text.includes("la liga")) return "ES"
+  if (text.includes("bundesliga")) return "DE"
+  if (text === "serie a" || text.includes("serie a")) return "IT"
+  if (text.includes("ligue 1")) return "FR"
+  if (text.includes("eredi")) return "NL"
+  if (text.includes("super lig")) return "TR"
+  if (text.includes("liga portugal")) return "PT"
+  if (text.includes("brasileirao")) return "BR"
+  if (text.includes("argentina") || text.includes("liga profesional")) return "AR"
+  return "GL"
+}
+
+function leagueTier(league) {
+  const text = normalizeText(league)
+
+  const top = [
+    "premier league",
+    "la liga",
+    "bundesliga",
+    "serie a",
+    "ligue 1",
+    "eredivisie",
+    "liga portugal",
+    "super lig",
+    "brasileirao serie a",
+    "liga profesional argentina",
+  ]
+
+  if (top.some((item) => text.includes(item))) return 1
+  return 0
+}
+
+function strengthLabel(prob) {
+  if (prob >= 0.84) return "Muito forte"
+  if (prob >= 0.76) return "Forte"
+  if (prob >= 0.67) return "Boa"
+  return "Moderada"
+}
+
+function marketTone(prob) {
+  if (prob >= 0.84) return "Muito forte"
+  if (prob >= 0.76) return "Boa"
+  if (prob >= 0.67) return "Moderada"
   return "Oportunidade extra"
 }
 
-function offensiveRhythm(totalShots, totalSot, expectedGoals) {
-  const score =
-    Number(totalShots || 0) * 0.45 +
-    Number(totalSot || 0) * 1.1 +
-    Number(expectedGoals || 0) * 3.2
+function buildTeamOrDraw(teamName) {
+  return `Dupla chance ${teamName} ou empate`
+}
 
-  if (score >= 20) return "Muito alto"
-  if (score >= 15) return "Alto"
-  if (score >= 10) return "Médio"
+function inferPace(totalGoals, totalShots) {
+  if (totalGoals >= 2.8 || totalShots >= 24) return "Alto"
+  if (totalGoals >= 2.1 || totalShots >= 18) return "Médio"
   return "Baixo"
 }
 
-function buildMainInsight(pickName, homeTeam, awayTeam, metrics) {
-  const totalGoals = round1(metrics.totalExpectedGoals)
-  const totalCorners = round1(metrics.expectedCorners)
-  const rhythm = offensiveRhythm(
-    metrics.expectedShots,
-    metrics.expectedSot,
-    metrics.totalExpectedGoals
+function buildInsight(bestMarket, row, totalGoals, totalCorners, totalShots, favoriteSide) {
+  if (bestMarket.includes("Mais de 1.5 gols")) {
+    return `A leitura Scoutly vê boa chance de pelo menos 2 gols, com projeção ofensiva de ${round1(totalGoals)} gols no confronto.`
+  }
+
+  if (bestMarket.includes("Mais de 2.5 gols")) {
+    return `A leitura Scoutly aponta jogo aberto, com volume para ultrapassar a linha de 2.5 gols. A projeção atual é de ${round1(totalGoals)} gols.`
+  }
+
+  if (bestMarket.includes("Menos de 2.5 gols")) {
+    return `A leitura Scoutly indica confronto mais travado, com tendência de placar controlado e projeção de ${round1(totalGoals)} gols.`
+  }
+
+  if (bestMarket.includes("Menos de 3.5 gols")) {
+    return `A leitura Scoutly aponta cenário de ritmo controlado, sem necessidade de explosão ofensiva para este jogo. A projeção atual é de ${round1(totalGoals)} gols.`
+  }
+
+  if (bestMarket.includes("Ambas marcam")) {
+    return `A leitura Scoutly identifica potencial ofensivo dos dois lados, com espaço para os dois times deixarem o seu gol.`
+  }
+
+  if (bestMarket.includes("Ambas não marcam")) {
+    return `A leitura Scoutly sugere dificuldade para pelo menos um dos lados converter em gol, com cenário mais fechado no placar.`
+  }
+
+  if (bestMarket.includes("Mais de 8.5 escanteios")) {
+    return `A leitura Scoutly projeta jogo com pressão ofensiva e volume para cantos, com expectativa de ${round1(totalCorners)} escanteios no total.`
+  }
+
+  if (bestMarket.includes("Menos de 8.5 escanteios")) {
+    return `A leitura Scoutly aponta partida menos acelerada em cantos, com projeção de ${round1(totalCorners)} escanteios no total.`
+  }
+
+  if (bestMarket.includes("Dupla chance")) {
+    return `A leitura Scoutly vê proteção interessante para o lado ${favoriteSide}, que chega com melhor equilíbrio estatístico para não sair derrotado.`
+  }
+
+  return `A leitura Scoutly aponta este mercado como uma das melhores oportunidades estatísticas do confronto.`
+}
+
+function extractRecentForm(row) {
+  const home = safeNumber(row.home_form, null)
+  const away = safeNumber(row.away_form, null)
+
+  if (home === null && away === null) {
+    return null
+  }
+
+  return {
+    home: home === null ? null : round1(home),
+    away: away === null ? null : round1(away),
+  }
+}
+
+function getAnalysisMetrics(match, analysis, stats) {
+  const expectedHomeGoals = safeNumber(
+    analysis.expected_home_goals,
+    safeNumber(match.expected_home_goals, 0)
   )
 
-  if (pickName.includes("MAIS DE 1.5 GOLS")) {
-    return `Scoutly vê um confronto com boa tendência ofensiva, projeção de ${totalGoals} gols esperados e cenário favorável para pelo menos 2 gols no jogo.`
+  const expectedAwayGoals = safeNumber(
+    analysis.expected_away_goals,
+    safeNumber(match.expected_away_goals, 0)
+  )
+
+  const expectedHomeShots = safeNumber(
+    analysis.expected_home_shots,
+    safeNumber(match.expected_home_shots, 0)
+  )
+
+  const expectedAwayShots = safeNumber(
+    analysis.expected_away_shots,
+    safeNumber(match.expected_away_shots, 0)
+  )
+
+  const expectedHomeSot = safeNumber(
+    analysis.expected_home_sot,
+    safeNumber(match.expected_home_sot, 0)
+  )
+
+  const expectedAwaySot = safeNumber(
+    analysis.expected_away_sot,
+    safeNumber(match.expected_away_sot, 0)
+  )
+
+  const expectedCorners = safeNumber(
+    analysis.expected_corners,
+    safeNumber(match.expected_corners, safeNumber(match.avg_corners, 0))
+  )
+
+  const totalGoals = round1(expectedHomeGoals + expectedAwayGoals)
+  let totalShots = round1(expectedHomeShots + expectedAwayShots)
+  let totalSot = round1(expectedHomeSot + expectedAwaySot)
+
+  if (totalShots <= 0 && stats) {
+    totalShots = round1(
+      safeNumber(stats.home_shots, 0) + safeNumber(stats.away_shots, 0)
+    )
   }
 
-  if (pickName.includes("MAIS DE 2.5 GOLS")) {
-    return `Scoutly identifica um jogo com ritmo ofensivo ${rhythm.toLowerCase()} e projeção de ${totalGoals} gols esperados, indicando valor na linha de mais de 2.5 gols.`
+  if (totalSot <= 0 && stats) {
+    totalSot = round1(
+      safeNumber(stats.home_shots_on_target, 0) +
+        safeNumber(stats.away_shots_on_target, 0)
+    )
   }
 
-  if (pickName.includes("MENOS DE 3.5 GOLS")) {
-    return `Scoutly enxerga um confronto mais controlado, sem explosão ofensiva, com projeção de ${totalGoals} gols esperados e boa sustentação para menos de 3.5 gols.`
+  if (totalShots > 0 && totalSot > totalShots) {
+    totalSot = totalShots
   }
 
-  if (pickName.includes("AMBAS MARCAM")) {
-    return `Scoutly detecta equilíbrio ofensivo entre ${homeTeam} e ${awayTeam}, com cenário consistente para gol dos dois lados.`
-  }
-
-  if (pickName.includes("AMBAS NÃO MARCAM")) {
-    return `Scoutly aponta um cenário de desequilíbrio ofensivo ou baixa produção de um dos lados, deixando ambas não marcam como leitura consistente.`
-  }
-
-  if (pickName.includes("ESCANTEIOS")) {
-    return `Scoutly projeta ${totalCorners} escanteios para a partida, com volume suficiente para sustentar essa linha de cantos.`
-  }
-
-  if (pickName.includes("DUPLA CHANCE")) {
-    return `Scoutly enxerga maior proteção de resultado para esse lado, com leitura de equilíbrio controlado e margem estatística favorável à dupla chance.`
-  }
-
-  return `Scoutly cruzou gols, escanteios, finalizações e forças relativas do confronto e encontrou valor estatístico nessa leitura.`
-}
-
-function buildRecentFormPlaceholder() {
   return {
-    home_form: null,
-    away_form: null,
-    recent_form_note: "Sem histórico recente disponível para este jogo."
+    expectedHomeGoals,
+    expectedAwayGoals,
+    totalGoals,
+    totalShots: totalShots > 0 ? totalShots : round1(safeNumber(match.avg_shots, 0)),
+    totalSot,
+    expectedCorners: expectedCorners > 0 ? round1(expectedCorners) : round1(safeNumber(match.avg_corners, 0)),
   }
 }
 
-function chooseMainPick(candidatePicks) {
-  const sorted = [...candidatePicks].sort((a, b) => b.score - a.score)
-  return sorted[0] || null
-}
+function buildCandidates(match, analysis, metrics) {
+  const homeTeam = match.home_team
+  const awayTeam = match.away_team
 
-function dedupePickNames(picks) {
+  const homeResultProb = safeNumber(
+    analysis.home_result_prob ?? analysis.home_win_prob,
+    0
+  )
+  const drawResultProb = safeNumber(
+    analysis.draw_result_prob ?? analysis.draw_prob,
+    0
+  )
+  const awayResultProb = safeNumber(
+    analysis.away_result_prob ?? analysis.away_win_prob,
+    0
+  )
+
+  const over15Prob = clamp(safeNumber(analysis.over15_prob, 0))
+  const over25Prob = clamp(
+    safeNumber(analysis.over25_prob ?? analysis.prob_over25, 0)
+  )
+  const under25Prob = clamp(safeNumber(analysis.under25_prob, 0))
+  const under35Prob = clamp(safeNumber(analysis.under35_prob, 0))
+  const bttsProb = clamp(safeNumber(analysis.btts_prob ?? analysis.prob_btts, 0))
+
+  const cornersBase = analysis.corners_over85_prob ?? analysis.prob_corners
+  const cornersOver85Prob = clamp(safeNumber(cornersBase, 0))
+
+  const homeDoubleChance = clamp(homeResultProb + drawResultProb)
+  const awayDoubleChance = clamp(awayResultProb + drawResultProb)
+
+  const favoriteSide =
+    homeDoubleChance >= awayDoubleChance ? homeTeam : awayTeam
+
+  const candidates = [
+    {
+      market: "Mais de 1.5 gols",
+      prob: over15Prob,
+      family: "goals-over",
+    },
+    {
+      market: "Mais de 2.5 gols",
+      prob: over25Prob,
+      family: "goals-over",
+    },
+    {
+      market: "Menos de 2.5 gols",
+      prob: under25Prob,
+      family: "goals-under",
+    },
+    {
+      market: "Menos de 3.5 gols",
+      prob: under35Prob,
+      family: "goals-under",
+    },
+    {
+      market: "Ambas marcam",
+      prob: bttsProb,
+      family: "btts",
+    },
+    {
+      market: "Ambas não marcam",
+      prob: clamp(1 - bttsProb),
+      family: "btts-no",
+    },
+    {
+      market: "Mais de 8.5 escanteios",
+      prob: cornersOver85Prob,
+      family: "corners-over",
+    },
+    {
+      market: "Menos de 8.5 escanteios",
+      prob: clamp(1 - cornersOver85Prob),
+      family: "corners-under",
+    },
+    {
+      market: buildTeamOrDraw(homeTeam),
+      prob: homeDoubleChance,
+      family: "double-chance",
+    },
+    {
+      market: buildTeamOrDraw(awayTeam),
+      prob: awayDoubleChance,
+      family: "double-chance",
+    },
+  ]
+    .map((item) => ({
+      ...item,
+      prob: clamp(item.prob),
+      favoriteSide,
+      totalGoals: metrics.totalGoals,
+      totalCorners: metrics.expectedCorners,
+      totalShots: metrics.totalShots,
+    }))
+    .filter((item) => item.prob > 0.57)
+
+  const unique = []
   const seen = new Set()
-  const result = []
 
-  for (const pick of picks) {
-    const key = pick.name.trim().toUpperCase()
-    if (seen.has(key)) continue
-    seen.add(key)
-    result.push(pick)
+  for (const candidate of candidates.sort((a, b) => b.prob - a.prob)) {
+    if (seen.has(candidate.market)) continue
+    seen.add(candidate.market)
+    unique.push(candidate)
   }
 
-  return result
+  return unique
 }
 
-function diversifyPicks(allMatches) {
-  const usedMarkets = new Map()
-  const adjusted = allMatches.map((match) => ({ ...match }))
+function buildQualityScore(match, analysis, metrics, stats) {
+  const leagueBoost = leagueTier(match.league) ? 0.07 : 0.02
+  const hasKickoff = getKickoff(match) || getKickoff(analysis) ? 0.03 : 0
+  const dataDensity =
+    (metrics.totalGoals > 0 ? 0.04 : 0) +
+    (metrics.expectedCorners > 0 ? 0.03 : 0) +
+    (metrics.totalShots > 0 ? 0.03 : 0) +
+    (safeNumber(stats?.home_shots, 0) + safeNumber(stats?.away_shots, 0) > 0 ? 0.03 : 0)
 
-  for (const match of adjusted) {
-    const marketKey = match.main_pick_market
-    const alreadyUsed = usedMarkets.get(marketKey) || 0
-    const diversityPenalty = alreadyUsed * 0.035
-    match.final_score = round2(match.final_score - diversityPenalty)
-    usedMarkets.set(marketKey, alreadyUsed + 1)
+  return leagueBoost + hasKickoff + dataDensity
+}
+
+function sortByKickoffAsc(a, b) {
+  const da = kickoffDate(a) ? kickoffDate(a).getTime() : Number.MAX_SAFE_INTEGER
+  const db = kickoffDate(b) ? kickoffDate(b).getTime() : Number.MAX_SAFE_INTEGER
+  return da - db
+}
+
+function buildAnalysisUpdate(match, analysis, stats) {
+  const metrics = getAnalysisMetrics(match, analysis, stats)
+  const candidates = buildCandidates(match, analysis, metrics)
+
+  if (!candidates.length) return null
+
+  const best = candidates[0]
+  const topThree = candidates.slice(0, 3)
+
+  const favoriteSide =
+    best.market.includes(match.home_team) ? match.home_team :
+    best.market.includes(match.away_team) ? match.away_team :
+    safeNumber(analysis.home_result_prob ?? analysis.home_win_prob, 0) >=
+    safeNumber(analysis.away_result_prob ?? analysis.away_win_prob, 0)
+      ? match.home_team
+      : match.away_team
+
+  const insight = buildInsight(
+    best.market,
+    analysis,
+    metrics.totalGoals,
+    metrics.expectedCorners,
+    metrics.totalShots,
+    favoriteSide
+  )
+
+  const form = extractRecentForm(analysis)
+
+  return {
+    matchId: match.id,
+    league: match.league,
+    kickoff: getKickoff(analysis) || getKickoff(match),
+    homeTeam: match.home_team,
+    awayTeam: match.away_team,
+    homeLogo: match.home_logo || match.home_jogo || null,
+    awayLogo: match.away_logo || null,
+    bestPick: best.market,
+    bestProb: best.prob,
+    strength: strengthLabel(best.prob),
+    metrics,
+    insight,
+    form,
+    topThree,
+    qualityScore: buildQualityScore(match, analysis, metrics, stats),
   }
+}
 
-  const finalList = []
-  const marketCount = new Map()
+function diversifyTopPicks(analyses, limit = 5) {
+  const marketFamilyCount = new Map()
+  const chosen = []
 
-  const sorted = [...adjusted].sort((a, b) => {
-    if (b.final_score !== a.final_score) return b.final_score - a.final_score
-    return new Date(a.kickoff || 0).getTime() - new Date(b.kickoff || 0).getTime()
+  const pool = [...analyses].sort((a, b) => {
+    const scoreA = a.bestProb + a.qualityScore
+    const scoreB = b.bestProb + b.qualityScore
+    return scoreB - scoreA
   })
 
-  for (const item of sorted) {
-    const marketKey = item.main_pick_market
-    const count = marketCount.get(marketKey) || 0
+  for (const item of pool) {
+    const family = item.topThree[0]?.family || "other"
+    const repeated = marketFamilyCount.get(family) || 0
+    const adjustedScore = item.bestProb + item.qualityScore - repeated * 0.08
 
-    if (count >= 3 && item.final_score < 0.74) continue
-
-    marketCount.set(marketKey, count + 1)
-    finalList.push(item)
+    item._adjustedScore = adjustedScore
   }
 
-  return finalList
+  pool.sort((a, b) => b._adjustedScore - a._adjustedScore)
+
+  for (const item of pool) {
+    if (chosen.length >= limit) break
+    const family = item.topThree[0]?.family || "other"
+    const repeated = marketFamilyCount.get(family) || 0
+
+    if (repeated >= 2 && pool.length > limit) continue
+
+    chosen.push(item)
+    marketFamilyCount.set(family, repeated + 1)
+  }
+
+  return chosen.slice(0, limit).sort(sortByKickoffAsc)
 }
 
-function buildCandidatePicks(row) {
-  const homeTeam = row.home_team
-  const awayTeam = row.away_team
-
-  const homeStrength = Number(row.home_strength || 0)
-  const awayStrength = Number(row.away_strength || 0)
-
-  const homeWinProb = Number(row.home_win_prob || row.home_result_prob || 0)
-  const drawProb = Number(row.draw_prob || row.draw_result_prob || 0)
-  const awayWinProb = Number(row.away_win_prob || row.away_result_prob || 0)
-
-  const probOver25 = Number(row.prob_over25 || row.over25_prob || 0)
-  const probBtts = Number(row.prob_btts || row.btts_prob || 0)
-  const probCorners = Number(row.prob_corners || row.corners_over85_prob || 0)
-
-  const expectedHomeGoals = Number(row.expected_home_goals || 0)
-  const expectedAwayGoals = Number(row.expected_away_goals || 0)
-  const expectedGoals = expectedHomeGoals + expectedAwayGoals
-  const expectedCorners = Number(row.expected_corners || 0)
-
-  const goalGap = Math.abs(expectedHomeGoals - expectedAwayGoals)
-  const strengthGap = Math.abs(homeStrength - awayStrength)
-
-  const homeDoubleChance = clamp(homeWinProb + drawProb, 0, 0.99)
-  const awayDoubleChance = clamp(awayWinProb + drawProb, 0, 0.99)
-
-  const candidates = []
-
-  if (expectedGoals >= 1.55) {
-    candidates.push({
-      name: "MAIS DE 1.5 GOLS",
-      market: "gols",
-      score: clamp(0.45 + expectedGoals * 0.18, 0, 0.95)
-    })
-  }
-
-  if (probOver25 >= 0.54 || expectedGoals >= 2.55) {
-    candidates.push({
-      name: "MAIS DE 2.5 GOLS",
-      market: "gols",
-      score: clamp(Math.max(probOver25, 0.35 + expectedGoals * 0.2), 0, 0.95)
-    })
-  }
-
-  if (expectedGoals <= 3.1) {
-    candidates.push({
-      name: "MENOS DE 3.5 GOLS",
-      market: "gols",
-      score: clamp(0.92 - expectedGoals * 0.16, 0, 0.95)
-    })
-  }
-
-  if (probBtts >= 0.57 && expectedHomeGoals >= 0.8 && expectedAwayGoals >= 0.8) {
-    candidates.push({
-      name: "AMBAS MARCAM",
-      market: "btts",
-      score: clamp(probBtts, 0, 0.95)
-    })
-  }
-
-  if (
-    (probBtts <= 0.46 || expectedAwayGoals <= 0.72 || expectedHomeGoals <= 0.72) &&
-    expectedGoals <= 3.05
-  ) {
-    candidates.push({
-      name: "AMBAS NÃO MARCAM",
-      market: "btts",
-      score: clamp(1 - probBtts, 0, 0.95)
-    })
-  }
-
-  if (expectedCorners >= 6.6) {
-    candidates.push({
-      name: "MAIS DE 6.5 ESCANTEIOS",
-      market: "escanteios",
-      score: clamp(Math.max(probCorners, 0.42 + expectedCorners * 0.05), 0, 0.95)
-    })
-  }
-
-  if (expectedCorners >= 8.6) {
-    candidates.push({
-      name: "MAIS DE 8.5 ESCANTEIOS",
-      market: "escanteios",
-      score: clamp(Math.max(probCorners, 0.28 + expectedCorners * 0.06), 0, 0.95)
-    })
-  }
-
-  if (expectedCorners <= 9.2) {
-    candidates.push({
-      name: "MENOS DE 10.5 ESCANTEIOS",
-      market: "escanteios",
-      score: clamp(0.88 - expectedCorners * 0.04, 0, 0.95)
-    })
-  }
-
-  if (homeDoubleChance >= 0.7 && homeStrength >= awayStrength * 0.9) {
-    candidates.push({
-      name: `DUPLA CHANCE ${homeTeam.toUpperCase()} OU EMPATE`,
-      market: "dupla_chance",
-      score: clamp(homeDoubleChance - 0.04 + strengthGap * 0.03, 0, 0.95)
-    })
-  }
-
-  if (awayDoubleChance >= 0.7 && awayStrength >= homeStrength * 0.9) {
-    candidates.push({
-      name: `DUPLA CHANCE ${awayTeam.toUpperCase()} OU EMPATE`,
-      market: "dupla_chance",
-      score: clamp(awayDoubleChance - 0.04 + strengthGap * 0.03, 0, 0.95)
-    })
-  }
-
-  return dedupePickNames(candidates)
-}
-
-function buildMetrics(row) {
-  const expectedHomeGoals = Number(row.expected_home_goals || 0)
-  const expectedAwayGoals = Number(row.expected_away_goals || 0)
-  const expectedHomeShots = Number(row.expected_home_shots || 0)
-  const expectedAwayShots = Number(row.expected_away_shots || 0)
-  const expectedHomeSot = Number(row.expected_home_sot || 0)
-  const expectedAwaySot = Number(row.expected_away_sot || 0)
-  const expectedCorners = Number(row.expected_corners || 0)
-
-  return {
-    totalExpectedGoals: expectedHomeGoals + expectedAwayGoals,
-    expectedCorners,
-    expectedShots: expectedHomeShots + expectedAwayShots,
-    expectedSot: expectedHomeSot + expectedAwaySot,
-    homeExpectedGoals: expectedHomeGoals,
-    awayExpectedGoals: expectedAwayGoals,
-    homeExpectedShots: expectedHomeShots,
-    awayExpectedShots: expectedAwayShots,
-    homeExpectedSot: expectedHomeSot,
-    awayExpectedSot: expectedAwaySot
-  }
-}
-
-function buildPickRecord(matchRow) {
-  const metrics = buildMetrics(matchRow)
-  const candidates = buildCandidatePicks(matchRow)
-  const mainPick = chooseMainPick(candidates)
-
-  if (!mainPick || mainPick.score < MIN_CONFIDENCE_FOR_MAIN) return null
-
-  const extras = candidates
-    .filter((p) => p.name !== mainPick.name)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 2)
-
-  const insight = buildMainInsight(
-    mainPick.name,
-    matchRow.home_team,
-    matchRow.away_team,
-    metrics
-  )
-
-  const formData = buildRecentFormPlaceholder()
-
-  const mainStrength = round2(mainPick.score)
-  const extra1 = extras[0] || null
-  const extra2 = extras[1] || null
-
-  const countryCode = getCountryCodeFromLeague(matchRow.league)
-  const leagueLabel = normalizeLeagueLabel(matchRow.league)
-
-  const finalScore =
-    mainStrength +
-    (metrics.totalExpectedGoals >= 2 ? 0.03 : 0) +
-    (metrics.expectedCorners >= 8 ? 0.02 : 0) +
-    (matchRow.kickoff ? 0.01 : 0)
-
-  return {
-    rank: null,
-    match_id: matchRow.match_id,
-    home_team: matchRow.home_team,
-    away_team: matchRow.away_team,
-    league: leagueLabel,
-    league_code: countryCode,
-    kickoff: matchRow.kickoff || null,
-    home_logo: matchRow.home_logo || null,
-    away_logo: matchRow.away_logo || null,
-
-    main_pick: mainPick.name,
-    main_pick_market: mainPick.market,
-    main_pick_score: mainStrength,
-    main_pick_label: confidenceLabel(mainPick.score),
-
-    pick_2: extra1 ? extra1.name : null,
-    pick_2_score: extra1 ? round2(extra1.score) : null,
-    pick_2_label: extra1 ? confidenceLabel(extra1.score) : null,
-
-    pick_3: extra2 ? extra2.name : null,
-    pick_3_score: extra2 ? round2(extra2.score) : null,
-    pick_3_label: extra2 ? confidenceLabel(extra2.score) : null,
-
-    insight,
-
-    expected_goals: round1(metrics.totalExpectedGoals),
-    expected_corners: round1(metrics.expectedCorners),
-    expected_shots: Math.round(metrics.expectedShots),
-    expected_sot: Math.round(metrics.expectedSot),
-    offensive_rhythm: offensiveRhythm(
-      metrics.expectedShots,
-      metrics.expectedSot,
-      metrics.totalExpectedGoals
-    ),
-
-    home_form: formData.home_form,
-    away_form: formData.away_form,
-    recent_form_note: formData.recent_form_note,
-
-    final_score: round2(finalScore)
-  }
-}
-
-async function loadUpcomingMatches() {
+async function fetchMatchesToday() {
   const { data, error } = await supabase
     .from("matches")
-    .select(`
-      match_id,
-      home_team,
-      away_team,
-      league,
-      kickoff,
-      home_logo,
-      away_logo,
-      match_date
-    `)
-    .gte("match_date", TODAY)
-    .order("kickoff", { ascending: true })
+    .select("*")
+    .order("kickoff", { ascending: true, nullsFirst: false })
 
   if (error) throw error
-  return data || []
+
+  const now = zonedNow()
+  const todayKey = formatDateKey(now)
+
+  return (data || []).filter((row) => {
+    const rowKey =
+      formatDateKey(row.kickoff) ||
+      formatDateKey(row.match_date) ||
+      formatDateKey(row.created_at)
+
+    if (!rowKey) return false
+    if (rowKey !== todayKey) return false
+
+    const k = kickoffDate(row)
+    if (!k) return true
+
+    const localKickoff = new Date(k.toLocaleString("en-US", { timeZone: TIMEZONE }))
+    return localKickoff.getTime() >= now.getTime() - 3 * 60 * 60 * 1000
+  })
 }
 
-async function loadMatchAnalysis(matchIds) {
-  if (!matchIds.length) return []
+async function fetchMatchAnalysisByIds(ids) {
+  if (!ids.length) return []
 
   const { data, error } = await supabase
     .from("match_analysis")
-    .select(`
-      match_id,
-      home_strength,
-      away_strength,
-      home_win_prob,
-      draw_prob,
-      away_win_prob,
-      home_result_prob,
-      draw_result_prob,
-      away_result_prob,
-      expected_home_goals,
-      expected_away_goals,
-      expected_home_shots,
-      expected_away_shots,
-      expected_home_sot,
-      expected_away_sot,
-      expected_corners,
-      expected_cards,
-      prob_over25,
-      prob_btts,
-      prob_corners,
-      prob_shots,
-      prob_sot,
-      prob_cards,
-      over25_prob,
-      btts_prob,
-      corners_over85_prob
-    `)
-    .in("match_id", matchIds)
+    .select("*")
+    .in("match_id", ids)
 
   if (error) throw error
   return data || []
 }
 
-async function loadUpcomingMatchesWithAnalysis() {
-  const matches = await loadUpcomingMatches()
-  if (!matches.length) return []
+async function fetchMatchStatsByIds(ids) {
+  if (!ids.length) return []
 
-  const matchIds = matches.map((m) => m.match_id)
-  const analyses = await loadMatchAnalysis(matchIds)
+  const { data, error } = await supabase
+    .from("match_stats")
+    .select("*")
+    .in("match_id", ids)
 
-  const analysisMap = new Map()
-  for (const row of analyses) {
-    analysisMap.set(row.match_id, row)
+  if (error) throw error
+  return data || []
+}
+
+function filterUpdateByExistingColumns(baseUpdate, sampleRow) {
+  if (!sampleRow) return baseUpdate
+
+  const allowed = new Set(Object.keys(sampleRow))
+  const output = {}
+
+  for (const [key, value] of Object.entries(baseUpdate)) {
+    if (allowed.has(key)) {
+      output[key] = value
+    }
   }
 
-  const rows = []
-  for (const match of matches) {
-    const analysis = analysisMap.get(match.match_id)
-    if (!analysis) continue
+  return output
+}
 
+async function updateMatchAnalysisRows(analyses, existingAnalysisRows) {
+  const analysisById = new Map(
+    existingAnalysisRows.map((row) => [row.match_id, row])
+  )
+
+  for (const item of analyses) {
+    const original = analysisById.get(item.matchId)
+    if (!original) continue
+
+    const baseUpdate = {
+      insight: item.insight,
+      pick: item.bestPick,
+      best_pick_1: item.topThree[0]?.market || null,
+      best_pick_2: item.topThree[1]?.market || null,
+      best_pick_3: item.topThree[2]?.market || null,
+      kickoff: item.kickoff || original.kickoff || null,
+    }
+
+    const update = filterUpdateByExistingColumns(baseUpdate, original)
+
+    if (!Object.keys(update).length) continue
+
+    const { error } = await supabase
+      .from("match_analysis")
+      .update(update)
+      .eq("match_id", item.matchId)
+
+    if (error) throw error
+  }
+}
+
+async function replaceDailyPicks(mainPick, topFive) {
+  const { error: deleteError } = await supabase
+    .from("daily_picks")
+    .delete()
+    .gte("id", 0)
+
+  if (deleteError) throw deleteError
+
+  const rows = []
+
+  if (mainPick) {
     rows.push({
-      ...match,
-      ...analysis
+      rank: 0,
+      match_id: mainPick.matchId,
+      home_team: mainPick.homeTeam,
+      away_team: mainPick.awayTeam,
+      league: mainPick.league,
+      market: mainPick.bestPick,
+      probability: round2(mainPick.bestProb),
+      is_opportunity: true,
     })
   }
 
-  return rows
-}
+  topFive.forEach((item, index) => {
+    rows.push({
+      rank: index + 1,
+      match_id: item.matchId,
+      home_team: item.homeTeam,
+      away_team: item.awayTeam,
+      league: item.league,
+      market: item.bestPick,
+      probability: round2(item.bestProb),
+      is_opportunity: true,
+    })
+  })
 
-async function clearTodayDailyPicks() {
-  const start = `${TODAY}T00:00:00`
-  const end = `${TODAY}T23:59:59`
+  if (!rows.length) return
 
-  const { error } = await supabase
+  const { error: insertError } = await supabase
     .from("daily_picks")
-    .delete()
-    .gte("created_at", start)
-    .lte("created_at", end)
+    .insert(rows)
 
-  if (error) throw error
+  if (insertError) throw insertError
 }
 
-async function saveDailyPicks(picks) {
-  if (!picks.length) return
+async function main() {
+  console.log("🧠 Scoutly Brain V2.2 iniciado...")
 
-  const rows = picks.map((pick, index) => ({
-    rank: pick.rank,
-    match_id: pick.match_id,
-    home_team: pick.home_team,
-    away_team: pick.away_team,
-    league: pick.league,
-    league_code: pick.league_code,
-    kickoff: pick.kickoff,
-    home_logo: pick.home_logo,
-    away_logo: pick.away_logo,
+  const matches = await fetchMatchesToday()
+  console.log(`📦 Jogos do dia encontrados: ${matches.length}`)
 
-    main_pick: pick.main_pick,
-    main_pick_market: pick.main_pick_market,
-    main_pick_score: pick.main_pick_score,
-    main_pick_label: pick.main_pick_label,
-
-    pick_2: pick.pick_2,
-    pick_2_score: pick.pick_2_score,
-    pick_2_label: pick.pick_2_label,
-
-    pick_3: pick.pick_3,
-    pick_3_score: pick.pick_3_score,
-    pick_3_label: pick.pick_3_label,
-
-    insight: pick.insight,
-
-    expected_goals: pick.expected_goals,
-    expected_corners: pick.expected_corners,
-    expected_shots: pick.expected_shots,
-    expected_sot: pick.expected_sot,
-    offensive_rhythm: pick.offensive_rhythm,
-
-    home_form: pick.home_form,
-    away_form: pick.away_form,
-    recent_form_note: pick.recent_form_note,
-
-    score: pick.final_score,
-    is_featured: index === 0
-  }))
-
-  const { error } = await supabase.from("daily_picks").insert(rows)
-  if (error) throw error
-}
-
-async function runScoutlyBrain() {
-  try {
-    console.log("🧠 Scoutly Brain V2 iniciado...")
-
-    const matches = await loadUpcomingMatchesWithAnalysis()
-
-    if (!matches.length) {
-      console.log("Nenhum jogo com análise disponível para hoje.")
-      return
-    }
-
-    const built = matches
-      .map(buildPickRecord)
-      .filter(Boolean)
-
-    if (!built.length) {
-      console.log("Nenhuma oportunidade forte encontrada para hoje.")
-      return
-    }
-
-    const rankedBase = diversifyPicks(built)
-      .sort((a, b) => {
-        if (b.final_score !== a.final_score) return b.final_score - a.final_score
-        return new Date(a.kickoff || 0).getTime() - new Date(b.kickoff || 0).getTime()
-      })
-
-    const featured = rankedBase[0]
-
-    const topFive = rankedBase
-      .filter((item) => item.match_id !== featured.match_id)
-      .sort((a, b) => new Date(a.kickoff || 0).getTime() - new Date(b.kickoff || 0).getTime())
-      .slice(0, MAX_TOP_PICKS)
-
-    const finalRows = [
-      { ...featured, rank: 0 },
-      ...topFive.map((item, idx) => ({ ...item, rank: idx + 1 }))
-    ]
-
-    await clearTodayDailyPicks()
-    await saveDailyPicks(finalRows)
-
-    console.log(`✅ Scoutly Brain V2 finalizado com sucesso.`)
-    console.log(`⭐ Dica do dia: ${featured.home_team} x ${featured.away_team} -> ${featured.main_pick}`)
-    console.log(`🔥 Top radar salvo: ${topFive.length} jogos`)
-  } catch (error) {
-    console.error("❌ Erro no Scoutly Brain V2:", error)
-    process.exit(1)
+  if (!matches.length) {
+    await replaceDailyPicks(null, [])
+    console.log("⚠️ Nenhum jogo válido hoje. Daily picks limpo.")
+    return
   }
+
+  const matchIds = matches.map((m) => m.id)
+  const [analysisRows, statsRows] = await Promise.all([
+    fetchMatchAnalysisByIds(matchIds),
+    fetchMatchStatsByIds(matchIds),
+  ])
+
+  console.log(`📊 Match analysis carregado: ${analysisRows.length}`)
+  console.log(`📈 Match stats carregado: ${statsRows.length}`)
+
+  const analysisByMatchId = new Map(
+    analysisRows.map((row) => [row.match_id, row])
+  )
+
+  const statsByMatchId = new Map(
+    statsRows.map((row) => [row.match_id, row])
+  )
+
+  const built = []
+
+  for (const match of matches) {
+    const analysis = analysisByMatchId.get(match.id)
+    if (!analysis) continue
+
+    const stats = statsByMatchId.get(match.id)
+    const builtItem = buildAnalysisUpdate(match, analysis, stats)
+
+    if (!builtItem) continue
+
+    built.push(builtItem)
+  }
+
+  console.log(`✅ Análises válidas montadas: ${built.length}`)
+
+  if (!built.length) {
+    await replaceDailyPicks(null, [])
+    console.log("⚠️ Nenhuma análise forte o suficiente para salvar.")
+    return
+  }
+
+  built.sort((a, b) => {
+    const scoreA = a.bestProb + a.qualityScore
+    const scoreB = b.bestProb + b.qualityScore
+    return scoreB - scoreA
+  })
+
+  const mainPick = built[0]
+  const topFive = diversifyTopPicks(
+    built.filter((item) => item.matchId !== mainPick.matchId),
+    5
+  )
+
+  await updateMatchAnalysisRows(built, analysisRows)
+  await replaceDailyPicks(mainPick, topFive)
+
+  console.log("🏁 Scoutly Brain V2.2 finalizado com sucesso.")
+  console.log("⭐ Dica do dia:", mainPick.homeTeam, "x", mainPick.awayTeam, "-", mainPick.bestPick)
+  console.log(
+    "🔥 Top 5:",
+    topFive.map((x) => `${x.homeTeam} x ${x.awayTeam} (${x.bestPick})`).join(" | ")
+  )
 }
 
-runScoutlyBrain()
+main().catch((error) => {
+  console.error("❌ Erro no Scoutly Brain V2.2:", {
+    code: error?.code || null,
+    details: error?.details || null,
+    hint: error?.hint || null,
+    message: error?.message || String(error),
+  })
+  process.exit(1)
+})
 
