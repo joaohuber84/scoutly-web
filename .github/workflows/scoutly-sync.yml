@@ -1,34 +1,106 @@
-name: Scoutly Sync
+const { createClient } = require("@supabase/supabase-js")
+const fetch = require("node-fetch")
 
-on:
-  workflow_dispatch:
+const APISPORTS_KEY = process.env.APISPORTS_KEY
 
-jobs:
-  sync:
-    runs-on: ubuntu-latest
+const SUPABASE_URL = process.env.SUPABASE_URL
+const SUPABASE_KEY =
+  process.env.SUPABASE_SERVICE_KEY ||
+  process.env.SUPABASE_SERVICE_ROLE_KEY
 
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+if (!SUPABASE_URL) {
+  throw new Error("SUPABASE_URL não encontrada.")
+}
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
+if (!SUPABASE_KEY) {
+  throw new Error("SUPABASE_SERVICE_KEY ou SUPABASE_SERVICE_ROLE_KEY não encontrada.")
+}
 
-      - name: Install dependencies
-        run: npm install
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-      - name: Run Scoutly sync
-        env:
-          APISPORTS_KEY: ${{ secrets.APISPORTS_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/scoutly-sync.js
+const API_URL = "https://v3.football.api-sports.io/fixtures"
 
-      - name: Run Scoutly brain
-        env:
-          APISPORTS_KEY: ${{ secrets.APISPORTS_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/scoutly-brain.js
+async function getFixtures() {
+
+  const today = new Date().toISOString().split("T")[0]
+
+  const url = `${API_URL}?date=${today}`
+
+  const res = await fetch(url, {
+    headers: {
+      "x-apisports-key": APISPORTS_KEY
+    }
+  })
+
+  const json = await res.json()
+
+  return json.response || []
+}
+
+function random(min, max) {
+  return Math.random() * (max - min) + min
+}
+
+async function runScoutlySync() {
+
+  console.log("Scoutly Sync iniciado")
+
+  const fixtures = await getFixtures()
+
+  console.log("Jogos encontrados:", fixtures.length)
+
+  for (const game of fixtures) {
+
+    const fixture = game.fixture
+    const teams = game.teams
+    const league = game.league
+
+    const match = {
+
+      id: fixture.id,
+
+      kickoff: fixture.date,
+
+      league: league.name,
+
+      home_team: teams.home.name,
+      away_team: teams.away.name,
+
+      home_logo: teams.home.logo,
+      away_logo: teams.away.logo,
+
+      match_date: fixture.date.split("T")[0],
+
+      avg_goals: random(1.8, 3.0),
+      avg_corners: random(7, 11),
+      avg_shots: random(16, 26),
+
+      home_win_prob: random(0.3, 0.6),
+      draw_prob: random(0.15, 0.3),
+      away_win_prob: random(0.2, 0.45),
+
+      over15_prob: random(0.6, 0.85),
+      over25_prob: random(0.45, 0.7),
+      under25_prob: random(0.3, 0.55),
+      under35_prob: random(0.6, 0.85),
+
+      btts_prob: random(0.4, 0.65),
+
+      corners_over85_prob: random(0.5, 0.75)
+    }
+
+    const { error } = await supabase
+      .from("matches")
+      .upsert(match)
+
+    if (error) {
+      console.log("Erro ao salvar match:", error)
+    }
+
+  }
+
+  console.log("Scoutly Sync finalizado")
+
+}
+
+runScoutlySync()
