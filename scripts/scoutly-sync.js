@@ -20,27 +20,24 @@ const ALLOWED_LEAGUES = {
   "bundesliga": "Bundesliga",
   "ligue 1": "Ligue 1",
   "primeira liga": "Liga Portugal",
-  "erediivisie": "Eredivisie",
   "eredivisie": "Eredivisie",
   "super lig": "Super Lig",
-  "süper lig": "Super Lig",
-  "uefa champions league": "Champions League",
-  "uefa europa league": "Europa League",
-  "uefa europa conference league": "Conference League",
+  "super league 1": "Super League 1",
+  "uefa champions league": "UEFA Champions League",
+  "uefa europa league": "UEFA Europa League",
+  "uefa europa conference league": "UEFA Europa Conference League",
   "fa cup": "FA Cup",
   "copa del rey": "Copa del Rey",
   "coppa italia": "Coppa Italia",
   "copa do brasil": "Copa do Brasil",
-  "campeonato brasileiro série a": "Brasileirão Série A",
   "campeonato brasileiro serie a": "Brasileirão Série A",
-  "serie a brazil": "Brasileirão Série A",
-  "campeonato brasileiro série b": "Brasileirão Série B",
   "campeonato brasileiro serie b": "Brasileirão Série B",
-  "serie b brazil": "Brasileirão Série B",
+  "brasileiro serie a": "Brasileirão Série A",
+  "brasileiro serie b": "Brasileirão Série B",
   "liga profesional argentina": "Liga Profesional Argentina",
   "major league soccer": "MLS",
-  "conmebol libertadores": "Libertadores",
-  "conmebol sudamericana": "Sul-Americana"
+  "conmebol libertadores": "CONMEBOL Libertadores",
+  "conmebol sudamericana": "CONMEBOL Sudamericana"
 }
 
 function normalizeText(value) {
@@ -62,6 +59,10 @@ function clamp(value, min, max) {
 
 function round(value, decimals = 2) {
   return Number(Number(value || 0).toFixed(decimals))
+}
+
+function roundInt(value) {
+  return Math.round(Number(value || 0))
 }
 
 function avg(arr) {
@@ -98,6 +99,7 @@ async function apiGet(path, params = {}) {
   })
 
   const res = await fetch(url.toString(), {
+    method: "GET",
     headers: {
       "x-apisports-key": API_KEY
     }
@@ -117,17 +119,22 @@ function getStatValue(statistics = [], labels = []) {
     const found = statistics.find(
       item => normalizeText(item.type) === normalizeText(label)
     )
+
     if (found) {
       const raw = found.value
+
       if (raw === null || raw === undefined) return 0
+
       if (typeof raw === "string") {
         const cleaned = raw.replace("%", "").trim()
         const num = Number(cleaned)
         return Number.isNaN(num) ? 0 : num
       }
+
       return Number(raw) || 0
     }
   }
+
   return 0
 }
 
@@ -164,7 +171,6 @@ function buildPoints(goalsFor, goalsAgainst) {
 
 async function buildTeamProfile(teamId, venue = "home") {
   const fixtures = await getRecentFixtures(teamId)
-
   const rows = []
 
   for (const fx of fixtures) {
@@ -172,6 +178,7 @@ async function buildTeamProfile(teamId, venue = "home") {
     if (!fixtureId) continue
 
     const isHome = fx.teams?.home?.id === teamId
+
     const goalsFor = Number(isHome ? fx.goals?.home : fx.goals?.away) || 0
     const goalsAgainst = Number(isHome ? fx.goals?.away : fx.goals?.home) || 0
 
@@ -381,27 +388,39 @@ async function fetchTodayFixtures() {
 async function replaceTodayData(fixturesIds) {
   if (!fixturesIds.length) return
 
-  await supabase
+  const { error: dailyError } = await supabase
     .from("daily_picks")
     .delete()
     .in("match_id", fixturesIds)
 
-  await supabase
+  if (dailyError) {
+    console.error("Erro ao limpar daily_picks:", dailyError)
+  }
+
+  const { error: statsError } = await supabase
     .from("match_stats")
     .delete()
     .in("match_id", fixturesIds)
 
-  await supabase
+  if (statsError) {
+    console.error("Erro ao limpar match_stats:", statsError)
+  }
+
+  const { error: matchesError } = await supabase
     .from("matches")
     .delete()
     .in("id", fixturesIds)
+
+  if (matchesError) {
+    console.error("Erro ao limpar matches:", matchesError)
+  }
 }
 
 async function runSyncV2() {
   console.log("Scoutly Sync V2 iniciado")
 
   const fixtures = await fetchTodayFixtures()
-  console.log("Jogos do dia após filtro de ligas:", fixtures.length)
+  console.log("Jogos elegíveis hoje:", fixtures.length)
 
   if (!fixtures.length) {
     console.log("Nenhum jogo elegível encontrado hoje.")
@@ -416,45 +435,50 @@ async function runSyncV2() {
 
   for (const fx of fixtures) {
     const fixtureId = fx.fixture?.id
-    const league = normalizeLeagueName(fx.league?.name)  || fx.league?.name
-
+    const league = normalizeLeagueName(fx.league?.name) || fx.league?.name
     const homeTeamId = fx.teams?.home?.id
     const awayTeamId = fx.teams?.away?.id
 
-    if (!fixtureId || !league || !homeTeamId || !awayTeamId) continue
+    if (!fixtureId || !homeTeamId || !awayTeamId) continue
 
-    console.log(`Processando ${fx.teams.home.name} x ${fx.teams.away.name}`)
+    console.log(`Processando ${fx.teams?.home?.name} x ${fx.teams?.away?.name}`)
 
     const homeProfile = await buildTeamProfile(homeTeamId, "home")
     const awayProfile = await buildTeamProfile(awayTeamId, "away")
     const metrics = buildMatchMetrics(homeProfile, awayProfile)
+    const nowIso = new Date().toISOString()
 
     matchRows.push({
       id: fixtureId,
-      fixture_id: fixtureId,
-      league,
-      kickoff: fx.fixture?.date,
+      created_at: nowIso,
       home_team: fx.teams?.home?.name || null,
       away_team: fx.teams?.away?.name || null,
+      league: league || null,
+      match_date: todayDateInTimezone(TIMEZONE),
+      kickoff: fx.fixture?.date || null,
       home_logo: fx.teams?.home?.logo || null,
       away_logo: fx.teams?.away?.logo || null,
 
       avg_goals: metrics.avgGoals,
       avg_corners: metrics.avgCorners,
       avg_shots: metrics.avgShots,
+      insight: null,
 
-      home_form: homeProfile.formScore,
-      away_form: awayProfile.formScore,
+      home_win_prob: metrics.homeResultProb,
+      draw_prob: metrics.drawProb,
+      away_win_prob: metrics.awayResultProb,
+
+      home_form: String(homeProfile.formScore),
+      away_form: String(awayProfile.formScore),
+
+      over25_prob: metrics.over25Prob,
+      btts_prob: metrics.bttsProb,
+      corners_over85_prob: metrics.cornersOver85Prob,
+
+      pick: null,
 
       power_home: metrics.homePower,
       power_away: metrics.awayPower,
-
-      over15_prob: metrics.over15Prob,
-      over25_prob: metrics.over25Prob,
-      under25_prob: metrics.under25Prob,
-      under35_prob: metrics.under35Prob,
-      btts_prob: metrics.bttsProb,
-      corners_over85_prob: metrics.cornersOver85Prob,
 
       home_result_prob: metrics.homeResultProb,
       draw_result_prob: metrics.drawProb,
@@ -462,23 +486,31 @@ async function runSyncV2() {
 
       market_odds_over25: null,
       market_odds_btts: null,
-      market_odds_corners85: null
+      market_odds_corners85: null,
+
+      over15_prob: metrics.over15Prob,
+      under25_prob: metrics.under25Prob,
+      under35_prob: metrics.under35Prob
     })
 
     statsRows.push({
+      created_at: nowIso,
       match_id: fixtureId,
 
-      home_shots: metrics.homeExpectedShots,
-      home_shots_on_target: metrics.homeExpectedShotsOnTarget,
-      home_corners: metrics.homeExpectedCorners,
-      home_yellow_cards: homeProfile.yellowFor,
+      home_shots: roundInt(metrics.homeExpectedShots),
+      home_shots_on_target: roundInt(metrics.homeExpectedShotsOnTarget),
+      home_corners: roundInt(metrics.homeExpectedCorners),
+      home_yellow_cards: roundInt(homeProfile.yellowFor),
 
-      away_shots: metrics.awayExpectedShots,
-      away_shots_on_target: metrics.awayExpectedShotsOnTarget,
-      away_corners: metrics.awayExpectedCorners,
-      away_yellow_cards: awayProfile.yellowFor
+      away_shots: roundInt(metrics.awayExpectedShots),
+      away_shots_on_target: roundInt(metrics.awayExpectedShotsOnTarget),
+      away_corners: roundInt(metrics.awayExpectedCorners),
+      away_yellow_cards: roundInt(awayProfile.yellowFor)
     })
   }
+
+  console.log("Total de rows para matches:", matchRows.length)
+  console.log("Total de rows para match_stats:", statsRows.length)
 
   if (matchRows.length) {
     const { error } = await supabase
@@ -487,7 +519,7 @@ async function runSyncV2() {
 
     if (error) {
       console.error("Erro ao inserir matches:", error)
-      return
+      throw error
     }
   }
 
@@ -498,13 +530,11 @@ async function runSyncV2() {
 
     if (error) {
       console.error("Erro ao inserir match_stats:", error)
-      return
+      throw error
     }
   }
 
   console.log("Scoutly Sync V2 finalizado com sucesso")
-  console.log("Matches inseridos:", matchRows.length)
-  console.log("Match stats inseridos:", statsRows.length)
 }
 
 runSyncV2().catch(err => {
