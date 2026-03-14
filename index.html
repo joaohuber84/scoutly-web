@@ -1657,34 +1657,71 @@
       state.statsByMatchId = toLatestMap(data || [])
     }
 
-    async function initialize() {
-      try {
-        setStatus('Conectando ao Scoutly...', true)
+   async function initialize() {
+  try {
+    setStatus('Conectando ao Scoutly...', true)
 
-        await Promise.all([
-          loadDailyPicks(),
-          loadMatches(),
-          loadMatchAnalysis(),
-          loadMatchStats()
-        ])
+    let dailyPicksError = null
+    let matchesError = null
 
-        renderOpportunity()
-        renderRadar()
-        renderCompetitions()
-
-        setStatus(`Conexão OK · Jogos futuros: ${state.matches.length}`, true)
-      } catch (error) {
-        console.error(error)
-        setStatus('Erro ao carregar dados do Scoutly.', false)
-
-        document.getElementById('opportunityContainer').innerHTML =
-          `<div class="empty-state">Não foi possível carregar a Dica do Dia.</div>`
-        document.getElementById('radarList').innerHTML =
-          `<div class="empty-state">Não foi possível carregar o radar do dia.</div>`
-        document.getElementById('competitionsGrid').innerHTML =
-          `<div class="empty-state">Não foi possível carregar as competições.</div>`
-      }
+    try {
+      await loadDailyPicks()
+      console.log('daily_picks OK', state.dailyPicks)
+    } catch (error) {
+      dailyPicksError = error
+      console.error('ERRO daily_picks:', error)
     }
+
+    try {
+      await loadMatches()
+      console.log('matches OK', state.matches)
+    } catch (error) {
+      matchesError = error
+      console.error('ERRO matches:', error)
+    }
+
+    if (dailyPicksError || matchesError) {
+      const message = `
+daily_picks: ${dailyPicksError ? (dailyPicksError.message || JSON.stringify(dailyPicksError)) : 'OK'}
+matches: ${matchesError ? (matchesError.message || JSON.stringify(matchesError)) : 'OK'}
+      `.trim()
+
+      setStatus('Erro ao carregar dados do Scoutly.', false)
+
+      document.getElementById('opportunityContainer').innerHTML =
+        `<div class="empty-state"><strong>Erro no carregamento</strong><br><br><pre style="white-space:pre-wrap;text-align:left;color:#9ab0d3;">${message}</pre></div>`
+
+      document.getElementById('radarList').innerHTML =
+        `<div class="empty-state"><pre style="white-space:pre-wrap;text-align:left;color:#9ab0d3;">${message}</pre></div>`
+
+      document.getElementById('competitionsGrid').innerHTML =
+        `<div class="empty-state"><pre style="white-space:pre-wrap;text-align:left;color:#9ab0d3;">${message}</pre></div>`
+
+      return
+    }
+
+    renderOpportunity()
+    renderRadar()
+    renderCompetitions()
+
+    setStatus(`Conexão OK · Jogos futuros: ${state.matches.length}`, true)
+  } catch (error) {
+    console.error('ERRO GERAL initialize:', error)
+
+    const message = error?.message || JSON.stringify(error) || 'Erro desconhecido'
+
+    setStatus('Erro ao carregar dados do Scoutly.', false)
+
+    document.getElementById('opportunityContainer').innerHTML =
+      `<div class="empty-state"><strong>Erro geral</strong><br><br><pre style="white-space:pre-wrap;text-align:left;color:#9ab0d3;">${message}</pre></div>`
+
+    document.getElementById('radarList').innerHTML =
+      `<div class="empty-state"><pre style="white-space:pre-wrap;text-align:left;color:#9ab0d3;">${message}</pre></div>`
+
+    document.getElementById('competitionsGrid').innerHTML =
+      `<div class="empty-state"><pre style="white-space:pre-wrap;text-align:left;color:#9ab0d3;">${message}</pre></div>`
+  }
+}
 
     document.getElementById('backToCompetitionsBtn').addEventListener('click', backToCompetitions)
     document.getElementById('closeAnalysisBtn').addEventListener('click', closeAnalysis)
