@@ -1830,16 +1830,38 @@
       state.dailyPicks = data || []
     }
 
-    async function loadMatches() {
-      const { data, error } = await supabaseClient
-        .from('matches')
-        .select('*')
-        .order('league', { ascending: true })
-        .order('kickoff', { ascending: true })
+  async function loadMatches() {
+  const { data: matchesData, error: matchesError } = await supabaseClient
+    .from('matches')
+    .select('*')
+    .order('league', { ascending: true })
+    .order('kickoff', { ascending: true })
 
-      if (error) throw error
-      state.matches = (data || []).filter(match => isUpcoming(match.kickoff || match.match_date))
+  if (matchesError) throw matchesError
+
+  const upcomingMatches = (matchesData || []).filter(match =>
+    isUpcoming(match.kickoff || match.match_date)
+  )
+
+  const { data: analysisData, error: analysisError } = await supabaseClient
+    .from('match_analysis')
+    .select('*')
+
+  if (analysisError) throw analysisError
+
+  const analysisMap = new Map(
+    (analysisData || []).map(item => [String(item.match_id), item])
+  )
+
+  state.matches = upcomingMatches.map(match => {
+    const analysis = analysisMap.get(String(match.id)) || {}
+
+    return {
+      ...match,
+      ...analysis
     }
+  })
+}
 
     async function initialize() {
       const errors = {}
