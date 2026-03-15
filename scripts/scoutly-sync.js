@@ -22,9 +22,7 @@ const REQUEST_DELAY_MS = 350
  */
 const TARGET_COMPETITIONS = [
   // Inglaterra
-  { mode: "country", country: "England", type: "league", names: ["Premier League"], display: "Premier League", region: "general", priority: 100 },
-  { mode: "country", country: "England", type: "cup", names: ["FA Cup", "League Cup", "EFL Cup"], display: "England - Cup", region: "general", priority: 70 },
-
+  { mode: "search", search: "England Premier League", display: "Premier League", region: "general", priority: 100 },
   // Espanha
   { mode: "country", country: "Spain", type: "league", names: ["La Liga"], display: "La Liga", region: "general", priority: 98 },
   { mode: "country", country: "Spain", type: "cup", names: ["Copa del Rey"], display: "Copa del Rey", region: "general", priority: 72 },
@@ -34,9 +32,7 @@ const TARGET_COMPETITIONS = [
   { mode: "country", country: "Italy", type: "cup", names: ["Coppa Italia"], display: "Coppa Italia", region: "general", priority: 73 },
 
   // Alemanha
-  { mode: "country", country: "Germany", type: "league", names: ["Bundesliga"], display: "Bundesliga", region: "general", priority: 96 },
-  { mode: "country", country: "Germany", type: "cup", names: ["DFB Pokal", "DFB-Pokal"], display: "DFB-Pokal", region: "general", priority: 74 },
-
+ { mode: "search", search: "Germany Bundesliga", display: "Bundesliga", region: "general", priority: 96 },
   // França
   { mode: "country", country: "France", type: "league", names: ["Ligue 1"], display: "Ligue 1", region: "general", priority: 95 },
   { mode: "country", country: "France", type: "cup", names: ["Coupe de France"], display: "Coupe de France", region: "general", priority: 71 },
@@ -56,15 +52,15 @@ const TARGET_COMPETITIONS = [
   // Argentina
   { mode: "country", country: "Argentina", type: "league", names: ["Liga Profesional Argentina", "Primera División"], display: "Liga Profesional Argentina", region: "general", priority: 84 },
 
-  // EUA / México
-  { mode: "country", country: "USA", type: "league", names: ["Major League Soccer", "MLS"], display: "MLS", region: "general", priority: 80 },
-  { mode: "country", country: "Mexico", type: "league", names: ["Liga MX"], display: "Liga MX", region: "general", priority: 79 },
+// EUA / México
+{ mode: "country", country: "USA", type: "league", names: ["Major League Soccer", "MLS"], display: "MLS", region: "general", priority: 80 },
+{ mode: "country", country: "Mexico", type: "league", names: ["Liga MX"], display: "Liga MX", region: "general", priority: 79 },
 
-  // Turquia / Grécia / Saudi / Dinamarca
-  { mode: "country", country: "Turkey", type: "league", names: ["Süper Lig", "Super Lig"], display: "Turkey - Super Lig", region: "general", priority: 78 },
-  { mode: "country", country: "Greece", type: "league", names: ["Super League 1", "Super League"], display: "Greece - Super League", region: "general", priority: 77 },
-  { mode: "country", country: "Saudi Arabia", type: "league", names: ["Pro League", "Saudi Pro League"], display: "Saudi Pro League", region: "general", priority: 76 },
-  { mode: "country", country: "Denmark", type: "league", names: ["Superliga"], display: "Denmark - Superliga", region: "general", priority: 75 },
+// Turquia / Grécia / Saudi / Dinamarca
+{ mode: "search", search: "Turkey Super Lig", display: "Super Lig", region: "general", priority: 78 },
+{ mode: "search", search: "Greece Super League 1", display: "Super League Greece", region: "general", priority: 77 },
+{ mode: "search", search: "Saudi Arabia Pro League", display: "Saudi Pro League", region: "general", priority: 76 },
+{ mode: "search", search: "Denmark Superliga", display: "Superliga", region: "general", priority: 75 },
 
   // UEFA / CONMEBOL
   { mode: "search", search: "UEFA Champions League", display: "UEFA Champions League", region: "general", priority: 99 },
