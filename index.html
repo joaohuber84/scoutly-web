@@ -871,10 +871,8 @@
       <div class="section">
         <div class="section-head">
           <div>
-            <h2 class="section-title">Competições do dia</h2>
-            <p class="section-copy">Navegue pelos jogos futuros das principais ligas e eventos especiais.</p>
-          </div>
-
+            <h2 class="section-title">🌍 Competições em destaque</h2>
+           <p class="section-copy">Explore as principais ligas e competições com jogos nas próximas horas.</p>
           <button class="ghost-button hidden" id="backToCompetitionsBtn">
             ← Voltar para competições
           </button>
@@ -1670,7 +1668,36 @@
 
       state.competitions = Array.from(map.values()).sort((a, b) => getLeagueSort(a.league) - getLeagueSort(b.league))
     }
+function getFlag(country) {
+  const flags = {
+    Brazil: "🇧🇷",
+    England: "🇬🇧",
+    Spain: "🇪🇸",
+    Italy: "🇮🇹",
+    Germany: "🇩🇪",
+    France: "🇫🇷",
+    Portugal: "🇵🇹",
+    Netherlands: "🇳🇱",
+    Belgium: "🇧🇪",
+    USA: "🇺🇸",
+    Argentina: "🇦🇷",
+    Mexico: "🇲🇽",
+    Turkey: "🇹🇷",
+    Greece: "🇬🇷",
+    Switzerland: "🇨🇭",
+    Denmark: "🇩🇰"
+  }
 
+ const code = flags[country]
+
+  if (!code) return "🌍"
+
+  return code
+    .toUpperCase()
+    .replace(/./g, char =>
+      String.fromCodePoint(127397 + char.charCodeAt())
+    )
+}
     function renderCompetitions() {
       buildCompetitions()
       const grid = document.getElementById('competitionsGrid')
@@ -1683,7 +1710,7 @@
       grid.innerHTML = state.competitions.map(comp => `
         <div class="competition-card" data-league="${encodeURIComponent(comp.league)}">
           <div class="competition-top">
-            <div class="competition-flag">${getLeagueBadge(comp.league)}</div>
+            <div class="competition-flag">${getFlag(comp.country)}</div>
             <div class="competition-count">${comp.count} jogo(s)</div>
           </div>
 
