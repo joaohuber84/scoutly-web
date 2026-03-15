@@ -659,6 +659,7 @@ async function upsertMatchAndAnalysis(fixture) {
     away_team: fixture?.teams?.away?.name || null,
     league: leagueDisplay,
     League: leagueDisplay,
+    country: comp.country || fixture?.league?.country || null,
     match_date: toDateOnly(kickoff),
     kickoff,
     Kickoff: kickoff,
