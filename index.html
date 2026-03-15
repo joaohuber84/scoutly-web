@@ -1682,25 +1682,24 @@ item.matches.push(match)
       state.competitions = Array.from(map.values()).sort((a, b) => getLeagueSort(a.league) - getLeagueSort(b.league))
     }
 function getFlag(country) {
-  const flags = {
-    Brazil: "🇧🇷",
-    England: "🇬🇧",
-    Spain: "🇪🇸",
-    Italy: "🇮🇹",
-    Germany: "🇩🇪",
-    France: "🇫🇷",
-    Portugal: "🇵🇹",
-    Netherlands: "🇳🇱",
-    Belgium: "🇧🇪",
-    USA: "🇺🇸",
-    Argentina: "🇦🇷",
-    Mexico: "🇲🇽",
-    Turkey: "🇹🇷",
-    Greece: "🇬🇷",
-    Switzerland: "🇨🇭",
-    Denmark: "🇩🇰"
-  }
-
+const flags = {
+  Brazil: "BR",
+  England: "GB",
+  Spain: "ES",
+  Italy: "IT",
+  Germany: "DE",
+  France: "FR",
+  Portugal: "PT",
+  Netherlands: "NL",
+  Belgium: "BE",
+  USA: "US",
+  Argentina: "AR",
+  Mexico: "MX",
+  Turkey: "TR",
+  Greece: "GR",
+  Switzerland: "CH",
+  Denmark: "DK"
+} 
  const code = flags[country]
 
   if (!code) return "🌍"
@@ -1722,11 +1721,13 @@ function getFlag(country) {
 
       grid.innerHTML = state.competitions.map(comp => `
         <div class="competition-card" data-league="${encodeURIComponent(comp.league)}">
+         
           <div class="competition-top">
-            <div class="competition-flag">${getFlag(comp.country)}</div>
-            <div class="competition-count">${comp.count} jogo(s)</div>
-          </div>
-
+        <div class="competition-flag">
+    <img src="https://flagcdn.com/w40/${getFlag(comp.country || '').toLowerCase()}.png" width="28">
+  </div>
+  <div class="competition-count">${comp.count} jogo(s)</div>
+</div>
           <div class="competition-name">${getLeagueDisplay(comp.league)}</div>
           <div class="competition-bottom">Toque para ver os jogos desta competição.</div>
         </div>
