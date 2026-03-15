@@ -1682,34 +1682,29 @@ item.matches.push(match)
       state.competitions = Array.from(map.values()).sort((a, b) => getLeagueSort(a.league) - getLeagueSort(b.league))
     }
 function getFlag(country) {
-const flags = {
-  Brazil: "BR",
-  England: "GB",
-  Spain: "ES",
-  Italy: "IT",
-  Germany: "DE",
-  France: "FR",
-  Portugal: "PT",
-  Netherlands: "NL",
-  Belgium: "BE",
-  USA: "US",
-  Argentina: "AR",
-  Mexico: "MX",
-  Turkey: "TR",
-  Greece: "GR",
-  Switzerland: "CH",
-  Denmark: "DK"
-} 
- const code = flags[country]
 
-  if (!code) return "🌍"
+  const flags = {
+    Brazil: "BR",
+    England: "GB",
+    Spain: "ES",
+    Italy: "IT",
+    Germany: "DE",
+    France: "FR",
+    Portugal: "PT",
+    Netherlands: "NL",
+    Belgium: "BE",
+    USA: "US",
+    Argentina: "AR",
+    Mexico: "MX",
+    Turkey: "TR",
+    Greece: "GR",
+    Switzerland: "CH",
+    Denmark: "DK"
+  }
 
-  return code
-    .toUpperCase()
-    .replace(/./g, char =>
-      String.fromCodePoint(127397 + char.charCodeAt())
-    )
+  return flags[country] || null
 }
+ 
     function renderCompetitions() {
       buildCompetitions()
       const grid = document.getElementById('competitionsGrid')
@@ -1724,7 +1719,8 @@ const flags = {
          
           <div class="competition-top">
         <div class="competition-flag">
- <img src="https://flagcdn.com/w40/${getFlag(comp.country).toLowerCase()}.png" width="28">
+ <img src="https://flagcdn.com/w40/${(getFlag(comp.country) || 'world').toLowerCase()}.png" width="28">
+
   </div>
   <div class="competition-count">${comp.count} jogo(s)</div>
 </div>
