@@ -655,6 +655,8 @@ let leagueDisplay = comp.display
 if (leagueId === 218) leagueDisplay = "Austrian Bundesliga"
 if (leagueId === 235) leagueDisplay = "Russian Premier League"
 if (leagueId === 203) leagueDisplay = "Super Lig"
+  if (leagueDisplay === "Süper Lig") leagueDisplay = "Super Lig"
+if (leagueDisplay === "Superliga") leagueDisplay = "Super Lig"
 const country = comp.country || fixture?.league?.country
 
 if (leagueDisplay === "Bundesliga" && country === "Austria") {
