@@ -648,27 +648,56 @@ const leagueId = fixture?.league?.id || comp?.leagueId
 
   const metrics = computeMatchMetrics(homeProfile, awayProfile)
 let leagueDisplay = comp.display
-if (leagueId === 218) leagueDisplay = "Austrian Bundesliga"
-if (leagueId === 235) leagueDisplay = "Russian Premier League"
-if (leagueId === 203) leagueDisplay = "Super Lig"
-  if (leagueDisplay === "Süper Lig") leagueDisplay = "Super Lig"
-if (leagueDisplay === "Superliga") leagueDisplay = "Super Lig"
-const country = comp.country || fixture?.league?.country
+let country = comp.country || fixture?.league?.country || null
 
-if (leagueDisplay === "Bundesliga" && country === "Austria") {
+const leagueNameRaw = fixture?.league?.name || ''
+const leagueId = fixture?.league?.id || comp?.leagueId || null
+
+const home = fixture?.teams?.home?.name || ''
+const away = fixture?.teams?.away?.name || ''
+const teams = `${home} ${away}`
+
+// AUSTRIA
+if (
+  leagueId === 218 ||
+  /salzburg|sturm graz|rapid vienna|austria vienna|altach|bw linz|wolfsberger|wsg wattens|grazer ak/i.test(teams)
+) {
   leagueDisplay = "Austrian Bundesliga"
+  country = "Austria"
 }
 
-if (leagueDisplay === "Premier League" && country === "Russia") {
+// RUSSIA
+if (
+  leagueId === 235 ||
+  /rubin|lokomotiv|krylia sovetov|nizhny novgorod|zenit|spartak|rostov|sochi|krasnodar|dinamo/i.test(teams)
+) {
   leagueDisplay = "Russian Premier League"
+  country = "Russia"
 }
 
-if (leagueDisplay === "Super League" && country === "Greece") {
+// TURKEY
+if (
+  leagueId === 203 ||
+  /fenerbahce|fenerbahçe|besiktas|beşiktaş|galatasaray|trabzonspor|samsunspor|gaziantep|kasimpasa|kasımpaşa|eyupspor|eyüpspor|konyaspor|rizespor|kayserispor|goztepe|göztepe|alanyaspor|basaksehir|başakşehir|genclerbirligi|gençlerbirliği/i.test(teams)
+) {
+  leagueDisplay = "Super Lig"
+  country = "Turkey"
+}
+
+// DENMARK
+if (
+  /silkeborg|vejle|brondby|midtjylland|fc copenhagen|nordsjaelland/i.test(teams)
+) {
+  leagueDisplay = "Superliga"
+  country = "Denmark"
+}
+
+// GREECE
+if (
+  /olympiacos|paok|panathinaikos|aek athens|aris|volos|kifisia/i.test(teams)
+) {
   leagueDisplay = "Super League Greece"
-}
-
-if (leagueDisplay === "Super League" && country === "Switzerland") {
-  leagueDisplay = "Swiss Super League"
+  country = "Greece"
 }
 
   const matchRow = {
