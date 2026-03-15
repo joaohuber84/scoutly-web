@@ -15,14 +15,11 @@ const TIMEZONE = "America/Sao_Paulo"
 const WINDOW_HOURS = 48
 const REQUEST_DELAY_MS = 350
 
-/**
- * Competições prioritárias do Scoutly.
- * A ideia aqui é controlar cobertura e normalização,
- * em vez de depender só de /fixtures?next=100.
- */
 const TARGET_COMPETITIONS = [
   // Inglaterra
-  { mode: "search", search: "England Premier League", display: "Premier League", region: "general", priority: 100 },
+  { mode: "country", country: "England", type: "league", names: ["Premier League"], display: "Premier League", region: "general", priority: 100 },
+  { mode: "country", country: "England", type: "cup", names: ["FA Cup", "League Cup", "EFL Cup"], display: "England - Cup", region: "general", priority: 74 },
+
   // Espanha
   { mode: "country", country: "Spain", type: "league", names: ["La Liga"], display: "La Liga", region: "general", priority: 98 },
   { mode: "country", country: "Spain", type: "cup", names: ["Copa del Rey"], display: "Copa del Rey", region: "general", priority: 72 },
@@ -32,7 +29,9 @@ const TARGET_COMPETITIONS = [
   { mode: "country", country: "Italy", type: "cup", names: ["Coppa Italia"], display: "Coppa Italia", region: "general", priority: 73 },
 
   // Alemanha
- { mode: "search", search: "Germany Bundesliga", display: "Bundesliga", region: "general", priority: 96 },
+  { mode: "country", country: "Germany", type: "league", names: ["Bundesliga"], display: "Bundesliga", region: "general", priority: 96 },
+  { mode: "country", country: "Germany", type: "cup", names: ["DFB Pokal", "DFB-Pokal"], display: "DFB-Pokal", region: "general", priority: 70 },
+
   // França
   { mode: "country", country: "France", type: "league", names: ["Ligue 1"], display: "Ligue 1", region: "general", priority: 95 },
   { mode: "country", country: "France", type: "cup", names: ["Coupe de France"], display: "Coupe de France", region: "general", priority: 71 },
@@ -52,15 +51,15 @@ const TARGET_COMPETITIONS = [
   // Argentina
   { mode: "country", country: "Argentina", type: "league", names: ["Liga Profesional Argentina", "Primera División"], display: "Liga Profesional Argentina", region: "general", priority: 84 },
 
-// EUA / México
-{ mode: "country", country: "USA", type: "league", names: ["Major League Soccer", "MLS"], display: "MLS", region: "general", priority: 80 },
-{ mode: "country", country: "Mexico", type: "league", names: ["Liga MX"], display: "Liga MX", region: "general", priority: 79 },
+  // EUA / México
+  { mode: "country", country: "USA", type: "league", names: ["Major League Soccer", "MLS"], display: "MLS", region: "general", priority: 80 },
+  { mode: "country", country: "Mexico", type: "league", names: ["Liga MX"], display: "Liga MX", region: "general", priority: 79 },
 
-// Turquia / Grécia / Saudi / Dinamarca
-{ mode: "search", search: "Turkey Super Lig", display: "Super Lig", region: "general", priority: 78 },
-{ mode: "search", search: "Greece Super League 1", display: "Super League Greece", region: "general", priority: 77 },
-{ mode: "search", search: "Saudi Arabia Pro League", display: "Saudi Pro League", region: "general", priority: 76 },
-{ mode: "search", search: "Denmark Superliga", display: "Superliga", region: "general", priority: 75 },
+  // Turquia / Grécia / Saudi / Dinamarca
+  { mode: "country", country: "Turkey", type: "league", names: ["Süper Lig", "Super Lig"], display: "Super Lig", region: "general", priority: 78 },
+  { mode: "country", country: "Greece", type: "league", names: ["Super League 1", "Super League"], display: "Super League Greece", region: "general", priority: 77 },
+  { mode: "country", country: "Saudi Arabia", type: "league", names: ["Pro League", "Saudi Pro League"], display: "Saudi Pro League", region: "general", priority: 76 },
+  { mode: "country", country: "Denmark", type: "league", names: ["Superliga"], display: "Superliga", region: "general", priority: 75 },
 
   // UEFA / CONMEBOL
   { mode: "search", search: "UEFA Champions League", display: "UEFA Champions League", region: "general", priority: 99 },
@@ -154,11 +153,12 @@ function normalizeCompetitionName(country, rawName, fallbackDisplay) {
   const name = String(rawName || "").trim()
   const c = String(country || "").trim()
 
-  // Mantém nomes fortes curtos e claros
   if (c === "England" && name === "Premier League") return "Premier League"
+  if (c === "Russia" && name === "Premier League") return "Russian Premier League"
   if (c === "Spain" && name === "La Liga") return "La Liga"
   if (c === "Italy" && name === "Serie A") return "Serie A"
   if (c === "Germany" && name === "Bundesliga") return "Bundesliga"
+  if (c === "Austria" && name === "Bundesliga") return "Austrian Bundesliga"
   if (c === "France" && name === "Ligue 1") return "Ligue 1"
   if (c === "Netherlands" && name === "Eredivisie") return "Eredivisie"
   if (c === "Portugal" && (name === "Primeira Liga" || name === "Liga Portugal Betclic")) return "Primeira Liga"
@@ -168,10 +168,10 @@ function normalizeCompetitionName(country, rawName, fallbackDisplay) {
   if (c === "Argentina" && (name === "Liga Profesional Argentina" || name === "Primera División")) return "Liga Profesional Argentina"
   if (c === "USA" && (name === "Major League Soccer" || name === "MLS")) return "MLS"
   if (c === "Mexico" && name === "Liga MX") return "Liga MX"
-  if (c === "Turkey" && (name === "Süper Lig" || name === "Super Lig")) return "Turkey - Super Lig"
-  if (c === "Greece" && (name === "Super League 1" || name === "Super League")) return "Greece - Super League"
+  if (c === "Turkey" && (name === "Süper Lig" || name === "Super Lig")) return "Super Lig"
+  if (c === "Greece" && (name === "Super League 1" || name === "Super League")) return "Super League Greece"
   if (c === "Saudi Arabia" && (name === "Pro League" || name === "Saudi Pro League")) return "Saudi Pro League"
-  if (c === "Denmark" && name === "Superliga") return "Denmark - Superliga"
+  if (c === "Denmark" && name === "Superliga") return "Superliga"
 
   if (name === "UEFA Champions League") return "UEFA Champions League"
   if (name === "UEFA Europa League") return "UEFA Europa League"
@@ -179,7 +179,11 @@ function normalizeCompetitionName(country, rawName, fallbackDisplay) {
   if (name === "CONMEBOL Libertadores") return "CONMEBOL Libertadores"
   if (name === "CONMEBOL Sudamericana") return "CONMEBOL Sudamericana"
 
-  return fallbackDisplay || (c && name ? `${c} - ${name}` : name || c || "Competição")
+  if (fallbackDisplay && name.toLowerCase() === fallbackDisplay.toLowerCase()) {
+    return fallbackDisplay
+  }
+
+  return fallbackDisplay || name || c || "Competição"
 }
 
 function leagueScorePriority(leagueName) {
@@ -241,23 +245,31 @@ async function resolveSearchCompetition(target) {
     current: true,
   })
 
+  const searchNeedle = String(target.search || "").toLowerCase().trim()
+
   return leagues
     .map((item) => {
       const currentSeason = item?.seasons?.find((s) => s.current) || item?.seasons?.[0]
       if (!currentSeason) return null
 
+      const country = item?.country?.name || null
+      const rawName = item?.league?.name || null
+
       return {
         leagueId: item.league.id,
         season: currentSeason.year,
-        country: item.country?.name || null,
-        rawName: item.league.name,
-        display: normalizeCompetitionName(item.country?.name, item.league.name, target.display),
+        country,
+        rawName,
+        display: normalizeCompetitionName(country, rawName, target.display),
         region: target.region,
         priority: target.priority,
       }
     })
     .filter(Boolean)
-    .filter((x) => x.rawName && x.rawName.toLowerCase().includes(target.search.toLowerCase().replace("uefa ", "").replace("conmebol ", "")) || x.display === target.display)
+    .filter((x) => {
+      const haystack = `${x.country || ""} ${x.rawName || ""}`.toLowerCase().trim()
+      return haystack.includes(searchNeedle)
+    })
 }
 
 async function resolveTargetCompetitions() {
@@ -276,7 +288,6 @@ async function resolveTargetCompetitions() {
     }
   }
 
-  // Deduplica por leagueId+season
   const seen = new Set()
   return resolved.filter((item) => {
     const key = `${item.leagueId}:${item.season}`
@@ -449,19 +460,19 @@ async function buildTeamRecentProfile(teamId, leagueId, season, beforeIso) {
   teamProfileCache.set(cacheKey, profile)
   return profile
 }
+function computeMatchMetrics(homeProfile, awayProfile) {
 
-function computeMatchMetrics(home, away) {
-  const expectedHomeGoals = clamp(((home.goalsFor + away.goalsAgainst) / 2) * 1.05, 0.2, 4.2)
-  const expectedAwayGoals = clamp(((away.goalsFor + home.goalsAgainst) / 2) * 0.95, 0.2, 4.2)
+  const expectedHomeGoals = clamp(((homeProfile.goalsFor + awayProfile.goalsAgainst) / 2) * 1.05, 0.2, 4.2)
+  const expectedAwayGoals = clamp(((awayProfile.goalsFor + homeProfile.goalsAgainst) / 2) * 0.95, 0.2, 4.2)
 
-  const expectedHomeShots = clamp(((home.shots + away.shots) / 2) * 1.02, 4, 25)
-  const expectedAwayShots = clamp(((away.shots + home.shots) / 2) * 0.98, 4, 25)
+  const expectedHomeShots = clamp(((homeProfile.shots + awayProfile.shots) / 2) * 1.02, 4, 25)
+  const expectedAwayShots = clamp(((awayProfile.shots + homeProfile.shots) / 2) * 0.98, 4, 25)
 
-  const expectedHomeSOT = clamp(((home.shotsOnTarget + away.shotsOnTarget) / 2) * 1.02, 1.5, 12)
-  const expectedAwaySOT = clamp(((away.shotsOnTarget + home.shotsOnTarget) / 2) * 0.98, 1.5, 12)
+  const expectedHomeSOT = clamp(((homeProfile.shotsOnTarget + awayProfile.shotsOnTarget) / 2) * 1.02, 1.5, 12)
+  const expectedAwaySOT = clamp(((awayProfile.shotsOnTarget + homeProfile.shotsOnTarget) / 2) * 0.98, 1.5, 12)
 
-  const expectedCorners = clamp(home.corners + away.corners, 4, 16)
-  const expectedCards = clamp(home.cards + away.cards, 1.5, 8)
+  const expectedCorners = clamp(homeProfile.corners + awayProfile.corners, 4, 16)
+  const expectedCards = clamp(homeProfile.cards + awayProfile.cards, 1.5, 8)
 
   const avgGoals = round(expectedHomeGoals + expectedAwayGoals, 2)
   const avgCorners = round(expectedCorners, 2)
@@ -469,29 +480,36 @@ function computeMatchMetrics(home, away) {
   const expectedTotalSOT = round(expectedHomeSOT + expectedAwaySOT, 2)
 
   const homeStrengthRaw =
-    home.goalsFor * 1.3 +
-    home.shotsOnTarget * 0.35 +
-    home.corners * 0.12 +
-    home.formPointsPct * 1.2 -
-    home.goalsAgainst * 0.45
+    homeProfile.goalsFor * 1.3 +
+    homeProfile.shotsOnTarget * 0.35 +
+    homeProfile.corners * 0.12 +
+    homeProfile.formPointsPct * 1.2 -
+    homeProfile.goalsAgainst * 0.45
 
   const awayStrengthRaw =
-    away.goalsFor * 1.25 +
-    away.shotsOnTarget * 0.33 +
-    away.corners * 0.10 +
-    away.formPointsPct * 1.1 -
-    away.goalsAgainst * 0.42
+    awayProfile.goalsFor * 1.25 +
+    awayProfile.shotsOnTarget * 0.33 +
+    awayProfile.corners * 0.10 +
+    awayProfile.formPointsPct * 1.1 -
+    awayProfile.goalsAgainst * 0.42
 
   const powerHome = round(clamp(homeStrengthRaw, 0.2, 5), 4)
   const powerAway = round(clamp(awayStrengthRaw, 0.2, 5), 4)
 
   const totalPower = Math.max(powerHome + powerAway, 0.01)
+
   let homeWinProb = powerHome / totalPower
   let awayWinProb = powerAway / totalPower
-  let drawProb = clamp(0.18 + (1 - Math.abs(homeWinProb - awayWinProb)) * 0.12, 0.18, 0.32)
+
+  let drawProb = clamp(
+    0.18 + (1 - Math.abs(homeWinProb - awayWinProb)) * 0.12,
+    0.18,
+    0.32
+  )
 
   const remain = 1 - drawProb
   const pair = Math.max(homeWinProb + awayWinProb, 0.01)
+
   homeWinProb = (homeWinProb / pair) * remain
   awayWinProb = (awayWinProb / pair) * remain
 
@@ -499,84 +517,101 @@ function computeMatchMetrics(home, away) {
   const over25Prob = clamp((avgGoals - 1.2) / 1.8, 0.10, 0.90)
   const under25Prob = clamp(1 - over25Prob, 0.10, 0.90)
   const under35Prob = clamp(1 - ((avgGoals - 1.8) / 2.0), 0.15, 0.95)
-  const bttsProb = clamp(((expectedHomeGoals - 0.4) + (expectedAwayGoals - 0.4)) / 3.2, 0.12, 0.88)
+
+  const bttsProb = clamp(
+    ((expectedHomeGoals - 0.4) + (expectedAwayGoals - 0.4)) / 3.2,
+    0.12,
+    0.88
+  )
+
   const cornersOver85Prob = clamp(avgCorners / 10.8, 0.15, 0.92)
+
   const probShots = clamp(avgShots / 24, 0.20, 0.90)
   const probSot = clamp(expectedTotalSOT / 8.5, 0.20, 0.90)
   const probCards = clamp(expectedCards / 5.2, 0.20, 0.85)
 
   let gameProfile = "Jogo equilibrado"
-  if (avgGoals >= 2.8 && avgShots >= 24) gameProfile = "Jogo de gols"
-  else if (avgCorners >= 10.2) gameProfile = "Jogo de escanteios"
-  else if (avgGoals <= 2.0 && avgShots <= 18) gameProfile = "Jogo travado"
+
+  if (avgGoals >= 2.8 && avgShots >= 24) {
+    gameProfile = "Jogo de gols"
+  } else if (avgCorners >= 10.2) {
+    gameProfile = "Jogo de escanteios"
+  } else if (avgGoals <= 2.0 && avgShots <= 18) {
+    gameProfile = "Jogo travado"
+  }
 
   const confidenceScore = round(
     clamp(
       over25Prob * 40 +
-        bttsProb * 20 +
-        cornersOver85Prob * 20 +
-        Math.max(homeWinProb, awayWinProb) * 20,
+      bttsProb * 20 +
+      cornersOver85Prob * 20 +
+      Math.max(homeWinProb, awayWinProb) * 20,
       0,
       100
     ),
     2
   )
 
-  // Picks
   const safePick =
     avgGoals >= 2.15
       ? "Mais de 1.5 gols"
       : avgCorners >= 8.7
-        ? "Mais de 7.5 escanteios"
-        : homeWinProb >= 0.58
-          ? "Dupla chance mandante"
-          : awayWinProb >= 0.58
-            ? "Dupla chance visitante"
-            : "Menos de 3.5 gols"
+      ? "Mais de 7.5 escanteios"
+      : homeWinProb >= 0.58
+      ? "Dupla chance mandante ou empate"
+      : awayWinProb >= 0.58
+      ? "Dupla chance visitante ou empate"
+      : "Menos de 3.5 gols"
 
   const balancedPick =
     over25Prob >= 0.66 && avgGoals >= 2.5
       ? "Mais de 2.5 gols"
       : bttsProb >= 0.61
-        ? "Ambas marcam"
-        : cornersOver85Prob >= 0.67
-          ? "Mais de 8.5 escanteios"
-          : homeWinProb >= 0.68
-            ? "Vitória do mandante"
-            : awayWinProb >= 0.68
-              ? "Vitória do visitante"
-              : "Mais de 1.5 gols"
+      ? "Ambas marcam"
+      : cornersOver85Prob >= 0.67
+      ? "Mais de 8.5 escanteios"
+      : homeWinProb >= 0.68
+      ? "Vitória do mandante"
+      : awayWinProb >= 0.68
+      ? "Vitória do visitante"
+      : "Mais de 1.5 gols"
 
   const aggressivePick =
     avgGoals >= 3.1
       ? "Mais de 3.5 gols"
       : cornersOver85Prob >= 0.76 && avgCorners >= 10.8
-        ? "Mais de 9.5 escanteios"
-        : homeWinProb >= 0.72
-          ? "Vitória do mandante"
-          : awayWinProb >= 0.72
-            ? "Vitória do visitante"
-            : bttsProb >= 0.64
-              ? "Ambas marcam"
-              : "Ambas não marcam"
+      ? "Mais de 9.5 escanteios"
+      : homeWinProb >= 0.72
+      ? "Vitória do mandante"
+      : awayWinProb >= 0.72
+      ? "Vitória do visitante"
+      : bttsProb >= 0.64
+      ? "Ambas marcam"
+      : "Ambas não marcam"
 
   const valuePick =
     avgCorners >= 10.4
       ? "Mais de 9.5 escanteios"
       : avgShots >= 24
-        ? "Mais de 10.5 finalizações"
-        : avgGoals >= 2.7
-          ? "Mais de 2.5 gols"
-          : "Mais de 8.5 escanteios"
+      ? "Mais de 10.5 finalizações"
+      : avgGoals >= 2.7
+      ? "Mais de 2.5 gols"
+      : "Mais de 8.5 escanteios"
 
-  let analysisText = "O confronto apresenta equilíbrio estatístico, com oportunidades distribuídas entre mercados de gols e escanteios."
+  let analysisText =
+    "O confronto apresenta equilíbrio estatístico, com oportunidades distribuídas entre mercados de gols e escanteios."
+
   if (gameProfile === "Jogo de gols") {
     analysisText =
       "As equipes apresentam média ofensiva elevada e bom volume de finalizações, indicando tendência favorável para mercados de gols."
-  } else if (gameProfile === "Jogo de escanteios") {
+  }
+
+  if (gameProfile === "Jogo de escanteios") {
     analysisText =
       "O confronto apresenta alto volume ofensivo e tendência de geração de escanteios, sugerindo valor nas linhas de corners."
-  } else if (gameProfile === "Jogo travado") {
+  }
+
+  if (gameProfile === "Jogo travado") {
     analysisText =
       "Os números recentes indicam um jogo mais controlado e com menor produção ofensiva."
   }
@@ -585,37 +620,48 @@ function computeMatchMetrics(home, away) {
     avgGoals,
     avgCorners,
     avgShots,
+
     expectedHomeGoals: round(expectedHomeGoals, 2),
     expectedAwayGoals: round(expectedAwayGoals, 2),
+
     expectedHomeShots: round(expectedHomeShots, 2),
     expectedAwayShots: round(expectedAwayShots, 2),
+
     expectedHomeSOT: round(expectedHomeSOT, 2),
     expectedAwaySOT: round(expectedAwaySOT, 2),
+
     expectedCards: round(expectedCards, 2),
+
     powerHome,
     powerAway,
+
     homeWinProb: round(homeWinProb, 4),
     drawProb: round(drawProb, 4),
     awayWinProb: round(awayWinProb, 4),
+
     over15Prob: round(over15Prob, 4),
     over25Prob: round(over25Prob, 4),
     under25Prob: round(under25Prob, 4),
     under35Prob: round(under35Prob, 4),
+
     bttsProb: round(bttsProb, 4),
     cornersOver85Prob: round(cornersOver85Prob, 4),
+
     probShots: round(probShots, 4),
     probSot: round(probSot, 4),
     probCards: round(probCards, 4),
+
     gameProfile,
     confidenceScore,
+
     safePick,
     balancedPick,
     aggressivePick,
     valuePick,
-    analysisText,
+
+    analysisText
   }
 }
-
 function buildPrimaryMarket(metrics) {
   return metrics.balancedPick
 }
@@ -629,11 +675,89 @@ function buildPrimaryProbability(metrics) {
   if (market.includes("8.5 escanteios") || market.includes("9.5 escanteios")) return metrics.cornersOver85Prob
   if (market === "Vitória do mandante") return metrics.homeWinProb
   if (market === "Vitória do visitante") return metrics.awayWinProb
-  if (market === "Dupla chance mandante") return round(metrics.homeWinProb + metrics.drawProb, 4)
-  if (market === "Dupla chance visitante") return round(metrics.awayWinProb + metrics.drawProb, 4)
+  if (market.includes("Dupla chance")) return round(Math.max(metrics.homeWinProb, metrics.awayWinProb) + metrics.drawProb, 4)
   if (market === "Menos de 3.5 gols") return metrics.under35Prob
 
   return 0.60
+}
+
+function normalizeLeagueByTeams(comp, fixture) {
+  let leagueDisplay = comp.display
+  let country = comp.country || fixture?.league?.country || null
+
+  const leagueNameRaw = fixture?.league?.name || ""
+  const leagueId = fixture?.league?.id || comp?.leagueId || null
+
+  const home = fixture?.teams?.home?.name || ""
+  const away = fixture?.teams?.away?.name || ""
+  const teams = `${home} ${away}`
+
+  if (
+    leagueId === 218 ||
+    /salzburg|sturm graz|rapid vienna|austria vienna|altach|bw linz|wolfsberger|wsg wattens|grazer ak/i.test(teams)
+  ) {
+    leagueDisplay = "Austrian Bundesliga"
+    country = "Austria"
+  }
+
+  if (
+    leagueId === 235 ||
+    /rubin|lokomotiv|krylia sovetov|nizhny novgorod|zenit|spartak|rostov|sochi|krasnodar|dinamo/i.test(teams)
+  ) {
+    leagueDisplay = "Russian Premier League"
+    country = "Russia"
+  }
+
+  if (
+    leagueId === 203 ||
+    /fenerbahce|fenerbahçe|besiktas|beşiktaş|galatasaray|trabzonspor|samsunspor|gaziantep|kasimpasa|kasımpaşa|eyupspor|eyüpspor|konyaspor|rizespor|kayserispor|goztepe|göztepe|alanyaspor|basaksehir|başakşehir|genclerbirligi|gençlerbirliği/i.test(teams)
+  ) {
+    leagueDisplay = "Super Lig"
+    country = "Turkey"
+  }
+
+  if (
+    /silkeborg|vejle|brondby|midtjylland|fc copenhagen|nordsjaelland/i.test(teams)
+  ) {
+    leagueDisplay = "Superliga"
+    country = "Denmark"
+  }
+
+  if (
+    /olympiacos|paok|panathinaikos|aek athens|aris|volos|kifisia/i.test(teams)
+  ) {
+    leagueDisplay = "Super League Greece"
+    country = "Greece"
+  }
+
+  if (
+    /al nassr|al hilal|al ittihad|al ahli|al shabab|al taawoun|al ettifaq/i.test(teams)
+  ) {
+    leagueDisplay = "Saudi Pro League"
+    country = "Saudi Arabia"
+  }
+
+  if (leagueNameRaw === "Bundesliga" && country === "Austria") {
+    leagueDisplay = "Austrian Bundesliga"
+  }
+
+  if (leagueNameRaw === "Premier League" && country === "Russia") {
+    leagueDisplay = "Russian Premier League"
+  }
+
+  if ((leagueNameRaw === "Süper Lig" || leagueNameRaw === "Super Lig") && country === "Turkey") {
+    leagueDisplay = "Super Lig"
+  }
+
+  if (leagueNameRaw === "Superliga" && country === "Denmark") {
+    leagueDisplay = "Superliga"
+  }
+
+  if ((leagueNameRaw === "Super League 1" || leagueNameRaw === "Super League") && country === "Greece") {
+    leagueDisplay = "Super League Greece"
+  }
+
+  return { leagueDisplay, country }
 }
 
 async function upsertMatchAndAnalysis(fixture) {
@@ -642,63 +766,12 @@ async function upsertMatchAndAnalysis(fixture) {
   const homeTeamId = fixture?.teams?.home?.id
   const awayTeamId = fixture?.teams?.away?.id
   const comp = fixture.__comp
-const leagueId = fixture?.league?.id || comp?.leagueId
+
   const homeProfile = await buildTeamRecentProfile(homeTeamId, comp.leagueId, comp.season, kickoff)
   const awayProfile = await buildTeamRecentProfile(awayTeamId, comp.leagueId, comp.season, kickoff)
 
   const metrics = computeMatchMetrics(homeProfile, awayProfile)
-let leagueDisplay = comp.display
-let country = comp.country || fixture?.league?.country || null
-
-const leagueNameRaw = fixture?.league?.name || ''
-
-
-const home = fixture?.teams?.home?.name || ''
-const away = fixture?.teams?.away?.name || ''
-const teams = `${home} ${away}`
-
-// AUSTRIA
-if (
-  leagueId === 218 ||
-  /salzburg|sturm graz|rapid vienna|austria vienna|altach|bw linz|wolfsberger|wsg wattens|grazer ak/i.test(teams)
-) {
-  leagueDisplay = "Austrian Bundesliga"
-  country = "Austria"
-}
-
-// RUSSIA
-if (
-  leagueId === 235 ||
-  /rubin|lokomotiv|krylia sovetov|nizhny novgorod|zenit|spartak|rostov|sochi|krasnodar|dinamo/i.test(teams)
-) {
-  leagueDisplay = "Russian Premier League"
-  country = "Russia"
-}
-
-// TURKEY
-if (
-  leagueId === 203 ||
-  /fenerbahce|fenerbahçe|besiktas|beşiktaş|galatasaray|trabzonspor|samsunspor|gaziantep|kasimpasa|kasımpaşa|eyupspor|eyüpspor|konyaspor|rizespor|kayserispor|goztepe|göztepe|alanyaspor|basaksehir|başakşehir|genclerbirligi|gençlerbirliği/i.test(teams)
-) {
-  leagueDisplay = "Super Lig"
-  country = "Turkey"
-}
-
-// DENMARK
-if (
-  /silkeborg|vejle|brondby|midtjylland|fc copenhagen|nordsjaelland/i.test(teams)
-) {
-  leagueDisplay = "Superliga"
-  country = "Denmark"
-}
-
-// GREECE
-if (
-  /olympiacos|paok|panathinaikos|aek athens|aris|volos|kifisia/i.test(teams)
-) {
-  leagueDisplay = "Super League Greece"
-  country = "Greece"
-}
+  const { leagueDisplay, country } = normalizeLeagueByTeams(comp, fixture)
 
   const matchRow = {
     id: fixtureId,
@@ -706,7 +779,7 @@ if (
     away_team: fixture?.teams?.away?.name || null,
     league: leagueDisplay,
     League: leagueDisplay,
-    country: comp.country || fixture?.league?.country || null,
+    country: country,
     match_date: toDateOnly(kickoff),
     kickoff,
     Kickoff: kickoff,
@@ -825,6 +898,52 @@ function uniqBy(arr, keyFn) {
   })
 }
 
+async function clearFutureWindow() {
+  const nowIso = new Date().toISOString()
+  const endIso = new Date(Date.now() + WINDOW_HOURS * 60 * 60 * 1000).toISOString()
+
+  const { data: rows, error: selectError } = await supabase
+    .from("matches")
+    .select("id")
+    .gte("kickoff", nowIso)
+    .lte("kickoff", endIso)
+
+  if (selectError) throw new Error(`Supabase select matches window: ${selectError.message}`)
+
+  const ids = (rows || []).map((x) => x.id)
+  if (!ids.length) return 0
+
+  const { error: dailyError } = await supabase
+    .from("daily_picks")
+    .delete()
+    .neq("match_id", -1)
+
+  if (dailyError) throw new Error(`Supabase delete daily_picks window: ${dailyError.message}`)
+
+  const { error: analysisError } = await supabase
+    .from("match_analysis")
+    .delete()
+    .in("match_id", ids)
+
+  if (analysisError) throw new Error(`Supabase delete match_analysis window: ${analysisError.message}`)
+
+  const { error: statsError } = await supabase
+    .from("match_stats")
+    .delete()
+    .in("match_id", ids)
+
+  if (statsError) throw new Error(`Supabase delete match_stats window: ${statsError.message}`)
+
+  const { error: matchesError } = await supabase
+    .from("matches")
+    .delete()
+    .in("id", ids)
+
+  if (matchesError) throw new Error(`Supabase delete matches window: ${matchesError.message}`)
+
+  return ids.length
+}
+
 async function rebuildDailyPicks(candidates) {
   const future = candidates
     .filter((x) => x.kickoff)
@@ -914,6 +1033,9 @@ async function run() {
   )
 
   console.log(`📅 Fixtures na janela de ${WINDOW_HOURS}h: ${allFixtures.length}`)
+
+  const cleared = await clearFutureWindow()
+  console.log(`🧹 Matches futuros limpos antes do rebuild: ${cleared}`)
 
   const candidates = []
 
