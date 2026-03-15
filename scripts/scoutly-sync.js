@@ -651,7 +651,25 @@ async function upsertMatchAndAnalysis(fixture) {
   const awayProfile = await buildTeamRecentProfile(awayTeamId, comp.leagueId, comp.season, kickoff)
 
   const metrics = computeMatchMetrics(homeProfile, awayProfile)
-  const leagueDisplay = comp.display
+let leagueDisplay = comp.display
+
+const country = comp.country || fixture?.league?.country
+
+if (leagueDisplay === "Bundesliga" && country === "Austria") {
+  leagueDisplay = "Austrian Bundesliga"
+}
+
+if (leagueDisplay === "Premier League" && country === "Russia") {
+  leagueDisplay = "Russian Premier League"
+}
+
+if (leagueDisplay === "Super League" && country === "Greece") {
+  leagueDisplay = "Super League Greece"
+}
+
+if (leagueDisplay === "Super League" && country === "Switzerland") {
+  leagueDisplay = "Swiss Super League"
+}
 
   const matchRow = {
     id: fixtureId,
