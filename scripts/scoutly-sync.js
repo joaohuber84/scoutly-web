@@ -651,7 +651,7 @@ let leagueDisplay = comp.display
 let country = comp.country || fixture?.league?.country || null
 
 const leagueNameRaw = fixture?.league?.name || ''
-const leagueId = fixture?.league?.id || comp?.leagueId || null
+
 
 const home = fixture?.teams?.home?.name || ''
 const away = fixture?.teams?.away?.name || ''
