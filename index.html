@@ -1724,7 +1724,7 @@ const flags = {
          
           <div class="competition-top">
         <div class="competition-flag">
-    <img src="https://flagcdn.com/w40/${getFlag(comp.country || '').toLowerCase()}.png" width="28">
+  <img src="https://flagcdn.com/w40/${flags[comp.country]?.toLowerCase()}.png" width="28"> 
   </div>
   <div class="competition-count">${comp.count} jogo(s)</div>
 </div>
