@@ -2317,7 +2317,7 @@ function renderLoadError(errorMap = {}) {
   if (scoutlyTicket) {
     scoutlyTicket.innerHTML = `<div class="error-state">${message}</div>`;
   }
-
+}
 async function loadDailyPicks() {
   const { data, error } = await supabaseClient
     .from('daily_picks')
