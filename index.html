@@ -1,1495 +1,1914 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Scoutly</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <style>
-    :root {
-      --bg: #07111f;
-      --card: rgba(14, 26, 48, 0.92);
-      --card-2: rgba(20, 37, 67, 0.96);
-      --border: rgba(112, 154, 255, 0.18);
-      --text: #eef4ff;
-      --muted: #9ab0d3;
-      --green: #00ff88;
-      --green-2: #2edc92;
-      --green-3: #6fd7ad;
-      --amber: #f0d36b;
-      --blue: #74a7ff;
-      --danger-soft: rgba(255, 110, 110, 0.18);
-      --draw-soft: rgba(255, 214, 102, 0.16);
-      --win-soft: rgba(0, 255, 136, 0.16);
-      --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
-      --radius-xl: 24px;
-      --radius-lg: 18px;
-      --radius-md: 14px;
-      --max-width: 1200px;
-    }
-
-    * { box-sizing: border-box; }
-
-    html, body {
-      margin: 0;
-      padding: 0;
-      font-family: Inter, Arial, sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(0,255,136,0.06), transparent 28%),
-        radial-gradient(circle at top right, rgba(105,167,255,0.10), transparent 26%),
-        linear-gradient(180deg, #06101d 0%, #0a1425 35%, #0e1a31 100%);
-      min-height: 100vh;
-    }
-
-    .app-shell {
-      width: 100%;
-      padding: 24px 16px 60px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: var(--max-width);
-      margin: 0 auto;
-    }
-
-    .topbar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 18px;
-      flex-wrap: wrap;
-    }
-
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-    }
-
-    .brand-fallback {
-      width: 56px;
-      height: 56px;
-      border-radius: 18px;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(180deg, #00ff88, #0bd06f);
-      color: #081b12;
-      font-weight: 900;
-      font-size: 26px;
-      box-shadow: 0 10px 24px rgba(0,255,136,0.24);
-      flex-shrink: 0;
-    }
-
-    .brand-logo {
-      height: 56px;
-      width: 56px;
-      object-fit: cover;
-      display: none;
-      border-radius: 18px;
-      box-shadow: 0 10px 24px rgba(0,0,0,0.22);
-      flex-shrink: 0;
-      background: rgba(255,255,255,0.03);
-    }
-
-    .brand-title {
-      margin: 0;
-      font-size: 30px;
-      line-height: 1;
-      letter-spacing: -0.04em;
-    }
-
-    .brand-subtitle {
-      margin: 6px 0 0;
-      color: var(--muted);
-      font-size: 13px;
-    }
-
-    .status-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 14px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid var(--border);
-      color: var(--muted);
-      font-size: 13px;
-      white-space: nowrap;
-    }
-
-    .status-dot {
-      width: 9px;
-      height: 9px;
-      border-radius: 999px;
-      background: var(--green);
-      box-shadow: 0 0 0 6px rgba(0,255,136,0.10);
-    }
-
-    .hero-grid {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 18px;
-      margin-bottom: 18px;
-    }
-
-    .panel {
-      background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow);
-      overflow: hidden;
-    }
-
-    .panel-header {
-      padding: 22px 22px 0;
-    }
-
-    .eyebrow {
-      color: var(--green);
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.10em;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
-
-    .panel-title {
-      margin: 0;
-      font-size: 28px;
-      letter-spacing: -0.04em;
-    }
-
-    .panel-subtitle {
-      margin: 10px 0 0;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .panel-body {
-      padding: 20px 22px 22px;
-    }
-
-    .pick-feature {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      min-height: 280px;
-      justify-content: space-between;
-    }
-
-    .league-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      align-self: flex-start;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border);
-      color: #d7e3fa;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
-    .pick-match {
-      font-size: 15px;
-      color: var(--muted);
-      font-weight: 700;
-      margin-bottom: 8px;
-    }
-
-    .pick-market {
-      font-size: 28px;
-      line-height: 1.08;
-      letter-spacing: -0.04em;
-      font-weight: 900;
-      text-transform: uppercase;
-      margin: 0;
-    }
-
-    .feature-box {
-      border: 1px solid rgba(0,255,136,0.14);
-      background: linear-gradient(135deg, rgba(0,255,136,0.10), rgba(105,167,255,0.08));
-      border-radius: var(--radius-lg);
-      padding: 18px;
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
-    }
-
-    .mini-stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-    }
-
-    .mini-stat {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
-    }
-
-    .mini-stat-label {
-      color: var(--muted);
-      font-size: 12px;
-      margin-bottom: 8px;
-    }
-
-    .mini-stat-value {
-      font-size: 18px;
-      font-weight: 800;
-      line-height: 1.25;
-    }
-
-    .chip-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      border-radius: 999px;
-      padding: 8px 12px;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: -0.01em;
-      border: 1px solid transparent;
-    }
-
-    .chip-very-strong {
-      background: rgba(0,255,136,0.13);
-      color: #cffff0;
-      border-color: rgba(0,255,136,0.15);
-    }
-
-    .chip-good {
-      background: rgba(46,220,146,0.12);
-      color: #d7ffef;
-      border-color: rgba(46,220,146,0.15);
-    }
-
-    .chip-moderate {
-      background: rgba(111,215,173,0.12);
-      color: #dbfff0;
-      border-color: rgba(111,215,173,0.15);
-    }
-
-    .chip-extra {
-      background: rgba(116,167,255,0.12);
-      color: #d9e7ff;
-      border-color: rgba(116,167,255,0.15);
-    }
-
-    .teams-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 10px;
-      flex-wrap: wrap;
-    }
-
-    .teams-row.compact {
-      gap: 10px;
-      margin-bottom: 8px;
-    }
-
-    .team-badge {
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
-      display: grid;
-      place-items: center;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border);
-      overflow: hidden;
-      flex-shrink: 0;
-      font-weight: 900;
-      color: #dfe9ff;
-      font-size: 13px;
-    }
-
-    .team-badge img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .team-names {
-      font-size: 16px;
-      font-weight: 800;
-      line-height: 1.3;
-    }
-
-    .radar-list {
-      display: grid;
-      gap: 12px;
-      margin-top: 8px;
-      max-height: 600px;
-      overflow: auto;
-      padding-right: 4px;
-    }
-
-    .radar-item {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 14px;
-      cursor: pointer;
-      transition: 0.2s ease;
-    }
-
-    .competition-card:hover,
-    .radar-item:hover,
-    .game-card:hover,
-    .ticket-pick-card:hover,
-    .generated-ticket:hover {
-      transform: translateY(-2px);
-      border-color: rgba(105,167,255,0.30);
-    }
-
-    .radar-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 8px;
-    }
-
-    .radar-rank {
-      width: 34px;
-      height: 34px;
-      display: grid;
-      place-items: center;
-      border-radius: 12px;
-      background: rgba(0,255,136,0.10);
-      border: 1px solid rgba(0,255,136,0.14);
-      color: var(--green);
-      font-weight: 900;
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-
-    .radar-market {
-      font-size: 18px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: -0.03em;
-      line-height: 1.2;
-      margin-top: 8px;
-    }
-
-    .radar-kickoff {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 8px;
-    }
-
-    .ticket-section {
-      margin-bottom: 18px;
-    }
-
-    .ticket-panel {
-      background: linear-gradient(135deg, rgba(10, 19, 39, 0.98), rgba(15, 32, 63, 0.98));
-      border: 1px solid rgba(56,189,248,0.22);
-      border-radius: var(--radius-xl);
-      box-shadow:
-        0 18px 40px rgba(0,0,0,0.35),
-        0 0 28px rgba(56,189,248,0.08);
-      overflow: hidden;
-    }
-
-    .ticket-header {
-      padding: 22px 22px 0;
-    }
-
-    .ticket-eyebrow {
-      color: #38bdf8;
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.10em;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
-
-    .ticket-title {
-      margin: 0;
-      font-size: 30px;
-      letter-spacing: -0.05em;
-    }
-
-    .ticket-subtitle {
-      margin: 10px 0 0;
-      color: var(--muted);
-      font-size: 14px;
-      line-height: 1.5;
-    }
-
-    .ticket-body {
-      padding: 20px 22px 22px;
-    }
-
-    .ticket-main-grid {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 16px;
-      align-items: start;
-    }
-
-    .ticket-card-wrap {
-      display: grid;
-      gap: 12px;
-    }
-
-    .ticket-pick-card,
-    .generated-ticket {
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
-      padding: 14px;
-      transition: 0.2s ease;
-    }
-
-    .ticket-pick-card + .ticket-pick-card,
-    .generated-ticket .ticket-pick-card + .ticket-pick-card {
-      position: relative;
-    }
-
-    .ticket-pick-card + .ticket-pick-card::before,
-    .generated-ticket .ticket-pick-card + .ticket-pick-card::before {
-      content: "+";
-      position: absolute;
-      top: -16px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 28px;
-      height: 28px;
-      border-radius: 999px;
-      display: grid;
-      place-items: center;
-      background: #081525;
-      border: 1px solid rgba(255,255,255,0.08);
-      color: var(--green);
-      font-weight: 900;
-      font-size: 15px;
-    }
-
-    .ticket-match {
-      font-size: 15px;
-      font-weight: 800;
-      color: #dfe9ff;
-      line-height: 1.4;
-    }
-
-    .ticket-market {
-      margin-top: 8px;
-      font-size: 14px;
-      font-weight: 900;
-      color: #f4fbff;
-      text-transform: uppercase;
-      letter-spacing: -0.02em;
-      line-height: 1.35;
-    }
-
-    .ticket-footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-      margin-top: 14px;
-    }
-
-    .ticket-confidence {
-      color: var(--amber);
-      font-size: 13px;
-      font-weight: 800;
-    }
-
-    .ticket-helper {
-      color: var(--muted);
-      font-size: 12px;
-    }
-
-    .ticket-actions {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      min-width: 210px;
-    }
-
-    .ticket-button {
-      border: 0;
-      cursor: pointer;
-      border-radius: 14px;
-      font-weight: 900;
-      font-size: 14px;
-      padding: 12px 16px;
-      transition: 0.2s ease;
-      background: linear-gradient(90deg,#f59e0b,#f97316);
-      color: white;
-      box-shadow: 0 0 20px rgba(249,115,22,0.28);
-    }
-
-    .ticket-button:hover,
-    .ghost-button:hover,
-    .primary-button:hover {
-      transform: translateY(-1px);
-      filter: brightness(1.03);
-    }
-
-    .generated-ticket-wrap.hidden {
-      display: none !important;
-    }
-
-    .generated-ticket-label {
-      font-size: 12px;
-      font-weight: 800;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: #fbbf24;
-      margin-bottom: 10px;
-    }
-
-    .section {
-      margin-top: 24px;
-    }
-
-    .section-head {
-      display: flex;
-      align-items: end;
-      justify-content: space-between;
-      gap: 14px;
-      margin-bottom: 14px;
-    }
-
-    .section-title {
-      margin: 0;
-      font-size: 26px;
-      letter-spacing: -0.04em;
-    }
-
-    .section-copy {
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .ghost-button,
-    .primary-button {
-      border: 0;
-      cursor: pointer;
-      border-radius: 14px;
-      font-weight: 800;
-      font-size: 14px;
-      transition: 0.2s ease;
-    }
-
-    .ghost-button {
-      background: rgba(255,255,255,0.05);
-      color: #d7e3fa;
-      border: 1px solid var(--border);
-      padding: 12px 16px;
-    }
-
-    .primary-button {
-      background: linear-gradient(180deg, #00ff88, #0bd06f);
-      color: #082012;
-      padding: 12px 18px;
-      box-shadow: 0 12px 24px rgba(0,255,136,0.20);
-    }
-
-    .competitions-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 14px;
-    }
-
-    .competition-card {
-      background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 18px;
-      box-shadow: var(--shadow);
-      cursor: pointer;
-      transition: 0.2s ease;
-    }
-
-    .competition-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .competition-flag {
-      display: flex;
-      align-items: center;
-      min-height: 28px;
-    }
-
-    .competition-count {
-      font-size: 12px;
-      color: var(--muted);
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border);
-      padding: 8px 10px;
-      border-radius: 999px;
-    }
-
-    .competition-name {
-      font-size: 18px;
-      font-weight: 800;
-      line-height: 1.25;
-    }
-
-    .competition-bottom {
-      color: var(--muted);
-      font-size: 13px;
-      margin-top: 10px;
-    }
-
-    .games-grid {
-      display: grid;
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    .game-card {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 14px;
-      align-items: center;
-      background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 16px;
-      box-shadow: var(--shadow);
-      transition: 0.2s ease;
-    }
-
-    .game-main {
-      min-width: 0;
-    }
-
-    .game-match {
-      font-size: 18px;
-      font-weight: 800;
-      line-height: 1.3;
-    }
-
-    .game-meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      color: var(--muted);
-      font-size: 13px;
-      margin-top: 8px;
-    }
-
-    .analysis-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(2,8,16,0.70);
-      backdrop-filter: blur(8px);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      z-index: 50;
-    }
-
-    .analysis-overlay.open {
-      display: flex;
-    }
-
-    .analysis-card {
-      width: 100%;
-      max-width: 1040px;
-      max-height: 92vh;
-      overflow: auto;
-      background: linear-gradient(180deg, rgba(19, 33, 60, 0.98), rgba(10, 18, 34, 0.98));
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      box-shadow: var(--shadow);
-    }
-
-    .analysis-header {
-      padding: 24px 24px 0;
-      display: flex;
-      align-items: start;
-      justify-content: space-between;
-      gap: 16px;
-    }
-
-    .analysis-title {
-      margin: 8px 0 0;
-      font-size: 34px;
-      line-height: 1.05;
-      letter-spacing: -0.05em;
-    }
-
-    .close-button {
-      width: 44px;
-      height: 44px;
-      border-radius: 14px;
-      border: 1px solid rgba(255,255,255,0.08);
-      background: rgba(255,255,255,0.05);
-      color: #fff;
-      font-size: 18px;
-      cursor: pointer;
-    }
-
-    .analysis-body {
-      padding: 24px;
-    }
-
-    .analysis-main-grid {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 16px;
-      margin-top: 18px;
-    }
-
-    .box {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 18px;
-    }
-
-    .box-title {
-      margin: 0 0 12px;
-      font-size: 18px;
-      letter-spacing: -0.03em;
-    }
-
-    .analysis-highlight {
-      border: 1px solid rgba(0,255,136,0.16);
-      background: linear-gradient(135deg, rgba(0,255,136,0.10), rgba(105,167,255,0.08));
-      border-radius: var(--radius-lg);
-      padding: 18px;
-      margin-bottom: 16px;
-    }
-
-    .analysis-market {
-      font-size: 28px;
-      font-weight: 900;
-      line-height: 1.1;
-      text-transform: uppercase;
-      letter-spacing: -0.04em;
-      margin-top: 10px;
-    }
-
-    .analysis-section-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 16px;
-      margin-top: 16px;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    .stat-item {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
-    }
-
-    .stat-label {
-      color: var(--muted);
-      font-size: 12px;
-      margin-bottom: 8px;
-    }
-
-    .stat-value {
-      font-size: 18px;
-      font-weight: 800;
-    }
-
-    .markets-list {
-      display: grid;
-      gap: 10px;
-    }
-
-    .market-line {
-      padding: 12px 14px;
-      border-radius: 14px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-    }
-
-    .market-line-name {
-      font-size: 14px;
-      font-weight: 800;
-      margin-bottom: 10px;
-      text-transform: uppercase;
-      line-height: 1.25;
-    }
-
-    .form-team {
-      margin-bottom: 16px;
-    }
-
-    .form-team:last-child {
-      margin-bottom: 0;
-    }
-
-    .form-team-name {
-      font-size: 14px;
-      font-weight: 800;
-      margin-bottom: 10px;
-      color: #dfe9ff;
-    }
-
-    .form-boxes {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-
-    .form-box {
-      min-width: 58px;
-      height: 40px;
-      padding: 0 10px;
-      display: grid;
-      place-items: center;
-      border-radius: 12px;
-      font-weight: 800;
-      font-size: 13px;
-      border: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .form-win {
-      background: var(--win-soft);
-      color: #d2ffec;
-    }
-
-    .form-draw {
-      background: var(--draw-soft);
-      color: #fff2c2;
-    }
-
-    .form-loss {
-      background: var(--danger-soft);
-      color: #ffd2d2;
-    }
-
-    .form-neutral {
-      background: rgba(255,255,255,0.05);
-      color: #dfe9ff;
-    }
-
-    .about-panel {
-      margin-top: 26px;
-      background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));
-      border: 1px solid var(--border);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow);
-      padding: 22px;
-    }
-
-    .about-title {
-      margin: 0 0 10px;
-      font-size: 22px;
-      letter-spacing: -0.03em;
-    }
-
-    .about-copy {
-      color: var(--muted);
-      line-height: 1.7;
-      font-size: 14px;
-      margin: 0;
-    }
-
-    .about-list {
-      display: grid;
-      gap: 8px;
-      margin-top: 14px;
-      color: #dfe9ff;
-      font-size: 14px;
-    }
-
-    .empty-state,
-    .loading-state,
-    .error-state {
-      background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));
-      border: 1px dashed rgba(112,154,255,0.22);
-      border-radius: var(--radius-lg);
-      padding: 22px;
-      color: var(--muted);
-      text-align: center;
-    }
-
-    .error-state {
-      white-space: pre-wrap;
-      text-align: left;
-      font-family: monospace;
-      color: #ffd7d7;
-      border-color: rgba(255, 110, 110, 0.22);
-      background: linear-gradient(180deg, rgba(50, 22, 30, 0.95), rgba(32, 14, 20, 0.98));
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    .footer-note {
-      margin-top: 18px;
-      color: var(--muted);
-      font-size: 12px;
-      text-align: center;
-      line-height: 1.6;
-      opacity: 0.9;
-    }
-
-    @media (max-width: 1080px) {
-      .hero-grid,
-      .analysis-main-grid,
-      .competitions-grid,
-      .analysis-section-grid,
-      .ticket-main-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 720px) {
-      .app-shell { padding: 18px 12px 42px; }
-      .topbar { flex-direction: column; align-items: stretch; }
-      .brand-title { font-size: 26px; }
-      .panel-title, .section-title, .about-title, .ticket-title { font-size: 24px; }
-      .pick-market, .analysis-market { font-size: 24px; }
-      .game-card { grid-template-columns: 1fr; }
-      .mini-stats, .stats-grid { grid-template-columns: 1fr; }
-      .analysis-title { font-size: 28px; }
-      .team-names { font-size: 15px; }
-      .ticket-actions { min-width: 100%; }
-    }
-  </style>
-  </head>
-<body>
-  <div class="app-shell">
-    <div class="container">
-      <div class="topbar">
-        <div class="brand">
-          <img
-            id="brandLogo"
-            class="brand-logo"
-            src="logo-scoutly.jpg"
-            alt="Scoutly"
-            onload="this.style.display='block';document.getElementById('brandFallback').style.display='none';"
-            onerror="this.style.display='none';document.getElementById('brandFallback').style.display='grid';"
-          />
-          <div id="brandFallback" class="brand-fallback">S</div>
-
-          <div>
-            <h1 class="brand-title">SCOUTLY</h1>
-            <p class="brand-subtitle">Assistente inteligente de apostas em futebol</p>
-          </div>
-        </div>
-
-        <div class="status-chip" id="statusChip">
-          <span class="status-dot"></span>
-          <span id="statusText">Conectando ao Scoutly...</span>
-        </div>
-      </div>
-
-      <div class="hero-grid">
-        <div class="panel">
-          <div class="panel-header">
-            <div class="eyebrow">Radar principal</div>
-            <h2 class="panel-title">Oportunidade em destaque</h2>
-            <p class="panel-subtitle">A leitura mais forte do Scoutly entre os jogos mais relevantes do momento.</p>
-          </div>
-
-          <div class="panel-body">
-            <div id="opportunityContainer" class="pick-feature">
-              <div class="loading-state">Carregando oportunidade em destaque...</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="panel">
-          <div class="panel-header">
-            <div class="eyebrow">Radar Scoutly</div>
-            <h2 class="panel-title">🔥 Radar Scoutly</h2>
-            <p class="panel-subtitle">As melhores oportunidades detectadas hoje para analisar antes de montar seu bilhete.</p>
-          </div>
-
-          <div class="panel-body">
-            <div id="radarList" class="radar-list">
-              <div class="loading-state">Carregando radar...</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="ticket-section">
-        <div class="ticket-panel">
-          <div class="ticket-header">
-            <div class="ticket-eyebrow">Bilhete do dia</div>
-            <h2 class="ticket-title">🎯 Bilhete Scoutly</h2>
-            <p class="ticket-subtitle">
-              Combinação automática de 2 ou 3 picks baseada nas melhores oportunidades do radar.
-            </p>
-          </div>
-
-          <div class="ticket-body">
-            <div class="ticket-main-grid">
-              <div class="ticket-card-wrap">
-                <div id="scoutlyTicket" class="ticket-card-wrap">
-                  <div class="loading-state">Montando bilhete Scoutly...</div>
-                </div>
-
-                <div id="generatedTicketWrap" class="generated-ticket-wrap hidden">
-                  <div class="generated-ticket">
-                    <div class="generated-ticket-label">⚡ Bilhete gerado</div>
-                    <div id="generatedTicketContent" class="ticket-card-wrap"></div>
-                    <div id="generatedTicketConfidence" class="ticket-footer"></div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="ticket-actions">
-                <button class="ticket-button" id="generateTicketBtn">⚡ Gerar Bilhete</button>
-                <div class="ticket-helper">
-                  Gere uma nova combinação com base nas oportunidades detectadas pelo Scoutly.
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-head">
-          <div>
-            <h2 class="section-title">🌍 Competições em destaque</h2>
-            <p class="section-copy">Explore as principais ligas e competições com jogos nas próximas horas.</p>
-          </div>
-
-          <button class="ghost-button hidden" id="backToCompetitionsBtn">
-            ← Voltar para competições
-          </button>
-        </div>
-
-        <div id="competitionsWrap">
-          <div id="competitionsGrid" class="competitions-grid">
-            <div class="loading-state">Carregando competições...</div>
-          </div>
-        </div>
-
-        <div id="gamesWrap" class="hidden">
-          <div class="section-head" style="margin-top: 8px;">
-            <div>
-              <h3 class="section-title" id="selectedCompetitionTitle">Jogos da competição</h3>
-              <p class="section-copy" id="selectedCompetitionCopy">Selecione um jogo para ver a análise.</p>
-            </div>
-          </div>
-
-          <div id="gamesGrid" class="games-grid"></div>
-        </div>
-      </div>
-
-      <div class="about-panel">
-        <h3 class="about-title">Sobre o Scoutly</h3>
-        <p class="about-copy">
-          O Scoutly é um radar inteligente que analisa dados reais de partidas para identificar oportunidades em apostas de futebol.
-          Nosso modelo cruza estatísticas como gols, escanteios, finalizações, forma recente e equilíbrio dos confrontos para destacar mercados com maior probabilidade estatística.
-        </p>
-
-        <div class="about-list">
-          <div>• 🎯 Bilhete Scoutly do dia</div>
-          <div>• 🔥 Radar Scoutly com oportunidades fortes</div>
-          <div>• 🌍 Competições organizadas com bandeiras</div>
-          <div>• 📊 Análise completa de jogos das principais ligas</div>
-          <div>• ⚽ Mercados recomendados com base em leitura estatística</div>
-        </div>
-
-        <div class="footer-note">
-          As análises não garantem resultados e devem ser utilizadas como apoio à tomada de decisão.
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="analysis-overlay" id="analysisOverlay">
-    <div class="analysis-card">
-      <div class="analysis-header">
-        <div>
-          <div class="eyebrow">Análise da partida</div>
-          <h2 class="analysis-title" id="analysisTitle">Análise do jogo</h2>
-          <p class="panel-subtitle" id="analysisSubtitle">Carregando detalhes...</p>
-        </div>
-
-        <button class="close-button" id="closeAnalysisBtn">✕</button>
-      </div>
-
-      <div class="analysis-body">
-        <div class="analysis-highlight">
-          <div class="pick-match" id="analysisMatchSmall">-</div>
-          <div id="analysisTipChip" class="chip-row"></div>
-          <div class="analysis-market" id="analysisBestPick">-</div>
-        </div>
-
-        <div class="analysis-main-grid">
-          <div>
-            <div class="box">
-              <h3 class="box-title">Leitura do jogo</h3>
-              <div id="analysisInsight" style="color:#dbe6fb;line-height:1.65;font-size:15px;">
-                Nenhuma leitura disponível para esta partida.
-              </div>
-            </div>
-
-            <div class="analysis-section-grid">
-              <div class="box">
-                <h3 class="box-title">O que os números indicam</h3>
-                <div id="analysisStats" class="stats-grid"></div>
-              </div>
-
-              <div class="box">
-                <h3 class="box-title">Forma recente (últimos 5 jogos)</h3>
-                <div id="recentFormWrap"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="box">
-            <h3 class="box-title">Oportunidades detectadas</h3>
-            <div id="marketsList" class="markets-list"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <script>
-
-const SUPABASE_URL = "https://zngdcatlxlxamceqpxij.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuZ2RjYXRseGx4YW1jZXFweGlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ0MDUsImV4cCI6MjA4NzkzMDQwNX0.fExn5-TVJKzljnLdg2wqF2I8FjBoNmb1wDmugLUP04M";
-
-const supabase = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-
-let matchesData = [];
-let radarData = [];
-let competitionsMap = {};
-
-const countryFlags = {
-Brazil:"🇧🇷",
-England:"🏴",
-Germany:"🇩🇪",
-Spain:"🇪🇸",
-Italy:"🇮🇹",
-France:"🇫🇷",
-Netherlands:"🇳🇱",
-Portugal:"🇵🇹",
-Turkey:"🇹🇷",
-Mexico:"🇲🇽",
-Argentina:"🇦🇷",
-USA:"🇺🇸",
-Belgium:"🇧🇪",
-Austria:"🇦🇹",
-Denmark:"🇩🇰"
-};
-
-function getFlag(country){
-  return countryFlags[country] || "🌍";
+<!DOCTYPE html> <html lang="pt-BR"> <head>    
+  <meta charset="UTF-8" />    
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />    
+  <title>Scoutly</title>    
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> <style>    
+    :root {    
+      --bg: #07111f;    
+      --card: rgba(14, 26, 48, 0.92);    
+      --card-2: rgba(20, 37, 67, 0.96);    
+      --border: rgba(112, 154, 255, 0.18);    
+      --text: #eef4ff;    
+      --muted: #9ab0d3;    
+      --green: #00ff88;    
+      --green-2: #2edc92;    
+      --green-3: #6fd7ad;    
+      --amber: #f0d36b;    
+      --blue: #74a7ff;    
+      --danger-soft: rgba(255, 110, 110, 0.18);    
+      --draw-soft: rgba(255, 214, 102, 0.16);    
+      --win-soft: rgba(0, 255, 136, 0.16);    
+      --shadow: 0 18px 40px rgba(0, 0, 0, 0.35);    
+      --radius-xl: 24px;    
+      --radius-lg: 18px;    
+      --radius-md: 14px;    
+      --max-width: 1200px;    
+    } * { box-sizing: border-box; }    
+
+html, body {    
+  margin: 0;    
+  padding: 0;    
+  font-family: Inter, Arial, sans-serif;    
+  color: var(--text);    
+  background:    
+    radial-gradient(circle at top left, rgba(0,255,136,0.06), transparent 28%),    
+    radial-gradient(circle at top right, rgba(105,167,255,0.10), transparent 26%),    
+    linear-gradient(180deg, #06101d 0%, #0a1425 35%, #0e1a31 100%);    
+  min-height: 100vh;    
+}    
+
+.app-shell {    
+  width: 100%;    
+  padding: 24px 16px 60px;    
+}    
+
+.container {    
+  width: 100%;    
+  max-width: var(--max-width);    
+  margin: 0 auto;    
+}    
+
+.topbar {    
+  display: flex;    
+  align-items: center;    
+  justify-content: space-between;    
+  gap: 16px;    
+  margin-bottom: 18px;    
+  flex-wrap: wrap;    
+}    
+
+.brand {    
+  display: flex;    
+  align-items: center;    
+  gap: 14px;    
+}    
+
+.brand-fallback {    
+  width: 56px;    
+  height: 56px;    
+  border-radius: 18px;    
+  display: grid;    
+  place-items: center;    
+  background: linear-gradient(180deg, #00ff88, #0bd06f);    
+  color: #081b12;    
+  font-weight: 900;    
+  font-size: 26px;    
+  box-shadow: 0 10px 24px rgba(0,255,136,0.24);    
+  flex-shrink: 0;    
+}    
+
+.brand-logo {    
+  height: 56px;    
+  width: 56px;    
+  object-fit: cover;    
+  display: none;    
+  border-radius: 18px;    
+  box-shadow: 0 10px 24px rgba(0,0,0,0.22);    
+  flex-shrink: 0;    
+  background: rgba(255,255,255,0.03);    
+}    
+
+.brand-title {    
+  margin: 0;    
+  font-size: 30px;    
+  line-height: 1;    
+  letter-spacing: -0.04em;    
+}    
+
+.brand-subtitle {    
+  margin: 6px 0 0;    
+  color: var(--muted);    
+  font-size: 13px;    
+}    
+
+.status-chip {    
+  display: inline-flex;    
+  align-items: center;    
+  gap: 8px;    
+  padding: 10px 14px;    
+  border-radius: 999px;    
+  background: rgba(255, 255, 255, 0.04);    
+  border: 1px solid var(--border);    
+  color: var(--muted);    
+  font-size: 13px;    
+  white-space: nowrap;    
+}    
+
+.status-dot {    
+  width: 9px;    
+  height: 9px;    
+  border-radius: 999px;    
+  background: var(--green);    
+  box-shadow: 0 0 0 6px rgba(0,255,136,0.10);    
+}    
+
+.hero-grid {    
+  display: grid;    
+  grid-template-columns: 1.1fr 0.9fr;    
+  gap: 18px;    
+  margin-bottom: 18px;    
+}    
+
+.panel {    
+  background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));    
+  border: 1px solid var(--border);    
+  border-radius: var(--radius-xl);    
+  box-shadow: var(--shadow);    
+  overflow: hidden;    
+}    
+
+.panel-header {    
+  padding: 22px 22px 0;    
+}    
+
+.eyebrow {    
+  color: var(--green);    
+  font-size: 12px;    
+  font-weight: 800;    
+  letter-spacing: 0.10em;    
+  text-transform: uppercase;    
+  margin-bottom: 10px;    
+}    
+
+.panel-title {    
+  margin: 0;    
+  font-size: 28px;    
+  letter-spacing: -0.04em;    
+}    
+
+.panel-subtitle {    
+  margin: 10px 0 0;    
+  color: var(--muted);    
+  font-size: 14px;    
+  line-height: 1.5;    
+}    
+
+.panel-body {    
+  padding: 20px 22px 22px;    
+}    
+
+.pick-feature {    
+  display: flex;    
+  flex-direction: column;    
+  gap: 16px;    
+  min-height: 280px;    
+  justify-content: space-between;    
+}    
+
+.league-pill {    
+  display: inline-flex;    
+  align-items: center;    
+  gap: 8px;    
+  align-self: flex-start;    
+  padding: 8px 12px;    
+  border-radius: 999px;    
+  background: rgba(255,255,255,0.05);    
+  border: 1px solid var(--border);    
+  color: #d7e3fa;    
+  font-size: 12px;    
+  font-weight: 700;    
+}    
+
+.pick-match {    
+  font-size: 15px;    
+  color: var(--muted);    
+  font-weight: 700;    
+  margin-bottom: 8px;    
+}    
+
+.pick-market {    
+  font-size: 28px;    
+  line-height: 1.08;    
+  letter-spacing: -0.04em;    
+  font-weight: 900;    
+  text-transform: uppercase;    
+  margin: 0;    
+}    
+
+.feature-box {    
+  border: 1px solid rgba(0,255,136,0.14);    
+  background: linear-gradient(135deg, rgba(0,255,136,0.10), rgba(105,167,255,0.08));    
+  border-radius: var(--radius-lg);    
+  padding: 18px;    
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);    
+}    
+
+.mini-stats {    
+  display: grid;    
+  grid-template-columns: repeat(3, 1fr);    
+  gap: 12px;    
+}    
+
+.mini-stat {    
+  background: rgba(255,255,255,0.04);    
+  border: 1px solid var(--border);    
+  border-radius: 16px;    
+  padding: 14px;    
+}    
+
+.mini-stat-label {    
+  color: var(--muted);    
+  font-size: 12px;    
+  margin-bottom: 8px;    
+}    
+
+.mini-stat-value {    
+  font-size: 18px;    
+  font-weight: 800;    
+  line-height: 1.25;    
+}    
+
+.chip-row {    
+  display: flex;    
+  flex-wrap: wrap;    
+  gap: 8px;    
+  margin-top: 14px;    
+}    
+
+.chip {    
+  display: inline-flex;    
+  align-items: center;    
+  gap: 8px;    
+  border-radius: 999px;    
+  padding: 8px 12px;    
+  font-size: 12px;    
+  font-weight: 800;    
+  letter-spacing: -0.01em;    
+  border: 1px solid transparent;    
+}    
+
+.chip-very-strong {    
+  background: rgba(0,255,136,0.13);    
+  color: #cffff0;    
+  border-color: rgba(0,255,136,0.15);    
+}    
+
+.chip-good {    
+  background: rgba(46,220,146,0.12);    
+  color: #d7ffef;    
+  border-color: rgba(46,220,146,0.15);    
+}    
+
+.chip-moderate {    
+  background: rgba(111,215,173,0.12);    
+  color: #dbfff0;    
+  border-color: rgba(111,215,173,0.15);    
+}    
+
+.chip-extra {    
+  background: rgba(116,167,255,0.12);    
+  color: #d9e7ff;    
+  border-color: rgba(116,167,255,0.15);    
+}    
+
+.teams-row {    
+  display: flex;    
+  align-items: center;    
+  gap: 12px;    
+  margin-bottom: 10px;    
+  flex-wrap: wrap;    
+}    
+
+.teams-row.compact {    
+  gap: 10px;    
+  margin-bottom: 8px;    
+}    
+
+.team-badge {    
+  width: 38px;    
+  height: 38px;    
+  border-radius: 12px;    
+  display: grid;    
+  place-items: center;    
+  background: rgba(255,255,255,0.05);    
+  border: 1px solid var(--border);    
+  overflow: hidden;    
+  flex-shrink: 0;    
+  font-weight: 900;    
+  color: #dfe9ff;    
+  font-size: 13px;    
+}    
+
+.team-badge img {    
+  width: 100%;    
+  height: 100%;    
+  object-fit: cover;    
+  display: block;    
+}    
+
+.team-names {    
+  font-size: 16px;    
+  font-weight: 800;    
+  line-height: 1.3;    
+}    
+
+.radar-list {    
+  display: grid;    
+  gap: 12px;    
+  margin-top: 8px;    
+  max-height: 600px;    
+  overflow: auto;    
+  padding-right: 4px;    
+}    
+
+.radar-item {    
+  background: rgba(255,255,255,0.04);    
+  border: 1px solid var(--border);    
+  border-radius: var(--radius-lg);    
+  padding: 14px;    
+  cursor: pointer;    
+  transition: 0.2s ease;    
+}    
+
+.competition-card:hover,    
+.radar-item:hover,    
+.game-card:hover {    
+  transform: translateY(-2px);    
+  border-color: rgba(105,167,255,0.30);    
+}    
+
+.radar-top {    
+  display: flex;    
+  align-items: center;    
+  justify-content: space-between;    
+  gap: 12px;    
+  margin-bottom: 8px;    
+}    
+
+.radar-rank {    
+  width: 34px;    
+  height: 34px;    
+  display: grid;    
+  place-items: center;    
+  border-radius: 12px;    
+  background: rgba(0,255,136,0.10);    
+  border: 1px solid rgba(0,255,136,0.14);    
+  color: var(--green);    
+  font-weight: 900;    
+  font-size: 14px;    
+  flex-shrink: 0;    
+}    
+
+.radar-market {    
+  font-size: 18px;    
+  font-weight: 900;    
+  text-transform: uppercase;    
+  letter-spacing: -0.03em;    
+  line-height: 1.2;    
+  margin-top: 8px;    
+}    
+
+.radar-kickoff {    
+  color: var(--muted);    
+  font-size: 12px;    
+  margin-top: 8px;    
+}    
+
+.section {    
+  margin-top: 24px;    
+}    
+
+.section-head {    
+  display: flex;    
+  align-items: end;    
+  justify-content: space-between;    
+  gap: 14px;    
+  margin-bottom: 14px;    
+}    
+
+.section-title {    
+  margin: 0;    
+  font-size: 26px;    
+  letter-spacing: -0.04em;    
+}    
+
+.section-copy {    
+  margin: 8px 0 0;    
+  color: var(--muted);    
+  font-size: 14px;    
+}    
+
+.ghost-button,    
+.primary-button {    
+  border: 0;    
+  cursor: pointer;    
+  border-radius: 14px;    
+  font-weight: 800;    
+  font-size: 14px;    
+  transition: 0.2s ease;    
+}    
+
+.ghost-button {    
+  background: rgba(255,255,255,0.05);    
+  color: #d7e3fa;    
+  border: 1px solid var(--border);    
+  padding: 12px 16px;    
+}    
+
+.primary-button {    
+  background: linear-gradient(180deg, #00ff88, #0bd06f);    
+  color: #082012;    
+  padding: 12px 18px;    
+  box-shadow: 0 12px 24px rgba(0,255,136,0.20);    
+}    
+
+.competitions-grid {    
+  display: grid;    
+  grid-template-columns: repeat(3, 1fr);    
+  gap: 14px;    
+}    
+
+.competition-card {    
+  background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));    
+  border: 1px solid var(--border);    
+  border-radius: var(--radius-lg);    
+  padding: 18px;    
+  box-shadow: var(--shadow);    
+  cursor: pointer;    
+  transition: 0.2s ease;    
+}    
+
+.competition-top {    
+  display: flex;    
+  align-items: center;    
+  justify-content: space-between;    
+  gap: 12px;    
+  margin-bottom: 12px;    
+}    
+
+.competition-flag {    
+  font-size: 20px;    
+  font-weight: 900;    
+  color: #dfe9ff;    
+}    
+
+.competition-count {    
+  font-size: 12px;    
+  color: var(--muted);    
+  background: rgba(255,255,255,0.05);    
+  border: 1px solid var(--border);    
+  padding: 8px 10px;    
+  border-radius: 999px;    
+}    
+
+.competition-name {    
+  font-size: 18px;    
+  font-weight: 800;    
+  line-height: 1.25;    
+}    
+
+.competition-bottom {    
+  color: var(--muted);    
+  font-size: 13px;    
+  margin-top: 10px;    
+}    
+
+.games-grid {    
+  display: grid;    
+  gap: 12px;    
+  margin-top: 14px;    
+}    
+
+.game-card {    
+  display: grid;    
+  grid-template-columns: 1fr auto;    
+  gap: 14px;    
+  align-items: center;    
+  background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));    
+  border: 1px solid var(--border);    
+  border-radius: var(--radius-lg);    
+  padding: 16px;    
+  box-shadow: var(--shadow);    
+  transition: 0.2s ease;    
+}    
+
+.game-main {    
+  min-width: 0;    
+}    
+
+.game-match {    
+  font-size: 18px;    
+  font-weight: 800;    
+  line-height: 1.3;    
+}    
+
+.game-meta {    
+  display: flex;    
+  flex-wrap: wrap;    
+  gap: 10px;    
+  color: var(--muted);    
+  font-size: 13px;    
+  margin-top: 8px;    
+}    
+
+.analysis-overlay {    
+  position: fixed;    
+  inset: 0;    
+  background: rgba(2,8,16,0.70);    
+  backdrop-filter: blur(8px);    
+  display: none;    
+  align-items: center;    
+  justify-content: center;    
+  padding: 24px;    
+  z-index: 50;    
+}    
+
+.analysis-overlay.open {    
+  display: flex;    
+}    
+
+.analysis-card {    
+  width: 100%;    
+  max-width: 1040px;    
+  max-height: 92vh;    
+  overflow: auto;    
+  background: linear-gradient(180deg, rgba(19, 33, 60, 0.98), rgba(10, 18, 34, 0.98));    
+  border: 1px solid var(--border);    
+  border-radius: 28px;    
+  box-shadow: var(--shadow);    
+}    
+
+.analysis-header {    
+  padding: 24px 24px 0;    
+  display: flex;    
+  align-items: start;    
+  justify-content: space-between;    
+  gap: 16px;    
+}    
+
+.analysis-title {    
+  margin: 8px 0 0;    
+  font-size: 34px;    
+  line-height: 1.05;    
+  letter-spacing: -0.05em;    
+}    
+
+.close-button {    
+  width: 44px;    
+  height: 44px;    
+  border-radius: 14px;    
+  border: 1px solid rgba(255,255,255,0.08);    
+  background: rgba(255,255,255,0.05);    
+  color: #fff;    
+  font-size: 18px;    
+  cursor: pointer;    
+}    
+
+.analysis-body {    
+  padding: 24px;    
+}    
+
+.analysis-main-grid {    
+  display: grid;    
+  grid-template-columns: 1.1fr 0.9fr;    
+  gap: 16px;    
+  margin-top: 18px;    
+}    
+
+.box {    
+  background: rgba(255,255,255,0.04);    
+  border: 1px solid var(--border);    
+  border-radius: var(--radius-lg);    
+  padding: 18px;    
+}    
+
+.box-title {    
+  margin: 0 0 12px;    
+  font-size: 18px;    
+  letter-spacing: -0.03em;    
+}    
+
+.analysis-highlight {    
+  border: 1px solid rgba(0,255,136,0.16);    
+  background: linear-gradient(135deg, rgba(0,255,136,0.10), rgba(105,167,255,0.08));    
+  border-radius: var(--radius-lg);    
+  padding: 18px;    
+  margin-bottom: 16px;    
+}    
+
+.analysis-market {    
+  font-size: 28px;    
+  font-weight: 900;    
+  line-height: 1.1;    
+  text-transform: uppercase;    
+  letter-spacing: -0.04em;    
+  margin-top: 10px;    
+}    
+
+.analysis-section-grid {    
+  display: grid;    
+  grid-template-columns: repeat(2, 1fr);    
+  gap: 16px;    
+  margin-top: 16px;    
+}    
+
+.stats-grid {    
+  display: grid;    
+  grid-template-columns: repeat(2, 1fr);    
+  gap: 12px;    
+  margin-top: 14px;    
+}    
+
+.stat-item {    
+  background: rgba(255,255,255,0.04);    
+  border: 1px solid var(--border);    
+  border-radius: 16px;    
+  padding: 14px;    
+}    
+
+.stat-label {    
+  color: var(--muted);    
+  font-size: 12px;    
+  margin-bottom: 8px;    
+}    
+
+.stat-value {    
+  font-size: 18px;    
+  font-weight: 800;    
+}    
+
+.markets-list {    
+  display: grid;    
+  gap: 10px;    
+}    
+
+.market-line {    
+  padding: 12px 14px;    
+  border-radius: 14px;    
+  background: rgba(255,255,255,0.04);    
+  border: 1px solid var(--border);    
+}    
+
+.market-line-name {    
+  font-size: 14px;    
+  font-weight: 800;    
+  margin-bottom: 10px;    
+  text-transform: uppercase;    
+  line-height: 1.25;    
+}    
+
+.form-team {    
+  margin-bottom: 16px;    
+}    
+
+.form-team:last-child {    
+  margin-bottom: 0;    
+}    
+
+.form-team-name {    
+  font-size: 14px;    
+  font-weight: 800;    
+  margin-bottom: 10px;    
+  color: #dfe9ff;    
+}    
+
+.form-boxes {    
+  display: flex;    
+  gap: 8px;    
+  flex-wrap: wrap;    
+}    
+
+.form-box {    
+  min-width: 58px;    
+  height: 40px;    
+  padding: 0 10px;    
+  display: grid;    
+  place-items: center;    
+  border-radius: 12px;    
+  font-weight: 800;    
+  font-size: 13px;    
+  border: 1px solid rgba(255,255,255,0.06);    
+}    
+
+.form-win {    
+  background: var(--win-soft);    
+  color: #d2ffec;    
+}    
+
+.form-draw {    
+  background: var(--draw-soft);    
+  color: #fff2c2;    
+}    
+
+.form-loss {    
+  background: var(--danger-soft);    
+  color: #ffd2d2;    
+}    
+
+.form-neutral {    
+  background: rgba(255,255,255,0.05);    
+  color: #dfe9ff;    
+}    
+
+.about-panel {    
+  margin-top: 26px;    
+  background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));    
+  border: 1px solid var(--border);    
+  border-radius: var(--radius-xl);    
+  box-shadow: var(--shadow);    
+  padding: 22px;    
+}    
+
+.about-title {    
+  margin: 0 0 10px;    
+  font-size: 22px;    
+  letter-spacing: -0.03em;    
+}    
+
+.about-copy {    
+  color: var(--muted);    
+  line-height: 1.7;    
+  font-size: 14px;    
+  margin: 0;    
+}    
+
+.about-list {    
+  display: grid;    
+  gap: 8px;    
+  margin-top: 14px;    
+  color: #dfe9ff;    
+  font-size: 14px;    
+}    
+
+.empty-state,    
+.loading-state,    
+.error-state {    
+  background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));    
+  border: 1px dashed rgba(112,154,255,0.22);    
+  border-radius: var(--radius-lg);    
+  padding: 22px;    
+  color: var(--muted);    
+  text-align: center;    
+}    
+
+.error-state {    
+  white-space: pre-wrap;    
+  text-align: left;    
+  font-family: monospace;    
+  color: #ffd7d7;    
+  border-color: rgba(255, 110, 110, 0.22);    
+  background: linear-gradient(180deg, rgba(50, 22, 30, 0.95), rgba(32, 14, 20, 0.98));    
+}    
+
+.hidden {    
+  display: none !important;    
+}    
+
+.footer-note {    
+  margin-top: 18px;    
+  color: var(--muted);    
+  font-size: 12px;    
+  text-align: center;    
+  line-height: 1.6;    
+  opacity: 0.9;    
+}    
+
+@media (max-width: 1080px) {    
+  .hero-grid,    
+  .analysis-main-grid,    
+  .competitions-grid,    
+  .analysis-section-grid {    
+    grid-template-columns: 1fr;    
+  }    
+}    
+
+@media (max-width: 720px) {    
+  .app-shell { padding: 18px 12px 42px; }    
+  .topbar { flex-direction: column; align-items: stretch; }    
+  .brand-title { font-size: 26px; }    
+  .panel-title, .section-title, .about-title { font-size: 24px; }    
+  .pick-market, .analysis-market { font-size: 24px; }    
+  .game-card { grid-template-columns: 1fr; }    
+  .mini-stats, .stats-grid { grid-template-columns: 1fr; }    
+  .analysis-title { font-size: 28px; }    
+  .team-names { font-size: 15px; }    
 }
 
-function shuffleArray(array){
-  return array.sort(() => Math.random() - 0.5);
+</style> </head>
+
+<body>    
+  <div class="app-shell">    
+    <div class="container">    
+      <div class="topbar">    
+        <div class="brand">    
+          <img    
+            id="brandLogo"    
+            class="brand-logo"    
+            src="logo-scoutly.jpg"    
+            alt="Scoutly"    
+            onload="this.style.display='block';document.getElementById('brandFallback').style.display='none';"    
+            onerror="this.style.display='none';document.getElementById('brandFallback').style.display='grid';"    
+          />    
+          <div id="brandFallback" class="brand-fallback">S</div> <div>    
+        <h1 class="brand-title">SCOUTLY</h1>    
+        <p class="brand-subtitle">Radar inteligente de oportunidades em futebol</p>    
+      </div>    
+    </div> <div class="status-chip" id="statusChip">    
+  <span class="status-dot"></span>    
+  <span id="statusText">Conectando ao Scoutly...</span>    
+</div>
+
+  </div> <div class="hero-grid">    
+    <div class="panel">    
+      <div class="panel-header">    
+        <div class="eyebrow">Dica do Dia</div>    
+        <h2 class="panel-title">A principal oportunidade do dia</h2>    
+        <p class="panel-subtitle">A leitura mais forte do Scoutly entre os jogos mais relevantes do dia.</p>    
+      </div> <div class="panel-body">    
+    <div id="opportunityContainer" class="pick-feature">    
+      <div class="loading-state">Carregando Dica do Dia...</div>    
+    </div>    
+  </div>    
+</div>    
+
+<div class="panel">    
+  <div class="panel-header">    
+    <div class="eyebrow">Top 5 do Dia</div>    
+    <h2 class="panel-title">Radar Scoutly</h2>    
+    <p class="panel-subtitle">Cinco jogos diferentes com oportunidades fortes para olhar antes de montar o bilhete.</p>    
+  </div>    
+
+  <div class="panel-body">    
+    <div id="radarList" class="radar-list">    
+      <div class="loading-state">Carregando radar...</div>    
+    </div>    
+  </div>    
+</div>
+
+  </div> <div class="section">    
+    <div class="section-head">    
+      <div>    
+        <h2 class="section-title">🌍 Competições em destaque</h2>    
+       <p class="section-copy">Explore as principais ligas e competições com jogos nas próximas horas.</p>    
+      <button class="ghost-button hidden" id="backToCompetitionsBtn">    
+        ← Voltar para competições    
+      </button>    
+    </div> <div id="competitionsWrap">    
+  <div id="competitionsGrid" class="competitions-grid">    
+    <div class="loading-state">Carregando competições...</div>    
+  </div>    
+</div>    
+
+<div id="gamesWrap" class="hidden">    
+  <div class="section-head" style="margin-top: 8px;">    
+    <div>    
+      <h3 class="section-title" id="selectedCompetitionTitle">Jogos da competição</h3>    
+      <p class="section-copy" id="selectedCompetitionCopy">Selecione um jogo para ver a análise.</p>    
+    </div>    
+  </div>    
+
+  <div id="gamesGrid" class="games-grid"></div>    
+</div>
+
+  </div> <div class="about-panel">    
+    <h3 class="about-title">Sobre o Scoutly</h3>    
+    <p class="about-copy">    
+      O Scoutly é um radar inteligente que analisa dados reais de partidas para identificar oportunidades em apostas de futebol.    
+      Nosso modelo cruza estatísticas como gols, escanteios, finalizações, forma recente e equilíbrio dos confrontos para destacar mercados com maior probabilidade estatística.    
+    </p> <div class="about-list">    
+  <div>• Dica do Dia</div>    
+  <div>• Top 5 do Dia</div>    
+  <div>• Análise completa de jogos das principais ligas</div>    
+  <div>• Mercados recomendados com base em leitura estatística</div>    
+</div>    
+
+<div class="footer-note">    
+  As análises não garantem resultados e devem ser utilizadas como apoio à tomada de decisão.    
+</div>
+
+  </div>    
+</div> </div> <div class="analysis-overlay" id="analysisOverlay">    
+    <div class="analysis-card">    
+      <div class="analysis-header">    
+        <div>    
+          <div class="eyebrow">Análise da partida</div>    
+          <h2 class="analysis-title" id="analysisTitle">Análise do jogo</h2>    
+          <p class="panel-subtitle" id="analysisSubtitle">Carregando detalhes...</p>    
+        </div> <button class="close-button" id="closeAnalysisBtn">✕</button>    
+  </div> <div class="analysis-body">    
+    <div class="analysis-highlight">    
+      <div class="pick-match" id="analysisMatchSmall">-</div>    
+      <div id="analysisTipChip" class="chip-row"></div>    
+      <div class="analysis-market" id="analysisBestPick">-</div>    
+    </div> <div class="analysis-main-grid">    
+  <div>    
+    <div class="box">    
+      <h3 class="box-title">Leitura do jogo</h3>    
+      <div id="analysisInsight" style="color:#dbe6fb;line-height:1.65;font-size:15px;">    
+        Nenhuma leitura disponível para esta partida.    
+      </div>    
+    </div>    
+
+    <div class="analysis-section-grid">    
+      <div class="box">    
+        <h3 class="box-title">O que os números indicam</h3>    
+        <div id="analysisStats" class="stats-grid"></div>    
+      </div>    
+
+      <div class="box">    
+        <h3 class="box-title">Forma recente (últimos 5 jogos)</h3>    
+        <div id="recentFormWrap"></div>    
+      </div>    
+    </div>    
+  </div>    
+
+  <div class="box">    
+    <h3 class="box-title">Oportunidades detectadas</h3>    
+    <div id="marketsList" class="markets-list"></div>    
+  </div>    
+</div>
+
+  </div>    
+</div> </div> <script>    
+    const supabaseClient = window.supabase.createClient(    
+      'https://zngdcatlxlxamceqpxij.supabase.co',    
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuZ2RjYXRseGx4YW1jZXFweGlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ0MDUsImV4cCI6MjA4NzkzMDQwNX0.fExn5-TVJKzljnLdg2wqF2I8FjBoNmb1wDmugLUP04M'    
+    ) const state = {    
+  dailyPicks: [],    
+  matches: [],    
+  competitions: [],    
+  selectedLeague: null    
+}    
+
+const leagueMeta = {    
+  'Premier League': { label: 'Premier League', badge: 'EN', sort: 10 },    
+  'La Liga': { label: 'La Liga', badge: 'ES', sort: 20 },    
+  'Serie A': { label: 'Serie A', badge: 'IT', sort: 30 },    
+  'Bundesliga': { label: 'Bundesliga', badge: 'DE', sort: 40 },    
+  'Ligue 1': { label: 'Ligue 1', badge: 'FR', sort: 50 },    
+  'Eredivisie': { label: 'Eredivisie', badge: 'NL', sort: 55 },    
+  'MLS': { label: 'MLS', badge: 'US', sort: 60 },    
+
+  'UEFA Champions League': { label: 'UEFA Champions League', badge: '🏆', sort: 5 },    
+  'UEFA Europa League': { label: 'UEFA Europa League', badge: '🏆', sort: 15 },    
+  'UEFA Europa Conference League': { label: 'UEFA Europa Conference League', badge: '🏆', sort: 25 },    
+  'CONMEBOL Libertadores': { label: 'CONMEBOL Libertadores', badge: '🏆', sort: 12 },    
+  'CONMEBOL Sudamericana': { label: 'CONMEBOL Sudamericana', badge: '🏆', sort: 18 },    
+  'CONCACAF Champions Cup': { label: 'CONCACAF Champions Cup', badge: '🏆', sort: 22 },    
+  'Copa do Brasil': { label: 'Copa do Brasil', badge: '🏟️', sort: 24 },    
+
+  'Serie B': { label: 'Serie B', badge: 'IT', sort: 32 },    
+  'Liga Profesional Argentina': { label: 'Liga Profesional Argentina', badge: 'AR', sort: 34 },    
+
+  'FIFA Club World Cup': { label: 'Mundial de Clubes', badge: '🌍', sort: 8 },    
+  'FIFA World Cup': { label: 'Copa do Mundo', badge: '🌍', sort: 7 },    
+  'UEFA European Championship': { label: 'Eurocopa', badge: '🌍', sort: 9 },    
+  'Copa America': { label: 'Copa América', badge: '🌍', sort: 11 },    
+  'UEFA Nations League': { label: 'Nations League', badge: '🌍', sort: 13 }    
+}    
+
+function setStatus(text, ok = true) {    
+  const chip = document.getElementById('statusChip')    
+  const txt = document.getElementById('statusText')    
+  txt.textContent = text    
+  chip.style.borderColor = ok ? 'rgba(0,255,136,0.18)' : 'rgba(255,107,122,0.22)'    
+}    
+
+function getLeagueDisplay(league) {    
+  return leagueMeta[league]?.label || league || '-'    
+}    
+
+function getLeagueBadge(league) {    
+  return leagueMeta[league]?.badge || 'LG'    
+}    
+
+function getLeagueSort(league) {    
+  return leagueMeta[league]?.sort || 999    
+}    
+
+function formatKickoff(value) {    
+  if (!value) return 'Horário não disponível'    
+  const d = new Date(value)    
+  if (Number.isNaN(d.getTime())) return 'Horário não disponível'    
+  return d.toLocaleString('pt-BR', {    
+    day: '2-digit',    
+    month: '2-digit',    
+    hour: '2-digit',    
+    minute: '2-digit'    
+  })    
+}    
+
+function formatDecimal(value, digits = 1) {    
+  if (value === null || value === undefined || Number.isNaN(Number(value))) return '-'    
+  return Number(value).toFixed(digits)    
+}    
+
+function clamp(value, min = 0, max = 1) {    
+  return Math.max(min, Math.min(max, value))    
+}    
+
+function logistic(x) {    
+  return 1 / (1 + Math.exp(-x))    
+}    
+
+function firstNumeric(obj, keys, fallback = null) {    
+  for (const key of keys) {    
+    const value = obj?.[key]    
+    const num = Number(value)    
+    if (!Number.isNaN(num) && value !== null && value !== undefined && value !== '') {    
+      return num    
+    }    
+  }    
+  return fallback    
+}    
+
+function weightedMetric(recent, season, recentWeight = 0.65) {    
+  const hasRecent = recent !== null && recent !== undefined && !Number.isNaN(Number(recent))    
+  const hasSeason = season !== null && season !== undefined && !Number.isNaN(Number(season))    
+
+  if (hasRecent && hasSeason) return Number(recent) * recentWeight + Number(season) * (1 - recentWeight)    
+  if (hasRecent) return Number(recent)    
+  if (hasSeason) return Number(season)    
+  return null    
+}    
+
+function probabilityToTier(prob) {    
+  const p = Number(prob || 0)    
+  if (p >= 0.80) return 'Muito forte'    
+  if (p >= 0.70) return 'Boa'    
+  if (p >= 0.60) return 'Moderada'    
+  return 'Oportunidade extra'    
+}    
+
+function chipClass(tier) {    
+  if (tier === 'Muito forte') return 'chip chip-very-strong'    
+  if (tier === 'Boa') return 'chip chip-good'    
+  if (tier === 'Moderada') return 'chip chip-moderate'    
+  return 'chip chip-extra'    
+}    
+
+function chipMarkup(tier) {    
+  const emoji =    
+    tier === 'Muito forte' ? '🔥' :    
+    tier === 'Boa' ? '🟢' :    
+    tier === 'Moderada' ? '🟡' :    
+    '🔵'    
+
+  return `<span class="${chipClass(tier)}">${emoji} ${tier}</span>`    
+}    
+
+function teamInitials(name) {    
+  if (!name) return 'TM'    
+  const words = String(name).trim().split(/\s+/).slice(0, 2)    
+  return words.map(w => w[0]?.toUpperCase() || '').join('') || 'TM'    
+}    
+
+function teamLogoUrl(match, side) {    
+  const keys =    
+    side === 'home'    
+      ? ['home_logo', 'home_logo_url', 'home_badge', 'home_badge_url', 'logo_home']    
+      : ['away_logo', 'away_logo_url', 'away_badge', 'away_badge_url', 'logo_away']    
+
+  for (const key of keys) {    
+    const value = match?.[key]    
+    if (typeof value === 'string' && value.trim()) return value.trim()    
+  }    
+  return null    
+}    
+
+function teamBadge(match, side, compact = false) {    
+  const teamName = side === 'home' ? match?.home_team : match?.away_team    
+  const logo = teamLogoUrl(match, side)    
+  return `    
+    <div class="team-badge${compact ? ' compact' : ''}">    
+      ${    
+        logo    
+          ? `<img src="${logo}" alt="${teamName || 'Time'}" onerror="this.style.display='none'; this.parentNode.textContent='${teamInitials(teamName)}';" />`    
+          : teamInitials(teamName)    
+      }    
+    </div>    
+  `    
+}    
+
+function isUpcoming(value) {    
+  if (!value) return false    
+  const d = new Date(value)    
+  if (Number.isNaN(d.getTime())) return false    
+  return d.getTime() >= (Date.now() - 2 * 60 * 60 * 1000)    
+}    
+
+function buildCoreMetrics(match) {    
+  const recentGoals = firstNumeric(match, ['avg_goals_recent', 'recent_avg_goals', 'last5_avg_goals'])    
+  const seasonGoals = firstNumeric(match, ['avg_goals', 'goals_avg', 'season_avg_goals'], 2.4)    
+
+  const recentCorners = firstNumeric(match, ['avg_corners_recent', 'recent_avg_corners', 'last5_avg_corners'])    
+  const seasonCorners = firstNumeric(match, ['avg_corners', 'corners_avg', 'season_avg_corners'], 8.8)    
+
+  const recentShots = firstNumeric(match, ['avg_shots_recent', 'recent_avg_shots', 'last5_avg_shots'])    
+  const seasonShots = firstNumeric(match, ['avg_shots', 'shots_avg', 'season_avg_shots'], 21)    
+
+  const recentSOT = firstNumeric(match, ['avg_shots_on_target_recent', 'recent_avg_shots_on_target', 'last5_avg_shots_on_target', 'avg_sot_recent', 'recent_avg_sot'])    
+  const seasonSOT = firstNumeric(match, ['avg_shots_on_target', 'shots_on_target_avg', 'season_avg_shots_on_target', 'avg_sot'], 7)    
+
+  const avgGoals = clamp(weightedMetric(recentGoals, seasonGoals, 0.68) ?? 2.4, 0.8, 5.4)    
+  const avgCorners = clamp(weightedMetric(recentCorners, seasonCorners, 0.65) ?? 8.8, 5.5, 15.5)    
+  const avgShots = clamp(weightedMetric(recentShots, seasonShots, 0.65) ?? 21, 8, 36)    
+  const avgShotsOnTarget = clamp(weightedMetric(recentSOT, seasonSOT, 0.65) ?? 7, 2, 14)    
+
+  const powerHome = clamp(firstNumeric(match, ['power_home'], 1), 0.45, 2.25)    
+  const powerAway = clamp(firstNumeric(match, ['power_away'], 1), 0.45, 2.25)    
+
+  return { avgGoals, avgCorners, avgShots, avgShotsOnTarget, powerHome, powerAway }    
+}    
+
+function buildExpectedGoals(match) {    
+  const { avgGoals, powerHome, powerAway } = buildCoreMetrics(match)    
+  const totalPower = powerHome + powerAway || 2    
+
+  let homeXg = avgGoals * (powerHome / totalPower)    
+  let awayXg = avgGoals * (powerAway / totalPower)    
+
+  homeXg *= 1.08    
+  awayXg *= 0.92    
+
+  const totalXg = homeXg + awayXg    
+  if (totalXg > 0) {    
+    const factor = avgGoals / totalXg    
+    homeXg *= factor    
+    awayXg *= factor    
+  }    
+
+  return {    
+    homeXg: clamp(homeXg, 0.25, 3.8),    
+    awayXg: clamp(awayXg, 0.25, 3.8)    
+  }    
+}    
+
+function cumulativePoisson(lambda, maxK = 10) {    
+  const arr = []    
+  let sum = 0    
+
+  for (let k = 0; k <= maxK; k++) {    
+    const p = poisson(lambda, k)    
+    sum += p    
+    arr.push(p)    
+  }    
+
+  if (sum < 0.999) arr.push(1 - sum)    
+  return arr    
+}    
+
+function poisson(lambda, k) {    
+  if (lambda <= 0) return k === 0 ? 1 : 0    
+  let factorial = 1    
+  for (let i = 2; i <= k; i++) factorial *= i    
+  return (Math.exp(-lambda) * Math.pow(lambda, k)) / factorial    
+}    
+
+function resultProbabilities(homeXg, awayXg, maxGoals = 8) {    
+  const homeDist = cumulativePoisson(homeXg, maxGoals)    
+  const awayDist = cumulativePoisson(awayXg, maxGoals)    
+
+  let homeWin = 0    
+  let draw = 0    
+  let awayWin = 0    
+
+  for (let h = 0; h < homeDist.length; h++) {    
+    for (let a = 0; a < awayDist.length; a++) {    
+      const p = homeDist[h] * awayDist[a]    
+      if (h > a) homeWin += p    
+      else if (h === a) draw += p    
+      else awayWin += p    
+    }    
+  }    
+
+  return {    
+    homeWin: clamp(homeWin, 0, 0.92),    
+    draw: clamp(draw, 0, 0.90),    
+    awayWin: clamp(awayWin, 0, 0.92)    
+  }    
+}    
+
+function totalGoalsProbabilities(homeXg, awayXg, maxGoals = 10) {    
+  const homeDist = cumulativePoisson(homeXg, maxGoals)    
+  const awayDist = cumulativePoisson(awayXg, maxGoals)    
+
+  let over15 = 0    
+  let over25 = 0    
+  let under25 = 0    
+  let under35 = 0    
+  let bttsYes = 0    
+  let bttsNo = 0    
+
+  for (let h = 0; h < homeDist.length; h++) {    
+    for (let a = 0; a < awayDist.length; a++) {    
+      const p = homeDist[h] * awayDist[a]    
+      const total = h + a    
+
+      if (total >= 2) over15 += p    
+      if (total >= 3) over25 += p    
+      if (total <= 2) under25 += p    
+      if (total <= 3) under35 += p    
+      if (h >= 1 && a >= 1) bttsYes += p    
+      if (!(h >= 1 && a >= 1)) bttsNo += p    
+    }    
+  }    
+
+  return {    
+    over15: clamp(over15, 0, 0.97),    
+    over25: clamp(over25, 0, 0.95),    
+    under25: clamp(under25, 0, 0.95),    
+    under35: clamp(under35, 0, 0.97),    
+    bttsYes: clamp(bttsYes, 0, 0.94),    
+    bttsNo: clamp(bttsNo, 0, 0.94)    
+  }    
+}    
+
+function buildExpectedCorners(match) {    
+  const core = buildCoreMetrics(match)    
+  const blended = core.avgCorners * 0.72 + (6.8 + core.avgShots * 0.10 + core.avgGoals * 0.34) * 0.28    
+  return clamp(blended, 6.2, 15.5)    
+}    
+
+function buildExpectedShots(match) {    
+  const core = buildCoreMetrics(match)    
+  return {    
+    shots: clamp(core.avgShots, 8, 36),    
+    shotsOnTarget: clamp(core.avgShotsOnTarget, 2, 14)    
+  }    
+}    
+
+function offensiveTempo(match) {    
+  const expectedCorners = buildExpectedCorners(match)    
+  const { shots, shotsOnTarget } = buildExpectedShots(match)    
+  const raw = shots * 0.5 + shotsOnTarget * 1.1 + expectedCorners * 0.45    
+
+  if (raw >= 22) return 'Alto'    
+  if (raw >= 16) return 'Moderado'    
+  return 'Baixo'    
+}    
+
+function lineScore(prob, family, market) {    
+  const p = Number(prob || 0)    
+  let score = p    
+
+  if (market === 'Mais de 1.5 gols') score += 0.06    
+  if (market === 'Menos de 3.5 gols') score += 0.05    
+  if (family === 'dupla_chance') score += 0.04    
+  if (family === 'escanteios') score += 0.02    
+  if (market === 'Empate') score -= 0.12    
+  if (market === 'Ambas marcam') score -= 0.02    
+  if (market === 'Ambas não marcam') score += 0.01    
+  if (p < 0.58) score -= 0.12    
+  if (p > 0.90) score -= 0.06    
+
+  return score    
+}    
+
+function chooseGoalMarkets(goalProbs) {    
+  return [    
+    { market: 'Mais de 1.5 gols', probability: goalProbs.over15 },    
+    { market: 'Mais de 2.5 gols', probability: goalProbs.over25 },    
+    { market: 'Menos de 2.5 gols', probability: goalProbs.under25 },    
+    { market: 'Menos de 3.5 gols', probability: goalProbs.under35 }    
+  ].map(item => ({    
+    ...item,    
+    family: 'gols',    
+    score: lineScore(item.probability, 'gols', item.market)    
+  }))    
+}    
+
+function chooseCornerBest(expectedCorners) {    
+  const lines = [6.5, 7.5, 8.5, 9.5, 10.5, 11.5]    
+  const candidates = []    
+
+  for (const line of lines) {    
+    const overProb = clamp(logistic((expectedCorners - line) / 1.12), 0.08, 0.92)    
+    const underProb = clamp(1 - overProb, 0.08, 0.92)    
+
+    candidates.push({    
+      market: `Mais de ${line} escanteios`,    
+      probability: overProb,    
+      family: 'escanteios',    
+      score: lineScore(overProb, 'escanteios', `Mais de ${line} escanteios`)    
+    })    
+
+    candidates.push({    
+      market: `Menos de ${line} escanteios`,    
+      probability: underProb,    
+      family: 'escanteios',    
+      score: lineScore(underProb, 'escanteios', `Menos de ${line} escanteios`)    
+    })    
+  }    
+
+  candidates.sort((a, b) => b.score - a.score)    
+  return candidates[0]    
+}    
+
+function buildMarketBoard(match) {    
+  const homeTeam = match.home_team || 'Mandante'    
+  const awayTeam = match.away_team || 'Visitante'    
+  const { homeXg, awayXg } = buildExpectedGoals(match)    
+  const results = resultProbabilities(homeXg, awayXg)    
+  const goals = totalGoalsProbabilities(homeXg, awayXg)    
+  const expectedCorners = buildExpectedCorners(match)    
+
+  const candidates = [    
+    { market: `Vitória do ${homeTeam}`, probability: results.homeWin, family: 'vitoria' },    
+    { market: `Vitória do ${awayTeam}`, probability: results.awayWin, family: 'vitoria' },    
+    { market: 'Empate', probability: results.draw, family: 'empate' },    
+    { market: `Dupla chance ${homeTeam} ou empate`, probability: clamp(results.homeWin + results.draw, 0, 0.97), family: 'dupla_chance' },    
+    { market: `Dupla chance ${awayTeam} ou empate`, probability: clamp(results.awayWin + results.draw, 0, 0.97), family: 'dupla_chance' },    
+    { market: 'Ambas marcam', probability: goals.bttsYes, family: 'ambas' },    
+    { market: 'Ambas não marcam', probability: goals.bttsNo, family: 'ambas' },    
+    ...chooseGoalMarkets(goals),    
+    chooseCornerBest(expectedCorners)    
+  ]    
+  .filter(Boolean)    
+  .map(item => ({    
+    ...item,    
+    probability: clamp(item.probability, 0.05, 0.97),    
+    score: item.score ?? lineScore(item.probability, item.family, item.market),    
+    tier: probabilityToTier(item.probability)    
+  }))    
+  .sort((a, b) => b.score - a.score)    
+
+  const usedFamilies = new Set()    
+  const topDistinct = []    
+
+  for (const item of candidates) {    
+    if (topDistinct.length >= 4) break    
+    if (usedFamilies.has(item.family)) continue    
+    usedFamilies.add(item.family)    
+    topDistinct.push(item)    
+  }    
+
+  return {    
+    tip: topDistinct[0] || { market: 'Mercado em revisão', probability: 0.60, tier: 'Moderada', family: 'outros' },    
+    extras: topDistinct.slice(1, 4),    
+    topDistinct,    
+    results,    
+    goals,    
+    expectedCorners    
+  }    
+}    
+
+function smartInsight(match, board) {    
+  const expectedCorners = formatDecimal(buildExpectedCorners(match), 1)    
+  const { avgGoals } = buildCoreMetrics(match)    
+  const { shots, shotsOnTarget } = buildExpectedShots(match)    
+  const tempo = offensiveTempo(match).toLowerCase()    
+
+  if (board.tip.family === 'escanteios') {    
+    return `Jogo com ritmo ofensivo ${tempo} e projeção de ${expectedCorners} escanteios. O modelo vê essa linha como a melhor oportunidade da partida.`    
+  }    
+
+  if (board.tip.market === 'Mais de 1.5 gols') {    
+    return `Confronto com produção ofensiva suficiente para pelo menos 2 gols. A combinação de ${formatDecimal(avgGoals, 1)} gols esperados, ${formatDecimal(shots, 0)} finalizações e ${formatDecimal(shotsOnTarget, 0)} no alvo sustenta essa leitura.`    
+  }    
+
+  if (board.tip.market.includes('Menos de')) {    
+    return `Confronto com tendência de ritmo controlado e placar sem explosão ofensiva. O modelo identifica esse mercado como o cenário mais consistente do jogo.`    
+  }    
+
+  if (board.tip.family === 'dupla_chance') {    
+    return `Mercado mais protegido para o confronto. O modelo vê vantagem suficiente para a equipe recomendada sair ao menos com o empate.`    
+  }    
+
+  if (board.tip.family === 'vitoria') {    
+    return `O modelo identifica superioridade estatística da equipe recomendada, transformando a vitória seca na leitura mais forte da partida.`    
+  }    
+
+  if (board.tip.family === 'ambas') {    
+    return `O mercado de ambas aparece como melhor leitura a partir da combinação entre equilíbrio ofensivo, produção recente e tendência do confronto.`    
+  }    
+
+  return `O modelo combinou forma recente, ritmo ofensivo e equilíbrio do confronto para destacar essa oportunidade como a melhor do jogo.`    
+}    
+
+function parseRecentRaw(match, side) {    
+  const keys = side === 'home'    
+    ? ['home_recent_scores', 'home_last5_scores', 'recent_home_scores', 'home_form_scores', 'home_form']    
+    : ['away_recent_scores', 'away_last5_scores', 'recent_away_scores', 'away_form_scores', 'away_form']    
+
+  for (const key of keys) {    
+    const value = match?.[key]    
+    if (!value) continue    
+
+    if (Array.isArray(value)) return value    
+
+    if (typeof value === 'string') {    
+      const text = value.trim()    
+      if (!text) continue    
+
+      try {    
+        const parsed = JSON.parse(text)    
+        if (Array.isArray(parsed)) return parsed    
+      } catch (_) {}    
+
+      if (text.includes('|')) return text.split('|').map(v => v.trim()).filter(Boolean)    
+      if (text.includes(',')) return text.split(',').map(v => v.trim()).filter(Boolean)    
+    }    
+  }    
+
+  return null    
+}    
+
+function parseScore(scoreText) {    
+  if (!scoreText || typeof scoreText !== 'string') return null    
+  const clean = scoreText.replace(/\s+/g, '')    
+  const parts = clean.split(/[-–xX:]/)    
+  if (parts.length !== 2) return null    
+
+  const a = Number(parts[0])    
+  const b = Number(parts[1])    
+
+  if (Number.isNaN(a) || Number.isNaN(b)) return null    
+  return { a, b, label: `${a}–${b}` }    
+}    
+
+function buildRecentForm(match, side) {    
+  const raw = parseRecentRaw(match, side)    
+  if (!raw || !raw.length) return []    
+
+  return raw.slice(0, 5).map(item => {    
+    const parsed = parseScore(String(item))    
+    if (!parsed) return { label: String(item), result: 'neutral' }    
+
+    const won = parsed.a > parsed.b    
+    const drew = parsed.a === parsed.b    
+    const lost = parsed.a < parsed.b    
+
+    return {    
+      label: parsed.label,    
+      result: won ? 'win' : drew ? 'draw' : lost ? 'loss' : 'neutral'    
+    }    
+  })    
+}    
+
+function recentFormMarkup(match) {    
+  const homeForm = buildRecentForm(match, 'home')    
+  const awayForm = buildRecentForm(match, 'away')    
+
+  if (!homeForm.length && !awayForm.length) {    
+    return `<div class="empty-state">Sem histórico recente disponível para este jogo.</div>`    
+  }    
+
+  function renderTeamForm(teamName, entries) {    
+    if (!entries.length) {    
+      return `    
+        <div class="form-team">    
+          <div class="form-team-name">${teamName || 'Time'}</div>    
+          <div class="empty-state" style="padding:12px;">Sem dados recentes.</div>    
+        </div>    
+      `    
+    }    
+
+    return `    
+      <div class="form-team">    
+        <div class="form-team-name">${teamName || 'Time'}</div>    
+        <div class="form-boxes">    
+          ${entries.map(entry => `    
+            <div class="form-box ${    
+              entry.result === 'win' ? 'form-win' :    
+              entry.result === 'draw' ? 'form-draw' :    
+              entry.result === 'loss' ? 'form-loss' :    
+              'form-neutral'    
+            }">${entry.label}</div>    
+          `).join('')}    
+        </div>    
+      </div>    
+    `    
+  }    
+
+  return `    
+    ${renderTeamForm(match.home_team, homeForm)}    
+    ${renderTeamForm(match.away_team, awayForm)}    
+  `    
+}    
+
+function statCardsMarkup(match) {    
+  const { avgGoals } = buildCoreMetrics(match)    
+  const expectedCorners = buildExpectedCorners(match)    
+  const { shots, shotsOnTarget } = buildExpectedShots(match)    
+  const tempo = offensiveTempo(match)    
+
+  const items = [    
+    { label: 'Gols esperados', value: formatDecimal(avgGoals, 1) },    
+    { label: 'Escanteios projetados', value: formatDecimal(expectedCorners, 1) },    
+    { label: 'Finalizações totais', value: formatDecimal(shots, 0) },    
+    { label: 'Finalizações no gol', value: formatDecimal(shotsOnTarget, 0) },    
+    { label: 'Ritmo ofensivo', value: tempo }    
+  ]    
+
+  return items.map(item => `    
+    <div class="stat-item">    
+      <div class="stat-label">${item.label}</div>    
+      <div class="stat-value">${item.value}</div>    
+    </div>    
+  `).join('')    
+}    
+
+function renderOpportunity() {    
+  const container = document.getElementById('opportunityContainer')    
+  const opportunity = state.dailyPicks.find(item => item.is_opportunity) || state.dailyPicks[0]    
+
+  if (!opportunity) {    
+    container.innerHTML = `<div class="empty-state">Nenhuma Dica do Dia encontrada.</div>`    
+    return    
+  }    
+
+  const match = state.matches.find(m => String(m.id) === String(opportunity.match_id))    
+  const leagueName = getLeagueDisplay(opportunity.league || match?.league)    
+  const leagueBadge = getLeagueBadge(opportunity.league || match?.league)    
+  const kickoff = match?.kickoff ? formatKickoff(match.kickoff) : 'Horário não disponível'    
+  const tier = probabilityToTier(opportunity.probability)    
+
+  container.innerHTML = `    
+    <div class="league-pill">    
+      <span>${leagueBadge}</span>    
+      <span>${leagueName}</span>    
+    </div>    
+
+    <div class="feature-box">    
+      <div class="teams-row">    
+        ${teamBadge(match || opportunity, 'home')}    
+        <div class="team-names">${opportunity.home_team || '-'} x ${opportunity.away_team || '-'}</div>    
+        ${teamBadge(match || opportunity, 'away')}    
+      </div>    
+
+      <div class="chip-row">    
+        ${chipMarkup(tier)}    
+      </div>    
+
+      <h3 class="pick-market">${opportunity.market}</h3>    
+    </div>    
+
+    <div class="mini-stats">    
+      <div class="mini-stat">    
+        <div class="mini-stat-label">Kickoff</div>    
+        <div class="mini-stat-value">${kickoff}</div>    
+      </div>    
+
+      <div class="mini-stat">    
+        <div class="mini-stat-label">Competição</div>    
+        <div class="mini-stat-value">${leagueName}</div>    
+      </div>    
+
+      <div class="mini-stat">    
+        <div class="mini-stat-label">Leitura do modelo</div>    
+        <div class="mini-stat-value">${tier}</div>    
+      </div>    
+    </div>    
+  `    
+}    
+
+function renderRadar() {    
+  const list = document.getElementById('radarList')    
+  const radarItems = state.dailyPicks    
+    .filter(item => Number(item.rank || 999) > 0)    
+    .sort((a, b) => Number(a.rank || 999) - Number(b.rank || 999))    
+    .slice(0, 5)    
+
+  if (!radarItems.length) {    
+    list.innerHTML = `<div class="empty-state">Nenhuma oportunidade encontrada para hoje.</div>`    
+    return    
+  }    
+
+  list.innerHTML = radarItems.map((item, index) => {    
+    const match = state.matches.find(m => String(m.id) === String(item.match_id))    
+    const kickoff = match?.kickoff ? formatKickoff(match.kickoff) : 'Horário não disponível'    
+    const tier = probabilityToTier(item.probability)    
+
+    return `    
+      <div class="radar-item" data-match-id="${item.match_id}">    
+        <div class="radar-top">    
+          <div class="radar-rank">${index + 1}</div>    
+          <div class="league-pill">    
+            <span>${getLeagueBadge(item.league)}</span>    
+            <span>${getLeagueDisplay(item.league)}</span>    
+          </div>    
+        </div>    
+
+        <div class="teams-row compact">    
+          ${teamBadge(match || item, 'home', true)}    
+          <div class="team-names">${item.home_team || '-'} x ${item.away_team || '-'}</div>    
+          ${teamBadge(match || item, 'away', true)}    
+        </div>    
+
+        <div class="chip-row">    
+          ${chipMarkup(tier)}    
+        </div>    
+
+        <div class="radar-market">${item.market}</div>    
+        <div class="radar-kickoff">Kickoff: ${kickoff}</div>    
+      </div>    
+    `    
+  }).join('')    
+
+  list.querySelectorAll('.radar-item').forEach(el => {    
+    el.addEventListener('click', () => openAnalysis(el.dataset.matchId))    
+  })    
+}    
+
+function buildCompetitions() {    
+  const map = new Map()    
+
+  for (const match of state.matches) {    
+    if (!isUpcoming(match.kickoff || match.match_date)) continue    
+
+   const league = match.league || ''
+
+const country = match.country || null
+
+if (!map.has(league)) {
+map.set(league, {
+league,
+country,
+count: 0,
+matches: []
+})
 }
 
-function setStatus(text){
-  const el = document.getElementById("statusText");
-  if(el) el.innerText = text;
+const item = map.get(league)
+
+if (!item.country && country) {
+item.country = country
 }
 
-async function loadMatches(){
-
-  setStatus("Carregando dados...");
-
-  const { data, error } = await supabase
-    .from("matches_today")
-    .select("*");
-
-  if(error){
-    console.error(error);
-    setStatus("Erro ao carregar dados");
-    return;
-  }
-
-  matchesData = data || [];
-
-  buildCompetitions();
-  buildRadar();
-
-  setStatus("Scoutly ativo");
-
+item.count += 1
+item.matches.push(match)
 }
 
-function buildCompetitions(){
-
-  competitionsMap = {};
-
-  matchesData.forEach(match => {
-
-    const league = match.league;
-
-    if(!competitionsMap[league]){
-      competitionsMap[league] = {
-        league: league,
-        country: match.country,
-        games: []
-      };
-    }
-
-    competitionsMap[league].games.push(match);
-
-  });
-
-  renderCompetitions();
-
+state.competitions = Array.from(map.values()).sort((a, b) => getLeagueSort(a.league) - getLeagueSort(b.league))    
 }
 
-function renderCompetitions(){
+function getFlag(country) {
 
-  const grid = document.getElementById("competitionsGrid");
-  grid.innerHTML = "";
-
-  Object.values(competitionsMap).forEach(comp => {
-
-    const card = document.createElement("div");
-    card.className = "competition-card";
-
-    card.innerHTML = `
-      <div class="competition-top">
-        <div class="competition-flag">${getFlag(comp.country)}</div>
-        <div class="competition-count">${comp.games.length} jogos</div>
-      </div>
-
-      <div class="competition-name">${comp.league}</div>
-
-      <div class="competition-bottom">
-        Clique para ver os jogos
-      </div>
-    `;
-
-    card.onclick = () => openCompetition(comp);
-
-    grid.appendChild(card);
-
-  });
-
+const flags = {
+Brazil: "BR",
+England: "GB",
+Spain: "ES",
+Italy: "IT",
+Germany: "DE",
+France: "FR",
+Portugal: "PT",
+Netherlands: "NL",
+Belgium: "BE",
+USA: "US",
+Argentina: "AR",
+Mexico: "MX",
+Turkey: "TR",
+Greece: "GR",
+Switzerland: "CH",
+Denmark: "DK"
 }
 
-function openCompetition(comp){
-
-  document.getElementById("competitionsWrap").classList.add("hidden");
-  document.getElementById("gamesWrap").classList.remove("hidden");
-
-  document.getElementById("selectedCompetitionTitle").innerText = comp.league;
-
-  const grid = document.getElementById("gamesGrid");
-  grid.innerHTML = "";
-
-  comp.games.forEach(game => {
-
-    const card = document.createElement("div");
-    card.className = "game-card";
-
-    card.innerHTML = `
-      <div class="game-main">
-
-        <div class="game-match">
-          ${game.home_team} x ${game.away_team}
-        </div>
-
-        <div class="game-meta">
-          <span>${game.kickoff || ""}</span>
-        </div>
-
-      </div>
-
-      <button class="primary-button">Analisar</button>
-    `;
-
-    card.querySelector("button").onclick = () => openAnalysis(game);
-
-    grid.appendChild(card);
-
-  });
-
-  document.getElementById("backToCompetitionsBtn").classList.remove("hidden");
-
+return flags[country] || null
 }
 
-document.getElementById("backToCompetitionsBtn").onclick = () => {
+function renderCompetitions() {    
+  buildCompetitions()    
+  const grid = document.getElementById('competitionsGrid')    
 
-  document.getElementById("gamesWrap").classList.add("hidden");
-  document.getElementById("competitionsWrap").classList.remove("hidden");
-  document.getElementById("backToCompetitionsBtn").classList.add("hidden");
+  if (!state.competitions.length) {    
+    grid.innerHTML = `<div class="empty-state">Nenhuma competição encontrada para hoje.</div>`    
+    return    
+  }    
 
-};
+  grid.innerHTML = state.competitions.map(comp => `    
+    <div class="competition-card" data-league="${encodeURIComponent(comp.league)}">    
+         
+      <div class="competition-top">    
+    <div class="competition-flag">
 
-function buildRadar(){
+ <img src="https://flagcdn.com/w40/${(getFlag(comp.country) || 'world').toLowerCase()}.png" width="28"> </div>    
+  <div class="competition-count">${comp.count} jogo(s)</div>    
+</div>    
+          <div class="competition-name">${getLeagueDisplay(comp.league)}</div>    
+          <div class="competition-bottom">Toque para ver os jogos desta competição.</div>    
+        </div>    
+      `).join('') grid.querySelectorAll('.competition-card').forEach(card => {    
+    card.addEventListener('click', () => {    
+      const league = decodeURIComponent(card.dataset.league)    
+      openCompetition(league)    
+    })    
+  })    
+}    
 
-  const radar = document.getElementById("radarList");
+function openCompetition(league) {    
+  state.selectedLeague = league    
 
-  radar.innerHTML = "";
+  const competition = state.competitions.find(c => c.league === league)    
+  const matches = competition?.matches || []    
 
-  radarData = matchesData.slice(0,5);
+  document.getElementById('competitionsWrap').classList.add('hidden')    
+  document.getElementById('gamesWrap').classList.remove('hidden')    
+  document.getElementById('backToCompetitionsBtn').classList.remove('hidden')    
 
-  radarData.forEach((match, index) => {
+  document.getElementById('selectedCompetitionTitle').textContent = getLeagueDisplay(league)    
+  document.getElementById('selectedCompetitionCopy').textContent = `${matches.length} jogo(s) futuros nesta competição.`    
 
-    const div = document.createElement("div");
+  const gamesGrid = document.getElementById('gamesGrid')    
 
-    div.className = "radar-item";
+  if (!matches.length) {    
+    gamesGrid.innerHTML = `<div class="empty-state">Nenhum jogo encontrado.</div>`    
+    return    
+  }    
 
-    div.innerHTML = `
-      <div class="radar-top">
-        <div class="radar-rank">#${index+1}</div>
-        <div class="league-pill">${getFlag(match.country)} ${match.league}</div>
-      </div>
+  gamesGrid.innerHTML = matches    
+    .sort((a, b) => {    
+      const ka = a.kickoff ? new Date(a.kickoff).getTime() : 0    
+      const kb = b.kickoff ? new Date(b.kickoff).getTime() : 0    
+      return ka - kb    
+    })    
+    .map(match => `    
+      <div class="game-card">    
+        <div class="game-main">    
+          <div class="teams-row compact">    
+            ${teamBadge(match, 'home', true)}    
+            <div class="game-match">${match.home_team || '-'} x ${match.away_team || '-'}</div>    
+            ${teamBadge(match, 'away', true)}    
+          </div>    
 
-      <div class="team-names">
-        ${match.home_team} x ${match.away_team}
-      </div>
+          <div class="game-meta">    
+            <span>${getLeagueBadge(match.league)} ${getLeagueDisplay(match.league)}</span>    
+            <span>${formatKickoff(match.kickoff)}</span>    
+          </div>    
+        </div>    
 
-      <div class="radar-market">
-        Mais de 1.5 gols
-      </div>
+        <div>    
+          <button class="primary-button" data-analyze-id="${match.id}">    
+            Ver análise →    
+          </button>    
+        </div>    
+      </div>    
+    `)    
+    .join('')    
 
-      <div class="radar-kickoff">
-        ${match.kickoff || ""}
-      </div>
-    `;
+  gamesGrid.querySelectorAll('[data-analyze-id]').forEach(btn => {    
+    btn.addEventListener('click', () => openAnalysis(btn.dataset.analyzeId))    
+  })    
+}    
 
-    radar.appendChild(div);
+function backToCompetitions() {    
+  state.selectedLeague = null    
+  document.getElementById('competitionsWrap').classList.remove('hidden')    
+  document.getElementById('gamesWrap').classList.add('hidden')    
+  document.getElementById('backToCompetitionsBtn').classList.add('hidden')    
+}    
 
-  });
+function openAnalysis(matchId) {    
+  const match = state.matches.find(m => String(m.id) === String(matchId))    
+  if (!match) return    
 
+  const board = buildMarketBoard(match)    
+  const tip = board.tip    
+  const extras = board.extras    
+
+  document.getElementById('analysisTitle').textContent = `${match.home_team || '-'} x ${match.away_team || '-'}`    
+  document.getElementById('analysisSubtitle').textContent =    
+    `${getLeagueBadge(match.league)} ${getLeagueDisplay(match.league)} • ${formatKickoff(match.kickoff)}`    
+  document.getElementById('analysisMatchSmall').innerHTML = `    
+    <div class="teams-row compact" style="margin-bottom:0;">    
+      ${teamBadge(match, 'home', true)}    
+      <div class="team-names">${match.home_team || '-'} x ${match.away_team || '-'}</div>    
+      ${teamBadge(match, 'away', true)}    
+    </div>    
+  `    
+  document.getElementById('analysisTipChip').innerHTML = chipMarkup(tip.tier)    
+  document.getElementById('analysisBestPick').textContent = tip.market    
+  document.getElementById('analysisInsight').textContent = smartInsight(match, board)    
+  document.getElementById('analysisStats').innerHTML = statCardsMarkup(match)    
+  document.getElementById('recentFormWrap').innerHTML = recentFormMarkup(match)    
+
+  document.getElementById('marketsList').innerHTML = extras.length    
+    ? extras.map(item => `    
+      <div class="market-line">    
+        <div class="chip-row" style="margin-top:0; margin-bottom:10px;">    
+          ${chipMarkup(item.tier)}    
+        </div>    
+        <div class="market-line-name">${item.market}</div>    
+      </div>    
+    `).join('')    
+    : `<div class="empty-state">Nenhuma oportunidade extra encontrada para este jogo.</div>`    
+
+  document.getElementById('analysisOverlay').classList.add('open')    
+}    
+
+function closeAnalysis() {    
+  document.getElementById('analysisOverlay').classList.remove('open')    
+}    
+
+function renderLoadError(errorMap = {}) {    
+  const parts = Object.entries(errorMap).map(([k, v]) => `${k}: ${v}`)    
+  const message = parts.join('\n') || 'Erro desconhecido'    
+
+  setStatus('Erro ao carregar dados do Scoutly.', false)    
+
+  document.getElementById('opportunityContainer').innerHTML =    
+    `<div class="error-state">Erro no carregamento\n\n${message}</div>`    
+
+  document.getElementById('radarList').innerHTML =    
+    `<div class="error-state">${message}</div>`    
+
+  document.getElementById('competitionsGrid').innerHTML =    
+    `<div class="error-state">${message}</div>`    
+}    
+
+async function loadDailyPicks() {    
+  const { data, error } = await supabaseClient    
+    .from('daily_picks')    
+    .select('*')    
+    .order('rank', { ascending: true })    
+
+  if (error) throw error    
+  state.dailyPicks = data || []    
 }
 
-function openAnalysis(game){
+async function loadMatches() {
+const { data: matchesData, error: matchesError } = await supabaseClient
+.from('matches')
+.select('*')
+.order('league', { ascending: true })
+.order('kickoff', { ascending: true })
 
-  document.getElementById("analysisOverlay").classList.add("open");
+if (matchesError) throw matchesError
 
-  document.getElementById("analysisTitle").innerText =
-    `${game.home_team} x ${game.away_team}`;
+const upcomingMatches = (matchesData || []).filter(match =>
+isUpcoming(match.kickoff || match.match_date)
+)
 
-  document.getElementById("analysisSubtitle").innerText =
-    game.league;
+const { data: analysisData, error: analysisError } = await supabaseClient
+.from('match_analysis')
+.select('*')
 
-  document.getElementById("analysisBestPick").innerText =
-    "Mais de 1.5 gols";
+if (analysisError) throw analysisError
 
-  document.getElementById("analysisInsight").innerText =
-    "Os números indicam tendência de jogo aberto com boas chances de gols.";
+const analysisMap = new Map(
+(analysisData || []).map(item => [String(item.match_id), item])
+)
 
+state.matches = upcomingMatches.map(match => {
+const analysis = analysisMap.get(String(match.id)) || {}
+
+return {    
+  ...match,    
+  ...analysis    
 }
 
-document.getElementById("closeAnalysisBtn").onclick = () => {
-  document.getElementById("analysisOverlay").classList.remove("open");
-};
-
-
-
-
-function buildMainTicketFromRadar() {
-  const wrap = document.getElementById("scoutlyTicket");
-
-  if (!radarData.length) {
-    wrap.innerHTML = `<div class="loading-state">Nenhum dado disponível para montar o bilhete.</div>`;
-    return;
-  }
-
-  const picks = radarData.slice(0, 2);
-
-  wrap.innerHTML = `
-    ${picks.map((pick, index) => `
-      <div class="ticket-pick-card">
-        <div class="ticket-match">
-          ${getFlag(pick.country)} ${pick.home_team} x ${pick.away_team}
-        </div>
-        <div class="ticket-market">
-          ${index === 0 ? "Mais de 1.5 gols" : "Dupla chance casa ou empate"}
-        </div>
-      </div>
-    `).join("")}
-
-    <div class="ticket-footer">
-      <div class="ticket-confidence">Confiança: Alta (8.4)</div>
-      <div class="ticket-helper">Bilhete montado com base nas melhores leituras do radar.</div>
-    </div>
-  `;
+})
 }
 
-function generateTicket() {
-  const wrap = document.getElementById("generatedTicketWrap");
-  const content = document.getElementById("generatedTicketContent");
-  const confidence = document.getElementById("generatedTicketConfidence");
+async function initialize() {    
+  const errors = {}    
 
-  if (!matchesData.length) {
-    wrap.classList.remove("hidden");
-    content.innerHTML = `<div class="loading-state">Sem jogos disponíveis para gerar bilhete.</div>`;
-    confidence.innerHTML = "";
-    return;
-  }
+  setStatus('Conectando ao Scoutly...', true)    
 
-  const picks = shuffleArray([...matchesData]).slice(0, 3);
+  try {    
+    await loadDailyPicks()    
+  } catch (error) {    
+    console.error('daily_picks error:', error)    
+    errors.daily_picks = error.message || JSON.stringify(error)    
+  }    
 
-  wrap.classList.remove("hidden");
+  try {    
+    await loadMatches()    
+  } catch (error) {    
+    console.error('matches error:', error)    
+    errors.matches = error.message || JSON.stringify(error)    
+  }    
 
-  content.innerHTML = picks.map((pick, index) => `
-    <div class="ticket-pick-card">
-      <div class="ticket-match">
-        ${getFlag(pick.country)} ${pick.home_team} x ${pick.away_team}
-      </div>
-      <div class="ticket-market">
-        ${
-          index === 0
-            ? "Mais de 1.5 gols"
-            : index === 1
-            ? "Mais de 8.5 escanteios"
-            : "Dupla chance casa ou empate"
-        }
-      </div>
-    </div>
-  `).join("");
+  if (Object.keys(errors).length) {    
+    renderLoadError(errors)    
+    return    
+  }    
 
-  confidence.innerHTML = `
-    <div class="ticket-confidence">Confiança: Boa (7.9)</div>
-    <div class="ticket-helper">Bilhete alternativo gerado com base nas oportunidades disponíveis.</div>
-  `;
-}
+  renderOpportunity()    
+  renderRadar()    
+  renderCompetitions()    
 
-document.getElementById("generateTicketBtn").onclick = generateTicket;
+  setStatus(`Conexão OK · Jogos futuros: ${state.matches.length}`, true)    
+}    
 
-async function initializeScoutly() {
-  await loadMatches();
-  buildMainTicketFromRadar();
-}
+document.getElementById('backToCompetitionsBtn').addEventListener('click', backToCompetitions)    
+document.getElementById('closeAnalysisBtn').addEventListener('click', closeAnalysis)    
+document.getElementById('analysisOverlay').addEventListener('click', (e) => {    
+  if (e.target.id === 'analysisOverlay') closeAnalysis()    
+})    
 
-initializeScoutly();
+initialize()
 
-</script>
+</script> </body>
 
-</body>
-</html>
+</html> 
