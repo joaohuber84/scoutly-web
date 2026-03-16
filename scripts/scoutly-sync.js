@@ -944,7 +944,7 @@ async function clearFutureWindow() {
 
   return ids.length
 }
-*/
+/*
 async function rebuildDailyPicks(candidates) {
   const future = candidates
     .filter((x) => x.kickoff)
@@ -1017,7 +1017,7 @@ async function rebuildDailyPicks(candidates) {
 
   return rows.length
 }
-
+*/
 async function run() {
   console.log("🚀 Scoutly Sync V3 iniciado")
 
@@ -1050,7 +1050,7 @@ async function run() {
     }
   }
 
-  const picksCount = await rebuildDailyPicks(candidates)
+  const picksCount = 0 // await rebuildDailyPicks(candidates)
   console.log(`🏁 Daily picks gerados: ${picksCount}`)
   console.log("✅ Scoutly Sync V3 concluído")
 }
