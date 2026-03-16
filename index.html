@@ -2008,7 +2008,7 @@
         </div>
 
         <div class="ticket-footer">
-          <div class="ticket-confidence">Confiança geral: ${confidenceLabel}</div>
+          <div class="ticket-confidence">Confiança geral: ${confidenceLabel()}</div>
           <div class="ticket-helper">Bilhete montado com leitura automática do Scoutly.</div>
         </div>
       `;
@@ -2305,7 +2305,7 @@ function renderLoadError(errorMap = {}) {
   setStatus('Erro ao carregar dados do Scoutly.', false);
 
   document.getElementById('opportunityContainer').innerHTML =
-    `<div class="error-state">Erro no carregamento\n\n${message}</div>`;
+    `<div class="error-state">Erro no carregamento<br><br>${message}</div>`;
 
   document.getElementById('radarList').innerHTML =
     `<div class="error-state">${message}</div>`;
