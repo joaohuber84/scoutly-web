@@ -1901,11 +1901,20 @@ async function initialize() {
   setStatus(`Conexão OK · Jogos futuros: ${state.matches.length}`, true)    
 }    
 
-document.getElementById('backToCompetitionsBtn').addEventListener('click', backToCompetitions)    
-document.getElementById('closeAnalysisBtn').addEventListener('click', closeAnalysis)    
-document.getElementById('analysisOverlay').addEventListener('click', (e) => {    
-  if (e.target.id === 'analysisOverlay') closeAnalysis()    
-})    
+document.getElementById('backToCompetitionsBtn').addEventListener('click', backToCompetitions)
+document.getElementById('closeAnalysisBtn').addEventListener('click', closeAnalysis)
+document.getElementById('analysisOverlay').addEventListener('click', (e) => {
+  if (e.target.id === 'analysisOverlay') closeAnalysis()
+})
+
+window.addEventListener('error', (e) => {
+  alert('ERRO JS: ' + e.message)
+})
+
+window.addEventListener('unhandledrejection', (e) => {
+  const msg = e.reason?.message || e.reason || 'erro desconhecido'
+  alert('ERRO PROMISE: ' + msg)
+})
 
 initialize()
 
