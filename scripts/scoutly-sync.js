@@ -1,12 +1,12 @@
 const { createClient } = require("@supabase/supabase-js")
 
-const APISPORTS_KEY = process.env.APISPORTS_KEY
-const SUPABASE_URL = process.env.SUPABASE_URL
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const APISPORTS_KEY = "e51fee79da402419a4196db17e5ba889"
+
+// Supabase será configurado depois
+const SUPABASE_URL = ""
+const SUPABASE_KEY = ""
 
 if (!APISPORTS_KEY) throw new Error("APISPORTS_KEY não encontrada.")
-if (!SUPABASE_URL) throw new Error("SUPABASE_URL não encontrada.")
-if (!SUPABASE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY não encontrada.")
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
