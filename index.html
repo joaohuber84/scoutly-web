@@ -2395,7 +2395,7 @@ async function initialize() {
 document.getElementById('generateTicketBtn')?.addEventListener('click', generateNewTicket);
 document.getElementById('backToCompetitionsBtn').addEventListener('click', backToCompetitions);
 document.getElementById('closeAnalysisBtn').addEventListener('click', closeAnalysis);
-document.getElementById('analysisOverlay').addEventListener('click', (e) => {
+document.getElementById('analysisOverlay')?.addEventListener('click', (e) => {
   if (e.target.id === 'analysisOverlay') closeAnalysis();
 });
 
