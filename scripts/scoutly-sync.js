@@ -897,6 +897,7 @@ function uniqBy(arr, keyFn) {
   })
 }
 
+/*
 async function clearFutureWindow() {
   const nowIso = new Date().toISOString()
   const endIso = new Date(Date.now() + WINDOW_HOURS * 60 * 60 * 1000).toISOString()
@@ -906,6 +907,7 @@ async function clearFutureWindow() {
     .select("id")
     .gte("kickoff", nowIso)
     .lte("kickoff", endIso)
+}
 
   if (selectError) throw new Error(`Supabase select matches window: ${selectError.message}`)
 
@@ -942,7 +944,7 @@ async function clearFutureWindow() {
 
   return ids.length
 }
-
+*/
 async function rebuildDailyPicks(candidates) {
   const future = candidates
     .filter((x) => x.kickoff)
@@ -1033,7 +1035,7 @@ async function run() {
 
   console.log(`📅 Fixtures na janela de ${WINDOW_HOURS}h: ${allFixtures.length}`)
 
-  const cleared = await clearFutureWindow()
+  const cleared = 0 //await clearFutureWindow()
   console.log(`🧹 Matches futuros limpos antes do rebuild: ${cleared}`)
 
   const candidates = []
