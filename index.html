@@ -1904,8 +1904,13 @@ return null;
     }
 
     function normalizeTicketPick(rawPick) {
-      const match = state.matches.find(m => String(m.id) === String(rawPick.match_id || rawPick.id || rawPick.sourceMatchId));
-      if (!match) return null;
+    const match =
+  state.matches.find(m => String(m.id) === String(rawPick.match_id)) ||
+  state.matches.find(m =>
+    (m.home_team || '').toLowerCase() === (rawPick.home_team || '').toLowerCase() &&
+    (m.away_team || '').toLowerCase() === (rawPick.away_team || '').toLowerCase()
+  ) ||
+  null;
 
       const probability = Number(rawPick.probability ?? 0.62);
       const tier = probabilityToTier(probability);
