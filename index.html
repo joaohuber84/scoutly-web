@@ -1377,20 +1377,55 @@
     }
 
  function teamLogoUrl(match, side) {
-  const keys = side === 'home'
-    ? ['home_logo', 'home_logo_url', 'home_badge', 'home_badge_url', 'logo_home']
-    : ['away_logo', 'away_logo_url', 'away_badge', 'away_badge_url', 'logo_away'];
 
-  for (const key of keys) {
-    const value = match?.[key];
-    if (typeof value === 'string' && value.trim()) {
-      console.log(`LOGO OK [${side}]`, match?.home_team, 'x', match?.away_team, key, value);
-      return value.trim();
-    }
-  }
+const keys = side === 'home'
+ ? [
+   'home_logo',
+   'home_logo_url',
+   'home_badge',
+   'home_badge_url',
+   'logo_home',
+   'homeTeam.logo',
+   'teams.home.logo'
+ ]
+ : [
+   'away_logo',
+   'away_logo_url',
+   'away_badge',
+   'away_badge_url',
+   'logo_away',
+   'awayTeam.logo',
+   'teams.away.logo'
+ ];
 
-  console.log(`LOGO FALTANDO [${side}]`, match?.home_team, 'x', match?.away_team, match);
-  return null;
+for (const key of keys) {
+
+ if (key.includes('.')) {
+
+   const parts = key.split('.');
+   let value = match;
+
+   for (const p of parts) {
+     value = value?.[p];
+   }
+
+   if (typeof value === 'string' && value.trim()) {
+     return value.trim();
+   }
+
+ } else {
+
+   const value = match?.[key];
+
+   if (typeof value === 'string' && value.trim()) {
+     return value.trim();
+   }
+
+ }
+
+}
+
+return null;
 }
 
     function teamBadge(match, side, compact = false) {
