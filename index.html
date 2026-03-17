@@ -2433,19 +2433,7 @@ async function loadMatches() {
 
   if (matchesError) throw matchesError;
 
-const now = new Date();
-
-// somente jogos futuros
-const filteredMatches = (matchesData || []).filter(match => {
-  if (!match.kickoff) return false;
-
-  const matchDate = new Date(match.kickoff);
-
-  return matchDate >= now;
-});
-
-const loadedMatches = filteredMatches;
-
+const loadedMatches = matchesData || [];
   const { data: analysisData, error: analysisError } = await supabaseClient
     .from('match_analysis')
     .select('*');
