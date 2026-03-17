@@ -1911,7 +1911,10 @@ return null;
     (m.away_team || '').toLowerCase() === (rawPick.away_team || '').toLowerCase()
   ) ||
   null;
-
+if (!match) {
+  console.warn('Match não encontrado:', rawPick);
+  return null;
+}
       const probability = Number(rawPick.probability ?? 0.62);
       const tier = probabilityToTier(probability);
 
