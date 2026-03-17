@@ -2030,11 +2030,15 @@ return null;
 
       container.innerHTML = `
         <div class="ticket-legs">
-          ${legs.map(leg => `
-            <div class="ticket-leg">
-              <div class="ticket-match">
-                ${teamBadge(leg, 'home', true)}
-                ${leg.home_team} x ${leg.away_team}
+${legs.map(leg => {
+  const match = state.matches.find(m => String(m.id) === String(leg.match_id)) || null;
+  const badgeSource = { ...leg, ...(match || {}) };
+
+  return `
+  <div class="ticket-leg">
+    <div class="ticket-match">
+      ${teamBadge(badgeSource, 'home', true)}
+      ${leg.home_team} x ${leg.away_team}
               </div>
               <div class="chip-row">
                 ${chipMarkup(leg.tier)}
@@ -2044,7 +2048,7 @@ return null;
                 ${getLeagueDisplay(leg.league)} • ${formatKickoff(leg.kickoff)}
               </div>
             </div>
-          `).join('')}
+          `}).join('')}
         </div>
 
         <div class="ticket-footer">
@@ -2068,10 +2072,15 @@ function renderRadar() {
   }
 
   list.innerHTML = radarItems.map((item, index) => {
-    const match = state.matches.find(m => String(m.id) === String(item.match_id));
-    const tier = probabilityToTier(item.probability);
-    const extraMarket = null;
-    const badgeSource = { ...item, ...match };
+    const match = state.matches.find(m =>
+  String(m.id) === String(item.match_id)
+) || state.matches.find(m =>
+  (m.home_team || '').trim().toLowerCase() === (item.home_team || '').trim().toLowerCase() &&
+  (m.away_team || '').trim().toLowerCase() === (item.away_team || '').trim().toLowerCase()
+);
+  const tier = probabilityToTier(item.probability);
+  const extraMarket = null;
+  const badgeSource = { ...item, ...(match || {}) };  
     
     return `
       <div class="radar-item" data-match-id="${item.match_id}">
