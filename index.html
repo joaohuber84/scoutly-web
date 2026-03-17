@@ -2163,7 +2163,9 @@ function buildCompetitions() {
   const map = new Map();
 
   for (const match of state.matches) {
-    if (!isUpcoming(match.kickoff || match.match_date)) continue;
+   // aceita jogos até 1 dia atrás
+//if (!isRecentOrUpcoming(match.kickoff || match.match_date)) continue;
+ 
 
     const league = match.league || '';
     const country = match.country || null;
