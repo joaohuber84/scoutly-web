@@ -2045,8 +2045,16 @@ if (!match) {
       container.innerHTML = `
         <div class="ticket-legs">
 ${legs.map(leg => {
-  const match = state.matches.find(m => String(m.id) === String(leg.match_id)) || null;
-  const badgeSource = { ...leg, ...(match || {}) };
+const match =
+  state.matches.find(m => String(m.id) === String(leg.match_id)) ||
+  state.matches.find(m =>
+    (m.home_team || '').trim().toLowerCase() === (leg.home_team || '').trim().toLowerCase() &&
+    (m.away_team || '').trim().toLowerCase() === (leg.away_team || '').trim().toLowerCase()
+  ) ||
+  null;
+
+const badgeSource = { ...leg, ...(match || {}) };
+
 
   return `
   <div class="ticket-leg">
