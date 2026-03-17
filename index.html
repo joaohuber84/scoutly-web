@@ -2196,7 +2196,8 @@ function buildCompetitions() {
   const map = new Map();
 
   for (const match of state.matches) {
-  if (!isUpcoming(match.kickoff)) continue;
+  // TEMPORÁRIO: mostrar todos
+// if (!isUpcoming(match.kickoff)) continue;
 
     const league = match.league || '';
     const country = match.country || null;
