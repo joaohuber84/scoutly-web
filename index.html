@@ -2402,9 +2402,7 @@ async function loadMatches() {
 
   if (matchesError) throw matchesError;
 
-  const upcomingMatches = (matchesData || []).filter(match =>
-    isUpcoming(match.kickoff || match.match_date)
-  );
+ const upcomingMatches = matchesData || [];
 
   const { data: analysisData, error: analysisError } = await supabaseClient
     .from('match_analysis')
