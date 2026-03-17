@@ -2442,7 +2442,7 @@ console.log('primeiros kickoff:', (matchesData || []).slice(0, 10).map(m => ({
   away_team: m.away_team,
   kickoff: m.kickoff
 })));
-
+window.debugMatches = matchesData || [];
 const loadedMatches = matchesData || [];
 
 const { data: analysisData, error: analysisError } = await supabaseClient
