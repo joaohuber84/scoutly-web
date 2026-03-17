@@ -1376,17 +1376,22 @@
       return words.map(w => w[0]?.toUpperCase() || '').join('') || 'TM';
     }
 
-    function teamLogoUrl(match, side) {
-      const keys = side === 'home'
-        ? ['home_logo', 'home_logo_url', 'home_badge', 'home_badge_url', 'logo_home']
-        : ['away_logo', 'away_logo_url', 'away_badge', 'away_badge_url', 'logo_away'];
+ function teamLogoUrl(match, side) {
+  const keys = side === 'home'
+    ? ['home_logo', 'home_logo_url', 'home_badge', 'home_badge_url', 'logo_home']
+    : ['away_logo', 'away_logo_url', 'away_badge', 'away_badge_url', 'logo_away'];
 
-      for (const key of keys) {
-        const value = match?.[key];
-        if (typeof value === 'string' && value.trim()) return value.trim();
-      }
-      return null;
+  for (const key of keys) {
+    const value = match?.[key];
+    if (typeof value === 'string' && value.trim()) {
+      console.log(`LOGO OK [${side}]`, match?.home_team, 'x', match?.away_team, key, value);
+      return value.trim();
     }
+  }
+
+  console.log(`LOGO FALTANDO [${side}]`, match?.home_team, 'x', match?.away_team, match);
+  return null;
+}
 
     function teamBadge(match, side, compact = false) {
       const teamName = side === 'home' ? match?.home_team : match?.away_team;
