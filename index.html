@@ -2402,7 +2402,16 @@ async function loadMatches() {
 
   if (matchesError) throw matchesError;
 
- const upcomingMatches = matchesData || [];
+const now = new Date();
+
+const filteredMatches = (matchesData || []).filter(match => {
+  if (!match.kickoff) return false;
+
+  const matchDate = new Date(match.kickoff);
+  return matchDate >= now;
+});
+
+const loadedMatches = filteredMatches;
 
   const { data: analysisData, error: analysisError } = await supabaseClient
     .from('match_analysis')
@@ -2414,7 +2423,7 @@ async function loadMatches() {
     (analysisData || []).map(item => [String(item.match_id), item])
   );
 
-  state.matches = upcomingMatches.map(match => {
+  state.matches = loadedMatches.map(match => {
     const analysis = analysisMap.get(String(match.id)) || {};
     return {
       ...match,
