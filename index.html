@@ -1447,7 +1447,7 @@ return null;
       if (!value) return false;
       const d = new Date(value);
       if (Number.isNaN(d.getTime())) return false;
-      return d.getTime() >= (Date.now() - 2 * 60 * 60 * 1000);
+      return d.getTime() >= (Date.now() - 24 * 60 * 60 * 1000);
     }
 
     function buildCoreMetrics(match) {
@@ -2171,9 +2171,7 @@ function buildCompetitions() {
   const map = new Map();
 
   for (const match of state.matches) {
-   // aceita jogos até 1 dia atrás
-//if (!isRecentOrUpcoming(match.kickoff || match.match_date)) continue;
- 
+  if (!isUpcoming(match.kickoff)) continue;
 
     const league = match.league || '';
     const country = match.country || null;
@@ -2412,11 +2410,13 @@ async function loadMatches() {
 
 const now = new Date();
 
+// permite jogos até 24h atrás
 const filteredMatches = (matchesData || []).filter(match => {
   if (!match.kickoff) return false;
 
   const matchDate = new Date(match.kickoff);
-  return matchDate >= now;
+
+  return matchDate >= new Date(now.getTime() - 24 * 60 * 60 * 1000);
 });
 
 const loadedMatches = filteredMatches;
