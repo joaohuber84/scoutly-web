@@ -1425,7 +1425,7 @@ for (const key of keys) {
 
 }
 
-return null;
+return 'https://upload.wikimedia.org/wikipedia/commons/6/6e/Football_icon.svg';
 }
 
     function teamBadge(match, side, compact = false) {
@@ -1902,46 +1902,71 @@ return null;
 
       return flags[country] || null;
     }
-
-    function normalizeTicketPick(rawPick) {
-    const match =
-  state.matches.find(m => String(m.id) === String(rawPick.match_id)) ||
-  state.matches.find(m =>
-    (m.home_team || '').toLowerCase() === (rawPick.home_team || '').toLowerCase() &&
-    (m.away_team || '').toLowerCase() === (rawPick.away_team || '').toLowerCase()
-  ) ||
-  null;
-if (!match) {
-  console.warn('Match não encontrado:', rawPick);
-  return null;
+function findMatchByPick(rawPick) {
+  return state.matches.find(m => String(m.id) === String(rawPick.match_id)) ||
+    state.matches.find(m =>
+      (m.home_team || '').trim().toLowerCase() === (rawPick.home_team || '').trim().toLowerCase() &&
+      (m.away_team || '').trim().toLowerCase() === (rawPick.away_team || '').trim().toLowerCase()
+    ) ||
+    null;
 }
-      const probability = Number(rawPick.probability ?? 0.62);
-      const tier = probabilityToTier(probability);
 
-   return {
-  match_id: match.id,
-  home_team: match.home_team,
-  away_team: match.away_team,
-  league: match.league,
-  country: match.country,
-  kickoff: match.kickoff,
-  market: rawPick.market,
-  probability,
-  tier,
-  home_logo: match.home_logo || rawPick.home_logo || null,
-  away_logo: match.away_logo || rawPick.away_logo || null,
-  tierWeight:
-    tier === 'Muito forte' ? 4 :
-    tier === 'Boa' ? 3 :
-    tier === 'Moderada' ? 2 : 1
-};  
-    }
+function getExtraOpportunityForMatch(matchId) {
+  const match = state.matches.find(m => String(m.id) === String(matchId));
+  if (!match) return null;
+
+  const sameMatchPicks = state.dailyPicks
+    .filter(item => {
+      const sameId = String(item.match_id) === String(matchId);
+      const sameTeams =
+        (item.home_team || '').trim().toLowerCase() === (match.home_team || '').trim().toLowerCase() &&
+        (item.away_team || '').trim().toLowerCase() === (match.away_team || '').trim().toLowerCase();
+
+      return sameId || sameTeams;
+    })
+    .sort((a, b) => Number(a.rank || 999) - Number(b.rank || 999));
+
+  if (!sameMatchPicks.length) return null;
+
+  return sameMatchPicks[0];
+}
+ function normalizeTicketPick(rawPick) {
+  const match = findMatchByPick(rawPick);
+
+  if (!match) {
+    return null;
+  }
+
+  const probability = Number(rawPick.probability ?? 0.62);
+  const tier = probabilityToTier(probability);
+
+  return {
+    match_id: match.id,
+    home_team: match.home_team,
+    away_team: match.away_team,
+    league: match.league,
+    country: match.country,
+    kickoff: match.kickoff,
+    market: rawPick.market,
+    probability,
+    tier,
+    home_logo: match.home_logo || rawPick.home_logo || null,
+    away_logo: match.away_logo || rawPick.away_logo || null,
+    tierWeight:
+      tier === 'Muito forte' ? 4 :
+      tier === 'Boa' ? 3 :
+      tier === 'Moderada' ? 2 : 1
+  };
+}
 
     function buildComputedTicketPool() {
       const pool = [];
 
-      state.matches.forEach(match => {
-        const board = buildMarketBoard(match);
+     state.matches.forEach(match => {
+  if (!match || !match.id) return;
+
+  const board = buildMarketBoard(match);
+  if (!board) return;
         const picks = [board.tip, ...board.extras];
 
        picks.forEach((pick, index) => {
@@ -1951,9 +1976,9 @@ if (!match) {
     probability: pick.probability - (index * 0.01)
   });
 
-  if (normalized) {
-    pool.push(normalized);
-  }
+  if (normalized && normalized.match_id) {
+  pool.push(normalized);
+}
 });
       });
 
@@ -2410,13 +2435,13 @@ async function loadMatches() {
 
 const now = new Date();
 
-// permite jogos até 24h atrás
+// somente jogos futuros
 const filteredMatches = (matchesData || []).filter(match => {
   if (!match.kickoff) return false;
 
   const matchDate = new Date(match.kickoff);
 
-  return matchDate >= new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  return matchDate >= now;
 });
 
 const loadedMatches = filteredMatches;
