@@ -1944,13 +1944,17 @@ if (!match) {
         const board = buildMarketBoard(match);
         const picks = [board.tip, ...board.extras];
 
-        picks.forEach((pick, index) => {
-          pool.push(normalizeTicketPick({
-            match_id: match.id,
-            market: pick.market,
-            probability: pick.probability - (index * 0.01)
-          }));
-        });
+       picks.forEach((pick, index) => {
+  const normalized = normalizeTicketPick({
+    match_id: match.id,
+    market: pick.market,
+    probability: pick.probability - (index * 0.01)
+  });
+
+  if (normalized) {
+    pool.push(normalized);
+  }
+});
       });
 
       return pool.filter(Boolean);
