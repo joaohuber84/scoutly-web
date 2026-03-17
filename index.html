@@ -2036,7 +2036,8 @@ function renderRadar() {
     const match = state.matches.find(m => String(m.id) === String(item.match_id));
     const tier = probabilityToTier(item.probability);
     const extraMarket = null;
-
+    const badgeSource = { ...item, ...match };
+    
     return `
       <div class="radar-item" data-match-id="${item.match_id}">
         <div class="radar-top">
@@ -2048,9 +2049,9 @@ function renderRadar() {
         </div>
 
         <div class="teams-row compact">
-          ${teamBadge(match || item, 'home', true)}
+          ${teamBadge(badgeSource, 'home', true)}
           <div class="team-names">${item.home_team || '-'} x ${item.away_team || '-'}</div>
-          ${teamBadge(match || item, 'away', true)}
+          ${teamBadge(badgeSource, 'away', true)}
         </div>
 
         <div class="chip-row">
