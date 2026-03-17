@@ -2432,13 +2432,21 @@ async function loadMatches() {
     .order('league', { ascending: true })
     .order('kickoff', { ascending: true });
 
-  if (matchesError) throw matchesError;
+ if (matchesError) throw matchesError;
+
+console.log('matchesData bruto:', matchesData);
+console.log('primeiros kickoff:', (matchesData || []).slice(0, 10).map(m => ({
+  id: m.id,
+  league: m.league,
+  home_team: m.home_team,
+  away_team: m.away_team,
+  kickoff: m.kickoff
+})));
 
 const loadedMatches = matchesData || [];
-  const { data: analysisData, error: analysisError } = await supabaseClient
-    .from('match_analysis')
-    .select('*');
 
+const { data: analysisData, error: analysisError } = await supabaseClient
+.from('match_analysis') .select('*');
   if (analysisError) throw analysisError;
 
   const analysisMap = new Map(
