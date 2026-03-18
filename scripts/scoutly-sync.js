@@ -1030,18 +1030,21 @@ async function run() {
   console.log("🚀 Scoutly Sync V3 iniciado")
 
   const competitions = await resolveTargetCompetitions()
-  console.log(`🎯 Competições resolvidas: ${competitions.length}`)
+console.log("COMPETITIONS:", competitions)
 
-  const fixtureLists = await Promise.all(
-    competitions.map((comp) => fetchFixturesForCompetition(comp))
-  )
+const fixtureLists = await Promise.all(
+  competitions.map((comp) => fetchFixturesForCompetition(comp))
+)
 
-  const allFixtures = uniqBy(
-    fixtureLists.flat(),
-    (x) => x?.fixture?.id
-  )
+console.log("FIXTURE LISTS:", fixtureLists)
 
-  console.log(`📅 Fixtures na janela de ${WINDOW_HOURS}h: ${allFixtures.length}`)
+const allFixtures = uniqBy(
+  fixtureLists.flat(),
+  (x) => x?.fixture?.id
+)
+
+console.log("ALL FIXTURES:", allFixtures)
+console.log(`📅 Fixtures na janela de ${WINDOW_HOURS}h: ${allFixtures.length}`)
 
   const cleared = 0 //await clearFutureWindow()
   console.log(`🧹 Matches futuros limpos antes do rebuild: ${cleared}`)
