@@ -1035,7 +1035,18 @@ console.log("COMPETITIONS:", competitions)
 const fixtureLists = await Promise.all(
   competitions.map((comp) => fetchFixturesForCompetition(comp))
 )
+console.log("COMPETITIONS:", competitions.map(c => ({
+  leagueId: c.leagueId,
+  display: c.display,
+  country: c.country,
+  season: c.season
+})));
 
+console.log("FIXTURE LISTS COUNT:", fixtureLists.map((list, i) => ({
+  competition: competitions[i]?.display,
+  total: list.length
+})));
+  
 console.log("FIXTURE LISTS:", fixtureLists)
 
 const allFixtures = uniqBy(
