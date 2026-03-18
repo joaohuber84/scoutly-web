@@ -323,6 +323,7 @@ const dates = [
 
   for (const date of dates) {
     try {
+      console.log("comp:", comp)
       const fixtures = await api("/fixtures", {
         league: comp.leagueId,
         season: comp.season,
