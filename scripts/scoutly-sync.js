@@ -17,7 +17,7 @@ const REQUEST_DELAY_MS = 350
 const TARGET_COMPETITIONS = [
   // Inglaterra
   { mode: "country", country: "England", type: "league", names: ["Premier League"], display: "Premier League", region: "general", priority: 100 },
-  { mode: "country", country: "England", type: "cup", names: ["FA Cup", "League Cup", "EFL Cup"], display: "England - Cup", region: "general", priority: 74 },
+  { mode: "country", country: "England", type: "cup", names: ["FA Cup", "EFL Cup"], display: "England - Cup", region: "general", priority: 74 },
 
   // Espanha
   { mode: "country", country: "Spain", type: "league", names: ["La Liga"], display: "La Liga", region: "general", priority: 98 },
@@ -56,10 +56,9 @@ const TARGET_COMPETITIONS = [
 
   // Turquia / Grécia / Saudi / Dinamarca
   { mode: "country", country: "Turkey", type: "league", names: ["Süper Lig", "Super Lig"], display: "Super Lig", region: "general", priority: 78 },
-  { mode: "country", country: "Greece", type: "league", names: ["Super League 1", "Super League"], display: "Super League Greece", region: "general", priority: 77 },
+ 
   { mode: "country", country: "Saudi Arabia", type: "league", names: ["Pro League", "Saudi Pro League"], display: "Saudi Pro League", region: "general", priority: 76 },
-  { mode: "country", country: "Denmark", type: "league", names: ["Superliga"], display: "Superliga", region: "general", priority: 75 },
-
+ 
   // UEFA / CONMEBOL
   { mode: "search", search: "UEFA Champions League", display: "UEFA Champions League", region: "general", priority: 99 },
   { mode: "search", search: "UEFA Europa League", display: "UEFA Europa League", region: "general", priority: 93 },
