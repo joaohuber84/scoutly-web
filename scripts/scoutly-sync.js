@@ -329,7 +329,8 @@ const dates = [
         date,
         timezone: TIMEZONE,
       })
-
+  console.log(fixtures)
+      
       for (const fixture of fixtures) {
         const kickoff = fixture?.fixture?.date
         if (!kickoff) continue
