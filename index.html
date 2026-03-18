@@ -2281,7 +2281,15 @@ function openCompetition(league) {
     return;
   }
 
-  gamesGrid.innerHTML = matches
+const now = new Date()
+const today = new Date()
+today.setHours(0, 0, 0, 0)
+
+const filteredMatches = matches.filter(match => {
+  if (!match.kickoff) return false
+  return new Date(match.kickoff) >= today
+})  
+gamesGrid.innerHTML = filteredMatches
     .sort((a, b) => {
       const ka = a.kickoff ? new Date(a.kickoff).getTime() : 0;
       const kb = b.kickoff ? new Date(b.kickoff).getTime() : 0;
