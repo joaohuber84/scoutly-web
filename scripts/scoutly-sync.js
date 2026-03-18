@@ -330,7 +330,7 @@ const dates = [
         date,
         timezone: TIMEZONE,
       })
-  console.log(fixtures)
+  console.log("DATA:", date, "LEAGUE:", comp.display, "FIXTURES:", fixtures.length)
       
       for (const fixture of fixtures) {
         const kickoff = fixture?.fixture?.date
