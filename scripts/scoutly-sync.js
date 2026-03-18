@@ -340,7 +340,7 @@ const dates = [
         const now = new Date()
         const end = new Date(now.getTime() + WINDOW_HOURS * 60 * 60 * 1000)
 
-        if (dt > now && dt <= end) {
+        if (dt <= end) {
           all.push({
             ...fixture,
             __comp: comp,
