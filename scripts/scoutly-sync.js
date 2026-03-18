@@ -284,7 +284,7 @@ async function resolveTargetCompetitions() {
         target.mode === "country"
           ? await resolveCountryCompetitions(target)
           : await resolveSearchCompetition(target)
-
+console.log("TARGET:", target.display || target.search, "ITEMS:", items)
       resolved.push(...items)
     } catch (error) {
       console.error(`Falha resolvendo competição ${target.display || target.search || target.country}:`, error.message)
