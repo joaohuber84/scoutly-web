@@ -1,14 +1,14 @@
-// const { createClient } = require("@supabase/supabase-js")
+const { createClient } = require("@supabase/supabase-js")
 
 const APISPORTS_KEY = "705f52b4ec1295f3c369365c2d71cb71"
 
 // Supabase será configurado depois
-const SUPABASE_URL = ""
-const SUPABASE_KEY = ""
+const SUPABASE_URL = "https://zngdcatlxlxamceqpxij.supabase.co"
+const SUPABASE_KEY = "sb_publishable_gw3BGCEcwhidS2hFbiwxIA_W28KkZ2a"
 
 if (!APISPORTS_KEY) throw new Error("APISPORTS_KEY não encontrada.")
 
-// const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 const API = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
 const WINDOW_HOURS = 72
