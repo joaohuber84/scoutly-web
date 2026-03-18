@@ -312,8 +312,13 @@ function buildWindowDates() {
 }
 
 async function fetchFixturesForCompetition(comp) {
- const today = new Date().toISOString().split('T')[0]
-const dates = [today]
+const today = new Date()
+
+const dates = [
+  new Date(today.getTime() - 24 * 60 * 60 * 1000),
+  today,
+  new Date(today.getTime() + 24 * 60 * 60 * 1000)
+].map(d => d.toISOString().split('T')[0])
   const all = []
 
   for (const date of dates) {
