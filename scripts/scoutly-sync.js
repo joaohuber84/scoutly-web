@@ -72,7 +72,7 @@ const TARGET_COMPETITIONS = [
 { mode: "country", country: "Austria", type: "league", names: ["Bundesliga"], display: "Austrian Bundesliga", region: "general", priority: 84 },
   
 // UEFA
-{ mode: "search", search: "UEFA Champions League", display: "Champions League", region: "general", priority: 99 }
+{ mode: "search", search: "UEFA Champions League", display: "Champions League", region: "general", priority: 99 },
  
 { mode: "search", search: "Champions League", display: "Champions League", region: "general", priority: 98 },
 
@@ -88,7 +88,7 @@ const TARGET_COMPETITIONS = [
 
 { mode: "search", search: "CONMEBOL Sudamericana", display: "Sul-Americana", region: "brazil", priority: 86 },
 
-{ mode: "search", search: "Copa Sudamericana", display: "Sul-Americana", region: "brazil", priority: 86 },
+{ mode: "search", search: "Copa Sudamericana", display: "Sul-Americana", region: "brazil", priority: 85 },
 ]
 
 const apiCache = new Map()
