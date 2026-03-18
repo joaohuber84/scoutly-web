@@ -266,7 +266,12 @@ async function resolveSearchCompetition(target) {
     .filter(Boolean)
     .filter((x) => {
       const haystack = `${x.country || ""} ${x.rawName || ""}`.toLowerCase().trim()
-      return haystack.includes(searchNeedle)
+      return (
+  haystack.includes(searchNeedle) ||
+  haystack.includes("champions league") ||
+  haystack.includes("europa league") ||
+  haystack.includes("conference league")
+)
     })
 }
 
