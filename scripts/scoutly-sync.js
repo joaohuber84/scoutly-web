@@ -388,13 +388,13 @@ if (
 // ==============================
 
 return haystack.includes(searchNeedle)
-
+    })
 
 // ==============================
 // REMOVER DUPLICADOS (MANTIDO)
 // ==============================
 
-const unique = new Map()
+      const unique = new Map()
 
 items.forEach((item) => {
   const key = item.leagueId
