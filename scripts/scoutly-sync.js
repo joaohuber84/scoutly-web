@@ -366,9 +366,34 @@ for (let i = 0; i <= 7; i++) {
         date,
         timezone: TIMEZONE,
       })
-  console.log("DATA:", date, "LEAGUE:", comp.display, "FIXTURES:", fixtures.length)
-      
-      for (const fixture of fixtures) {
+      const isYouth = (name) =>
+  name.includes("U20") ||
+  name.includes("U19") ||
+  name.includes("U17") ||
+  name.includes("Youth")
+
+const isInvalidLeague = (league) =>
+  league.includes("U20") ||
+  league.includes("Youth") ||
+  league.includes("Women")
+
+const filteredFixtures = fixtures.filter(f => {
+  const home = f.teams.home.name
+  const away = f.teams.away.name
+  const league = f.league.name
+  const country = f.league.country
+
+  if (isYouth(home) || isYouth(away)) return false
+  if (isInvalidLeague(league)) return false
+
+  // 🔥 filtro importante pra Saudi bug
+  if (league.includes("Pro League") && country !== "Saudi Arabia") return false
+
+  return true
+})
+ console.log("DATA:", date, "LEAGUE:", comp.display, "RAW:", fixtures.length, "FILTERED:", filteredFixtures.length)
+  
+      for (const fixture of filteredFixtures) {
         const kickoff = fixture?.fixture?.date
         if (!kickoff) continue
 
