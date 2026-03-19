@@ -294,9 +294,17 @@ async function resolveSearchCompetition(target) {
     })
     .filter(Boolean)
     .filter((x) => {
-      const haystack = `${x.country || ""} ${x.rawName || ""}`.toLowerCase().trim()
-      return 
-    haystack.includes(searchNeedle) 
+    const haystack = `${x.country || ""} ${x.rawName || ""}`.toLowerCase().trim()
+
+console.log("SEARCH TARGET:", target.search, "=>", {
+  country: x.country,
+  rawName: x.rawName,
+  haystack,
+  season: x.season,
+  leagueId: x.leagueId
+})
+
+return haystack.includes(searchNeedle)
     })
 }
 
