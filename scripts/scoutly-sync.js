@@ -52,42 +52,50 @@ const TARGET_COMPETITIONS = [
   { mode: "country", country: "Argentina", type: "league", names: ["Liga Profesional Argentina", "Primera División"], display: "Liga Profesional Argentina", region: "general", priority: 84 },
   { mode: "country", country: "Argentina", type: "cup", names: ["Copa Argentina"], display: "Copa Argentina", region: "general", priority: 70 },
 
-  // EUA / México
-  { mode: "country", country: "USA", type: "league", names: ["Major League Soccer", "MLS"], display: "MLS", region: "general", priority: 80 },
-  { mode: "search", search: "CONCACAF Champions Cup", display: "CONCACAF Champions Cup", region: "america", priority: 88},
-  { mode: "search", search: "CONCACAF Champions League", display: "CONCACAF Champions Cup", region: "america", priority: 88},
-  { mode: "country", country: "Mexico", type: "league", names: ["Liga MX"], display: "Liga MX", region: "general", priority: 79 },
+  // México
+   { mode: "country", country: "Mexico", type: "league", names: ["Liga MX"], display: "Liga MX", region: "general", priority: 79 },
   
-  // Turquia / Grécia / Saudi / Dinamarca
+  // Turquia / Grécia / Dinamarca
   { mode: "country", country: "Turkey", type: "league", names: ["Süper Lig", "Super Lig"], display: "Super Lig", region: "general", priority: 78 },
   { mode: "country", country: "Denmark", type: "league", names: ["Superliga", "Superligaen"], display: "Danish Superliga", region: "general", priority: 75 },
   { mode: "country", country: "Greece", type: "league", names: ["Super League 1", "Super League"], display: "Super League Greece", region: "general", priority: 74 },
   { mode: "country", country: "Saudi Arabia", type: "league", names: ["Pro League", "Saudi Pro League"], display: "Saudi Pro League", region: "general", priority: 76 },
-  { mode: "country", country: "Saudi Arabia", type: "cup", names: ["King Cup", "Kings Cup"], display: "Saudi King Cup", region: "general", priority: 70 }, 
-
+  
   // Bélgica
 { mode: "country", country: "Belgium", type: "league", names: ["Pro League", "Jupiler Pro League"], display: "Belgian Pro League", region: "general", priority: 85 },
 
 // Áustria
 { mode: "country", country: "Austria", type: "league", names: ["Bundesliga"], display: "Austrian Bundesliga", region: "general", priority: 84 },
   
-// UEFA
-{ mode: "search", search: "UEFA Champions League", display: "Champions League", region: "general", priority: 99 },
- 
-{ mode: "search", search: "Champions League", display: "Champions League", region: "general", priority: 98 },
+// 🇺🇸 USA / MLS + CONCACAF
+{ mode: "search", search: "Major League Soccer", display: "MLS",region: "america", priority: 90},
+{ mode: "search", search: "MLS", display: "MLS", region: "america", priority: 89},
 
-  
-{ mode: "search", search: "UEFA Europa League", display: "Europa League", region: "general", priority: 93 },
+{ mode: "search", search: "CONCACAF Champions Cup", display: "CONCACAF Champions Cup", region: "america". priority: 88},
+{ mode: "search", search: "CONCACAF Champions League", display: "CONCACAF Champions Cup", region: "america", priority: 87},
 
-{ mode: "search", search: "UEFA Europa Conference League", display: "Conference League", region: "general", priority: 87 },
+// 🇸🇦 SAUDI
+{ mode: "search", search: "Saudi Pro League", display: "Saudi Pro League", region: "general", priority: 85},
+{ mode: "search", search: "Pro League", display: "Saudi Pro League", region: "general", priority: 84},
+
+{ mode: "search", search: "King Cup", display: "Saudi King Cup", region: "general", priority: 83},
+{ mode: "search", search: "Kings Cup", display: "Saudi King Cup", region: "general", priority: 82},
+
+// 🇪🇺 UEFA
+{ mode: "search", search: "Champions League", display: "Champions League", region: "general", priority: 99},
+{ mode: "search", search: "UEFA Champions League", display: "Champions League", region: "general", priority: 98},
+
+{ mode: "search", search: "Europa League", display: "Europa League", region: "general", priority: 93},
+{ mode: "search", search: "UEFA Europa League", display: "Europa League", region: "general", priority: 92},
+
+{ mode: "search", search: "Conference League", display: "Conference League", region: "general", priority: 88},
+{ mode: "search", search: "UEFA Europa Conference League", display: "Conference League", region: "general", priority: 87},
 
 // CONMEBOL
 { mode: "search", search: "CONMEBOL Libertadores", display: "Libertadores", region: "brazil", priority: 92 },
-
 { mode: "search", search: "Copa Libertadores", display: "Libertadores", region: "brazil", priority: 91 },
 
 { mode: "search", search: "CONMEBOL Sudamericana", display: "Sul-Americana", region: "brazil", priority: 86 },
-
 { mode: "search", search: "Copa Sudamericana", display: "Sul-Americana", region: "brazil", priority: 85 },
 ]
 
