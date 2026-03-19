@@ -78,7 +78,6 @@ const TARGET_COMPETITIONS = [
 { mode: "search", search: "Kings Cup", display: "Saudi King Cup", region: "general", priority: 82},
 
 // 🇪🇺 UEFA
-{ mode: "search", search: "Champions League", display: "Champions League", region: "general", priority: 99},
 { mode: "search", search: "UEFA Champions League", display: "Champions League", region: "general", priority: 98},
 
 { mode: "search", search: "Europa League", display: "Europa League", region: "general", priority: 93},
@@ -278,8 +277,13 @@ async function resolveCountryCompetitions(target) {
       if (!currentSeason) return null
 
       const country = item?.country?.name || null
-      const rawName = item?.league?.name || null
+     let rawName = item?.league?.name || null
 
+if (rawName) {
+  rawName = rawName
+    .replace(/^[A-Z]{2,3}\s+/g, "") // remove AU, WC, TRI, etc
+    .trim()
+}
       return {
         leagueId: item.league.id,
         season: currentSeason.year,
@@ -301,22 +305,32 @@ async function resolveCountryCompetitions(target) {
         season: x.season,
         leagueId: x.leagueId
       })
+      
+    const countryText = x.country?.toLowerCase() || ""
+const rawNameText = x.rawName?.toLowerCase() || ""
 
-      if (x.rawName?.toLowerCase().includes("u20")) return false
-      if (x.rawName?.toLowerCase().includes("u17")) return false
-      if (x.rawName?.toLowerCase().includes("youth")) return false
-      if (x.rawName?.toLowerCase().includes("women")) return false
-      if (x.rawName?.toLowerCase().includes("open cup")) return false
+if (
+  (countryText.includes("usa") || countryText.includes("united states")) &&
+  rawNameText.includes("cup")
+) return false
 
-      if (target.search === "Champions League" && !haystack.includes("uefa")) return false
-      if (target.search === "Europa League" && !haystack.includes("uefa")) return false
-      if (target.search === "Conference League" && !haystack.includes("uefa")) return false
+if (rawNameText.includes("u20")) return false
+if (rawNameText.includes("u17")) return false
+if (rawNameText.includes("youth")) return false
+if (rawNameText.includes("women")) return false
+     
+     if (target.display === "Champions League" && !haystack.includes("uefa")) return false
+     if (target.display === "Europa League" && !haystack.includes("uefa")) return false
+     if (target.display === "Conference League" && !haystack.includes("uefa")) return false
+ 
 
-      if (target.display === "Saudi Pro League" && !x.country?.toLowerCase().includes("saudi")) return false
-      if (target.display === "MLS" && x.rawName !== "Major League Soccer") return false
+      if (target.display === "Saudi Pro League" && !countryText.includes("saudi")) return false
+      if (target.display === "MLS" && !rawNameText == "major league soccer") return false
       if (target.display === "CONCACAF Champions Cup" && !haystack.includes("concacaf champions")) return false
-      if (target.display === "Libertadores" && x.rawName?.toLowerCase().includes("u20")) return false
-
+      if (target.display === "Libertadores" && rawNameText.includes("u20")) return false
+      if (target.display === "Austrian Bundesliga" && !countryText.includes("austria")) return false
+      if (rawNameText.includes("open cup")) return false
+      
       return haystack.includes(searchNeedle)
     })
 
