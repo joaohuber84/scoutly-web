@@ -332,7 +332,15 @@ if (rawNameText.includes("reserves")) return false
      if (target.display === "Europa League" && !haystack.includes("uefa")) return false
      if (target.display === "Conference League" && !haystack.includes("uefa")) return false
  
-      if (target.display === "Saudi Pro League" && ( !countryText.includes("saudi") || !rawNameText.includes("pro league")) return false
+      if (
+  target.display === "Saudi Pro League" &&
+  (
+    !countryText.includes("saudi") ||
+    !rawNameText.includes("pro league")
+  ) 
+) {
+        return false
+    }
       if (target.display === "MLS" && rawNameText !== "major league soccer") return false
       if (target.display === "CONCACAF Champions Cup" && !haystack.includes("concacaf champions")) return false
       if (target.display === "Austrian Bundesliga" && !countryText.includes("austria")) return false
