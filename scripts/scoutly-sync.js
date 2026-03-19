@@ -311,26 +311,32 @@ const rawNameText = x.rawName?.toLowerCase() || ""
 
 if (
   (countryText.includes("usa") || countryText.includes("united states")) &&
-  rawNameText.includes("cup")
+  rawNameText.includes("open cup")
 ) return false
 
-if (rawNameText.includes("u20")) return false
+if (
+  rawNameText.includes("u20") ||
+  rawNameText.includes("u-20") ||
+  rawNameText.includes("under 20") ||
+  rawNameText.includes("sub 20")
+) return false
+
 if (rawNameText.includes("u17")) return false
 if (rawNameText.includes("youth")) return false
 if (rawNameText.includes("women")) return false
-     
+if (rawNameText.includes("open cup")) return false
+if (rawNameText.includes("reserve")) return false
+if (rawNameText.includes("reserves")) return false
+      
      if (target.display === "Champions League" && !haystack.includes("uefa")) return false
      if (target.display === "Europa League" && !haystack.includes("uefa")) return false
      if (target.display === "Conference League" && !haystack.includes("uefa")) return false
  
-
-      if (target.display === "Saudi Pro League" && !countryText.includes("saudi")) return false
-      if (target.display === "MLS" && !rawNameText == "major league soccer") return false
+      if (target.display === "Saudi Pro League" && ( !countryText.includes("saudi") || !rawNameText.includes("pro league")) return false
+      if (target.display === "MLS" && rawNameText !== "major league soccer") return false
       if (target.display === "CONCACAF Champions Cup" && !haystack.includes("concacaf champions")) return false
-      if (target.display === "Libertadores" && rawNameText.includes("u20")) return false
       if (target.display === "Austrian Bundesliga" && !countryText.includes("austria")) return false
-      if (rawNameText.includes("open cup")) return false
-      
+    
       return haystack.includes(searchNeedle)
     })
 
