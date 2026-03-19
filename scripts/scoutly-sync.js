@@ -70,12 +70,10 @@ const TARGET_COMPETITIONS = [
 // 🇺🇸 USA / MLS + CONCACAF
 { mode: "country", country: "USA", type: "league", names: ["Major League Soccer"], display: "MLS", region: "america", priority: 90 },
 
-{ mode: "search", search: "CONCACAF", display: "CONCACAF Champions Cup", region: "america", priority: 88 },
+{ mode: "search", search: "CONCACAF Champions", display: "CONCACAF Champions Cup", region: "america", priority: 88 },
 
 // 🇸🇦 SAUDI
 { mode: "search", search: "Saudi Pro League", display: "Saudi Pro League", region: "general", priority: 85},
-{ mode: "search", search: "Pro League", display: "Saudi Pro League", region: "general", priority: 84},
-
 { mode: "search", search: "King Cup", display: "Saudi King Cup", region: "general", priority: 83},
 { mode: "search", search: "Kings Cup", display: "Saudi King Cup", region: "general", priority: 82},
 
@@ -267,31 +265,6 @@ async function resolveCountryCompetitions(target) {
     })
 }
 
-async function resolveSearchCompetition(target) {
-  const leagues = await api("/leagues", {
-    search: target.search,
-  })
-
-  const searchNeedle = String(target.search || "").toLowerCase().trim()
-
-  return leagues
-    .map((item) => {
-      const currentSeason = item?.seasons?.find((s) => s.current) || item?.seasons?.[0]
-      if (!currentSeason) return null
-
-      const country = item?.country?.name || null
-      const rawName = item?.league?.name || null
-
-      return {
-        leagueId: item.league.id,
-        season: currentSeason.year,
-        country,
-        rawName,
-        display: normalizeCompetitionName(country, rawName, target.display),
-        region: target.region,
-        priority: target.priority,
-      }
-    })
     async function resolveSearchCompetition(target) {
   const leagues = await api("/leagues", {
     search: target.search,
