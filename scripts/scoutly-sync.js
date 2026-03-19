@@ -306,58 +306,104 @@ if (rawName) {
         leagueId: x.leagueId
       })
       
-    const countryText = x.country?.toLowerCase() || ""
+// ==============================
+// NORMALIZAÇÃO
+// ==============================
+
+const countryText = x.country?.toLowerCase() || ""
 const rawNameText = x.rawName?.toLowerCase() || ""
 
-if (
-  (countryText.includes("usa") || countryText.includes("united states")) &&
-  rawNameText.includes("open cup")
-) return false
+// ==============================
+// FILTROS GERAIS (REMOVER LIXO)
+// ==============================
 
+// ❌ Remover categorias indesejadas
 if (
   rawNameText.includes("u20") ||
   rawNameText.includes("u-20") ||
+  rawNameText.includes("u 20") ||
   rawNameText.includes("under 20") ||
   rawNameText.includes("sub 20")
+ 
 ) return false
 
 if (rawNameText.includes("u17")) return false
 if (rawNameText.includes("youth")) return false
 if (rawNameText.includes("women")) return false
-if (rawNameText.includes("open cup")) return false
 if (rawNameText.includes("reserve")) return false
 if (rawNameText.includes("reserves")) return false
+if (rawNameText.includes("u21")) return false
       
-     if (target.display === "Champions League" && !haystack.includes("uefa")) return false
-     if (target.display === "Europa League" && !haystack.includes("uefa")) return false
-     if (target.display === "Conference League" && !haystack.includes("uefa")) return false
- 
-      if (
+// ❌ Remover Open Cup (qualquer variação)
+if (rawNameText.includes("open cup")) return false
+
+
+// ==============================
+// FILTROS POR COMPETIÇÃO
+// ==============================
+
+// ✅ Saudi Pro League (filtrar corretamente)
+if (
   target.display === "Saudi Pro League" &&
   (
     !countryText.includes("saudi") ||
     !rawNameText.includes("pro league")
-  ) 
-) {
-        return false
-    }
-      if (target.display === "MLS" && rawNameText !== "major league soccer") return false
-      if (target.display === "CONCACAF Champions Cup" && !haystack.includes("concacaf champions")) return false
-      if (target.display === "Austrian Bundesliga" && !countryText.includes("austria")) return false
-    
-      return haystack.includes(searchNeedle)
-    })
+  )
+) return false
 
-  const unique = new Map()
+// ✅ UEFA - garantir que são oficiais
+if (target.display === "Champions League" && !haystack.includes("uefa")) return false
+if (target.display === "Europa League" && !haystack.includes("uefa")) return false
 
-  items.forEach((item) => {
-    const key = item.leagueId
-    if (!unique.has(key)) {
-      unique.set(key, item)
-    }
-  })
+// ✅ Conference League (corrigido)
+if (
+  target.display === "Conference League" &&
+  !haystack.includes("uefa")
+) return false
 
-  return Array.from(unique.values())
+
+// ✅ MLS (manter só oficial)
+if (
+  target.display === "MLS" &&
+  rawNameText !== "major league soccer"
+) return false
+
+
+// ✅ CONCACAF
+if (
+  target.display === "CONCACAF Champions Cup" &&
+  !haystack.includes("concacaf champions")
+) return false
+
+
+// ✅ Austrian Bundesliga
+if (
+  target.display === "Austrian Bundesliga" &&
+  !countryText.includes("austria")
+) return false
+
+
+// ==============================
+// MATCH FINAL
+// ==============================
+
+return haystack.includes(searchNeedle)
+
+
+// ==============================
+// REMOVER DUPLICADOS (MANTIDO)
+// ==============================
+
+const unique = new Map()
+
+items.forEach((item) => {
+  const key = item.leagueId
+  if (!unique.has(key)) {
+    unique.set(key, item)
+  }
+})
+
+return Array.from(unique.values())
 }
   
 async function resolveTargetCompetitions() {
