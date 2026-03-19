@@ -283,16 +283,15 @@ async function resolveCountryCompetitions(target) {
      let rawName = item?.league?.name || null
 
 if (rawName) {
-  rawName = rawName
-    .replace(/^[A-Z]{2,3}\s+/g, "") // remove AU, WC, TRI, etc
-    .trim()
+  rawName = rawName?.trim()
+    
 }
       return {
         leagueId: item.league.id,
         season: currentSeason.year,
         country,
         rawName,
-        display: normalizeCompetitionName(country, rawName, target.display),
+        display: rawName,
         region: target.region,
         priority: target.priority,
       }
