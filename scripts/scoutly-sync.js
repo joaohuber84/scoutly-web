@@ -68,11 +68,9 @@ const TARGET_COMPETITIONS = [
 { mode: "country", country: "Austria", type: "league", names: ["Bundesliga"], display: "Austrian Bundesliga", region: "general", priority: 84 },
   
 // 🇺🇸 USA / MLS + CONCACAF
-{ mode: "search", search: "Major League Soccer", display: "MLS", region: "america", priority: 90},
-{ mode: "search", search: "MLS", display: "MLS", region: "america", priority: 89},
+{ mode: "country", country: "USA", type: "league", names: ["Major League Soccer"], display: "MLS", region: "america", priority: 90 },
 
-{ mode: "search", search: "CONCACAF Champions Cup", display: "CONCACAF Champions Cup", region: "america", priority: 88},
-{ mode: "search", search: "CONCACAF Champions League", display: "CONCACAF Champions Cup", region: "america", priority: 87},
+{ mode: "search", search: "CONCACAF", display: "CONCACAF Champions Cup", region: "america", priority: 88 },
 
 // 🇸🇦 SAUDI
 { mode: "search", search: "Saudi Pro League", display: "Saudi Pro League", region: "general", priority: 85},
@@ -297,12 +295,8 @@ async function resolveSearchCompetition(target) {
     .filter(Boolean)
     .filter((x) => {
       const haystack = `${x.country || ""} ${x.rawName || ""}`.toLowerCase().trim()
-      return (
-  haystack.includes(searchNeedle) ||
-  haystack.includes("champions league") ||
-  haystack.includes("europa league") ||
-  haystack.includes("conference league")
-)
+      return 
+    haystack.includes(searchNeedle) 
     })
 }
 
@@ -385,6 +379,7 @@ const filteredFixtures = fixtures.filter(f => {
 
   if (isYouth(home) || isYouth(away)) return false
   if (isInvalidLeague(league)) return false
+if (league.toLowerCase().includes("open cup")) return false
 
   // 🔥 filtro importante pra Saudi bug
   if (league.includes("Pro League") && country !== "Saudi Arabia") return false
