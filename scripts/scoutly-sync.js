@@ -292,22 +292,73 @@ async function resolveSearchCompetition(target) {
         priority: target.priority,
       }
     })
+    async function resolveSearchCompetition(target) {
+  const leagues = await api("/leagues", {
+    search: target.search,
+  })
+
+  const searchNeedle = String(target.search || "").toLowerCase().trim()
+
+  const items = leagues
+    .map((item) => {
+      const currentSeason = item?.seasons?.find((s) => s.current) || item?.seasons?.[0]
+      if (!currentSeason) return null
+
+      const country = item?.country?.name || null
+      const rawName = item?.league?.name || null
+
+      return {
+        leagueId: item.league.id,
+        season: currentSeason.year,
+        country,
+        rawName,
+        display: normalizeCompetitionName(country, rawName, target.display),
+        region: target.region,
+        priority: target.priority,
+      }
+    })
     .filter(Boolean)
     .filter((x) => {
-    const haystack = `${x.country || ""} ${x.rawName || ""}`.toLowerCase().trim()
+      const haystack = `${x.country || ""} ${x.rawName || ""}`.toLowerCase().trim()
 
-console.log("SEARCH TARGET:", target.search, "=>", {
-  country: x.country,
-  rawName: x.rawName,
-  haystack,
-  season: x.season,
-  leagueId: x.leagueId
-})
+      console.log("SEARCH TARGET:", target.search, "=>", {
+        country: x.country,
+        rawName: x.rawName,
+        haystack,
+        season: x.season,
+        leagueId: x.leagueId
+      })
 
-return haystack.includes(searchNeedle)
+      if (x.rawName?.toLowerCase().includes("u20")) return false
+      if (x.rawName?.toLowerCase().includes("u17")) return false
+      if (x.rawName?.toLowerCase().includes("youth")) return false
+      if (x.rawName?.toLowerCase().includes("women")) return false
+      if (x.rawName?.toLowerCase().includes("open cup")) return false
+
+      if (target.search === "Champions League" && !haystack.includes("uefa")) return false
+      if (target.search === "Europa League" && !haystack.includes("uefa")) return false
+      if (target.search === "Conference League" && !haystack.includes("uefa")) return false
+
+      if (target.display === "Saudi Pro League" && !x.country?.toLowerCase().includes("saudi")) return false
+      if (target.display === "MLS" && x.rawName !== "Major League Soccer") return false
+      if (target.display === "CONCACAF Champions Cup" && !haystack.includes("concacaf champions")) return false
+      if (target.display === "Libertadores" && x.rawName?.toLowerCase().includes("u20")) return false
+
+      return haystack.includes(searchNeedle)
     })
-}
 
+  const unique = new Map()
+
+  items.forEach((item) => {
+    const key = item.leagueId
+    if (!unique.has(key)) {
+      unique.set(key, item)
+    }
+  })
+
+  return Array.from(unique.values())
+}
+  
 async function resolveTargetCompetitions() {
   const resolved = []
 
