@@ -72,20 +72,22 @@ const TARGET_COMPETITIONS = [
 
 { mode: "search", search: "CONCACAF Champions", display: "CONCACAF Champions Cup", region: "america", priority: 88 },
 
-// 🇸🇦 SAUDI
-{ mode: "search", search: "Saudi Pro League", display: "Saudi Pro League", region: "general", priority: 85},
-{ mode: "search", search: "King Cup", display: "Saudi King Cup", region: "general", priority: 83},
-{ mode: "search", search: "Kings Cup", display: "Saudi King Cup", region: "general", priority: 82},
+// 🇸🇦 Saudi Arabia (oficial)
+{ 
+  mode: "search", 
+  search: "Saudi League", 
+  display: "Saudi Pro League", 
+  region: "general", 
+  priority: 85 
+},
 
 // 🇪🇺 UEFA
-{ mode: "search", search: "UEFA Champions League", display: "Champions League", region: "general", priority: 98},
+{ mode: "search", search: "UEFA Champions League", display: "UEFA Champions League", region: "general", priority: 98 },
 
-{ mode: "search", search: "Europa League", display: "Europa League", region: "general", priority: 93},
-{ mode: "search", search: "UEFA Europa League", display: "Europa League", region: "general", priority: 92},
+{ mode: "search", search: "UEFA Europa League", display: "UEFA Europa League", region: "general", priority: 93 },
 
-{ mode: "search", search: "Conference League", display: "Conference League", region: "general", priority: 88},
-{ mode: "search", search: "UEFA Europa Conference League", display: "Conference League", region: "general", priority: 87},
-
+{ mode: "search", search: "UEFA Conference League", display: "UEFA Conference League", region: "general", priority: 88 },
+  
 // CONMEBOL
 { mode: "search", search: "CONMEBOL Libertadores", display: "Libertadores", region: "brazil", priority: 92 },
 { mode: "search", search: "Copa Libertadores", display: "Libertadores", region: "brazil", priority: 91 },
@@ -195,12 +197,13 @@ function normalizeCompetitionName(country, rawName, fallbackDisplay) {
   if (c === "Mexico" && name === "Liga MX") return "Liga MX"
   if (c === "Turkey" && (name === "Süper Lig" || name === "Super Lig")) return "Super Lig"
   if (c === "Greece" && (name === "Super League 1" || name === "Super League")) return "Super League Greece"
-  if (c === "Saudi Arabia" && (name === "Pro League" || name === "Saudi Pro League")) return "Saudi Pro League"
+  if (c === "Saudi Arabia" && (name === "Pro League" ||name === "Saudi Pro League" || name === "Saudi League" || name === "ROSHN Saudi League")) return "Saudi Pro League"
   if (c === "Denmark" && name === "Superliga") return "Superliga"
 
-  if (name === "UEFA Champions League") return "UEFA Champions League"
-  if (name === "UEFA Europa League") return "UEFA Europa League"
-  if (name === "UEFA Europa Conference League") return "UEFA Europa Conference League"
+if (name === "UEFA Champions League") return "UEFA Champions League"
+if (name === "UEFA Europa League") return "UEFA Europa League"
+if (name === "UEFA Conference League") return "UEFA Conference League"
+if (name === "UEFA Europa Conference League") return "UEFA Conference League"
   if (name === "CONMEBOL Libertadores") return "CONMEBOL Libertadores"
   if (name === "CONMEBOL Sudamericana") return "CONMEBOL Sudamericana"
 
@@ -333,7 +336,10 @@ if (rawNameText.includes("women")) return false
 if (rawNameText.includes("reserve")) return false
 if (rawNameText.includes("reserves")) return false
 if (rawNameText.includes("u21")) return false
-      
+if (rawNameText.includes("division 1")) return false
+if (rawNameText.includes("division 2")) return false
+if (rawNameText.includes("lower")) return false
+     
 // ❌ Remover Open Cup (qualquer variação)
 if (rawNameText.includes("open cup")) return false
 
@@ -343,25 +349,35 @@ if (rawNameText.includes("open cup")) return false
 // ==============================
 
 // ✅ Saudi Pro League (filtrar corretamente)
-if (
-  target.display === "Saudi Pro League" &&
-  (
+if (target.display === "Saudi Pro League") {
+  if (
     !countryText.includes("saudi") ||
-    !rawNameText.includes("pro league")
-  )
-) return false
+    !(
+      rawNameText.includes("pro league") ||
+      rawNameText.includes("professional league") ||
+      rawNameText.includes("saudi league") ||
+      rawNameText.includes("roshn")
+    )
+  ) return false
+}
 
 // ✅ UEFA - garantir que são oficiais
-if (target.display === "Champions League" && !haystack.includes("uefa")) return false
-if (target.display === "Europa League" && !haystack.includes("uefa")) return false
-
-// ✅ Conference League (corrigido)
 if (
-  target.display === "Conference League" &&
-  !haystack.includes("uefa")
+  target.display === "UEFA Champions League" &&
+  !haystack.includes("champions")
 ) return false
 
+if (
+  target.display === "UEFA Europa League" &&
+  !haystack.includes("europa")
+) return false
 
+if (
+  target.display === "UEFA Conference League" &&
+  !haystack.includes("conference")
+) return false
+
+      
 // ✅ MLS (manter só oficial)
 if (
   target.display === "MLS" &&
@@ -494,21 +510,21 @@ if (league.toLowerCase().includes("open cup")) return false
 })
  console.log("DATA:", date, "LEAGUE:", comp.display, "RAW:", fixtures.length, "FILTERED:", filteredFixtures.length)
   
-      for (const fixture of filteredFixtures) {
-        const kickoff = fixture?.fixture?.date
-        if (!kickoff) continue
+  for (const fixture of filteredFixtures) {
+  const kickoff = fixture?.fixture?.date
+  if (!kickoff) continue
 
-        const dt = new Date(kickoff)
-        const now = new Date()
-        const end = new Date(now.getTime() + WINDOW_HOURS * 60 * 60 * 1000)
+  const dt = new Date(kickoff)
+  const now = new Date()
+  const end = new Date(now.getTime() + WINDOW_HOURS * 60 * 60 * 1000)
 
-        if (dt <= end) {
-          all.push({
-            ...fixture,
-            __comp: comp,
-          })
-        }
-      }
+  if (dt >= now && dt <= end) {
+    all.push({
+      ...fixture,
+      __comp: comp,
+    })
+  }
+}
     } catch (error) {
       console.error(`Falha buscando fixtures de ${comp.display} em ${date}:`, error.message)
     }
@@ -1213,7 +1229,18 @@ console.log("FIXTURE LISTS COUNT:", fixtureLists.map((list, i) => ({
 console.log("FIXTURE LISTS:", fixtureLists)
 
 const allFixtures = uniqBy(
-  fixtureLists.flat(),
+  fixtureLists
+    .flat()
+    .filter((x) => {
+      const kickoff = x?.fixture?.date
+      if (!kickoff) return false
+
+      const dt = new Date(kickoff)
+      const now = new Date()
+      const end = new Date(now.getTime() + WINDOW_HOURS * 60 * 60 * 1000)
+
+      return dt >= now && dt <= end
+    }),
   (x) => x?.fixture?.id
 )
 
