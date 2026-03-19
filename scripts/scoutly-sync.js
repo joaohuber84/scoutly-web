@@ -54,9 +54,9 @@ const TARGET_COMPETITIONS = [
 
   // EUA / México
   { mode: "country", country: "USA", type: "league", names: ["Major League Soccer", "MLS"], display: "MLS", region: "general", priority: 80 },
-  { mode: "country", country: "USA", type: "cup", names: ["US Open Cup"], display: "US Open Cup", region: "general", priority: 70 },
+  { mode: "search", search: "CONCACAF Champions Cup", display: "CONCACAF Champions Cup", region: "america", priority: 88},
+  { mode: "search", search: "CONCACAF Champions League", display: "CONCACAF Champions Cup", region: "america", priority: 88},
   { mode: "country", country: "Mexico", type: "league", names: ["Liga MX"], display: "Liga MX", region: "general", priority: 79 },
-  { mode: "country", country: "Mexico", type: "cup", names: ["Copa MX"], display: "Copa MX", region: "general", priority: 70 },
   
   // Turquia / Grécia / Saudi / Dinamarca
   { mode: "country", country: "Turkey", type: "league", names: ["Süper Lig", "Super Lig"], display: "Super Lig", region: "general", priority: 78 },
