@@ -264,7 +264,6 @@ async function resolveCountryCompetitions(target) {
 async function resolveSearchCompetition(target) {
   const leagues = await api("/leagues", {
     search: target.search,
-    current: true,
   })
 
   const searchNeedle = String(target.search || "").toLowerCase().trim()
@@ -423,6 +422,7 @@ async function buildTeamRecentProfile(teamId, leagueId, season, beforeIso) {
   const cacheKey = `${teamId}:${leagueId}:${season}:${toDateOnly(beforeIso)}`
   if (teamProfileCache.has(cacheKey)) return teamProfileCache.get(cacheKey)
 
+await new Promise(r => setTimeout(r, 1000))
   const fixtures = await api("/fixtures", {
     team: teamId,
     league: leagueId,
