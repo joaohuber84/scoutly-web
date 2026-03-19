@@ -68,10 +68,10 @@ const TARGET_COMPETITIONS = [
 { mode: "country", country: "Austria", type: "league", names: ["Bundesliga"], display: "Austrian Bundesliga", region: "general", priority: 84 },
   
 // 🇺🇸 USA / MLS + CONCACAF
-{ mode: "search", search: "Major League Soccer", display: "MLS",region: "america", priority: 90},
+{ mode: "search", search: "Major League Soccer", display: "MLS", region: "america", priority: 90},
 { mode: "search", search: "MLS", display: "MLS", region: "america", priority: 89},
 
-{ mode: "search", search: "CONCACAF Champions Cup", display: "CONCACAF Champions Cup", region: "america". priority: 88},
+{ mode: "search", search: "CONCACAF Champions Cup", display: "CONCACAF Champions Cup", region: "america", priority: 88},
 { mode: "search", search: "CONCACAF Champions League", display: "CONCACAF Champions Cup", region: "america", priority: 87},
 
 // 🇸🇦 SAUDI
