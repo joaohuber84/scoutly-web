@@ -1449,7 +1449,20 @@ return 'https://upload.wikimedia.org/wikipedia/commons/6/6e/Football_icon.svg';
       if (Number.isNaN(d.getTime())) return false;
       return d.getTime() >= (Date.now() - 24 * 60 * 60 * 1000);
     }
+function isMatchVisibleToday(value) {
+  if (!value) return false;
 
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return false;
+
+  const start = new Date();
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(start);
+  end.setDate(end.getDate() + 1);
+
+  return d >= start && d < end;
+}
     function buildCoreMetrics(match) {
       const recentGoals = firstNumeric(match, ['avg_goals_recent', 'recent_avg_goals', 'last5_avg_goals']);
       const seasonGoals = firstNumeric(match, ['avg_goals', 'goals_avg', 'season_avg_goals'], 2.4);
@@ -1879,29 +1892,7 @@ return 'https://upload.wikimedia.org/wikipedia/commons/6/6e/Football_icon.svg';
         </div>
       `).join('');
     }
-
-    function getFlag(country) {
-      const flags = {
-        Brazil: 'BR',
-        England: 'gb',
-        Spain: 'es',
-        Italy: 'it',
-        Germany: 'de',
-        France: 'fr',
-        Portugal: 'pt',
-        Netherlands: 'nl',
-        Belgium: 'be',
-        USA: 'us',
-        Argentina: 'ar',
-        Mexico: 'mx',
-        Turkey: 'tr',
-        Greece: 'gr',
-        Switzerland: 'ch',
-        Denmark: 'dk'
-      };
-
-      return flags[country] || null;
-    }
+ }
 function findMatchByPick(rawPick) {
   return state.matches.find(m => String(m.id) === String(rawPick.match_id)) ||
     state.matches.find(m =>
@@ -2196,8 +2187,7 @@ function buildCompetitions() {
   const map = new Map();
 
   for (const match of state.matches) {
-  // TEMPORÁRIO: mostrar todos
-// if (!isUpcoming(match.kickoff)) continue;
+    if (!isMatchVisibleToday(match.kickoff)) continue;
 
     const league = match.league || '';
     const country = match.country || null;
@@ -2235,23 +2225,26 @@ function renderCompetitions() {
     return;
   }
 
-  grid.innerHTML = state.competitions.map(comp => `
-    <div class="competition-card" data-league="${encodeURIComponent(comp.league)}">
-      <div class="competition-top">
-        <div class="competition-flag">
-          <img
-            src="https://flagcdn.com/w40/${(getFlag(comp.country) || 'world').toLowerCase()}.png"
-            width="28"
-            alt="${comp.country || 'world'}"
-          />
-        </div>
-        <div class="competition-count">${comp.count} jogo(s)</div>
-      </div>
+  grid.innerHTML = state.competitions.map(comp => {
+    const flagCode = getFlag(comp.country);
+    const flagMarkup = flagCode
+      ? `<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="28" alt="${comp.country || 'flag'}" />`
+      : `<span>${getLeagueBadge(comp.league)}</span>`;
 
-      <div class="competition-name">${getLeagueDisplay(comp.league)}</div>
-      <div class="competition-bottom">Toque para ver os jogos desta competição.</div>
-    </div>
-  `).join('');
+    return `
+      <div class="competition-card" data-league="${encodeURIComponent(comp.league)}">
+        <div class="competition-top">
+          <div class="competition-flag">
+            ${flagMarkup}
+          </div>
+          <div class="competition-count">${comp.count} jogo(s)</div>
+        </div>
+
+        <div class="competition-name">${getLeagueDisplay(comp.league)}</div>
+        <div class="competition-bottom">Toque para ver os jogos desta competição.</div>
+      </div>
+    `;
+  }).join('');
 
   grid.querySelectorAll('.competition-card').forEach(card => {
     card.addEventListener('click', () => {
@@ -2266,30 +2259,23 @@ function openCompetition(league) {
 
   const competition = state.competitions.find(c => c.league === league);
   const matches = competition?.matches || [];
+  const filteredMatches = matches.filter(match => isMatchVisibleToday(match.kickoff));
 
   document.getElementById('competitionsWrap').classList.add('hidden');
   document.getElementById('gamesWrap').classList.remove('hidden');
   document.getElementById('backToCompetitionsBtn').classList.remove('hidden');
 
   document.getElementById('selectedCompetitionTitle').textContent = getLeagueDisplay(league);
-  document.getElementById('selectedCompetitionCopy').textContent = `${matches.length} jogo(s) futuros nesta competição.`;
+  document.getElementById('selectedCompetitionCopy').textContent = `${filteredMatches.length} jogo(s) hoje nesta competição.`;
 
   const gamesGrid = document.getElementById('gamesGrid');
 
-  if (!matches.length) {
+  if (!filteredMatches.length) {
     gamesGrid.innerHTML = `<div class="empty-state">Nenhum jogo encontrado.</div>`;
     return;
   }
 
-const now = new Date()
-const today = new Date()
-today.setHours(0, 0, 0, 0)
-
-const filteredMatches = matches.filter(match => {
-  if (!match.kickoff) return false
-  return new Date(match.kickoff) >= today
-})  
-gamesGrid.innerHTML = filteredMatches
+  gamesGrid.innerHTML = filteredMatches
     .sort((a, b) => {
       const ka = a.kickoff ? new Date(a.kickoff).getTime() : 0;
       const kb = b.kickoff ? new Date(b.kickoff).getTime() : 0;
@@ -2332,7 +2318,6 @@ gamesGrid.innerHTML = filteredMatches
     btn.addEventListener('click', () => openAnalysis(btn.dataset.analyzeId));
   });
 }
-
 function backToCompetitions() {
   state.selectedLeague = null;
   document.getElementById('competitionsWrap').classList.remove('hidden');
@@ -2409,8 +2394,11 @@ function renderLoadError(errorMap = {}) {
 
   setStatus('Erro ao carregar dados do Scoutly.', false);
 
-  document.getElementById('opportunityContainer').innerHTML =
-    `<div class="error-state">Erro no carregamento<br><br>${message}</div>`;
+  const opportunityContainer = document.getElementById('opportunityContainer');
+  if (opportunityContainer) {
+    opportunityContainer.innerHTML =
+      `<div class="error-state">Erro no carregamento<br><br>${message}</div>`;
+  }
 
   document.getElementById('radarList').innerHTML =
     `<div class="error-state">${message}</div>`;
@@ -2499,8 +2487,7 @@ async function initialize() {
   renderRadar();
   renderCompetitions();
 
-  setStatus(`Conexão OK · Jogos futuros: ${state.matches.length}`, true);
-}
+setStatus(`Conexão OK · Jogos hoje: ${state.matches.filter(match => isMatchVisibleToday(match.kickoff)).length}`, true);
 
 const generateBtn = document.getElementById('generateTicketBtn');
 if (generateBtn) {
