@@ -503,14 +503,8 @@ function buildWindowDates() {
 
 async function fetchFixturesForCompetition(comp) {
   const { start, end } = getSyncWindowRange()
-
-  const dates = []
-  const cursor = new Date(start)
-
-  while (cursor <= end) {
-    dates.push(cursor.toISOString().slice(0, 10))
-    cursor.setDate(cursor.getDate() + 1)
-  }
+  const startDate = start.toISOString().slice(0, 10)
+  const endDate = end.toISOString().slice(0, 10)
 
   const all = []
 
@@ -546,19 +540,19 @@ async function fetchFixturesForCompetition(comp) {
     )
   }
 
-  for (const date of dates) {
-    try {
-      console.log("comp:", comp)
-      
-await sleep (1200)
-     
-      const fixtures = await api("/fixtures", {
-        league: comp.leagueId,
-        season: comp.season,
-        date,
-        timezone: TIMEZONE,
-      })
+  try {
+    console.log("comp:", comp)
 
+    await sleep(1200)
+
+    const fixtures = await api("/fixtures", {
+      league: comp.leagueId,
+      season: comp.season,
+      from: startDate,
+      to: endDate,
+      timezone: TIMEZONE,
+    })
+      
       const filteredFixtures = fixtures.filter((f) => {
         const home = f?.teams?.home?.name || ""
         const away = f?.teams?.away?.name || ""
