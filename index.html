@@ -1480,10 +1480,15 @@ function isMatchVisible(value) {
   if (Number.isNaN(d.getTime())) return false;
 
   const now = new Date();
-  const limit = new Date();
-  limit.setHours(limit.getHours() + 48);
 
-  return d >= now && d <= limit;
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(now);
+  end.setDate(end.getDate() + 2);
+  end.setHours(23, 59, 59, 999);
+
+  return d >= start && d <= end;
 }
     function buildCoreMetrics(match) {
       const recentGoals = firstNumeric(match, ['avg_goals_recent', 'recent_avg_goals', 'last5_avg_goals']);
@@ -2313,8 +2318,8 @@ function openCompetition(league) {
   document.getElementById('backToCompetitionsBtn').classList.remove('hidden');
 
   document.getElementById('selectedCompetitionTitle').textContent = getLeagueDisplay(league);
-  document.getElementById('selectedCompetitionCopy').textContent =
-    `${filteredMatches.length} jogo(s) nos próximos horários desta competição.`;
+ document.getElementById('selectedCompetitionCopy').textContent =
+  `${filteredMatches.length} jogo(s) entre hoje e os próximos 2 dias nesta competição.`;
 
   const gamesGrid = document.getElementById('gamesGrid');
 
@@ -2480,26 +2485,45 @@ async function loadMatches() {
     .order('league', { ascending: true })
     .order('kickoff', { ascending: true });
 
- if (matchesError) throw matchesError;
+  if (matchesError) throw matchesError;
 
-console.log('matchesData bruto:', matchesData);
+  console.log('matchesData bruto:', matchesData);
 
-console.log(
-  'primeiros kickoff:',
-  (matchesData || []).slice(0, 10).map(m => ({
-    id: m.id,
-    league: m.league,
-    home_team: m.home_team,
-    away_team: m.away_team,
-    kickoff: m.kickoff
-  }))
-);
-  
-window.debugMatches = matchesData || [];
-const loadedMatches = matchesData || [];
+  console.log(
+    'primeiros kickoff:',
+    (matchesData || []).slice(0, 10).map(m => ({
+      id: m.id,
+      league: m.league,
+      home_team: m.home_team,
+      away_team: m.away_team,
+      kickoff: m.kickoff
+    }))
+  );
 
-const { data: analysisData, error: analysisError } = await supabaseClient
-.from('match_analysis') .select('*');
+  window.debugMatches = matchesData || [];
+  const loadedMatches = matchesData || [];
+
+  console.log('TOTAL loadedMatches:', loadedMatches.length);
+  console.log(
+    'LIGAS carregadas:',
+    [...new Set(loadedMatches.map(m => m.league))].sort()
+  );
+  console.log(
+    'AMOSTRA loadedMatches:',
+    loadedMatches.slice(0, 20).map(m => ({
+      id: m.id,
+      league: m.league,
+      country: m.country,
+      home_team: m.home_team,
+      away_team: m.away_team,
+      kickoff: m.kickoff
+    }))
+  );
+
+  const { data: analysisData, error: analysisError } = await supabaseClient
+    .from('match_analysis')
+    .select('*');
+
   if (analysisError) throw analysisError;
 
   const analysisMap = new Map(
@@ -2513,8 +2537,15 @@ const { data: analysisData, error: analysisError } = await supabaseClient
       ...analysis
     };
   });
+
+  console.log('TOTAL state.matches:', state.matches.length);
+  console.log(
+    'LIGAS em state.matches:',
+    [...new Set(state.matches.map(m => m.league))].sort()
+  );
 }
-function generateNewTicket() { renderTicket();
+function generateNewTicket() { 
+  renderTicket();
  }                             
 async function initialize() {
   const errors = {};
