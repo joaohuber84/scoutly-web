@@ -59,7 +59,7 @@ const TARGET_COMPETITIONS = [
   { mode: "country", country: "Turkey", type: "league", names: ["Süper Lig", "Super Lig"], display: "Super Lig", region: "general", priority: 78 },
   { mode: "country", country: "Denmark", type: "league", names: ["Superliga", "Superligaen"], display: "Danish Superliga", region: "general", priority: 75 },
   { mode: "country", country: "Greece", type: "league", names: ["Super League 1", "Super League"], display: "Super League Greece", region: "general", priority: 74 },
-  { mode: "country", country: "Saudi Arabia", type: "league", names: ["Pro League", "Saudi Pro League"], display: "Saudi Pro League", region: "general", priority: 76 },
+ { mode: "search", search: "Saudi League", display: "Saudi Pro League", region: "general", priority: 85},
   
   // Bélgica
 { mode: "country", country: "Belgium", type: "league", names: ["Pro League", "Jupiler Pro League"], display: "Belgian Pro League", region: "general", priority: 85 },
