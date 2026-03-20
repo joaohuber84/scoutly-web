@@ -1083,7 +1083,6 @@ function uniqBy(arr, keyFn) {
   })
 }
 
-/*
 async function clearFutureWindow() {
   const nowIso = new Date().toISOString()
   const endIso = new Date(Date.now() + WINDOW_HOURS * 60 * 60 * 1000).toISOString()
@@ -1093,117 +1092,54 @@ async function clearFutureWindow() {
     .select("id")
     .gte("kickoff", nowIso)
     .lte("kickoff", endIso)
-}
 
-  if (selectError) throw new Error(`Supabase select matches window: ${selectError.message}`)
+  if (selectError) {
+    throw new Error(`Supabase select matches window: ${selectError.message}`)
+  }
 
   const ids = (rows || []).map((x) => x.id)
-  if (!ids.length) return 0
 
   const { error: dailyError } = await supabase
     .from("daily_picks")
     .delete()
     .neq("match_id", -1)
 
-  if (dailyError) throw new Error(`Supabase delete daily_picks window: ${dailyError.message}`)
+  if (dailyError) {
+    throw new Error(`Supabase delete daily_picks window: ${dailyError.message}`)
+  }
+
+  if (!ids.length) return 0
 
   const { error: analysisError } = await supabase
     .from("match_analysis")
     .delete()
     .in("match_id", ids)
 
-  if (analysisError) throw new Error(`Supabase delete match_analysis window: ${analysisError.message}`)
+  if (analysisError) {
+    throw new Error(`Supabase delete match_analysis window: ${analysisError.message}`)
+  }
 
   const { error: statsError } = await supabase
     .from("match_stats")
     .delete()
     .in("match_id", ids)
 
-  if (statsError) throw new Error(`Supabase delete match_stats window: ${statsError.message}`)
+  if (statsError) {
+    throw new Error(`Supabase delete match_stats window: ${statsError.message}`)
+  }
 
   const { error: matchesError } = await supabase
     .from("matches")
     .delete()
     .in("id", ids)
 
-  if (matchesError) throw new Error(`Supabase delete matches window: ${matchesError.message}`)
+  if (matchesError) {
+    throw new Error(`Supabase delete matches window: ${matchesError.message}`)
+  }
 
   return ids.length
 }
-/*
-async function rebuildDailyPicks(candidates) {
-  const future = candidates
-    .filter((x) => x.kickoff)
-    .filter((x) => new Date(x.kickoff) > new Date())
-    .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff))
 
-  const uniquePerLeague = uniqBy(
-    future.sort((a, b) => {
-      if (b.probability !== a.probability) return b.probability - a.probability
-      if (b.priority !== a.priority) return b.priority - a.priority
-      return new Date(a.kickoff) - new Date(b.kickoff)
-    }),
-    (x) => x.league
-  )
-
-  const brazilCandidate = uniquePerLeague
-    .filter((x) => x.region === "brazil")
-    .sort((a, b) => b.probability - a.probability)[0] || null
-
-  const withoutBrazilDup = uniquePerLeague.filter((x) => x.fixtureId !== brazilCandidate?.fixtureId)
-
-  const generalTop = withoutBrazilDup
-    .sort((a, b) => {
-      if (b.probability !== a.probability) return b.probability - a.probability
-      if (b.priority !== a.priority) return b.priority - a.priority
-      return new Date(a.kickoff) - new Date(b.kickoff)
-    })
-    .slice(0, 5)
-
-  const pool = brazilCandidate
-    ? [brazilCandidate, ...generalTop].slice(0, 6)
-    : generalTop.slice(0, 6)
-
-  const finalSorted = pool
-    .sort((a, b) => {
-      if (b.probability !== a.probability) return b.probability - a.probability
-      if (b.priority !== a.priority) return b.priority - a.priority
-      return new Date(a.kickoff) - new Date(b.kickoff)
-    })
-    .slice(0, 6)
-
-  const rows = finalSorted.map((item, index) => ({
-    rank: index,
-    match_id: item.fixtureId,
-    home_team: item.homeTeam,
-    away_team: item.awayTeam,
-    league: item.league,
-    market: item.market,
-    probability: round(item.probability, 4),
-    is_opportunity: index === 0,
-    created_at: new Date().toISOString(),
-    home_logo: item.homeLogo || null,
-    away_logo: item.awayLogo || null,
-  }))
-
-  const { error: deleteError } = await supabase
-    .from("daily_picks")
-    .delete()
-    .neq("match_id", -1)
-
-  if (deleteError) throw new Error(`Supabase delete daily_picks: ${deleteError.message}`)
-
-  if (!rows.length) return 0
-
-  const { error: insertError } = await supabase
-    .from("daily_picks")
-    .insert(rows)
-
-  if (insertError) throw new Error(`Supabase insert daily_picks: ${insertError.message}`)
-
-  return rows.length
-}
-*/
 async function run() {
   console.log("🚀 Scoutly Sync V3 iniciado")
 
@@ -1246,7 +1182,7 @@ const allFixtures = uniqBy(
 console.log("ALL FIXTURES:", allFixtures)
 console.log(`📅 Fixtures na janela de ${WINDOW_HOURS}h: ${allFixtures.length}`)
 
-  const cleared = 0 //await clearFutureWindow()
+  const cleared = await clearFutureWindow()
   console.log(`🧹 Matches futuros limpos antes do rebuild: ${cleared}`)
 
   const candidates = []
