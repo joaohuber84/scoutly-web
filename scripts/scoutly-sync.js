@@ -133,6 +133,15 @@ function toDateOnly(iso) {
   return d.toISOString().slice(0, 10)
 }
 
+function normalizeLeagueKey(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
 function makeApiCacheKey(path, params = {}) {
   return `${path}?${Object.entries(params)
     .sort(([a], [b]) => a.localeCompare(b))
@@ -235,24 +244,51 @@ function leagueScorePriority(leagueName) {
 }
 
 async function resolveCountryCompetitions(target) {
-  const leagues = await api("/leagues", 
-  {
+  const leagues = await api("/leagues", {
     country: target.country,
+    current: true,
   })
 
-  const normalizedNames = new Set(target.names.map((x) => x.toLowerCase()))
+  const normalizedNames = new Set(
+    (target.names || []).map((x) => normalizeLeagueKey(x))
+  )
 
   return leagues
     .filter((item) => {
-      const rawName = String(item?.league?.name || "").toLowerCase()
+      const rawName = String(item?.league?.name || "")
+      const rawNameKey = normalizeLeagueKey(rawName)
       const leagueType = String(item?.league?.type || "").toLowerCase()
       const seasonCurrent = item?.seasons?.find((s) => s.current) || item?.seasons?.[0]
 
       if (!seasonCurrent) return false
       if (target.type && leagueType !== target.type) return false
 
-     return Array.from(normalizedNames).some((n) => rawName.includes(n))
-    }) 
+      if (
+        rawNameKey.includes("u17") ||
+        rawNameKey.includes("u18") ||
+        rawNameKey.includes("u19") ||
+        rawNameKey.includes("u20") ||
+        rawNameKey.includes("u21") ||
+        rawNameKey.includes("u23") ||
+        rawNameKey.includes("under 17") ||
+        rawNameKey.includes("under 18") ||
+        rawNameKey.includes("under 19") ||
+        rawNameKey.includes("under 20") ||
+        rawNameKey.includes("under 21") ||
+        rawNameKey.includes("under 23") ||
+        rawNameKey.includes("women") ||
+        rawNameKey.includes("feminina") ||
+        rawNameKey.includes("feminino") ||
+        rawNameKey.includes("female") ||
+        rawNameKey.includes("youth") ||
+        rawNameKey.includes("reserve") ||
+        rawNameKey.includes("reserves")
+      ) {
+        return false
+      }
+
+      return Array.from(normalizedNames).some((n) => rawNameKey === n)
+    })
     .map((item) => {
       const currentSeason = item?.seasons?.find((s) => s.current) || item?.seasons?.[0]
       return {
@@ -260,7 +296,11 @@ async function resolveCountryCompetitions(target) {
         season: currentSeason.year,
         country: item.country?.name || target.country,
         rawName: item.league.name,
-        display: normalizeCompetitionName(item.country?.name || target.country, item.league.name, target.display),
+        display: normalizeCompetitionName(
+          item.country?.name || target.country,
+          item.league.name,
+          target.display
+        ),
         region: target.region,
         priority: target.priority,
       }
