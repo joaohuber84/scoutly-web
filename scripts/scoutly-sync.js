@@ -1,14 +1,16 @@
 const { createClient } = require("@supabase/supabase-js")
 
-const APISPORTS_KEY = "705f52b4ec1295f3c369365c2d71cb71"
-
-// Supabase será configurado depois
-const SUPABASE_URL = "https://zngdcatlxlxamceqpxij.supabase.co"
-const SUPABASE_KEY = "sb_publishable_gw3BGCEcwhidS2hFbiwxIA_W28KkZ2a"
+const APISPORTS_KEY = process.env.APISPORTS_KEY || ""
+const SUPABASE_URL = process.env.SUPABASE_URL || ""
+const SUPABASE_KEY =
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY || ""
 
 if (!APISPORTS_KEY) throw new Error("APISPORTS_KEY não encontrada.")
+if (!SUPABASE_URL) throw new Error("SUPABASE_URL não encontrada.")
+if (!SUPABASE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY não encontrada.")
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+
 const API = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
 const WINDOW_HOURS = 72
@@ -39,7 +41,7 @@ const TARGET_COMPETITIONS = [
   // Holanda
   { mode: "country", country: "Netherlands", type: "league", names: ["Eredivisie"], display: "Eredivisie", region: "general", priority: 90 },
   { mode: "country", country: "Netherlands", type: "cup", names: ["KNVB Cup"], display: "KNVB Cup", region: "general", priority: 70 },
-  
+
   // Portugal
   { mode: "country", country: "Portugal", type: "league", names: ["Primeira Liga", "Liga Portugal Betclic"], display: "Primeira Liga", region: "general", priority: 89 },
   { mode: "country", country: "Portugal", type: "cup", names: ["Taça de Portugal"], display: "Taça de Portugal", region: "general", priority: 68 },
@@ -54,47 +56,34 @@ const TARGET_COMPETITIONS = [
   { mode: "country", country: "Argentina", type: "cup", names: ["Copa Argentina"], display: "Copa Argentina", region: "general", priority: 70 },
 
   // México
-   { mode: "country", country: "Mexico", type: "league", names: ["Liga MX"], display: "Liga MX", region: "general", priority: 79 },
-  
+  { mode: "country", country: "Mexico", type: "league", names: ["Liga MX"], display: "Liga MX", region: "general", priority: 79 },
+
   // Turquia / Grécia / Dinamarca
   { mode: "country", country: "Turkey", type: "league", names: ["Süper Lig", "Super Lig"], display: "Super Lig", region: "general", priority: 78 },
   { mode: "country", country: "Denmark", type: "league", names: ["Superliga", "Superligaen"], display: "Danish Superliga", region: "general", priority: 75 },
   { mode: "country", country: "Greece", type: "league", names: ["Super League 1", "Super League"], display: "Super League Greece", region: "general", priority: 74 },
- { mode: "search", search: "Saudi League", display: "Saudi Pro League", region: "general", priority: 85},
-  
-  // Bélgica
-{ mode: "country", country: "Belgium", type: "league", names: ["Pro League", "Jupiler Pro League"], display: "Belgian Pro League", region: "general", priority: 85 },
 
-// Áustria
-{ mode: "country", country: "Austria", type: "league", names: ["Bundesliga"], display: "Austrian Bundesliga", region: "general", priority: 84 },
-  
-// 🇺🇸 USA / MLS + CONCACAF
-{ mode: "country", country: "USA", type: "league", names: ["Major League Soccer"], display: "MLS", region: "america", priority: 90 },
+  // Bélgica / Áustria
+  { mode: "country", country: "Belgium", type: "league", names: ["Pro League", "Jupiler Pro League"], display: "Belgian Pro League", region: "general", priority: 85 },
+  { mode: "country", country: "Austria", type: "league", names: ["Bundesliga"], display: "Austrian Bundesliga", region: "general", priority: 84 },
 
-{ mode: "search", search: "CONCACAF Champions", display: "CONCACAF Champions Cup", region: "america", priority: 88 },
+  // USA / CONCACAF
+  { mode: "country", country: "USA", type: "league", names: ["Major League Soccer"], display: "MLS", region: "america", priority: 90 },
+  { mode: "search", search: "CONCACAF Champions", display: "CONCACAF Champions Cup", region: "america", priority: 88 },
 
-// 🇸🇦 Saudi Arabia (oficial)
-{ 
-  mode: "search", 
-  search: "Saudi League", 
-  display: "Saudi Pro League", 
-  region: "general", 
-  priority: 85 
-},
+  // Saudi Arabia
+  { mode: "search", search: "Saudi League", display: "Saudi Pro League", region: "general", priority: 85 },
 
-// 🇪🇺 UEFA
-{ mode: "search", search: "UEFA Champions League", display: "UEFA Champions League", region: "general", priority: 98 },
+  // UEFA
+  { mode: "search", search: "UEFA Champions League", display: "UEFA Champions League", region: "general", priority: 98 },
+  { mode: "search", search: "UEFA Europa League", display: "UEFA Europa League", region: "general", priority: 93 },
+  { mode: "search", search: "UEFA Conference League", display: "UEFA Conference League", region: "general", priority: 88 },
 
-{ mode: "search", search: "UEFA Europa League", display: "UEFA Europa League", region: "general", priority: 93 },
-
-{ mode: "search", search: "UEFA Conference League", display: "UEFA Conference League", region: "general", priority: 88 },
-  
-// CONMEBOL
-{ mode: "search", search: "CONMEBOL Libertadores", display: "Libertadores", region: "brazil", priority: 92 },
-{ mode: "search", search: "Copa Libertadores", display: "Libertadores", region: "brazil", priority: 91 },
-
-{ mode: "search", search: "CONMEBOL Sudamericana", display: "Sul-Americana", region: "brazil", priority: 86 },
-{ mode: "search", search: "Copa Sudamericana", display: "Sul-Americana", region: "brazil", priority: 85 },
+  // CONMEBOL
+  { mode: "search", search: "CONMEBOL Libertadores", display: "Libertadores", region: "brazil", priority: 92 },
+  { mode: "search", search: "Copa Libertadores", display: "Libertadores", region: "brazil", priority: 91 },
+  { mode: "search", search: "CONMEBOL Sudamericana", display: "Sul-Americana", region: "brazil", priority: 86 },
+  { mode: "search", search: "Copa Sudamericana", display: "Sul-Americana", region: "brazil", priority: 85 },
 ]
 
 const apiCache = new Map()
@@ -154,14 +143,14 @@ async function api(path, params = {}) {
   const cacheKey = makeApiCacheKey(path, params)
   if (apiCache.has(cacheKey)) return apiCache.get(cacheKey)
 
+  await sleep(REQUEST_DELAY_MS)
+
   const url = new URL(API + path)
   Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== null && v !== "") {
       url.searchParams.set(k, String(v))
     }
   })
-
-  await sleep(REQUEST_DELAY_MS)
 
   const response = await fetch(url, {
     method: "GET",
@@ -207,13 +196,21 @@ function normalizeCompetitionName(country, rawName, fallbackDisplay) {
   if (c === "Mexico" && name === "Liga MX") return "Liga MX"
   if (c === "Turkey" && (name === "Süper Lig" || name === "Super Lig")) return "Super Lig"
   if (c === "Greece" && (name === "Super League 1" || name === "Super League")) return "Super League Greece"
-  if (c === "Saudi Arabia" && (name === "Pro League" ||name === "Saudi Pro League" || name === "Saudi League" || name === "ROSHN Saudi League")) return "Saudi Pro League"
+  if (
+    c === "Saudi Arabia" &&
+    (name === "Pro League" ||
+      name === "Saudi Pro League" ||
+      name === "Saudi League" ||
+      name === "ROSHN Saudi League")
+  ) {
+    return "Saudi Pro League"
+  }
   if (c === "Denmark" && name === "Superliga") return "Superliga"
 
-if (name === "UEFA Champions League") return "UEFA Champions League"
-if (name === "UEFA Europa League") return "UEFA Europa League"
-if (name === "UEFA Conference League") return "UEFA Conference League"
-if (name === "UEFA Europa Conference League") return "UEFA Conference League"
+  if (name === "UEFA Champions League") return "UEFA Champions League"
+  if (name === "UEFA Europa League") return "UEFA Europa League"
+  if (name === "UEFA Conference League") return "UEFA Conference League"
+  if (name === "UEFA Europa Conference League") return "UEFA Conference League"
   if (name === "CONMEBOL Libertadores") return "CONMEBOL Libertadores"
   if (name === "CONMEBOL Sudamericana") return "CONMEBOL Sudamericana"
 
@@ -234,14 +231,46 @@ function leagueScorePriority(leagueName) {
   if (name === "Ligue 1") return 95
   if (name === "Brasileirão Série A") return 94
   if (name === "UEFA Europa League") return 93
-  if (name === "CONMEBOL Libertadores") return 92
+  if (name === "CONMEBOL Libertadores" || name === "Libertadores") return 92
   if (name === "Copa do Brasil") return 91
   if (name === "Eredivisie") return 90
   if (name === "Primeira Liga") return 89
   if (name === "Brasileirão Série B") return 88
-  if (name === "UEFA Europa Conference League") return 87
-  if (name === "CONMEBOL Sudamericana") return 86
+  if (name === "UEFA Conference League") return 87
+  if (name === "CONMEBOL Sudamericana" || name === "Sul-Americana") return 86
   return 70
+}
+
+function getSyncWindowRange() {
+  const now = new Date()
+  const start = new Date(now)
+  start.setHours(0, 0, 0, 0)
+
+  if (WINDOW_MODE === "UNTIL_SUNDAY") {
+    const end = new Date(now)
+    const day = end.getDay()
+    const daysUntilSunday = (7 - day) % 7
+    end.setDate(end.getDate() + daysUntilSunday)
+    end.setHours(23, 59, 59, 999)
+    return { start, end }
+  }
+
+  const end = new Date(now.getTime() + WINDOW_HOURS * 60 * 60 * 1000)
+  return { start, end }
+}
+
+function buildWindowDates() {
+  const { start, end } = getSyncWindowRange()
+
+  const dates = new Set()
+  const cursor = new Date(start)
+
+  while (cursor <= end) {
+    dates.add(isoDate(cursor))
+    cursor.setUTCDate(cursor.getUTCDate() + 1)
+  }
+
+  return Array.from(dates)
 }
 
 async function resolveCountryCompetitions(target) {
@@ -307,13 +336,11 @@ async function resolveCountryCompetitions(target) {
       }
     })
 }
-
-    async function resolveSearchCompetition(target) {
+async function resolveSearchCompetition(target) {
   const leagues = await api("/leagues", {
     search: target.search,
+    current: true,
   })
-
-  const searchNeedle = String(target.search || "").toLowerCase().trim()
 
   const items = leagues
     .map((item) => {
@@ -321,147 +348,89 @@ async function resolveCountryCompetitions(target) {
       if (!currentSeason) return null
 
       const country = item?.country?.name || null
-     let rawName = item?.league?.name || null
+      const rawName = String(item?.league?.name || "").trim()
+      const countryText = (country || "").toLowerCase()
+      const rawNameText = rawName.toLowerCase()
+      const haystack = `${country || ""} ${rawName}`.toLowerCase().trim()
 
-if (rawName) {
-  rawName = rawName?.trim()
-    
-}
+      if (
+        rawNameText.includes("u17") ||
+        rawNameText.includes("u18") ||
+        rawNameText.includes("u19") ||
+        rawNameText.includes("u20") ||
+        rawNameText.includes("u21") ||
+        rawNameText.includes("u23") ||
+        rawNameText.includes("under 17") ||
+        rawNameText.includes("under 18") ||
+        rawNameText.includes("under 19") ||
+        rawNameText.includes("under 20") ||
+        rawNameText.includes("under 21") ||
+        rawNameText.includes("under 23") ||
+        rawNameText.includes("sub 17") ||
+        rawNameText.includes("sub 18") ||
+        rawNameText.includes("sub 19") ||
+        rawNameText.includes("sub 20") ||
+        rawNameText.includes("sub 21") ||
+        rawNameText.includes("sub 23") ||
+        rawNameText.includes("women") ||
+        rawNameText.includes("female") ||
+        rawNameText.includes("feminina") ||
+        rawNameText.includes("feminino") ||
+        rawNameText.includes("youth") ||
+        rawNameText.includes("reserve") ||
+        rawNameText.includes("reserves") ||
+        rawNameText.includes("division 1") ||
+        rawNameText.includes("division 2") ||
+        rawNameText.includes("lower") ||
+        rawNameText.includes("open cup")
+      ) {
+        return null
+      }
+
+      if (target.display === "Saudi Pro League") {
+        if (
+          !countryText.includes("saudi") ||
+          !(
+            rawNameText.includes("pro league") ||
+            rawNameText.includes("professional league") ||
+            rawNameText.includes("saudi league") ||
+            rawNameText.includes("roshn")
+          )
+        ) {
+          return null
+        }
+      }
+
+      if (target.display === "UEFA Champions League" && !haystack.includes("champions")) return null
+      if (target.display === "UEFA Europa League" && !haystack.includes("europa")) return null
+      if (target.display === "UEFA Conference League" && !haystack.includes("conference")) return null
+      if (target.display === "MLS" && rawNameText !== "major league soccer") return null
+      if (target.display === "CONCACAF Champions Cup" && !haystack.includes("concacaf champions")) return null
+      if (target.display === "Austrian Bundesliga" && !countryText.includes("austria")) return null
+      if (target.display === "Libertadores" && !haystack.includes("libertadores")) return null
+      if (target.display === "Sul-Americana" && !haystack.includes("sudamericana")) return null
+
       return {
         leagueId: item.league.id,
         season: currentSeason.year,
         country,
         rawName,
-        display: rawName,
+        display: normalizeCompetitionName(country, rawName, target.display),
         region: target.region,
         priority: target.priority,
       }
     })
     .filter(Boolean)
-    .filter((x) => {
-      const haystack = `${x.country || ""} ${x.rawName || ""}`.toLowerCase().trim()
 
-      console.log("SEARCH TARGET:", target.search, "=>", {
-        country: x.country,
-        rawName: x.rawName,
-        haystack,
-        season: x.season,
-        leagueId: x.leagueId
-      })
-      
-// ==============================
-// NORMALIZAÇÃO
-// ==============================
+  const unique = new Map()
+  items.forEach((item) => {
+    const key = item.leagueId
+    if (!unique.has(key)) unique.set(key, item)
+  })
 
-const countryText = x.country?.toLowerCase() || ""
-const rawNameText = x.rawName?.toLowerCase() || ""
-
-// ==============================
-// FILTROS GERAIS (REMOVER LIXO)
-// ==============================
-
-// ❌ Remover categorias indesejadas
-if (
-  rawNameText.includes("u20") ||
-  rawNameText.includes("u-20") ||
-  rawNameText.includes("u 20") ||
-  rawNameText.includes("under 20") ||
-  rawNameText.includes("sub 20")
- 
-) return false
-
-if (rawNameText.includes("u17")) return false
-if (rawNameText.includes("youth")) return false
-if (rawNameText.includes("women")) return false
-if (rawNameText.includes("reserve")) return false
-if (rawNameText.includes("reserves")) return false
-if (rawNameText.includes("u21")) return false
-if (rawNameText.includes("division 1")) return false
-if (rawNameText.includes("division 2")) return false
-if (rawNameText.includes("lower")) return false
-     
-// ❌ Remover Open Cup (qualquer variação)
-if (rawNameText.includes("open cup")) return false
-
-
-// ==============================
-// FILTROS POR COMPETIÇÃO
-// ==============================
-
-// ✅ Saudi Pro League (filtrar corretamente)
-if (target.display === "Saudi Pro League") {
-  if (
-    !countryText.includes("saudi") ||
-    !(
-      rawNameText.includes("pro league") ||
-      rawNameText.includes("professional league") ||
-      rawNameText.includes("saudi league") ||
-      rawNameText.includes("roshn")
-    )
-  ) return false
+  return Array.from(unique.values())
 }
 
-// ✅ UEFA - garantir que são oficiais
-if (
-  target.display === "UEFA Champions League" &&
-  !haystack.includes("champions")
-) return false
-
-if (
-  target.display === "UEFA Europa League" &&
-  !haystack.includes("europa")
-) return false
-
-if (
-  target.display === "UEFA Conference League" &&
-  !haystack.includes("conference")
-) return false
-
-      
-// ✅ MLS (manter só oficial)
-if (
-  target.display === "MLS" &&
-  rawNameText !== "major league soccer"
-) return false
-
-
-// ✅ CONCACAF
-if (
-  target.display === "CONCACAF Champions Cup" &&
-  !haystack.includes("concacaf champions")
-) return false
-
-
-// ✅ Austrian Bundesliga
-if (
-  target.display === "Austrian Bundesliga" &&
-  !countryText.includes("austria")
-) return false
-
-
-// ==============================
-// MATCH FINAL
-// ==============================
-
-return haystack.includes(searchNeedle)
-    })
-
-// ==============================
-// REMOVER DUPLICADOS (MANTIDO)
-// ==============================
-
-      const unique = new Map()
-
-items.forEach((item) => {
-  const key = item.leagueId
-  if (!unique.has(key)) {
-    unique.set(key, item)
-  }
-})
-
-return Array.from(unique.values())
-}
-  
 async function resolveTargetCompetitions() {
   const resolved = []
 
@@ -471,10 +440,14 @@ async function resolveTargetCompetitions() {
         target.mode === "country"
           ? await resolveCountryCompetitions(target)
           : await resolveSearchCompetition(target)
-console.log("TARGET:", target.display || target.search, "ITEMS:", items)
+
+      console.log("TARGET:", target.display || target.search, "ITEMS:", items)
       resolved.push(...items)
     } catch (error) {
-      console.error(`Falha resolvendo competição ${target.display || target.search || target.country}:`, error.message)
+      console.error(
+        `Falha resolvendo competição ${target.display || target.search || target.country}:`,
+        error.message
+      )
     }
   }
 
@@ -485,21 +458,6 @@ console.log("TARGET:", target.display || target.search, "ITEMS:", items)
     seen.add(key)
     return true
   })
-}
-
-function buildWindowDates() {
-  const now = new Date()
-  const end = new Date(now.getTime() + WINDOW_HOURS * 60 * 60 * 1000)
-
-  const dates = new Set()
-  const cursor = new Date(now)
-
-  while (cursor <= end) {
-    dates.add(isoDate(cursor))
-    cursor.setUTCDate(cursor.getUTCDate() + 1)
-  }
-
-  return Array.from(dates)
 }
 
 async function fetchFixturesForCompetition(comp) {
@@ -544,8 +502,6 @@ async function fetchFixturesForCompetition(comp) {
   try {
     console.log("comp:", comp)
 
-    await sleep(1200)
-
     const fixtures = await api("/fixtures", {
       league: comp.leagueId,
       season: comp.season,
@@ -553,55 +509,58 @@ async function fetchFixturesForCompetition(comp) {
       to: endDate,
       timezone: TIMEZONE,
     })
-      
-      const filteredFixtures = fixtures.filter((f) => {
-        const home = f?.teams?.home?.name || ""
-        const away = f?.teams?.away?.name || ""
-        const league = f?.league?.name || ""
-        const country = f?.league?.country || ""
 
-        if (hasForbiddenMarker(home)) return false
-        if (hasForbiddenMarker(away)) return false
-        if (hasForbiddenMarker(league)) return false
+    const filteredFixtures = fixtures.filter((f) => {
+      const home = f?.teams?.home?.name || ""
+      const away = f?.teams?.away?.name || ""
+      const league = f?.league?.name || ""
+      const country = f?.league?.country || ""
 
-        if (normalizeLeagueKey(league).includes("open cup")) return false
+      if (hasForbiddenMarker(home)) return false
+      if (hasForbiddenMarker(away)) return false
+      if (hasForbiddenMarker(league)) return false
 
-        if (
-          normalizeLeagueKey(league).includes("pro league") &&
-          normalizeLeagueKey(country) !== "saudi arabia" &&
-          comp.display === "Saudi Pro League"
-        ) {
-          return false
-        }
+      if (normalizeLeagueKey(league).includes("open cup")) return false
 
-        return true
-      })
-
-      console.log(
-        "DATA:", date,
-        "LEAGUE:", comp.display,
-        "RAW:", fixtures.length,
-        "FILTERED:", filteredFixtures.length
-      )
-
-      for (const fixture of filteredFixtures) {
-        const kickoff = fixture?.fixture?.date
-        if (!kickoff) continue
-
-        const dt = new Date(kickoff)
-        if (Number.isNaN(dt.getTime())) continue
-
-        if (dt >= start && dt <= end) {
-          all.push({
-            ...fixture,
-            __comp: comp,
-          })
-        }
+      if (
+        comp.display === "Saudi Pro League" &&
+        normalizeLeagueKey(country) !== "saudi arabia"
+      ) {
+        return false
       }
-    } catch (error) {
-    console.error(`Falha buscando fixtures de ${comp.display} entre ${startDate} e ${endDate}:`, error.message)
+
+      return true
+    })
+
+    console.log(
+      "LEAGUE:", comp.display,
+      "FROM:", startDate,
+      "TO:", endDate,
+      "RAW:", fixtures.length,
+      "FILTERED:", filteredFixtures.length
+    )
+
+    for (const fixture of filteredFixtures) {
+      const kickoff = fixture?.fixture?.date
+      if (!kickoff) continue
+
+      const dt = new Date(kickoff)
+      if (Number.isNaN(dt.getTime())) continue
+
+      if (dt >= start && dt <= end) {
+        all.push({
+          ...fixture,
+          __comp: comp,
+        })
+      }
     }
-  
+  } catch (error) {
+    console.error(
+      `Falha buscando fixtures de ${comp.display} entre ${startDate} e ${endDate}:`,
+      error.message
+    )
+  }
+
   return all
 }
 
@@ -639,306 +598,173 @@ function isCompletedFixture(fixture) {
   const short = fixture?.fixture?.status?.short || ""
   return ["FT", "AET", "PEN"].includes(short)
 }
+function collectRecentFixtures(allFixtures, teamId, limit = 10) {
+  return allFixtures
+    .filter(
+      (f) =>
+        isCompletedFixture(f) &&
+        (f?.teams?.home?.id === teamId || f?.teams?.away?.id === teamId)
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.fixture.date).getTime() -
+        new Date(a.fixture.date).getTime()
+    )
+    .slice(0, limit)
+}
 
-async function buildTeamRecentProfile(teamId, leagueId, season, beforeIso) {
-  const cacheKey = `${teamId}:${leagueId}:${season}:${toDateOnly(beforeIso)}`
-  if (teamProfileCache.has(cacheKey)) return teamProfileCache.get(cacheKey)
+async function buildTeamProfile(teamId, leagueId, season, allFixtures) {
+  const cacheKey = `${teamId}-${leagueId}-${season}`
+  if (teamProfileCache.has(cacheKey)) {
+    return teamProfileCache.get(cacheKey)
+  }
 
-await new Promise(r => setTimeout(r, 1000))
-  const fixtures = await api("/fixtures", {
-    team: teamId,
-    league: leagueId,
-    season,
-    last: 10,
-    timezone: TIMEZONE,
-  })
-
-  const beforeDate = new Date(beforeIso)
-
-  const completed = fixtures
-    .filter(isCompletedFixture)
-    .filter((f) => {
-      const d = new Date(f?.fixture?.date)
-      return !Number.isNaN(d.getTime()) && d < beforeDate
-    })
-    .sort((a, b) => new Date(b.fixture.date) - new Date(a.fixture.date))
-    .slice(0, 5)
+  const recentFixtures = collectRecentFixtures(allFixtures, teamId, 10)
 
   const goalsFor = []
   const goalsAgainst = []
-  const corners = []
   const shots = []
   const shotsOnTarget = []
+  const corners = []
+  const fouls = []
   const cards = []
-  const form = []
 
-  for (const game of completed) {
-    const fixtureId = game?.fixture?.id
-    const isHome = game?.teams?.home?.id === teamId
+  for (const f of recentFixtures) {
+    const isHome = f?.teams?.home?.id === teamId
 
-    const gf = isHome ? safeNumber(game?.goals?.home) : safeNumber(game?.goals?.away)
-    const ga = isHome ? safeNumber(game?.goals?.away) : safeNumber(game?.goals?.home)
+    const gf = isHome
+      ? f?.goals?.home ?? 0
+      : f?.goals?.away ?? 0
 
-    goalsFor.push(gf)
-    goalsAgainst.push(ga)
+    const ga = isHome
+      ? f?.goals?.away ?? 0
+      : f?.goals?.home ?? 0
 
-    if (gf > ga) form.push("W")
-    else if (gf === ga) form.push("D")
-    else form.push("L")
+    goalsFor.push(safeNumber(gf))
+    goalsAgainst.push(safeNumber(ga))
 
-    const stats = await getFixtureStatistics(fixtureId)
-    const teamStats = stats.find((s) => s?.team?.id === teamId)
+    const stats = await getFixtureStatistics(f.fixture.id)
 
-    if (teamStats?.statistics) {
-      corners.push(extractStatValue(teamStats.statistics, "Corner Kicks"))
-      shots.push(extractStatValue(teamStats.statistics, "Total Shots"))
-      shotsOnTarget.push(extractStatValue(teamStats.statistics, "Shots on Goal"))
-      cards.push(extractStatValue(teamStats.statistics, "Yellow Cards"))
-    }
+    const teamStats =
+      stats.find((s) => s.team.id === teamId)?.statistics || []
+
+    shots.push(extractStatValue(teamStats, "Total Shots"))
+    shotsOnTarget.push(extractStatValue(teamStats, "Shots on Goal"))
+    corners.push(extractStatValue(teamStats, "Corner Kicks"))
+    fouls.push(extractStatValue(teamStats, "Fouls"))
+    cards.push(
+      extractStatValue(teamStats, "Yellow Cards") +
+        extractStatValue(teamStats, "Red Cards")
+    )
   }
 
-  const points = form.reduce((acc, cur) => {
-    if (cur === "W") return acc + 3
-    if (cur === "D") return acc + 1
-    return acc
-  }, 0)
-
   const profile = {
-    games: completed.length,
-    goalsFor: round(avg(goalsFor), 2),
-    goalsAgainst: round(avg(goalsAgainst), 2),
-    corners: round(avg(corners), 2),
-    shots: round(avg(shots), 2),
-    shotsOnTarget: round(avg(shotsOnTarget), 2),
-    cards: round(avg(cards), 2),
-    formString: form.join(" "),
-    formPointsPct: completed.length ? round(points / (completed.length * 3), 4) : 0,
+    matches: recentFixtures.length,
+    avgGoalsFor: round(avg(goalsFor)),
+    avgGoalsAgainst: round(avg(goalsAgainst)),
+    avgShots: round(avg(shots)),
+    avgShotsOnTarget: round(avg(shotsOnTarget)),
+    avgCorners: round(avg(corners)),
+    avgFouls: round(avg(fouls)),
+    avgCards: round(avg(cards)),
   }
 
   teamProfileCache.set(cacheKey, profile)
   return profile
 }
-function computeMatchMetrics(homeProfile, awayProfile) {
 
-  const expectedHomeGoals = clamp(((homeProfile.goalsFor + awayProfile.goalsAgainst) / 2) * 1.05, 0.2, 4.2)
-  const expectedAwayGoals = clamp(((awayProfile.goalsFor + homeProfile.goalsAgainst) / 2) * 0.95, 0.2, 4.2)
+function buildMatchAnalysis(fixture, homeProfile, awayProfile) {
+  const homeStrength =
+    homeProfile.avgGoalsFor +
+    homeProfile.avgShotsOnTarget * 0.3 +
+    homeProfile.avgCorners * 0.2
 
-  const expectedHomeShots = clamp(((homeProfile.shots + awayProfile.shots) / 2) * 1.02, 4, 25)
-  const expectedAwayShots = clamp(((awayProfile.shots + homeProfile.shots) / 2) * 0.98, 4, 25)
+  const awayStrength =
+    awayProfile.avgGoalsFor +
+    awayProfile.avgShotsOnTarget * 0.3 +
+    awayProfile.avgCorners * 0.2
 
-  const expectedHomeSOT = clamp(((homeProfile.shotsOnTarget + awayProfile.shotsOnTarget) / 2) * 1.02, 1.5, 12)
-  const expectedAwaySOT = clamp(((awayProfile.shotsOnTarget + homeProfile.shotsOnTarget) / 2) * 0.98, 1.5, 12)
+  const totalStrength = homeStrength + awayStrength || 1
 
-  const expectedCorners = clamp(homeProfile.corners + awayProfile.corners, 4, 16)
-  const expectedCards = clamp(homeProfile.cards + awayProfile.cards, 1.5, 8)
+  const homeProb = clamp(homeStrength / totalStrength, 0.05, 0.9)
+  const awayProb = clamp(awayStrength / totalStrength, 0.05, 0.9)
+  const drawProb = clamp(1 - (homeProb + awayProb), 0.05, 0.5)
 
-  const avgGoals = round(expectedHomeGoals + expectedAwayGoals, 2)
-  const avgCorners = round(expectedCorners, 2)
-  const avgShots = round(expectedHomeShots + expectedAwayShots, 2)
-  const expectedTotalSOT = round(expectedHomeSOT + expectedAwaySOT, 2)
+  const expectedGoals =
+    (homeProfile.avgGoalsFor + awayProfile.avgGoalsFor) / 2
 
-  const homeStrengthRaw =
-    homeProfile.goalsFor * 1.3 +
-    homeProfile.shotsOnTarget * 0.35 +
-    homeProfile.corners * 0.12 +
-    homeProfile.formPointsPct * 1.2 -
-    homeProfile.goalsAgainst * 0.45
+  const expectedCorners =
+    (homeProfile.avgCorners + awayProfile.avgCorners) / 2
 
-  const awayStrengthRaw =
-    awayProfile.goalsFor * 1.25 +
-    awayProfile.shotsOnTarget * 0.33 +
-    awayProfile.corners * 0.10 +
-    awayProfile.formPointsPct * 1.1 -
-    awayProfile.goalsAgainst * 0.42
+  const expectedCards =
+    (homeProfile.avgCards + awayProfile.avgCards) / 2
 
-  const powerHome = round(clamp(homeStrengthRaw, 0.2, 5), 4)
-  const powerAway = round(clamp(awayStrengthRaw, 0.2, 5), 4)
-
-  const totalPower = Math.max(powerHome + powerAway, 0.01)
-
-  let homeWinProb = powerHome / totalPower
-  let awayWinProb = powerAway / totalPower
-
-  let drawProb = clamp(
-    0.18 + (1 - Math.abs(homeWinProb - awayWinProb)) * 0.12,
-    0.18,
-    0.32
-  )
-
-  const remain = 1 - drawProb
-  const pair = Math.max(homeWinProb + awayWinProb, 0.01)
-
-  homeWinProb = (homeWinProb / pair) * remain
-  awayWinProb = (awayWinProb / pair) * remain
-
-  const over15Prob = clamp(avgGoals / 2.7, 0.28, 0.95)
-  const over25Prob = clamp((avgGoals - 1.2) / 1.8, 0.10, 0.90)
-  const under25Prob = clamp(1 - over25Prob, 0.10, 0.90)
-  const under35Prob = clamp(1 - ((avgGoals - 1.8) / 2.0), 0.15, 0.95)
-
-  const bttsProb = clamp(
-    ((expectedHomeGoals - 0.4) + (expectedAwayGoals - 0.4)) / 3.2,
-    0.12,
-    0.88
-  )
-
-  const cornersOver85Prob = clamp(avgCorners / 10.8, 0.15, 0.92)
-
-  const probShots = clamp(avgShots / 24, 0.20, 0.90)
-  const probSot = clamp(expectedTotalSOT / 8.5, 0.20, 0.90)
-  const probCards = clamp(expectedCards / 5.2, 0.20, 0.85)
-
-  let gameProfile = "Jogo equilibrado"
-
-  if (avgGoals >= 2.8 && avgShots >= 24) {
-    gameProfile = "Jogo de gols"
-  } else if (avgCorners >= 10.2) {
-    gameProfile = "Jogo de escanteios"
-  } else if (avgGoals <= 2.0 && avgShots <= 18) {
-    gameProfile = "Jogo travado"
-  }
-
-  const confidenceScore = round(
-    clamp(
-      over25Prob * 40 +
-      bttsProb * 20 +
-      cornersOver85Prob * 20 +
-      Math.max(homeWinProb, awayWinProb) * 20,
-      0,
-      100
-    ),
-    2
-  )
-
-  const safePick =
-    avgGoals >= 2.15
-      ? "Mais de 1.5 gols"
-      : avgCorners >= 8.7
-      ? "Mais de 7.5 escanteios"
-      : homeWinProb >= 0.58
-      ? "Dupla chance mandante ou empate"
-      : awayWinProb >= 0.58
-      ? "Dupla chance visitante ou empate"
-      : "Menos de 3.5 gols"
-
-  const balancedPick =
-    over25Prob >= 0.66 && avgGoals >= 2.5
-      ? "Mais de 2.5 gols"
-      : bttsProb >= 0.61
-      ? "Ambas marcam"
-      : cornersOver85Prob >= 0.67
-      ? "Mais de 8.5 escanteios"
-      : homeWinProb >= 0.68
-      ? "Vitória do mandante"
-      : awayWinProb >= 0.68
-      ? "Vitória do visitante"
-      : "Mais de 1.5 gols"
-
-  const aggressivePick =
-    avgGoals >= 3.1
-      ? "Mais de 3.5 gols"
-      : cornersOver85Prob >= 0.76 && avgCorners >= 10.8
-      ? "Mais de 9.5 escanteios"
-      : homeWinProb >= 0.72
-      ? "Vitória do mandante"
-      : awayWinProb >= 0.72
-      ? "Vitória do visitante"
-      : bttsProb >= 0.64
-      ? "Ambas marcam"
-      : "Ambas não marcam"
-
-  const valuePick =
-    avgCorners >= 10.4
-      ? "Mais de 9.5 escanteios"
-      : avgShots >= 24
-      ? "Mais de 10.5 finalizações"
-      : avgGoals >= 2.7
-      ? "Mais de 2.5 gols"
-      : "Mais de 8.5 escanteios"
-
-  let analysisText =
-    "O confronto apresenta equilíbrio estatístico, com oportunidades distribuídas entre mercados de gols e escanteios."
-
-  if (gameProfile === "Jogo de gols") {
-    analysisText =
-      "As equipes apresentam média ofensiva elevada e bom volume de finalizações, indicando tendência favorável para mercados de gols."
-  }
-
-  if (gameProfile === "Jogo de escanteios") {
-    analysisText =
-      "O confronto apresenta alto volume ofensivo e tendência de geração de escanteios, sugerindo valor nas linhas de corners."
-  }
-
-  if (gameProfile === "Jogo travado") {
-    analysisText =
-      "Os números recentes indicam um jogo mais controlado e com menor produção ofensiva."
-  }
+  const over25 = clamp(expectedGoals / 3, 0.1, 0.85)
+  const over15 = clamp(expectedGoals / 2, 0.2, 0.95)
+  const btts = clamp(expectedGoals / 2.5, 0.15, 0.85)
 
   return {
-    avgGoals,
-    avgCorners,
-    avgShots,
-
-    expectedHomeGoals: round(expectedHomeGoals, 2),
-    expectedAwayGoals: round(expectedAwayGoals, 2),
-
-    expectedHomeShots: round(expectedHomeShots, 2),
-    expectedAwayShots: round(expectedAwayShots, 2),
-
-    expectedHomeSOT: round(expectedHomeSOT, 2),
-    expectedAwaySOT: round(expectedAwaySOT, 2),
-
-    expectedCards: round(expectedCards, 2),
-
-    powerHome,
-    powerAway,
-
-    homeWinProb: round(homeWinProb, 4),
-    drawProb: round(drawProb, 4),
-    awayWinProb: round(awayWinProb, 4),
-
-    over15Prob: round(over15Prob, 4),
-    over25Prob: round(over25Prob, 4),
-    under25Prob: round(under25Prob, 4),
-    under35Prob: round(under35Prob, 4),
-
-    bttsProb: round(bttsProb, 4),
-    cornersOver85Prob: round(cornersOver85Prob, 4),
-
-    probShots: round(probShots, 4),
-    probSot: round(probSot, 4),
-    probCards: round(probCards, 4),
-
-    gameProfile,
-    confidenceScore,
-
-    safePick,
-    balancedPick,
-    aggressivePick,
-    valuePick,
-
-    analysisText
+    probabilities: {
+      home: round(homeProb),
+      draw: round(drawProb),
+      away: round(awayProb),
+    },
+    markets: {
+      over15: round(over15),
+      over25: round(over25),
+      btts: round(btts),
+      corners: round(expectedCorners),
+      cards: round(expectedCards),
+    },
   }
 }
-function buildPrimaryMarket(metrics) {
-  return metrics.balancedPick
+
+function buildCoreMetrics(fixture, homeProfile, awayProfile) {
+  return {
+    goals: round(
+      (homeProfile.avgGoalsFor + awayProfile.avgGoalsFor) / 2
+    ),
+    shots: round(
+      (homeProfile.avgShots + awayProfile.avgShots) / 2
+    ),
+    shots_on_target: round(
+      (homeProfile.avgShotsOnTarget + awayProfile.avgShotsOnTarget) / 2
+    ),
+    corners: round(
+      (homeProfile.avgCorners + awayProfile.avgCorners) / 2
+    ),
+    fouls: round(
+      (homeProfile.avgFouls + awayProfile.avgFouls) / 2
+    ),
+    cards: round(
+      (homeProfile.avgCards + awayProfile.avgCards) / 2
+    ),
+  }
 }
 
-function buildPrimaryProbability(metrics) {
-  const market = metrics.balancedPick
+async function upsertMatch(match) {
+  const payload = {
+    fixture_id: match.fixture_id,
+    kickoff: match.kickoff,
+    league: match.league,
+    region: match.region,
+    priority: match.priority,
+    home_team: match.home_team,
+    away_team: match.away_team,
+    probabilities: match.probabilities,
+    markets: match.markets,
+    metrics: match.metrics,
+    updated_at: new Date().toISOString(),
+  }
 
-  if (market === "Mais de 2.5 gols") return metrics.over25Prob
-  if (market === "Mais de 1.5 gols") return metrics.over15Prob
-  if (market === "Ambas marcam") return metrics.bttsProb
-  if (market.includes("8.5 escanteios") || market.includes("9.5 escanteios")) return metrics.cornersOver85Prob
-  if (market === "Vitória do mandante") return metrics.homeWinProb
-  if (market === "Vitória do visitante") return metrics.awayWinProb
-  if (market.includes("Dupla chance")) return round(Math.max(metrics.homeWinProb, metrics.awayWinProb) + metrics.drawProb, 4)
-  if (market === "Menos de 3.5 gols") return metrics.under35Prob
+  const { error } = await supabase
+    .from("matches")
+    .upsert(payload, { onConflict: "fixture_id" })
 
-  return 0.60
+  if (error) {
+    console.error("Erro ao salvar match:", error.message)
+  }
 }
-
 function normalizeLeagueByTeams(comp, fixture) {
   let leagueDisplay = comp.display
   let country = comp.country || fixture?.league?.country || null
@@ -952,7 +778,9 @@ function normalizeLeagueByTeams(comp, fixture) {
 
   if (
     leagueId === 218 ||
-    /salzburg|sturm graz|rapid vienna|austria vienna|altach|bw linz|wolfsberger|wsg wattens|grazer ak/i.test(teams)
+    /salzburg|sturm graz|rapid vienna|austria vienna|altach|bw linz|wolfsberger|wsg wattens|grazer ak/i.test(
+      teams
+    )
   ) {
     leagueDisplay = "Austrian Bundesliga"
     country = "Austria"
@@ -960,7 +788,9 @@ function normalizeLeagueByTeams(comp, fixture) {
 
   if (
     leagueId === 235 ||
-    /rubin|lokomotiv|krylia sovetov|nizhny novgorod|zenit|spartak|rostov|sochi|krasnodar|dinamo/i.test(teams)
+    /rubin|lokomotiv|krylia sovetov|nizhny novgorod|zenit|spartak|rostov|sochi|krasnodar|dinamo/i.test(
+      teams
+    )
   ) {
     leagueDisplay = "Russian Premier League"
     country = "Russia"
@@ -968,28 +798,36 @@ function normalizeLeagueByTeams(comp, fixture) {
 
   if (
     leagueId === 203 ||
-    /fenerbahce|fenerbahçe|besiktas|beşiktaş|galatasaray|trabzonspor|samsunspor|gaziantep|kasimpasa|kasımpaşa|eyupspor|eyüpspor|konyaspor|rizespor|kayserispor|goztepe|göztepe|alanyaspor|basaksehir|başakşehir|genclerbirligi|gençlerbirliği/i.test(teams)
+    /fenerbahce|fenerbahçe|besiktas|beşiktaş|galatasaray|trabzonspor|samsunspor|gaziantep|kasimpasa|kasımpaşa|eyupspor|eyüpspor|konyaspor|rizespor|kayserispor|goztepe|göztepe|alanyaspor|basaksehir|başakşehir|genclerbirligi|gençlerbirliği/i.test(
+      teams
+    )
   ) {
     leagueDisplay = "Super Lig"
     country = "Turkey"
   }
 
   if (
-    /silkeborg|vejle|brondby|midtjylland|fc copenhagen|nordsjaelland/i.test(teams)
+    /silkeborg|vejle|brondby|midtjylland|fc copenhagen|nordsjaelland/i.test(
+      teams
+    )
   ) {
     leagueDisplay = "Superliga"
     country = "Denmark"
   }
 
   if (
-    /olympiacos|paok|panathinaikos|aek athens|aris|volos|kifisia/i.test(teams)
+    /olympiacos|paok|panathinaikos|aek athens|aris|volos|kifisia/i.test(
+      teams
+    )
   ) {
     leagueDisplay = "Super League Greece"
     country = "Greece"
   }
 
   if (
-    /al nassr|al hilal|al ittihad|al ahli|al shabab|al taawoun|al ettifaq/i.test(teams)
+    /al nassr|al hilal|al ittihad|al ahli|al shabab|al taawoun|al ettifaq/i.test(
+      teams
+    )
   ) {
     leagueDisplay = "Saudi Pro League"
     country = "Saudi Arabia"
@@ -1003,7 +841,10 @@ function normalizeLeagueByTeams(comp, fixture) {
     leagueDisplay = "Russian Premier League"
   }
 
-  if ((leagueNameRaw === "Süper Lig" || leagueNameRaw === "Super Lig") && country === "Turkey") {
+  if (
+    (leagueNameRaw === "Süper Lig" || leagueNameRaw === "Super Lig") &&
+    country === "Turkey"
+  ) {
     leagueDisplay = "Super Lig"
   }
 
@@ -1011,174 +852,51 @@ function normalizeLeagueByTeams(comp, fixture) {
     leagueDisplay = "Superliga"
   }
 
-  if ((leagueNameRaw === "Super League 1" || leagueNameRaw === "Super League") && country === "Greece") {
+  if (
+    (leagueNameRaw === "Super League 1" ||
+      leagueNameRaw === "Super League") &&
+    country === "Greece"
+  ) {
     leagueDisplay = "Super League Greece"
   }
 
   return { leagueDisplay, country }
 }
 
-async function upsertMatchAndAnalysis(fixture) {
-  const fixtureId = fixture?.fixture?.id
-  const kickoff = fixture?.fixture?.date
-  const homeTeamId = fixture?.teams?.home?.id
-  const awayTeamId = fixture?.teams?.away?.id
-  const comp = fixture.__comp
+function buildPrimaryMarket(analysis) {
+  const { probabilities, markets } = analysis
 
-  const homeProfile = await buildTeamRecentProfile(homeTeamId, comp.leagueId, comp.season, kickoff)
-  const awayProfile = await buildTeamRecentProfile(awayTeamId, comp.leagueId, comp.season, kickoff)
-
-  const metrics = computeMatchMetrics(homeProfile, awayProfile)
-  const { leagueDisplay, country } = normalizeLeagueByTeams(comp, fixture)
-
-  const matchRow = {
-    id: fixtureId,
-    home_team: fixture?.teams?.home?.name || null,
-    away_team: fixture?.teams?.away?.name || null,
-    league: leagueDisplay,
-    League: leagueDisplay,
-    country: country,
-    match_date: toDateOnly(kickoff),
-    kickoff,
-    Kickoff: kickoff,
-    home_logo: fixture?.teams?.home?.logo || null,
-    away_logo: fixture?.teams?.away?.logo || null,
-
-    avg_goals: metrics.avgGoals,
-    avg_corners: metrics.avgCorners,
-    avg_shots: metrics.avgShots,
-
-    home_win_prob: metrics.homeWinProb,
-    draw_prob: metrics.drawProb,
-    away_win_prob: metrics.awayWinProb,
-
-    home_result_prob: metrics.homeWinProb,
-    draw_result_prob: metrics.drawProb,
-    away_result_prob: metrics.awayWinProb,
-
-    power_home: metrics.powerHome,
-    power_away: metrics.powerAway,
-
-    over15_prob: metrics.over15Prob,
-    over25_prob: metrics.over25Prob,
-    under25_prob: metrics.under25Prob,
-    under35_prob: metrics.under35Prob,
-    btts_prob: metrics.bttsProb,
-    corners_over85_prob: metrics.cornersOver85Prob,
-
-    home_form: homeProfile.formString || null,
-    away_form: awayProfile.formString || null,
-
-    pick: buildPrimaryMarket(metrics),
-
-    game_profile: metrics.gameProfile,
-    confidence_score: metrics.confidenceScore,
-    safe_pick: metrics.safePick,
-    balanced_pick: metrics.balancedPick,
-    aggressive_pick: metrics.aggressivePick,
-    value_pick: metrics.valuePick,
-    analysis_text: metrics.analysisText,
-  }
-
-  const analysisRow = {
-    match_id: fixtureId,
-    expected_home_goals: metrics.expectedHomeGoals,
-    expected_away_goals: metrics.expectedAwayGoals,
-    expected_home_shots: metrics.expectedHomeShots,
-    expected_away_shots: metrics.expectedAwayShots,
-    expected_home_sot: metrics.expectedHomeSOT,
-    expected_away_sot: metrics.expectedAwaySOT,
-    expected_corners: metrics.avgCorners,
-    expected_cards: metrics.expectedCards,
-    prob_over25: metrics.over25Prob,
-    prob_btts: metrics.bttsProb,
-    prob_corners: metrics.cornersOver85Prob,
-    prob_shots: metrics.probShots,
-    prob_sot: metrics.probSot,
-    prob_cards: metrics.probCards,
-    best_pick_1: metrics.safePick,
-    best_pick_2: metrics.balancedPick,
-    best_pick_3: metrics.aggressivePick,
-  }
-
-  const statsRow = {
-    match_id: fixtureId,
-    home_shots: round(homeProfile.shots, 2),
-    home_shots_on_target: round(homeProfile.shotsOnTarget, 2),
-    home_corners: round(homeProfile.corners, 2),
-    home_yellow_cards: round(homeProfile.cards, 2),
-    away_shots: round(awayProfile.shots, 2),
-    away_shots_on_target: round(awayProfile.shotsOnTarget, 2),
-    away_corners: round(awayProfile.corners, 2),
-    away_yellow_cards: round(awayProfile.cards, 2),
-  }
-
-  const { error: matchError } = await supabase
-    .from("matches")
-    .upsert(matchRow, { onConflict: "id" })
-
-  if (matchError) throw new Error(`Supabase matches: ${matchError.message}`)
-
-  const { error: analysisError } = await supabase
-    .from("match_analysis")
-    .upsert(analysisRow, { onConflict: "match_id" })
-
-  if (analysisError) throw new Error(`Supabase match_analysis: ${analysisError.message}`)
-
-  const { error: statsError } = await supabase
-    .from("match_stats")
-    .upsert(statsRow, { onConflict: "match_id" })
-
-  if (statsError) throw new Error(`Supabase match_stats: ${statsError.message}`)
-
-  return {
-    fixtureId,
-    league: leagueDisplay,
-    market: buildPrimaryMarket(metrics),
-    probability: buildPrimaryProbability(metrics),
-    homeTeam: matchRow.home_team,
-    awayTeam: matchRow.away_team,
-    homeLogo: matchRow.home_logo,
-    awayLogo: matchRow.away_logo,
-    kickoff: matchRow.kickoff,
-    region: comp.region,
-    priority: comp.priority || leagueScorePriority(leagueDisplay),
-  }
+  if (markets.over25 >= 0.72) return "Mais de 2.5 gols"
+  if (markets.over15 >= 0.82) return "Mais de 1.5 gols"
+  if (markets.btts >= 0.68) return "Ambas marcam"
+  if (markets.corners >= 9.2) return "Mais de 8.5 escanteios"
+  if (probabilities.home >= 0.62) return "Vitória do mandante"
+  if (probabilities.away >= 0.62) return "Vitória do visitante"
+  return "Menos de 3.5 gols"
 }
 
-function uniqBy(arr, keyFn) {
-  const seen = new Set()
-  return arr.filter((item) => {
-    const key = keyFn(item)
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
-}
+function buildPrimaryProbability(analysis, market) {
+  const { probabilities, markets } = analysis
 
-function getSyncWindowRange() {
-  const now = new Date()
+  if (market === "Mais de 2.5 gols") return markets.over25
+  if (market === "Mais de 1.5 gols") return markets.over15
+  if (market === "Ambas marcam") return markets.btts
+  if (market === "Mais de 8.5 escanteios") return clamp(markets.corners / 12, 0.1, 0.9)
+  if (market === "Vitória do mandante") return probabilities.home
+  if (market === "Vitória do visitante") return probabilities.away
+  if (market === "Menos de 3.5 gols") return clamp(1 - markets.over25 / 1.2, 0.2, 0.92)
 
-   const start = new Date(now)
-  start.setHours(0, 0, 0, 0)
-
-  const end = new Date(now)
-  const day = end.getDay() // 0=domingo, 1=segunda ... 6=sábado
-  const daysUntilSunday = (7 - day) % 7
-  end.setDate(end.getDate() + daysUntilSunday)
-  end.setHours(23, 59, 59, 999)
-
-  return { start, end }
+  return 0.55
 }
 
 async function clearFutureWindow() {
   const { start, end } = getSyncWindowRange()
   const nowIso = start.toISOString()
   const endIso = end.toISOString()
-  
+
   const { data: rows, error: selectError } = await supabase
     .from("matches")
-    .select("id")
+    .select("fixture_id")
     .gte("kickoff", nowIso)
     .lte("kickoff", endIso)
 
@@ -1186,7 +904,7 @@ async function clearFutureWindow() {
     throw new Error(`Supabase select matches window: ${selectError.message}`)
   }
 
-  const ids = (rows || []).map((x) => x.id)
+  const ids = (rows || []).map((x) => x.fixture_id)
 
   const { error: dailyError } = await supabase
     .from("daily_picks")
@@ -1199,28 +917,10 @@ async function clearFutureWindow() {
 
   if (!ids.length) return 0
 
-  const { error: analysisError } = await supabase
-    .from("match_analysis")
-    .delete()
-    .in("match_id", ids)
-
-  if (analysisError) {
-    throw new Error(`Supabase delete match_analysis window: ${analysisError.message}`)
-  }
-
-  const { error: statsError } = await supabase
-    .from("match_stats")
-    .delete()
-    .in("match_id", ids)
-
-  if (statsError) {
-    throw new Error(`Supabase delete match_stats window: ${statsError.message}`)
-  }
-
   const { error: matchesError } = await supabase
     .from("matches")
     .delete()
-    .in("id", ids)
+    .in("fixture_id", ids)
 
   if (matchesError) {
     throw new Error(`Supabase delete matches window: ${matchesError.message}`)
@@ -1229,73 +929,171 @@ async function clearFutureWindow() {
   return ids.length
 }
 
-async function run() {
-  console.log("🚀 Scoutly Sync V3 iniciado")
+async function buildAndStoreMatches(competitions, fixtureLists) {
+  const allFixtures = uniqBy(
+    fixtureLists.flat(),
+    (x) => x?.fixture?.id
+  )
 
-  const competitions = await resolveTargetCompetitions()
-console.log("COMPETITIONS:", competitions)
+  console.log(
+    "FIXTURES POR LIGA:",
+    allFixtures.reduce((acc, f) => {
+      const league = f?.__comp?.display || f?.league?.name || "SEM LIGA"
+      acc[league] = (acc[league] || 0) + 1
+      return acc
+    }, {})
+  )
 
-const fixtureLists = await Promise.all(
-  competitions.map((comp) => fetchFixturesForCompetition(comp))
-)
-console.log("COMPETITIONS:", competitions.map(c => ({
-  leagueId: c.leagueId,
-  display: c.display,
-  country: c.country,
-  season: c.season
-})));
-
-console.log("FIXTURE LISTS COUNT:", fixtureLists.map((list, i) => ({
-  competition: competitions[i]?.display,
-  total: list.length
-})));
-  
-console.log("FIXTURE LISTS:", fixtureLists)
-
-const allFixtures = uniqBy(
-  fixtureLists
-    .flat()
-    .filter((x) => {
-      const kickoff = x?.fixture?.date
-      if (!kickoff) return false
-
-      const dt = new Date(kickoff)
-      const now = new Date()
-      const end = new Date(now.getTime() + WINDOW_HOURS * 60 * 60 * 1000)
-
-      return dt >= now && dt <= end
-    }),
-  (x) => x?.fixture?.id
-)
-  
-console.log(
-  "FIXTURES POR LIGA:",
-  allFixtures.reduce((acc, f) => {
-    const league = f?.__comp?.display || f?.league?.name || "SEM LIGA";
-    acc[league] = (acc[league] || 0) + 1;
-    return acc;
-  }, {})
-);
-
-console.log("ALL FIXTURES:", allFixtures)
-console.log(`📅 Fixtures na janela de ${WINDOW_HOURS}h: ${allFixtures.length}`)
+  console.log("ALL FIXTURES:", allFixtures)
+  console.log(`📅 Fixtures na janela ativa: ${allFixtures.length}`)
 
   const cleared = await clearFutureWindow()
   console.log(`🧹 Matches futuros limpos antes do rebuild: ${cleared}`)
 
-  const candidates = []
+  const stored = []
 
   for (const fixture of allFixtures) {
     try {
-      const candidate = await upsertMatchAndAnalysis(fixture)
-      candidates.push(candidate)
-      console.log(`✅ ${candidate.league} | ${candidate.homeTeam} x ${candidate.awayTeam}`)
+      const comp = fixture.__comp
+      if (!comp) continue
+
+      const homeTeamId = fixture?.teams?.home?.id
+      const awayTeamId = fixture?.teams?.away?.id
+      if (!homeTeamId || !awayTeamId) continue
+
+      const homeProfile = await buildTeamProfile(
+        homeTeamId,
+        comp.leagueId,
+        comp.season,
+        allFixtures
+      )
+
+      const awayProfile = await buildTeamProfile(
+        awayTeamId,
+        comp.leagueId,
+        comp.season,
+        allFixtures
+      )
+
+      const analysis = buildMatchAnalysis(fixture, homeProfile, awayProfile)
+      const metrics = buildCoreMetrics(fixture, homeProfile, awayProfile)
+      const primaryMarket = buildPrimaryMarket(analysis)
+      const primaryProbability = buildPrimaryProbability(
+        analysis,
+        primaryMarket
+      )
+
+      const { leagueDisplay, country } = normalizeLeagueByTeams(comp, fixture)
+
+      const payload = {
+        fixture_id: fixture?.fixture?.id,
+        kickoff: fixture?.fixture?.date || null,
+        league: leagueDisplay,
+        country,
+        region: comp.region,
+        priority: comp.priority || leagueScorePriority(leagueDisplay),
+        home_team: fixture?.teams?.home?.name || null,
+        away_team: fixture?.teams?.away?.name || null,
+        home_logo: fixture?.teams?.home?.logo || null,
+        away_logo: fixture?.teams?.away?.logo || null,
+        probabilities: analysis.probabilities,
+        markets: analysis.markets,
+        metrics,
+        pick: primaryMarket,
+        probability: primaryProbability,
+        updated_at: new Date().toISOString(),
+      }
+
+      await upsertMatch(payload)
+
+      stored.push(payload)
+
+      console.log(
+        `✅ ${payload.league} | ${payload.home_team} x ${payload.away_team}`
+      )
     } catch (error) {
-      console.error(`❌ Falha processando fixture ${fixture?.fixture?.id}:`, error.message)
+      console.error(
+        `❌ Falha processando fixture ${fixture?.fixture?.id}:`,
+        error.message
+      )
     }
   }
 
-  const picksCount = 0 // await rebuildDailyPicks(candidates)
+  return stored
+}
+
+async function rebuildDailyPicks(matches) {
+  if (!matches.length) return 0
+
+  const sorted = [...matches]
+    .filter((m) => m.fixture_id && m.pick)
+    .sort((a, b) => {
+      const pa = Number(a.probability || 0)
+      const pb = Number(b.probability || 0)
+
+      if (pb !== pa) return pb - pa
+      return Number(b.priority || 0) - Number(a.priority || 0)
+    })
+    .slice(0, 20)
+
+  if (!sorted.length) return 0
+
+  const rows = sorted.map((m, index) => ({
+    match_id: m.fixture_id,
+    rank: index + 1,
+    league: m.league,
+    home_team: m.home_team,
+    away_team: m.away_team,
+    market: m.pick,
+    probability: m.probability,
+    kickoff: m.kickoff,
+    created_at: new Date().toISOString(),
+  }))
+
+  const { error } = await supabase.from("daily_picks").insert(rows)
+
+  if (error) {
+    throw new Error(`Supabase daily_picks: ${error.message}`)
+  }
+
+  return rows.length
+}
+async function run() {
+  console.log("🚀 Scoutly Sync V3 iniciado")
+
+  const { start, end } = getSyncWindowRange()
+  console.log(`📆 Janela ativa: ${start.toISOString()} -> ${end.toISOString()}`)
+
+  const competitions = await resolveTargetCompetitions()
+  console.log("COMPETITIONS:", competitions)
+
+  const fixtureLists = []
+  for (const comp of competitions) {
+    const list = await fetchFixturesForCompetition(comp)
+    fixtureLists.push(list)
+  }
+
+  console.log(
+    "COMPETITIONS RESOLVIDAS:",
+    competitions.map((c) => ({
+      leagueId: c.leagueId,
+      display: c.display,
+      country: c.country,
+      season: c.season,
+    }))
+  )
+
+  console.log(
+    "FIXTURE LISTS COUNT:",
+    fixtureLists.map((list, i) => ({
+      competition: competitions[i]?.display,
+      total: list.length,
+    }))
+  )
+
+  const storedMatches = await buildAndStoreMatches(competitions, fixtureLists)
+
+  const picksCount = await rebuildDailyPicks(storedMatches)
   console.log(`🏁 Daily picks gerados: ${picksCount}`)
   console.log("✅ Scoutly Sync V3 concluído")
 }
