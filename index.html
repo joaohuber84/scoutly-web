@@ -2487,14 +2487,17 @@ async function initialize() {
   renderRadar();
   renderCompetitions();
 
-setStatus(`Conexão OK · Jogos hoje: ${state.matches.filter(match => isMatchVisibleToday(match.kickoff)).length}`, true);
+  setStatus(`Conexão OK · Jogos hoje: ${state.matches.filter(match => isMatchVisibleToday(match.kickoff)).length}`, true);
+}
 
 const generateBtn = document.getElementById('generateTicketBtn');
 if (generateBtn) {
   generateBtn.addEventListener('click', generateNewTicket);
 }
+
 document.getElementById('backToCompetitionsBtn').addEventListener('click', backToCompetitions);
 document.getElementById('closeAnalysisBtn').addEventListener('click', closeAnalysis);
+
 const overlay = document.getElementById('analysisOverlay');
 if (overlay) {
   overlay.addEventListener('click', (e) => {
