@@ -2299,7 +2299,8 @@ function renderCompetitions() {
 
     openCompetition(league);
   });
-
+}
+    
 function openCompetition(league) {
   state.selectedLeague = league;
 
@@ -2480,13 +2481,18 @@ async function loadMatches() {
  if (matchesError) throw matchesError;
 
 console.log('matchesData bruto:', matchesData);
-console.log('primeiros kickoff:', (matchesData || []).slice(0, 10).map(m => ({
-  id: m.id,
-  league: m.league,
-  home_team: m.home_team,
-  away_team: m.away_team,
-  kickoff: m.kickoff
-})));
+
+console.log(
+  'primeiros kickoff:',
+  (matchesData || []).slice(0, 10).map(m => ({
+    id: m.id,
+    league: m.league,
+    home_team: m.home_team,
+    away_team: m.away_team,
+    kickoff: m.kickoff
+  }))
+);
+  
 window.debugMatches = matchesData || [];
 const loadedMatches = matchesData || [];
 
@@ -2554,7 +2560,6 @@ if (overlay) {
   });
 }
   
-}
 initialize();
 </script>
 </body>
