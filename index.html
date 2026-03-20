@@ -1245,7 +1245,7 @@
       currentTicket: []
     };
 
-   const leagueMeta = {
+  const leagueMeta = {
   // 🌍 COMPETIÇÕES GLOBAIS / SELEÇÕES
   'FIFA World Cup': { label: 'Copa do Mundo', badge: '🌍', sort: 1 },
   'FIFA Club World Cup': { label: 'Mundial de Clubes', badge: '🌍', sort: 2 },
@@ -1253,51 +1253,43 @@
   'Copa America': { label: 'Copa América', badge: '🌍', sort: 4 },
   'UEFA Nations League': { label: 'Nations League', badge: '🌍', sort: 5 },
 
-  // 🏆 PRINCIPAIS COPAS INTERNACIONAIS
+  // 🏆 COPAS INTERNACIONAIS
   'UEFA Champions League': { label: 'Champions League', badge: '🏆', sort: 10 },
+  'Libertadores': { label: 'Libertadores', badge: '🏆', sort: 11 },
   'CONMEBOL Libertadores': { label: 'Libertadores', badge: '🏆', sort: 11 },
   'UEFA Europa League': { label: 'Europa League', badge: '🏆', sort: 12 },
   'UEFA Europa Conference League': { label: 'Conference League', badge: '🏆', sort: 13 },
+  'UEFA Conference League': { label: 'Conference League', badge: '🏆', sort: 13 },
+  'Sul-Americana': { label: 'Sul-Americana', badge: '🏆', sort: 14 },
   'CONMEBOL Sudamericana': { label: 'Sul-Americana', badge: '🏆', sort: 14 },
   'CONCACAF Champions Cup': { label: 'CONCACAF Champions Cup', badge: '🏆', sort: 15 },
-
-  // 🇧🇷 COPAS NACIONAIS
   'Copa do Brasil': { label: 'Copa do Brasil', badge: '🏆', sort: 20 },
 
-// 🌍 LIGAS (principais + internacionais relevantes)
+  // 🇧🇷 BRASIL
+  'Brasileirão Série A': { label: 'Brasileirão Série A', badge: 'BR', sort: 21 },
+  'Brasileirão Série B': { label: 'Brasileirão Série B', badge: 'BR', sort: 22 },
 
-'Liga Profesional Argentina': { label: 'Liga Argentina', badge: 'AR', sort: 30 },
+  // 🌍 LIGAS PRINCIPAIS
+  'Liga Profesional Argentina': { label: 'Liga Argentina', badge: 'AR', sort: 30 },
+  'Serie A': { label: 'Serie A', badge: 'IT', sort: 31 },
+  'La Liga': { label: 'La Liga', badge: 'ES', sort: 33 },
+  'Premier League': { label: 'Premier League', badge: 'GB', sort: 34 },
+  'Bundesliga': { label: 'Bundesliga', badge: 'DE', sort: 35 },
+  'Ligue 1': { label: 'Ligue 1', badge: 'FR', sort: 36 },
+  'Eredivisie': { label: 'Eredivisie', badge: 'NL', sort: 37 },
+  'Liga MX': { label: 'Liga MX', badge: 'MX', sort: 38 },
+  'Primeira Liga': { label: 'Primeira Liga', badge: 'PT', sort: 39 },
+  'MLS': { label: 'MLS', badge: 'US', sort: 40 },
 
-'Serie A': { label: 'Serie A', badge: 'IT', sort: 31 },
-
-// removido Serie B italiana (não usamos)
-
-'La Liga': { label: 'La Liga', badge: 'ES', sort: 33 },
-
-'Premier League': { label: 'Premier League', badge: 'GB', sort: 34 },
-
-'Bundesliga': { label: 'Bundesliga', badge: 'DE', sort: 35 },
-
-'Ligue 1': { label: 'Ligue 1', badge: 'FR', sort: 36 },
-
-'Eredivisie': { label: 'Eredivisie', badge: 'NL', sort: 37 },
-
-'Liga MX': { label: 'Liga MX', badge: 'MX', sort: 38 },
-
-'Austrian Bundesliga': { label: 'Austrian Bundesliga', badge: 'AT', sort: 39 },
-
-// 🌍 NOVAS LIGAS
-
-'Belgian Pro League': { label: 'Bélgica', badge: 'BE', sort: 40 },
-
-'Superliga': { label: 'Dinamarca', badge: 'DK', sort: 41 },
-
-'Super League Greece': { label: 'Grécia', badge: 'GR', sort: 42 },
-
-'Süper Lig': { label: 'Turquia', badge: 'TR', sort: 43 },
-
-'Saudi Pro League': { label: 'Arábia Saudita', badge: 'SA', sort: 44 }
-}; 
+  // 🌍 OUTRAS LIGAS
+  'Austrian Bundesliga': { label: 'Austrian Bundesliga', badge: 'AT', sort: 41 },
+  'Belgian Pro League': { label: 'Bélgica', badge: 'BE', sort: 42 },
+  'Superliga': { label: 'Dinamarca', badge: 'DK', sort: 43 },
+  'Super League Greece': { label: 'Grécia', badge: 'GR', sort: 44 },
+  'Super Lig': { label: 'Turquia', badge: 'TR', sort: 45 },
+  'Süper Lig': { label: 'Turquia', badge: 'TR', sort: 45 },
+  'Saudi Pro League': { label: 'Arábia Saudita', badge: 'SA', sort: 46 }
+};
 
     function setStatus(text, ok = true) {
       const chip = document.getElementById('statusChip');
@@ -1485,7 +1477,9 @@ function isMatchVisible(value) {
   start.setHours(0, 0, 0, 0);
 
   const end = new Date(now);
-  end.setDate(end.getDate() + 2);
+  const day = end.getDay(); // 0=domingo, 1=segunda ... 6=sábado
+  const daysUntilSunday = (7 - day) % 7;
+  end.setDate(end.getDate() + daysUntilSunday);
   end.setHours(23, 59, 59, 999);
 
   return d >= start && d <= end;
