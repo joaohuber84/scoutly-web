@@ -11,7 +11,7 @@ if (!APISPORTS_KEY) throw new Error("APISPORTS_KEY não encontrada.")
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 const API = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
-const WINDOW_HOURS = 72
+const WINDOW_MODE = "UNTIL_SUNDAY"
 const REQUEST_DELAY_MS = 350
 
 const TARGET_COMPETITIONS = [
@@ -502,97 +502,105 @@ function buildWindowDates() {
 }
 
 async function fetchFixturesForCompetition(comp) {
-const today = new Date()
+  const { start, end } = getSyncWindowRange()
 
-const dates = []
-for (let i = 0; i <= 7; i++) {
-  const d = new Date(today)
-  d.setDate(today.getDate() + i)
-  dates.push(d.toISOString().split('T')[0])
-}
+  const dates = []
+  const cursor = new Date(start)
+
+  while (cursor <= end) {
+    dates.push(cursor.toISOString().slice(0, 10))
+    cursor.setDate(cursor.getDate() + 1)
+  }
+
   const all = []
+
+  const hasForbiddenMarker = (value = "") => {
+    const v = normalizeLeagueKey(value)
+
+    return (
+      v.includes("u17") ||
+      v.includes("u18") ||
+      v.includes("u19") ||
+      v.includes("u20") ||
+      v.includes("u21") ||
+      v.includes("u23") ||
+      v.includes("under 17") ||
+      v.includes("under 18") ||
+      v.includes("under 19") ||
+      v.includes("under 20") ||
+      v.includes("under 21") ||
+      v.includes("under 23") ||
+      v.includes("sub 17") ||
+      v.includes("sub 18") ||
+      v.includes("sub 19") ||
+      v.includes("sub 20") ||
+      v.includes("sub 21") ||
+      v.includes("sub 23") ||
+      v.includes("women") ||
+      v.includes("female") ||
+      v.includes("feminina") ||
+      v.includes("feminino") ||
+      v.includes("youth") ||
+      v.includes("reserve") ||
+      v.includes("reserves")
+    )
+  }
 
   for (const date of dates) {
     try {
       console.log("comp:", comp)
+
       const fixtures = await api("/fixtures", {
         league: comp.leagueId,
         season: comp.season,
         date,
         timezone: TIMEZONE,
       })
-      const hasForbiddenMarker = (value = "") => {
-  const v = normalizeLeagueKey(value)
 
-  return (
-    v.includes("u17") ||
-    v.includes("u18") ||
-    v.includes("u19") ||
-    v.includes("u20") ||
-    v.includes("u21") ||
-    v.includes("u23") ||
-    v.includes("under 17") ||
-    v.includes("under 18") ||
-    v.includes("under 19") ||
-    v.includes("under 20") ||
-    v.includes("under 21") ||
-    v.includes("under 23") ||
-    v.includes("sub 17") ||
-    v.includes("sub 18") ||
-    v.includes("sub 19") ||
-    v.includes("sub 20") ||
-    v.includes("sub 21") ||
-    v.includes("sub 23") ||
-    v.includes("women") ||
-    v.includes("female") ||
-    v.includes("feminina") ||
-    v.includes("feminino") ||
-    v.includes("youth") ||
-    v.includes("reserve") ||
-    v.includes("reserves")
-  )
-}
+      const filteredFixtures = fixtures.filter((f) => {
+        const home = f?.teams?.home?.name || ""
+        const away = f?.teams?.away?.name || ""
+        const league = f?.league?.name || ""
+        const country = f?.league?.country || ""
 
-const filteredFixtures = fixtures.filter((f) => {
-  const home = f?.teams?.home?.name || ""
-  const away = f?.teams?.away?.name || ""
-  const league = f?.league?.name || ""
-  const country = f?.league?.country || ""
+        if (hasForbiddenMarker(home)) return false
+        if (hasForbiddenMarker(away)) return false
+        if (hasForbiddenMarker(league)) return false
 
-  if (hasForbiddenMarker(home)) return false
-  if (hasForbiddenMarker(away)) return false
-  if (hasForbiddenMarker(league)) return false
+        if (normalizeLeagueKey(league).includes("open cup")) return false
 
-  if (league.toLowerCase().includes("open cup")) return false
+        if (
+          normalizeLeagueKey(league).includes("pro league") &&
+          normalizeLeagueKey(country) !== "saudi arabia" &&
+          comp.display === "Saudi Pro League"
+        ) {
+          return false
+        }
 
-  // evita confundir ligas "Pro League" de outros países com Arábia Saudita
-  if (
-    normalizeLeagueKey(league).includes("pro league") &&
-    normalizeLeagueKey(country) !== "saudi arabia" &&
-    comp.display === "Saudi Pro League"
-  ) {
-    return false
-  }
+        return true
+      })
 
-  return true
-})
- console.log("DATA:", date, "LEAGUE:", comp.display, "RAW:", fixtures.length, "FILTERED:", filteredFixtures.length)
-  
-  for (const fixture of filteredFixtures) {
-  const kickoff = fixture?.fixture?.date
-  if (!kickoff) continue
+      console.log(
+        "DATA:", date,
+        "LEAGUE:", comp.display,
+        "RAW:", fixtures.length,
+        "FILTERED:", filteredFixtures.length
+      )
 
-  const dt = new Date(kickoff)
-  const now = new Date()
-  const end = new Date(now.getTime() + WINDOW_HOURS * 60 * 60 * 1000)
+      for (const fixture of filteredFixtures) {
+        const kickoff = fixture?.fixture?.date
+        if (!kickoff) continue
 
-  if (dt >= now && dt <= end) {
-    all.push({
-      ...fixture,
-      __comp: comp,
-    })
-  }
-}
+        const dt = new Date(kickoff)
+        if (Number.isNaN(dt.getTime())) continue
+
+        if (dt >= start && dt <= end) {
+          all.push({
+            ...fixture,
+            __comp: comp,
+          })
+        }
+      }
     } catch (error) {
       console.error(`Falha buscando fixtures de ${comp.display} em ${date}:`, error.message)
     }
@@ -1152,10 +1160,26 @@ function uniqBy(arr, keyFn) {
   })
 }
 
-async function clearFutureWindow() {
-  const nowIso = new Date().toISOString()
-  const endIso = new Date(Date.now() + WINDOW_HOURS * 60 * 60 * 1000).toISOString()
+function getSyncWindowRange() {
+  const now = new Date()
 
+   const start = new Date(now)
+  start.setHours(0, 0, 0, 0)
+
+  const end = new Date(now)
+  const day = end.getDay() // 0=domingo, 1=segunda ... 6=sábado
+  const daysUntilSunday = (7 - day) % 7
+  end.setDate(end.getDate() + daysUntilSunday)
+  end.setHours(23, 59, 59, 999)
+
+  return { start, end }
+}
+
+async function clearFutureWindow() {
+  const { start, end } = getSyncWindowRange()
+  const nowIso = start.toISOString()
+  const endIso = end.toISOString()
+  
   const { data: rows, error: selectError } = await supabase
     .from("matches")
     .select("id")
