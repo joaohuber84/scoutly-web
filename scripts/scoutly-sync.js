@@ -521,29 +521,58 @@ for (let i = 0; i <= 7; i++) {
         date,
         timezone: TIMEZONE,
       })
-      const isYouth = (name) =>
-  name.includes("U20") ||
-  name.includes("U19") ||
-  name.includes("U17") ||
-  name.includes("Youth")
+      const hasForbiddenMarker = (value = "") => {
+  const v = normalizeLeagueKey(value)
 
-const isInvalidLeague = (league) =>
-  league.includes("U20") ||
-  league.includes("Youth") ||
-  league.includes("Women")
+  return (
+    v.includes("u17") ||
+    v.includes("u18") ||
+    v.includes("u19") ||
+    v.includes("u20") ||
+    v.includes("u21") ||
+    v.includes("u23") ||
+    v.includes("under 17") ||
+    v.includes("under 18") ||
+    v.includes("under 19") ||
+    v.includes("under 20") ||
+    v.includes("under 21") ||
+    v.includes("under 23") ||
+    v.includes("sub 17") ||
+    v.includes("sub 18") ||
+    v.includes("sub 19") ||
+    v.includes("sub 20") ||
+    v.includes("sub 21") ||
+    v.includes("sub 23") ||
+    v.includes("women") ||
+    v.includes("female") ||
+    v.includes("feminina") ||
+    v.includes("feminino") ||
+    v.includes("youth") ||
+    v.includes("reserve") ||
+    v.includes("reserves")
+  )
+}
 
-const filteredFixtures = fixtures.filter(f => {
-  const home = f.teams.home.name
-  const away = f.teams.away.name
-  const league = f.league.name
-  const country = f.league.country
+const filteredFixtures = fixtures.filter((f) => {
+  const home = f?.teams?.home?.name || ""
+  const away = f?.teams?.away?.name || ""
+  const league = f?.league?.name || ""
+  const country = f?.league?.country || ""
 
-  if (isYouth(home) || isYouth(away)) return false
-  if (isInvalidLeague(league)) return false
-if (league.toLowerCase().includes("open cup")) return false
+  if (hasForbiddenMarker(home)) return false
+  if (hasForbiddenMarker(away)) return false
+  if (hasForbiddenMarker(league)) return false
 
-  // 🔥 filtro importante pra Saudi bug
-  if (league.includes("Pro League") && country !== "Saudi Arabia") return false
+  if (league.toLowerCase().includes("open cup")) return false
+
+  // evita confundir ligas "Pro League" de outros países com Arábia Saudita
+  if (
+    normalizeLeagueKey(league).includes("pro league") &&
+    normalizeLeagueKey(country) !== "saudi arabia" &&
+    comp.display === "Saudi Pro League"
+  ) {
+    return false
+  }
 
   return true
 })
