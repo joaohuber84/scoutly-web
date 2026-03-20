@@ -1178,6 +1178,15 @@ const allFixtures = uniqBy(
     }),
   (x) => x?.fixture?.id
 )
+  
+console.log(
+  "FIXTURES POR LIGA:",
+  allFixtures.reduce((acc, f) => {
+    const league = f?.__comp?.display || f?.league?.name || "SEM LIGA";
+    acc[league] = (acc[league] || 0) + 1;
+    return acc;
+  }, {})
+);
 
 console.log("ALL FIXTURES:", allFixtures)
 console.log(`📅 Fixtures na janela de ${WINDOW_HOURS}h: ${allFixtures.length}`)
