@@ -598,10 +598,9 @@ async function fetchFixturesForCompetition(comp) {
         }
       }
     } catch (error) {
-      console.error(`Falha buscando fixtures de ${comp.display} em ${date}:`, error.message)
+    console.error(`Falha buscando fixtures de ${comp.display} entre ${startDate} e ${endDate}:`, error.message)
     }
-  }
-
+  
   return all
 }
 
