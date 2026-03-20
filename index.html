@@ -1264,17 +1264,45 @@
   // 🇧🇷 COPAS NACIONAIS
   'Copa do Brasil': { label: 'Copa do Brasil', badge: '🏆', sort: 20 },
 
-  // 🌍 LIGAS (exemplos principais — o resto continua automático)
-  'Liga Profesional Argentina': { label: 'Liga Argentina', badge: 'AR', sort: 30 },
-  'Serie A': { label: 'Serie A', badge: 'IT', sort: 31 },
-  'Serie B': { label: 'Serie B', badge: 'IT', sort: 32 },
-  'La Liga': { label: 'La Liga', badge: 'ES', sort: 33 },
-  'Premier League': { label: 'Premier League', badge: 'GB', sort: 34 },
-  'Bundesliga': { label: 'Bundesliga', badge: 'DE', sort: 35 },
-  'Ligue 1': { label: 'Ligue 1', badge: 'FR', sort: 36 },
-  'Eredivisie': { label: 'Eredivisie', badge: 'NL', sort: 37 },
-  'Liga MX': { label: 'Liga MX', badge: 'MX', sort: 38 },
-  'Austrian Bundesliga': { label: 'Austrian Bundesliga', badge: 'AT', sort: 39 },
+ / 🌍 LIGAS (principais + internacionais relevantes)
+
+'Liga Profesional Argentina': { label: 'Liga Argentina', badge: 'AR', sort: 30 },
+
+'Serie A': { label: 'Serie A', badge: 'IT', sort: 31 },
+// removido Serie B italiana (não usamos)
+
+'La Liga': { label: 'La Liga', badge: 'ES', sort: 33 },
+'Premier League': { label: 'Premier League', badge: 'GB', sort: 34 },
+'Bundesliga': { label: 'Bundesliga', badge: 'DE', sort: 35 },
+'Ligue 1': { label: 'Ligue 1', badge: 'FR', sort: 36 },
+'Eredivisie': { label: 'Eredivisie', badge: 'NL', sort: 37 },
+
+'Liga MX': { label: 'Liga MX', badge: 'MX', sort: 38 },
+'Austrian Bundesliga': { label: 'Austrian Bundesliga', badge: 'AT', sort: 39 },
+
+// 🇧🇷 BRASIL
+'Brasileirão Série A': { label: 'Brasileirão Série A', badge: 'BR', sort: 40 },
+'Brasileirao Serie A': { label: 'Brasileirão Série A', badge: 'BR', sort: 40 }, // fallback sem acento
+
+// 🇵🇹 PORTUGAL
+'Primeira Liga': { label: 'Primeira Liga', badge: 'PT', sort: 42 },
+
+// 🇸🇦 ARÁBIA SAUDITA
+'Saudi Pro League': { label: 'Saudi Pro League', badge: 'SA', sort: 43 },
+
+// 🌍 OUTRAS LIGAS IMPORTANTES (EUROPA)
+
+'Danish Superliga': { label: 'Superliga', badge: 'DK', sort: 50 },
+'Superliga': { label: 'Superliga', badge: 'DK', sort: 50 },
+
+'Belgian Pro League': { label: 'Pro League', badge: 'BE', sort: 51 },
+'First Division A': { label: 'Pro League', badge: 'BE', sort: 51 },
+
+'Greek Super League': { label: 'Super League', badge: 'GR', sort: 52 },
+'Super League Greece': { label: 'Super League', badge: 'GR', sort: 52 },
+
+'Süper Lig': { label: 'Süper Lig', badge: 'TR', sort: 53 },
+'Turkish Super Lig': { label: 'Süper Lig', badge: 'TR', sort: 53 }, 
 }; 
 
     function setStatus(text, ok = true) {
@@ -2226,8 +2254,10 @@ function renderCompetitions() {
   buildCompetitions();
   const grid = document.getElementById('competitionsGrid');
 
+  if (!grid) return;
+
   if (!state.competitions.length) {
-    grid.innerHTML = `<div class="empty-state">Nenhuma competição encontrada para hoje.</div>`;
+    grid.innerHTML = `<div class="empty-state">Nenhuma competição encontrada para os próximos jogos.</div>`;
     return;
   }
 
@@ -2238,7 +2268,7 @@ function renderCompetitions() {
       : `<span>${getLeagueBadge(comp.league)}</span>`;
 
     return `
-      <div class="competition-card" data-league="${encodeURIComponent(comp.league)}">
+      <div class="competition-card" data-league="${encodeURIComponent(comp.league)}" role="button" tabindex="0">
         <div class="competition-top">
           <div class="competition-flag">
             ${flagMarkup}
@@ -2252,13 +2282,29 @@ function renderCompetitions() {
     `;
   }).join('');
 
-  grid.querySelectorAll('.competition-card').forEach(card => {
-    card.addEventListener('click', () => {
-      const league = decodeURIComponent(card.dataset.league);
-      openCompetition(league);
-    });
+  grid.addEventListener('click', (e) => {
+    const card = e.target.closest('.competition-card');
+    if (!card) return;
+
+    const league = decodeURIComponent(card.dataset.league || '');
+    if (!league) return;
+
+    openCompetition(league);
+  };
+
+  grid.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+
+    const card = e.target.closest('.competition-card');
+    if (!card) return;
+
+    e.preventDefault();
+
+    const league = decodeURIComponent(card.dataset.league || '');
+    if (!league) return;
+
+    openCompetition(league);
   });
-}
 
 function openCompetition(league) {
   state.selectedLeague = league;
@@ -2320,10 +2366,13 @@ function openCompetition(league) {
     })
     .join('');
 
-  gamesGrid.querySelectorAll('[data-analyze-id]').forEach(btn => {
-    btn.addEventListener('click', () => openAnalysis(btn.dataset.analyzeId));
-  });
-}
+  gamesGrid.onclick = (e) => {
+  const btn = e.target.closest('[data-analyze-id]');
+  if (!btn) return;
+
+  openAnalysis(btn.dataset.analyzeId);
+};
+
 function backToCompetitions() {
   state.selectedLeague = null;
   document.getElementById('competitionsWrap').classList.remove('hidden');
