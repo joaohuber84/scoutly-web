@@ -11,6 +11,7 @@ if (!APISPORTS_KEY) throw new Error("APISPORTS_KEY não encontrada.")
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 const API = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
+const WINDOW_HOURS = 72
 const WINDOW_MODE = "UNTIL_SUNDAY"
 const REQUEST_DELAY_MS = 1200
 
