@@ -251,8 +251,8 @@ async function resolveCountryCompetitions(target) {
       if (!seasonCurrent) return false
       if (target.type && leagueType !== target.type) return false
 
-      return Array.from(normalizedNames).some((n) => rawName === n)
-    })
+     return Array.from(normalizedNames).some((n) => rawName.includes(n))
+    }) 
     .map((item) => {
       const currentSeason = item?.seasons?.find((s) => s.current) || item?.seasons?.[0]
       return {
