@@ -1472,18 +1472,13 @@ function isMatchVisible(value) {
   if (Number.isNaN(d.getTime())) return false;
 
   const now = new Date();
-
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-
   const end = new Date(now);
-  const day = end.getDay(); // 0=domingo, 1=segunda ... 6=sábado
-  const daysUntilSunday = (7 - day) % 7;
-  end.setDate(end.getDate() + daysUntilSunday);
+  end.setDate(end.getDate() + 7);
   end.setHours(23, 59, 59, 999);
 
-  return d >= start && d <= end;
+  return d >= now && d <= end;
 }
+
     function buildCoreMetrics(match) {
       const recentGoals = firstNumeric(match, ['avg_goals_recent', 'recent_avg_goals', 'last5_avg_goals']);
       const seasonGoals = firstNumeric(match, ['avg_goals', 'goals_avg', 'season_avg_goals'], 2.4);
@@ -2569,8 +2564,20 @@ async function initialize() {
   renderRadar();
   renderCompetitions();
 
-const visibleMatches = state.matches.filter(match => isMatchVisible(match.kickoff));
+const visibleMatches = state.matches.filter(match => {
+  console.log("CHECK MATCH:", {
+    league: match.league,
+    home: match.home_team,
+    away: match.away_team,
+    kickoff: match.kickoff,
+    parsed: new Date(match.kickoff).toString(),
+    now: new Date().toString(),
+    visible: isMatchVisible(match.kickoff)
+  });
 
+  return isMatchVisible(match.kickoff);
+});
+  
 console.log('JOGOS VISÍVEIS:', visibleMatches.map(m => ({
   league: m.league,
   home_team: m.home_team,
