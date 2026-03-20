@@ -2306,14 +2306,15 @@ function openCompetition(league) {
 
   const competition = state.competitions.find(c => c.league === league);
   const matches = competition?.matches || [];
-  const filteredMatches = matches.filter(match => isMatchVisibleToday(match.kickoff));
+  const filteredMatches = matches.filter(match => isMatchVisible(match.kickoff));
 
   document.getElementById('competitionsWrap').classList.add('hidden');
   document.getElementById('gamesWrap').classList.remove('hidden');
   document.getElementById('backToCompetitionsBtn').classList.remove('hidden');
 
   document.getElementById('selectedCompetitionTitle').textContent = getLeagueDisplay(league);
-  document.getElementById('selectedCompetitionCopy').textContent = `${filteredMatches.length} jogo(s) hoje nesta competição.`;
+  document.getElementById('selectedCompetitionCopy').textContent =
+    `${filteredMatches.length} jogo(s) nos próximos horários desta competição.`;
 
   const gamesGrid = document.getElementById('gamesGrid');
 
@@ -2362,13 +2363,14 @@ function openCompetition(league) {
     .join('');
 
   gamesGrid.onclick = (e) => {
-  const btn = e.target.closest('[data-analyze-id]');
-  if (!btn) return;
+    const btn = e.target.closest('[data-analyze-id]');
+    if (!btn) return;
 
-  openAnalysis(btn.dataset.analyzeId);
-};
+    openAnalysis(btn.dataset.analyzeId);
+  };
+}
 
-function backToCompetitions() {
+  function backToCompetitions() {
   state.selectedLeague = null;
   document.getElementById('competitionsWrap').classList.remove('hidden');
   document.getElementById('gamesWrap').classList.add('hidden');
@@ -2559,7 +2561,8 @@ if (overlay) {
     if (e.target.id === 'analysisOverlay') closeAnalysis();
   });
 }
-  
+
+}
 initialize();
 </script>
 </body>
