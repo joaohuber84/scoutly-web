@@ -12,7 +12,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 const API = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
 const WINDOW_MODE = "UNTIL_SUNDAY"
-const REQUEST_DELAY_MS = 350
+const REQUEST_DELAY_MS = 1200
 
 const TARGET_COMPETITIONS = [
   // Inglaterra
@@ -549,7 +549,9 @@ async function fetchFixturesForCompetition(comp) {
   for (const date of dates) {
     try {
       console.log("comp:", comp)
-
+      
+await sleep (1200)
+     
       const fixtures = await api("/fixtures", {
         league: comp.leagueId,
         season: comp.season,
