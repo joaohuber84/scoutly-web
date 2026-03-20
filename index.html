@@ -2569,8 +2569,16 @@ async function initialize() {
   renderRadar();
   renderCompetitions();
 
- setStatus(`Conexão OK · Próximos jogos: ${state.matches.filter(match => isMatchVisible(match.kickoff)).length}`, true);
+const visibleMatches = state.matches.filter(match => isMatchVisible(match.kickoff));
 
+console.log('JOGOS VISÍVEIS:', visibleMatches.map(m => ({
+  league: m.league,
+  home_team: m.home_team,
+  away_team: m.away_team,
+  kickoff: m.kickoff
+})));
+
+setStatus(`Conexão OK · Próximos jogos: ${visibleMatches.length}`, true);
 
 const generateBtn = document.getElementById('generateTicketBtn');
 if (generateBtn) {
