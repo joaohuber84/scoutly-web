@@ -2493,7 +2493,7 @@ async function initialize() {
   renderRadar();
   renderCompetitions();
 
-  setStatus(`Conexão OK · Jogos hoje: ${state.matches.filter(match => isMatchVisibleToday(match.kickoff)).length}`, true);
+ setStatus(`Conexão OK · Próximos jogos: ${state.matches.filter(match => isMatchVisible(match.kickoff)).length}`, true);
 }
 
 const generateBtn = document.getElementById('generateTicketBtn');
@@ -2510,7 +2510,7 @@ if (overlay) {
     if (e.target.id === 'analysisOverlay') closeAnalysis();
   });
 }
-    }
+   
 initialize();
 </script>
 </body>
