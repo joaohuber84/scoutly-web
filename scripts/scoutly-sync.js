@@ -235,9 +235,9 @@ function leagueScorePriority(leagueName) {
 }
 
 async function resolveCountryCompetitions(target) {
-  const leagues = await api("/leagues", {
+  const leagues = await api("/leagues", 
+  {
     country: target.country,
-    current: true,
   })
 
   const normalizedNames = new Set(target.names.map((x) => x.toLowerCase()))
