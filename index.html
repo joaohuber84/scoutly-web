@@ -1245,35 +1245,37 @@
       currentTicket: []
     };
 
-    const leagueMeta = {
-      'Premier League': { label: 'Premier League', badge: 'EN', sort: 10 },
-      'La Liga': { label: 'La Liga', badge: 'ES', sort: 20 },
-      'Serie A': { label: 'Serie A', badge: 'IT', sort: 30 },
-      'Bundesliga': { label: 'Bundesliga', badge: 'DE', sort: 40 },
-      'Ligue 1': { label: 'Ligue 1', badge: 'FR', sort: 50 },
-      'Eredivisie': { label: 'Eredivisie', badge: 'NL', sort: 55 },
-      'MLS': { label: 'MLS', badge: 'US', sort: 60 },
-      'Brasileirão Série A': { label: 'Brasileirão Série A', badge: 'BR', sort: 16 },
-      'Brasileirão Série B': { label: 'Brasileirão Série B', badge: 'BR', sort: 17 },
-      'Liga MX': { label: 'Liga MX', badge: 'MX', sort: 61 },
-      'Liga Profesional Argentina': { label: 'Liga Profesional Argentina', badge: 'AR', sort: 34 },
+   const leagueMeta = {
+  // 🌍 COMPETIÇÕES GLOBAIS / SELEÇÕES
+  'FIFA World Cup': { label: 'Copa do Mundo', badge: '🌍', sort: 1 },
+  'FIFA Club World Cup': { label: 'Mundial de Clubes', badge: '🌍', sort: 2 },
+  'UEFA European Championship': { label: 'Eurocopa', badge: '🌍', sort: 3 },
+  'Copa America': { label: 'Copa América', badge: '🌍', sort: 4 },
+  'UEFA Nations League': { label: 'Nations League', badge: '🌍', sort: 5 },
 
-      'UEFA Champions League': { label: 'UEFA Champions League', badge: '🏆', sort: 5 },
-      'UEFA Europa League': { label: 'UEFA Europa League', badge: '🏆', sort: 15 },
-      'UEFA Europa Conference League': { label: 'UEFA Europa Conference League', badge: '🏆', sort: 25 },
-      'CONMEBOL Libertadores': { label: 'CONMEBOL Libertadores', badge: '🏆', sort: 12 },
-      'CONMEBOL Sudamericana': { label: 'CONMEBOL Sudamericana', badge: '🏆', sort: 18 },
-      'CONCACAF Champions Cup': { label: 'CONCACAF Champions Cup', badge: '🏆', sort: 22 },
-      'Copa do Brasil': { label: 'Copa do Brasil', badge: '🏟️', sort: 24 },
+  // 🏆 PRINCIPAIS COPAS INTERNACIONAIS
+  'UEFA Champions League': { label: 'Champions League', badge: '🏆', sort: 10 },
+  'CONMEBOL Libertadores': { label: 'Libertadores', badge: '🏆', sort: 11 },
+  'UEFA Europa League': { label: 'Europa League', badge: '🏆', sort: 12 },
+  'UEFA Europa Conference League': { label: 'Conference League', badge: '🏆', sort: 13 },
+  'CONMEBOL Sudamericana': { label: 'Sul-Americana', badge: '🏆', sort: 14 },
+  'CONCACAF Champions Cup': { label: 'CONCACAF Champions Cup', badge: '🏆', sort: 15 },
 
-      'Serie B': { label: 'Serie B', badge: 'IT', sort: 32 },
+  // 🇧🇷 COPAS NACIONAIS
+  'Copa do Brasil': { label: 'Copa do Brasil', badge: '🏆', sort: 20 },
 
-      'FIFA Club World Cup': { label: 'Mundial de Clubes', badge: '🌍', sort: 8 },
-      'FIFA World Cup': { label: 'Copa do Mundo', badge: '🌍', sort: 7 },
-      'UEFA European Championship': { label: 'Eurocopa', badge: '🌍', sort: 9 },
-      'Copa America': { label: 'Copa América', badge: '🌍', sort: 11 },
-      'UEFA Nations League': { label: 'Nations League', badge: '🌍', sort: 13 }
-    };
+  // 🌍 LIGAS (exemplos principais — o resto continua automático)
+  'Liga Profesional Argentina': { label: 'Liga Argentina', badge: 'AR', sort: 30 },
+  'Serie A': { label: 'Serie A', badge: 'IT', sort: 31 },
+  'Serie B': { label: 'Serie B', badge: 'IT', sort: 32 },
+  'La Liga': { label: 'La Liga', badge: 'ES', sort: 33 },
+  'Premier League': { label: 'Premier League', badge: 'GB', sort: 34 },
+  'Bundesliga': { label: 'Bundesliga', badge: 'DE', sort: 35 },
+  'Ligue 1': { label: 'Ligue 1', badge: 'FR', sort: 36 },
+  'Eredivisie': { label: 'Eredivisie', badge: 'NL', sort: 37 },
+  'Liga MX': { label: 'Liga MX', badge: 'MX', sort: 38 },
+  'Austrian Bundesliga': { label: 'Austrian Bundesliga', badge: 'AT', sort: 39 },
+}; 
 
     function setStatus(text, ok = true) {
       const chip = document.getElementById('statusChip');
@@ -1449,19 +1451,17 @@ return 'https://upload.wikimedia.org/wikipedia/commons/6/6e/Football_icon.svg';
       if (Number.isNaN(d.getTime())) return false;
       return d.getTime() >= (Date.now() - 24 * 60 * 60 * 1000);
     }
-function isMatchVisibleToday(value) {
+function isMatchVisible(value) {
   if (!value) return false;
 
   const d = new Date(value);
   if (Number.isNaN(d.getTime())) return false;
 
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const limit = new Date();
+  limit.setHours(limit.getHours() + 48);
 
-  const end = new Date(start);
-  end.setDate(end.getDate() + 1);
-
-  return d >= start && d < end;
+  return d >= now && d <= limit;
 }
     function buildCoreMetrics(match) {
       const recentGoals = firstNumeric(match, ['avg_goals_recent', 'recent_avg_goals', 'last5_avg_goals']);
@@ -2177,7 +2177,13 @@ function getFlag(country) {
     Turkey: 'TR',
     Greece: 'GR',
     Switzerland: 'CH',
-    Denmark: 'DK'
+    Denmark: 'DK',
+    Austria: 'AT',
+
+    // NOVOS
+    'Saudi Arabia': 'SA',
+    'Saudi-Arabia': 'SA',
+    KSA: 'SA',
   };
 
   return flags[country] || null;
@@ -2187,7 +2193,7 @@ function buildCompetitions() {
   const map = new Map();
 
   for (const match of state.matches) {
-    if (!isMatchVisibleToday(match.kickoff)) continue;
+    if (!isMatchVisible(match.kickoff)) continue;
 
     const league = match.league || '';
     const country = match.country || null;
