@@ -1890,9 +1890,9 @@ function isMatchVisibleToday(value) {
           <div class="stat-label">${item.label}</div>
           <div class="stat-value">${item.value}</div>
         </div>
-      `).join('');
-    
+      `).join('');    
  }
+    
 function findMatchByPick(rawPick) {
   return state.matches.find(m => String(m.id) === String(rawPick.match_id)) ||
     state.matches.find(m =>
