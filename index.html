@@ -1459,13 +1459,7 @@ return 'https://upload.wikimedia.org/wikipedia/commons/6/6e/Football_icon.svg';
       `;
     }
 
-    function isUpcoming(value) {
-      if (!value) return false;
-      const d = new Date(value);
-      if (Number.isNaN(d.getTime())) return false;
-      return d.getTime() >= (Date.now() - 24 * 60 * 60 * 1000);
-    }
-function isMatchVisible(value) {
+    function isMatchVisible(value) {
   if (!value) return false;
 
   const d = new Date(value);
@@ -1477,10 +1471,10 @@ function isMatchVisible(value) {
   start.setHours(0, 0, 0, 0);
 
   const end = new Date(now);
-  end.setDate(end.getDate() + 7);
+  end.setDate(end.getDate() + 2);
   end.setHours(23, 59, 59, 999);
 
-  return true
+  return d >= start && d <= end;
 }
 
  function shouldHideLeague(leagueName) {
@@ -2236,16 +2230,13 @@ function getFlag(country) {
 function buildCompetitions() {
   const map = new Map();
 
-  for (const match of state.matches) {
-  console.log("BUILD COMPETITIONS MATCH:", {
-    league: match.league,
-    home: match.home_team,
-    away: match.away_team,
-    kickoff: match.kickoff,
-    visible: isMatchVisible(match.kickoff),
-    hiddenLeague: shouldHideLeague(match.league)
+  const visibleMatches = state.matches.filter(match => {
+    const visible = isMatchVisible(match.kickoff);
+    const hiddenLeague = shouldHideLeague(match.league);
+    return visible && !hiddenLeague;
   });
 
+  for (const match of visibleMatches) {
     const league = match.league || '';
     const country = match.country || null;
 
@@ -2268,11 +2259,9 @@ function buildCompetitions() {
     item.matches.push(match);
   }
 
-console.log("MAP BEFORE ARRAY:", Array.from(map.values()));
-
-state.competitions = Array.from(map.values()).sort(
-  (a, b) => getLeagueSort(a.league) - getLeagueSort(b.league)
-);
+  state.competitions = Array.from(map.values()).sort(
+    (a, b) => getLeagueSort(a.league) - getLeagueSort(b.league)
+  );
 }
 
 function renderCompetitions() {
@@ -2335,9 +2324,12 @@ function renderCompetitions() {
 function openCompetition(league) {
   state.selectedLeague = league;
 
-  const competition = state.competitions.find(c => c.league === league);
-  const matches = competition?.matches || [];
-  const filteredMatches = matches;
+ const competition = state.competitions.find(c => c.league === league);
+const matches = competition?.matches || [];
+const filteredMatches = matches.filter(match =>
+  isMatchVisible(match.kickoff) && !shouldHideLeague(match.league)
+);
+ 
 
   document.getElementById('competitionsWrap').classList.add('hidden');
   document.getElementById('gamesWrap').classList.remove('hidden');
