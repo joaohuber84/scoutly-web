@@ -748,27 +748,34 @@ function buildCoreMetrics(fixture, homeProfile, awayProfile) {
 }
 
 async function upsertMatch(match) {
-const payload = {
-  id: match.id,
-  kickoff: match.kickoff,
-  league: match.league,
-  region: match.region,
-  priority: match.priority,
-  home_team: match.home_team,
-  away_team: match.away_team,
-  probabilities: match.probabilities,
-  metrics: match.metrics,
-  updated_at: new Date().toISOString(),
-}
+  const payload = {
+    id: match.id,
+    kickoff: match.kickoff,
+    league: match.league,
+    country: match.country || null,
+    region: match.region || null,
+    priority: match.priority || null,
+    home_team: match.home_team || null,
+    away_team: match.away_team || null,
+    home_logo: match.home_logo || null,
+    away_logo: match.away_logo || null,
+    probabilities: match.probabilities || null,
+    markets: match.markets || null,
+    metrics: match.metrics || null,
+    pick: match.pick || null,
+    probability: match.probability || null,
+    updated_at: new Date().toISOString(),
+  }
 
-const { error } = await supabase
-  .from("matches")
-  .upsert(payload, { onConflict: "id" })
+  const { error } = await supabase
+    .from("matches")
+    .upsert(payload, { onConflict: "id" })
 
   if (error) {
     console.error("Erro ao salvar match:", error.message)
   }
 }
+
 function normalizeLeagueByTeams(comp, fixture) {
   let leagueDisplay = comp.display
   let country = comp.country || fixture?.league?.country || null
@@ -1003,7 +1010,7 @@ const allFixtures = uniqBy(
       const { leagueDisplay, country } = normalizeLeagueByTeams(comp, fixture)
 
       const payload = {
-        fixture_id: fixture?.fixture?.id,
+        id: fixture?.fixture?.id,
         kickoff: fixture?.fixture?.date || null,
         league: leagueDisplay,
         country,
