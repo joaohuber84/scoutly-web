@@ -2175,8 +2175,8 @@ function getMainMarket(match) {
   // GOLS
   if (probOver25 >= 0.72) addMercado("Mais de 2.5 gols", probOver25 + 0.05, "gols");
   if (probOver15 >= 0.80) addMercado("Mais de 1.5 gols", probOver15 + 0.06, "gols");
-  if (golsMedia > 0 && golsMedia <= 2.2) addMercado("Menos de 3.5 gols", 0.74 + (2.2 - golsMedia) * 0.08, "gols");
-  if (golsMedia > 0 && golsMedia <= 1.8) addMercado("Menos de 2.5 gols", 0.64 + (1.8 - golsMedia) * 0.10, "gols");
+  if (golsMedia > 0 && golsMedia <= 2.2) addMercado("Menos de 3.5 gols", 0.66 + (2.2 - golsMedia) * 0.06, "gols");
+  if (golsMedia > 0 && golsMedia <= 1.8) addMercado("Menos de 2.5 gols", 0.62 + (1.8 - golsMedia) * 0.08, "gols");
 
   // AMBAS MARCAM
   if (probBTTS >= 0.68) addMercado("Ambas marcam", probBTTS + 0.03, "btts");
@@ -2212,12 +2212,24 @@ function getMainMarket(match) {
   }
 
   if (shotsMedia <= 18 && shotsOnTargetMedia <= 6 && golsMedia <= 2.1) {
-    addMercado("Menos de 3.5 gols", 0.80, "gols");
+    addMercado("Menos de 3.5 gols", 0.69, "gols");
   }
 
   // REMOVER EXCESSO DE REPETIÇÃO DE UMA MESMA FAMÍLIA
-  candidatos.sort((a, b) => b.score - a.score);
+  const prioridadeFamilia = {
+  resultado: 0.03,
+  dupla: 0.025,
+  btts: 0.02,
+  escanteios: 0.015,
+  gols: 0
+};
 
+candidatos.sort((a, b) => {
+  const scoreA = a.score + (prioridadeFamilia[a.familia] || 0);
+  const scoreB = b.score + (prioridadeFamilia[b.familia] || 0);
+  return scoreB - scoreA;
+});
+  
   if (!candidatos.length) {
     if (Number(match?.probability || 0) >= 0.70) return "Mais de 1.5 gols";
     return "Jogo equilibrado";
