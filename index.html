@@ -2516,22 +2516,7 @@ async function loadMatches() {
 
   window.debugMatches = matchesData || [];
  const loadedMatches = matchesData || [];
-  if (!match.kickoff) return false;
-
-  const d = new Date(match.kickoff);
-  if (Number.isNaN(d.getTime())) return false;
-
-  const now = new Date();
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date(now);
-  end.setDate(end.getDate() + 7);
-  end.setHours(23, 59, 59, 999);
-
-  return d >= start && d <= end;
-}); 
-
+  
   console.log("MATCHES FILTRADOS:", loadedMatches.length);
   console.log('TOTAL loadedMatches:', loadedMatches.length);
   console.log(
