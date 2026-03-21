@@ -1472,12 +1472,39 @@ function isMatchVisible(value) {
   if (Number.isNaN(d.getTime())) return false;
 
   const now = new Date();
+
   const end = new Date(now);
-  end.setDate(end.getDate() + 7);
+  const day = end.getDay(); // 0=domingo ... 6=sábado
+  const daysUntilSunday = (7 - day) % 7;
+  end.setDate(end.getDate() + daysUntilSunday);
   end.setHours(23, 59, 59, 999);
 
   return d >= now && d <= end;
 }
+
+ function shouldHideLeague(leagueName) {
+  const name = String(leagueName || "").toLowerCase();
+
+  return (
+    name.includes("u20") ||
+    name.includes("u-20") ||
+    name.includes("under 20") ||
+    name.includes("sub 20") ||
+    name.includes("u17") ||
+    name.includes("u18") ||
+    name.includes("u19") ||
+    name.includes("u21") ||
+    name.includes("u23") ||
+    name.includes("women") ||
+    name.includes("female") ||
+    name.includes("feminina") ||
+    name.includes("feminino") ||
+    name.includes("youth") ||
+    name.includes("reserve") ||
+    name.includes("reserves") ||
+    name.includes("open cup")
+  );
+}   
 
     function buildCoreMetrics(match) {
       const recentGoals = firstNumeric(match, ['avg_goals_recent', 'recent_avg_goals', 'last5_avg_goals']);
@@ -2210,6 +2237,9 @@ function buildCompetitions() {
 
   for (const match of state.matches) {
 
+    if (!isMatchVisible(match.kickoff)) continue;
+  if (shouldHideLeague(match.league)) continue;
+
     const league = match.league || '';
     const country = match.country || null;
 
@@ -2563,7 +2593,10 @@ async function initialize() {
   renderRadar();
   renderCompetitions();
 
-const visibleMatches = state.matches;
+const visibleMatches = state.matches.filter(match => 
+  isMatchVisible(match.kickoff) &&
+  !shouldHideLeague(match.league)
+);
   
 console.log('JOGOS VISÍVEIS:', visibleMatches.map(m => ({
   league: m.league,
