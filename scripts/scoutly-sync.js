@@ -750,7 +750,6 @@ function buildCoreMetrics(fixture, homeProfile, awayProfile) {
 async function upsertMatch(match) {
   const payload = {
     id: match.id,
-    fixture_id: match.fixture_id ||  match.id,
     kickoff: match.kickoff,
     league: match.league,
     country: match.country || null,
@@ -1036,7 +1035,6 @@ const allFixtures = uniqBy(
 
       const payload = {
         id: fixture?.fixture?.id,
-        fixture_id: fixture?.fixture?.id,
         kickoff: fixture?.fixture?.date || null,
         league: leagueDisplay,
         country,
@@ -1076,7 +1074,7 @@ async function rebuildDailyPicks(matches) {
   if (!matches.length) return 0
 
   const sorted = [...matches]
-    .filter((m) => m.fixture_id && m.pick)
+    .filter((m) => m.id && m.pick)
     .sort((a, b) => {
       const pa = Number(a.probability || 0)
       const pb = Number(b.probability || 0)
@@ -1089,7 +1087,7 @@ async function rebuildDailyPicks(matches) {
   if (!sorted.length) return 0
 
   const rows = sorted.map((m, index) => ({
-    match_id: m.fixture_id,
+    match_id: m.id,
     rank: index + 1,
     league: m.league,
     home_team: m.home_team,
