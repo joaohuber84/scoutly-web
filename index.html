@@ -2228,8 +2228,13 @@ function getFlag(country) {
 }
 
 function buildCompetitions() {
- const map = new Map();
-  for (const match of state.matches) {
+  const map = new Map();
+
+  const visibleMatches = state.matches.filter(match =>
+    isMatchVisible(match.kickoff) && !shouldHideLeague(match.league)
+  );
+
+  for (const match of visibleMatches) {
     const league = match.league || '';
     const country = match.country || null;
 
@@ -2317,11 +2322,12 @@ function renderCompetitions() {
 function openCompetition(league) {
   state.selectedLeague = league;
 
- const competition = state.competitions.find(c => c.league === league);
-const matches = competition?.matches || [];
-const filteredMatches = matches;
+  const competition = state.competitions.find(c => c.league === league);
+  const matches = competition?.matches || [];
+  const filteredMatches = matches.filter(match =>
+    isMatchVisible(match.kickoff) && !shouldHideLeague(match.league)
+  );
  
-
   document.getElementById('competitionsWrap').classList.add('hidden');
   document.getElementById('gamesWrap').classList.remove('hidden');
   document.getElementById('backToCompetitionsBtn').classList.remove('hidden');
