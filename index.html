@@ -1467,14 +1467,10 @@ return 'https://upload.wikimedia.org/wikipedia/commons/6/6e/Football_icon.svg';
 
   const now = new Date();
 
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
+  const diffMs = d.getTime() - now.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
 
-  const end = new Date(now);
-  end.setDate(end.getDate() + 2);
-  end.setHours(23, 59, 59, 999);
-
-  return d >= start && d <= end;
+  return diffDays >= -1 && diffDays <= 3;
 }
 
  function shouldHideLeague(leagueName) {
