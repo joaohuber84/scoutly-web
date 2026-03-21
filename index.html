@@ -2315,9 +2315,7 @@ function openCompetition(league) {
 
  const competition = state.competitions.find(c => c.league === league);
 const matches = competition?.matches || [];
-const filteredMatches = matches.filter(match =>
-  isMatchVisible(match.kickoff) && !shouldHideLeague(match.league)
-);
+const filteredMatches = matches;
  
 
   document.getElementById('competitionsWrap').classList.add('hidden');
