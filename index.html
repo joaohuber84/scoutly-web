@@ -2075,7 +2075,19 @@ function getExtraOpportunityForMatch(matchId) {
         tryAdd(moderate.length ? moderate : pool);
       }
 
-      return picked.slice(0, 3);
+      const selected = [];
+const usedLeagues = new Set();
+
+for (const item of picked) {
+  if (!usedLeagues.has(item.league)) {
+    selected.push(item);
+    usedLeagues.add(item.league);
+  }
+
+  if (selected.length === 3) break;
+}
+
+return selected;
     }
 
     function renderTicket() {
