@@ -2209,7 +2209,6 @@ function buildCompetitions() {
   const map = new Map();
 
   for (const match of state.matches) {
-    if (!isMatchVisible(match.kickoff)) continue;
 
     const league = match.league || '';
     const country = match.country || null;
@@ -2300,7 +2299,7 @@ function openCompetition(league) {
 
   const competition = state.competitions.find(c => c.league === league);
   const matches = competition?.matches || [];
-  const filteredMatches = matches.filter(match => isMatchVisible(match.kickoff));
+  const filteredMatches = matches;
 
   document.getElementById('competitionsWrap').classList.add('hidden');
   document.getElementById('gamesWrap').classList.remove('hidden');
