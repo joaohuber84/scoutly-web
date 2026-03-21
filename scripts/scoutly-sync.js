@@ -1092,8 +1092,7 @@ async function run() {
       competition: competitions[i]?.display,
       total: list.length,
     }))
-  )
-
+  
   const storedMatches = await buildAndStoreMatches(competitions, fixtureLists)
 
   const picksCount = await rebuildDailyPicks(storedMatches)
