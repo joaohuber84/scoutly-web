@@ -2173,11 +2173,11 @@ function getMainMarket(match) {
   }
 
   // GOLS
-  if (probOver25 >= 0.72) addMercado("Mais de 2.5 gols", probOver25 + 0.05, "gols");
-  if (probOver15 >= 0.80) addMercado("Mais de 1.5 gols", probOver15 + 0.06, "gols");
-  if (golsMedia > 0 && golsMedia <= 2.2) addMercado("Menos de 3.5 gols", 0.66 + (2.2 - golsMedia) * 0.06, "gols");
-  if (golsMedia > 0 && golsMedia <= 1.8) addMercado("Menos de 2.5 gols", 0.62 + (1.8 - golsMedia) * 0.08, "gols");
-
+ if (probOver25 >= 0.75) addMercado("Mais de 2.5 gols", probOver25 + 0.04, "gols");
+if (probOver15 >= 0.82) addMercado("Mais de 1.5 gols", probOver15 + 0.05, "gols");
+if (golsMedia > 0 && golsMedia <= 2.0) {addMercado("Menos de 3.5 gols", 0.60 + (2.0 - golsMedia) * 0.05, "gols");}
+if (golsMedia > 0 && golsMedia <= 1.5) { addMercado("Menos de 2.5 gols", 0.58 + (1.5 - golsMedia) * 0.06, "gols");}
+  
   // AMBAS MARCAM
   if (probBTTS >= 0.68) addMercado("Ambas marcam", probBTTS + 0.03, "btts");
   if (golsMedia > 0 && golsMedia <= 2.0 && probBTTS <= 0.52) {
@@ -2199,20 +2199,20 @@ function getMainMarket(match) {
   if (probFora >= 0.64) addMercado("Vitória do visitante", probFora + 0.03, "resultado");
 
   if (probCasa >= 0.48 && probCasa + probEmpate >= 0.78) {
-    addMercado("Dupla chance mandante ou empate", probCasa + probEmpate + 0.02, "dupla");
+   addMercado(`${match.home_team} ou empate`, probCasa + probEmpate + 0.02, "dupla"); 
   }
 
   if (probFora >= 0.48 && probFora + probEmpate >= 0.78) {
-    addMercado("Dupla chance visitante ou empate", probFora + probEmpate + 0.02, "dupla");
+    addMercado(`${match.away_team} ou empate`, probFora + probEmpate + 0.02, "dupla");
   }
 
   // AJUSTES DE CONTEXTO
   if (shotsMedia >= 24 && shotsOnTargetMedia >= 8) {
-    addMercado("Mais de 1.5 gols", 0.83, "gols");
+    addMercado("Mais de 1.5 gols", 0.80, "gols");
   }
 
   if (shotsMedia <= 16 && shotsOnTargetMedia <= 5 && golsMedia <= 2.0) {
-    addMercado("Menos de 3.5 gols", 0.60, "gols");
+    addMercado("Menos de 3.5 gols", 0.56, "gols");
   }
 
 console.log("CANDIDATOS Scoutly:", match.home_team, "x", match.away_team, candidatos);
@@ -2237,11 +2237,33 @@ candidatos.sort((a, b) => {
     return "Jogo equilibrado";
   }
 
-  return candidatos[0].nome;
+const limitePorFamilia = {
+  gols: 3,
+  btts: 2,
+  escanteios: 2,
+  resultado: 2,
+  dupla: 2
+};
+
+window.__usedMarkets = window.__usedMarkets || {};
+
+for (let c of candidatos) {
+  const usada = window.__usedMarkets[c.familia] || 0;
+  const limite = limitePorFamilia[c.familia] || 2;
+
+  if (usada < limite) {
+    window.__usedMarkets[c.familia] = usada + 1;
+    return c.nome;
+  }
+}
+
+// fallback
+return candidatos[0].nome;
 }
     
 function renderRadar() {
   const list = document.getElementById('radarList');
+window.__usedMarkets = {}; // 🔥 ESSENCIAL
 
 const sortedMatches = state.matches
   .filter(m => {
