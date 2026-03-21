@@ -758,7 +758,6 @@ const payload = {
   home_team: match.home_team,
   away_team: match.away_team,
   probabilities: match.probabilities,
-  markets: match.markets,
   metrics: match.metrics,
   updated_at: new Date().toISOString(),
 }
