@@ -750,6 +750,7 @@ function buildCoreMetrics(fixture, homeProfile, awayProfile) {
 async function upsertMatch(match) {
   const payload = {
     id: match.id,
+    fixture_id: match.fixture_id ||  match.id,
     kickoff: match.kickoff,
     league: match.league,
     country: match.country || null,
@@ -1035,6 +1036,7 @@ const allFixtures = uniqBy(
 
       const payload = {
         id: fixture?.fixture?.id,
+        fixture_id: fixture?.fixture?.id,
         kickoff: fixture?.fixture?.date || null,
         league: leagueDisplay,
         country,
