@@ -2224,15 +2224,8 @@ function getFlag(country) {
 }
 
 function buildCompetitions() {
-  const map = new Map();
-
-  const visibleMatches = state.matches.filter(match => {
-    const visible = isMatchVisible(match.kickoff);
-    const hiddenLeague = shouldHideLeague(match.league);
-    return visible && !hiddenLeague;
-  });
-
-  for (const match of visibleMatches) {
+ const map = new map();
+  for (const match of state.matches) {
     const league = match.league || '';
     const country = match.country || null;
 
