@@ -532,13 +532,13 @@ async function fetchFixturesForCompetition(comp) {
       return true
     })
 
-    console.log(
-      "LEAGUE:", comp.display,
-      "FROM:", startDate,
-      "TO:", endDate,
-      "RAW:", fixtures.length,
-      "FILTERED:", filteredFixtures.length
-    )
+ console.log(
+        "LEAGUE:", comp.display,
+        "FROM:", startDate,
+        "TO:", endDate,
+        "RAW:", fixtures.length,
+        "FILTERED:", filteredFixtures.length
+      )
 
     for (const fixture of filteredFixtures) {
       const kickoff = fixture?.fixture?.date
@@ -930,10 +930,22 @@ async function clearFutureWindow() {
 }
 
 async function buildAndStoreMatches(competitions, fixtureLists) {
-  const allFixtures = uniqBy(
-    fixtureLists.flat(),
-    (x) => x?.fixture?.id
-  )
+const { start, end } = getSyncWindowRange()
+
+const allFixtures = uniqBy(
+  fixtureLists
+    .flat()
+    .filter((x) => {
+      const kickoff = x?.fixture?.date
+      if (!kickoff) return false
+
+      const dt = new Date(kickoff)
+      if (Number.isNaN(dt.getTime())) return false
+
+      return dt >= start && dt <= end
+    }),
+  (x) => x?.fixture?.id
+) 
 
   console.log(
     "FIXTURES POR LIGA:",
