@@ -2137,10 +2137,15 @@ const badgeSource = { ...leg, ...(match || {}) };
 function renderRadar() {
   const list = document.getElementById('radarList');
 
-  const radarItems = state.dailyPicks
-    .filter(item => Number(item.rank || 999) > 0)
-    .sort((a, b) => Number(a.rank || 999) - Number(b.rank || 999))
-    .slice(0, 5);
+ const radarItems = state.matches
+  .filter(m => Number(m.probability || 0) >= 0.6)
+  .sort((a, b) => {
+    if (Number(b.probability || 0) !== Number(a.probability || 0)) {
+      return Number(b.probability || 0) - Number(a.probability || 0);
+    }
+    return Number(b.priority || 0) - Number(a.priority || 0);
+  })
+  .slice(0, 15);
 
   if (!radarItems.length) {
     list.innerHTML = `<div class="empty-state">Nenhuma oportunidade encontrada para hoje.</div>`;
@@ -2148,18 +2153,14 @@ function renderRadar() {
   }
 
   list.innerHTML = radarItems.map((item, index) => {
-    const match = state.matches.find(m =>
-  String(m.id) === String(item.match_id)
-) || state.matches.find(m =>
-  (m.home_team || '').trim().toLowerCase() === (item.home_team || '').trim().toLowerCase() &&
-  (m.away_team || '').trim().toLowerCase() === (item.away_team || '').trim().toLowerCase()
-);
+   
+  const match = item;
   const tier = probabilityToTier(item.probability);
   const extraMarket = null;
   const badgeSource = { ...item, ...(match || {}) };  
     
     return `
-      <div class="radar-item" data-match-id="${item.match_id}">
+      <div class="radar-item" data-match-id="${item.id}">
         <div class="radar-top">
           <div class="radar-rank">${index + 1}</div>
           <div class="league-pill">
