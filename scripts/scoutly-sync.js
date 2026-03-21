@@ -344,8 +344,7 @@ async function resolveCountryCompetitions(target) {
 }
 async function resolveSearchCompetition(target) {
   const leagues = await api("/leagues", {
-    search: target.search,
-    current: true,
+    search: target.search
   })
 
   const items = leagues
