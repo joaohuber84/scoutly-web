@@ -749,23 +749,23 @@ function buildCoreMetrics(fixture, homeProfile, awayProfile) {
 }
 
 async function upsertMatch(match) {
-  const payload = {
-    fixture_id: match.fixture_id,
-    kickoff: match.kickoff,
-    league: match.league,
-    region: match.region,
-    priority: match.priority,
-    home_team: match.home_team,
-    away_team: match.away_team,
-    probabilities: match.probabilities,
-    markets: match.markets,
-    metrics: match.metrics,
-    updated_at: new Date().toISOString(),
-  }
+const payload = {
+  id: match.id,
+  kickoff: match.kickoff,
+  league: match.league,
+  region: match.region,
+  priority: match.priority,
+  home_team: match.home_team,
+  away_team: match.away_team,
+  probabilities: match.probabilities,
+  markets: match.markets,
+  metrics: match.metrics,
+  updated_at: new Date().toISOString(),
+}
 
-  const { error } = await supabase
-    .from("matches")
-    .upsert(payload, { onConflict: "fixture_id" })
+const { error } = await supabase
+  .from("matches")
+  .upsert(payload, { onConflict: "id" })
 
   if (error) {
     console.error("Erro ao salvar match:", error.message)
@@ -902,7 +902,7 @@ async function clearFutureWindow() {
 
   const { data: rows, error: selectError } = await supabase
     .from("matches")
-    .select("fixture_id")
+    .select("id")
     .gte("kickoff", nowIso)
     .lte("kickoff", endIso)
 
@@ -910,7 +910,7 @@ async function clearFutureWindow() {
     throw new Error(`Supabase select matches window: ${selectError.message}`)
   }
 
-  const ids = (rows || []).map((x) => x.fixture_id)
+  const ids = (rows || []).map((x) => x.id)
 
   const { error: dailyError } = await supabase
     .from("daily_picks")
@@ -926,7 +926,7 @@ async function clearFutureWindow() {
   const { error: matchesError } = await supabase
     .from("matches")
     .delete()
-    .in("fixture_id", ids)
+    .in("id", ids)
 
   if (matchesError) {
     throw new Error(`Supabase delete matches window: ${matchesError.message}`)
