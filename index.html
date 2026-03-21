@@ -2157,7 +2157,7 @@ function renderRadar() {
     }
     return Number(b.priority || 0) - Number(a.priority || 0);
   })
-  .slice(0, 5);
+  .slice(0, 10);
 
   if (!radarItems.length) {
     list.innerHTML = `<div class="empty-state">Nenhuma oportunidade encontrada para hoje.</div>`;
