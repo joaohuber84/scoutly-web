@@ -1473,13 +1473,14 @@ function isMatchVisible(value) {
 
   const now = new Date();
 
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+
   const end = new Date(now);
-  const day = end.getDay(); // 0=domingo ... 6=sábado
-  const daysUntilSunday = (7 - day) % 7;
-  end.setDate(end.getDate() + daysUntilSunday);
+  end.setDate(end.getDate() + 7);
   end.setHours(23, 59, 59, 999);
 
-  return d >= now && d <= end;
+  return true
 }
 
  function shouldHideLeague(leagueName) {
@@ -2236,9 +2237,14 @@ function buildCompetitions() {
   const map = new Map();
 
   for (const match of state.matches) {
-
-    if (!isMatchVisible(match.kickoff)) continue;
-  if (shouldHideLeague(match.league)) continue;
+  console.log("BUILD COMPETITIONS MATCH:", {
+    league: match.league,
+    home: match.home_team,
+    away: match.away_team,
+    kickoff: match.kickoff,
+    visible: isMatchVisible(match.kickoff),
+    hiddenLeague: shouldHideLeague(match.league)
+  });
 
     const league = match.league || '';
     const country = match.country || null;
@@ -2262,9 +2268,11 @@ function buildCompetitions() {
     item.matches.push(match);
   }
 
-  state.competitions = Array.from(map.values()).sort(
-    (a, b) => getLeagueSort(a.league) - getLeagueSort(b.league)
-  );
+console.log("MAP BEFORE ARRAY:", Array.from(map.values()));
+
+state.competitions = Array.from(map.values()).sort(
+  (a, b) => getLeagueSort(a.league) - getLeagueSort(b.league)
+);
 }
 
 function renderCompetitions() {
