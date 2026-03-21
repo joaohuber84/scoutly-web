@@ -2593,10 +2593,23 @@ async function initialize() {
   renderRadar();
   renderCompetitions();
 
-const visibleMatches = state.matches.filter(match => 
-  isMatchVisible(match.kickoff) &&
-  !shouldHideLeague(match.league)
-);
+const visibleMatches = state.matches.filter(match => {
+  const visible = isMatchVisible(match.kickoff);
+  const hiddenLeague = shouldHideLeague(match.league);
+
+  console.log("CHECK MATCH:", {
+    league: match.league,
+    home: match.home_team,
+    away: match.away_team,
+    kickoff: match.kickoff,
+    parsed: new Date(match.kickoff).toString(),
+    now: new Date().toString(),
+    visible,
+    hiddenLeague
+  });
+
+  return visible && !hiddenLeague;
+});
   
 console.log('JOGOS VISÍVEIS:', visibleMatches.map(m => ({
   league: m.league,
