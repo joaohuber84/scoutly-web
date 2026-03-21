@@ -2149,15 +2149,32 @@ const badgeSource = { ...leg, ...(match || {}) };
 function renderRadar() {
   const list = document.getElementById('radarList');
 
- const radarItems = state.matches
+const sortedMatches = state.matches
   .filter(m => Number(m.probability || 0) >= 0.6)
   .sort((a, b) => {
     if (Number(b.probability || 0) !== Number(a.probability || 0)) {
       return Number(b.probability || 0) - Number(a.probability || 0);
     }
     return Number(b.priority || 0) - Number(a.priority || 0);
-  })
-  .slice(0, 10);
+  });
+
+const radarItems = [];
+const leagueCount = {};
+
+for (const match of sortedMatches) {
+  const league = match.league;
+
+  if (!leagueCount[league]) {
+    leagueCount[league] = 0;
+  }
+
+  if (leagueCount[league] < 2) {
+    radarItems.push(match);
+    leagueCount[league]++;
+  }
+
+  if (radarItems.length === 10) break;
+} 
 
   if (!radarItems.length) {
     list.innerHTML = `<div class="empty-state">Nenhuma oportunidade encontrada para hoje.</div>`;
