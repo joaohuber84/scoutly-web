@@ -2175,9 +2175,12 @@ function getMainMarket(match) {
   // GOLS
  if (probOver25 >= 0.75) addMercado("Mais de 2.5 gols", probOver25 + 0.04, "gols");
 if (probOver15 >= 0.82) addMercado("Mais de 1.5 gols", probOver15 + 0.05, "gols");
-if (golsMedia > 0 && golsMedia <= 2.0) {addMercado("Menos de 3.5 gols", 0.60 + (2.0 - golsMedia) * 0.05, "gols");}
-if (golsMedia > 0 && golsMedia <= 1.5) { addMercado("Menos de 2.5 gols", 0.58 + (1.5 - golsMedia) * 0.06, "gols");}
-  
+if (golsMedia > 0 && golsMedia <= 1.8 && probBTTS < 0.55 && shotsOnTargetMedia <= 8) { 
+  addMercado("Menos de 3.5 gols", 0.58 + (1.8 - golsMedia) * 0.06, "gols" );
+}
+if ( golsMedia > 0 && golsMedia <= 1.4 && probBTTS < 0.50 && shotsOnTargetMedia <= 7) {
+  addMercado("Menos de 2.5 gols", 0.60 + (1.4 - golsMedia) * 0.07, "gols");
+}
   // AMBAS MARCAM
   if (probBTTS >= 0.68) addMercado("Ambas marcam", probBTTS + 0.03, "btts");
   if (golsMedia > 0 && golsMedia <= 2.0 && probBTTS <= 0.52) {
@@ -2238,7 +2241,7 @@ candidatos.sort((a, b) => {
   }
 
 const limitePorFamilia = {
-  gols: 3,
+  gols: 2,
   btts: 2,
   escanteios: 2,
   resultado: 2,
@@ -2257,8 +2260,22 @@ for (let c of candidatos) {
   }
 }
 
-// fallback
-return candidatos[0].nome;
+// fallback inteligente: pega a família menos usada
+const candidatoAlternativo = [...candidatos].sort((a, b) => {
+  const usadaA = window.__usedMarkets[a.familia] || 0;
+  const usadaB = window.__usedMarkets[b.familia] || 0;
+
+  if (usadaA !== usadaB) return usadaA - usadaB;
+  return b.score - a.score;
+})[0];
+
+if (candidatoAlternativo) {
+  const familia = candidatoAlternativo.familia;
+  window.__usedMarkets[familia] = (window.__usedMarkets[familia] || 0) + 1;
+  return candidatoAlternativo.nome;
+}
+
+return "Jogo equilibrado";
 }
     
 function renderRadar() {
