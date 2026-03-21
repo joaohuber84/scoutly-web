@@ -2515,7 +2515,7 @@ async function loadMatches() {
   );
 
   window.debugMatches = matchesData || [];
- const loadedMatches = (matchesData || []).filter(match => {
+ const loadedMatches = matchesData || [];
   if (!match.kickoff) return false;
 
   const d = new Date(match.kickoff);
