@@ -2150,45 +2150,78 @@ function renderRadar() {
   const list = document.getElementById('radarList');
 
 const sortedMatches = state.matches
-  .filter(m => Number(m.probability || 0) >= 0.6)
+  .filter(m => {
+    const probability = Number(m.probability || 0);
+    const league = String(m.league || '').toLowerCase();
+    const isBrazil = league.includes('brazil') || league.includes('brasileirão') || league.includes('copa do brasil');
+
+    if (isBrazil) return probability >= 0.55;
+    return probability >= 0.6;
+  })
   .sort((a, b) => {
-    if (Number(b.probability || 0) !== Number(a.probability || 0)) {
-      return Number(b.probability || 0) - Number(a.probability || 0);
-    }
+    const probDiff = Number(b.probability || 0) - Number(a.probability || 0);
+    if (probDiff !== 0) return probDiff;
+
     return Number(b.priority || 0) - Number(a.priority || 0);
   });
 
 const radarItems = [];
 const leagueCount = {};
-let hasBrazil = false
-for (const match of sortedMatches) {
-  const league = match.league;
-  const isBrazil = league && league.toLowerCase().includes('brazil');
+let hasBrazil = false;
 
-  if (!leagueCount[league]) {
-    leagueCount[league] = 0;
+for (const match of sortedMatches) {
+  const league = String(match.league || '');
+  const leagueKey = league.toLowerCase();
+  const isBrazil =
+    leagueKey.includes('brazil') ||
+    leagueKey.includes('brasileirão') ||
+    leagueKey.includes('copa do brasil');
+
+  if (!leagueCount[leagueKey]) {
+    leagueCount[leagueKey] = 0;
   }
 
-  if (leagueCount[league] < 2) {
-    radarItems.push(match);
-    leagueCount[league]++;
-    if (isBrazil) {
-      hasBrazil = true; 
-    }
+  if (leagueCount[leagueKey] >= 2) continue;
+
+  radarItems.push(match);
+  leagueCount[leagueKey]++;
+
+  if (isBrazil) {
+    hasBrazil = true;
   }
 
   if (radarItems.length === 10) break;
-} 
-if (!hasBrazil) {
-  const brazilMatch = sortedMatches.find(m =>
-    m.league && m.league.toLowerCase().includes('brazil')
-  );
+}
 
-  if (brazilMatch && !radarItems.includes(brazilMatch)) {
-    radarItems.pop();
-    radarItems.push(brazilMatch);
+if (!hasBrazil) {
+  const brazilMatch = sortedMatches.find(m => {
+    const league = String(m.league || '').toLowerCase();
+    return (
+      league.includes('brazil') ||
+      league.includes('brasileirão') ||
+      league.includes('copa do brasil')
+    );
+  });
+
+  if (brazilMatch) {
+    const replaceIndex = radarItems.findIndex(item => {
+      const league = String(item.league || '').toLowerCase();
+      const isBrazil =
+        league.includes('brazil') ||
+        league.includes('brasileirão') ||
+        league.includes('copa do brasil');
+
+      return !isBrazil;
+    });
+
+    if (replaceIndex !== -1 && !radarItems.some(item => String(item.id) === String(brazilMatch.id))) {
+      radarItems[replaceIndex] = brazilMatch;
+    } else if (radarItems.length < 10 && !radarItems.some(item => String(item.id) === String(brazilMatch.id))) {
+      radarItems.push(brazilMatch);
+    }
   }
 }
+
   if (!radarItems.length) {
     list.innerHTML = `<div class="empty-state">Nenhuma oportunidade encontrada para hoje.</div>`;
     return;
