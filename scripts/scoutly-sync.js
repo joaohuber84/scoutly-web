@@ -1085,7 +1085,6 @@ async function run() {
       country: c.country,
       season: c.season,
     }))
-  )
 
   console.log(
     "FIXTURE LISTS COUNT:",
