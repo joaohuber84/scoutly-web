@@ -1459,7 +1459,7 @@ return 'https://upload.wikimedia.org/wikipedia/commons/6/6e/Football_icon.svg';
       `;
     }
 
-    function isMatchVisible(value) {
+  function isMatchVisible(value) {
   if (!value) return false;
 
   const d = new Date(value);
@@ -1467,11 +1467,15 @@ return 'https://upload.wikimedia.org/wikipedia/commons/6/6e/Football_icon.svg';
 
   const now = new Date();
 
-  const diffMs = d.getTime() - now.getTime();
-  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
 
-  return diffDays >= -1 && diffDays <= 3;
-}
+  const end = new Date(now);
+  end.setDate(end.getDate() + 2);
+  end.setHours(23, 59, 59, 999);
+
+  return d >= start && d <= end;
+} 
 
  function shouldHideLeague(leagueName) {
   const name = String(leagueName || "").toLowerCase();
