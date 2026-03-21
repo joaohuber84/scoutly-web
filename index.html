@@ -2232,28 +2232,33 @@ function buildCompetitions() {
     return visible && !hiddenLeague;
   });
 
-  for (const match of visibleMatches) {
-    const league = match.league || '';
-    const country = match.country || null;
+  for (const match of state.matches) {
+  const visible = isMatchVisible(match.kickoff);
+  const hiddenLeague = shouldHideLeague(match.league);
 
-    if (!map.has(league)) {
-      map.set(league, {
-        league,
-        country,
-        count: 0,
-        matches: []
-      });
-    }
+  if (!visible || hiddenLeague) continue;
 
-    const item = map.get(league);
+  const league = match.league || '';
+  const country = match.country || null;
 
-    if (!item.country && country) {
-      item.country = country;
-    }
-
-    item.count += 1;
-    item.matches.push(match);
+  if (!map.has(league)) {
+    map.set(league, {
+      league,
+      country,
+      count: 0,
+      matches: []
+    });
   }
+
+  const item = map.get(league);
+
+  if (!item.country && country) {
+    item.country = country;
+  }
+
+  item.count += 1;
+  item.matches.push(match);
+}
 
   state.competitions = Array.from(map.values()).sort(
     (a, b) => getLeagueSort(a.league) - getLeagueSort(b.league)
@@ -2614,7 +2619,7 @@ console.log('JOGOS VISÍVEIS:', visibleMatches.map(m => ({
   kickoff: m.kickoff
 })));
 
-setStatus(`Conexão OK · Próximos jogos: ${visibleMatches.length}`, true);
+setStatus(`Conexão OK · Matches carregados: ${state.matches.length}`, true);
 
 const generateBtn = document.getElementById('generateTicketBtn');
 if (generateBtn) {
