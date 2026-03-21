@@ -901,21 +901,7 @@ function buildPrimaryProbability(analysis, market) {
 }
 
 async function clearFutureWindow() {
-  const { start, end } = getSyncWindowRange()
-  const nowIso = start.toISOString()
-  const endIso = end.toISOString()
-
-  const { data: rows, error: selectError } = await supabase
-    .from("matches")
-    .select("id")
-    .gte("kickoff", nowIso)
-    .lte("kickoff", endIso)
-
-  if (selectError) {
-    throw new Error(`Supabase select matches window: ${selectError.message}`)
-  }
-
-  const ids = (rows || []).map((x) => x.id)
+  const now = new Date().toISOString()
 
   const { error: dailyError } = await supabase
     .from("daily_picks")
@@ -923,21 +909,59 @@ async function clearFutureWindow() {
     .neq("match_id", -1)
 
   if (dailyError) {
-    throw new Error(`Supabase delete daily_picks window: ${dailyError.message}`)
+    throw new Error(`Supabase delete daily_picks: ${dailyError.message}`)
   }
 
-  if (!ids.length) return 0
-
-  const { error: matchesError } = await supabase
+  const { data: rows, error: selectError } = await supabase
     .from("matches")
-    .delete()
-    .in("id", ids)
+    .select("id")
+    .lte("kickoff", now)
 
-  if (matchesError) {
-    throw new Error(`Supabase delete matches window: ${matchesError.message}`)
+  if (selectError) {
+    throw new Error(`Supabase select old matches: ${selectError.message}`)
   }
 
-  return ids.length
+  const oldIds = (rows || []).map((x) => x.id)
+
+  if (oldIds.length) {
+    const { error: deleteOldError } = await supabase
+      .from("matches")
+      .delete()
+      .in("id", oldIds)
+
+    if (deleteOldError) {
+      throw new Error(`Supabase delete old matches: ${deleteOldError.message}`)
+    }
+  }
+
+  const { start, end } = getSyncWindowRange()
+  const startIso = start.toISOString()
+  const endIso = end.toISOString()
+
+  const { data: futureRows, error: futureSelectError } = await supabase
+    .from("matches")
+    .select("id")
+    .gte("kickoff", startIso)
+    .lte("kickoff", endIso)
+
+  if (futureSelectError) {
+    throw new Error(`Supabase select future matches: ${futureSelectError.message}`)
+  }
+
+  const futureIds = (futureRows || []).map((x) => x.id)
+
+  if (futureIds.length) {
+    const { error: futureDeleteError } = await supabase
+      .from("matches")
+      .delete()
+      .in("id", futureIds)
+
+    if (futureDeleteError) {
+      throw new Error(`Supabase delete future matches: ${futureDeleteError.message}`)
+    }
+  }
+
+  return oldIds.length + futureIds.length
 }
 
 async function buildAndStoreMatches(competitions, fixtureLists) {
