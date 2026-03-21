@@ -2160,9 +2160,10 @@ const sortedMatches = state.matches
 
 const radarItems = [];
 const leagueCount = {};
-
+let hasBrazil = false
 for (const match of sortedMatches) {
   const league = match.league;
+  const isBrazil = league && league.toLowerCase().includes('brazil');
 
   if (!leagueCount[league]) {
     leagueCount[league] = 0;
@@ -2171,11 +2172,23 @@ for (const match of sortedMatches) {
   if (leagueCount[league] < 2) {
     radarItems.push(match);
     leagueCount[league]++;
+    if (isBrazil) {
+      hasBrazil = true; 
+    }
   }
 
   if (radarItems.length === 10) break;
 } 
+if (!hasBrazil) {
+  const brazilMatch = sortedMatches.find(m =>
+    m.league && m.league.toLowerCase().includes('brazil')
+  );
 
+  if (brazilMatch && !radarItems.includes(brazilMatch)) {
+    radarItems.pop();
+    radarItems.push(brazilMatch);
+  }
+}
   if (!radarItems.length) {
     list.innerHTML = `<div class="empty-state">Nenhuma oportunidade encontrada para hoje.</div>`;
     return;
