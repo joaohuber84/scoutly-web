@@ -2335,25 +2335,18 @@ if (!hasBrazil) {
         </div>
 
         <div class="radar-market">${mainMarket}</div>
+<div class="radar-kickoff">
+  ${getLeagueDisplay(item.league)} • ${formatKickoff(match?.kickoff)}
+</div>
+</div>
+`;
+}).join('');
 
-        ${
-          extraMarket
-            ? `<div class="ticket-helper" style="margin-top:8px;">Extra: ${extraMarket.market}</div>`
-            : ''
-        }
-
-        <div class="radar-kickoff">
-          ${getLeagueDisplay(item.league)} • ${formatKickoff(match?.kickoff)}
-        </div>
-      </div>
-    `;
-  }).join('');
-
-  list.querySelectorAll('.radar-item').forEach(el => {
-    el.addEventListener('click', () => openAnalysis(el.dataset.matchId));
-  });
+list.querySelectorAll('.radar-item').forEach(el => {
+  el.addEventListener('click', () => openAnalysis(el.dataset.matchId));
+});
 }
-
+    
 function getFlag(country) {
   const flags = {
     Brazil: 'BR',
