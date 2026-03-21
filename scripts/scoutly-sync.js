@@ -132,6 +132,16 @@ function normalizeLeagueKey(value) {
     .trim()
 }
 
+function uniqBy(arr, getKey) {
+  const seen = new Set()
+  return arr.filter((item) => {
+    const key = getKey(item)
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  })
+}
+
 function makeApiCacheKey(path, params = {}) {
   return `${path}?${Object.entries(params)
     .sort(([a], [b]) => a.localeCompare(b))
@@ -246,7 +256,11 @@ function getSyncWindowRange() {
   const start = new Date(now)
   start.setHours(0, 0, 0, 0)
 
-if (WINDOW_MODE === "NEXT_HOURS") {
+  if (WINDOW_MODE === "NEXT_HOURS") {
+    const end = new Date(now.getTime() + WINDOW_HOURS * 60 * 60 * 1000)
+    return { start, end }
+  }
+
   const end = new Date(now.getTime() + WINDOW_HOURS * 60 * 60 * 1000)
   return { start, end }
 }
@@ -925,6 +939,7 @@ async function buildAndStoreMatches(competitions, fixtureLists) {
 const { start, end } = getSyncWindowRange()
 
 const allFixtures = uniqBy(
+  
   fixtureLists
     .flat()
     .filter((x) => {
@@ -1085,14 +1100,14 @@ async function run() {
       country: c.country,
       season: c.season,
     }))
-
+)
   console.log(
     "FIXTURE LISTS COUNT:",
     fixtureLists.map((list, i) => ({
       competition: competitions[i]?.display,
       total: list.length,
     }))
-  
+  )
   const storedMatches = await buildAndStoreMatches(competitions, fixtureLists)
 
   const picksCount = await rebuildDailyPicks(storedMatches)
