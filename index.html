@@ -2146,6 +2146,86 @@ const badgeSource = { ...leg, ...(match || {}) };
       `;
     }
 
+function getMainMarket(match) {
+  const probabilities = match?.probabilities || {};
+  const markets = match?.markets || {};
+  const metrics = match?.metrics || {};
+
+  const probCasa = Number(probabilities.home || 0);
+  const probEmpate = Number(probabilities.draw || 0);
+  const probFora = Number(probabilities.away || 0);
+
+  const probOver15 = Number(markets.over15 || 0);
+  const probOver25 = Number(markets.over25 || 0);
+  const probBTTS = Number(markets.btts || 0);
+
+  const cornersMedia = Number(markets.corners || metrics.corners || 0);
+  const golsMedia = Number(metrics.goals || 0);
+  const shotsMedia = Number(metrics.shots || 0);
+  const shotsOnTargetMedia = Number(metrics.shots_on_target || 0);
+  const cardsMedia = Number(metrics.cards || 0);
+
+  const candidatos = [];
+
+  function addMercado(nome, score, familia) {
+    if (!Number.isFinite(score) || score <= 0) return;
+    candidatos.push({ nome, score, familia });
+  }
+
+  // GOLS
+  if (probOver25 >= 0.72) addMercado("Mais de 2.5 gols", probOver25 + 0.05, "gols");
+  if (probOver15 >= 0.80) addMercado("Mais de 1.5 gols", probOver15 + 0.06, "gols");
+  if (golsMedia > 0 && golsMedia <= 2.2) addMercado("Menos de 3.5 gols", 0.74 + (2.2 - golsMedia) * 0.08, "gols");
+  if (golsMedia > 0 && golsMedia <= 1.8) addMercado("Menos de 2.5 gols", 0.64 + (1.8 - golsMedia) * 0.10, "gols");
+
+  // AMBAS MARCAM
+  if (probBTTS >= 0.68) addMercado("Ambas marcam", probBTTS + 0.03, "btts");
+  if (golsMedia > 0 && golsMedia <= 2.0 && probBTTS <= 0.52) {
+    addMercado("Ambas não marcam", 0.70 + (0.52 - probBTTS) * 0.20, "btts");
+  }
+
+  // ESCANTEIOS
+  if (cornersMedia >= 10.2) addMercado("Mais de 8.5 escanteios", 0.78 + (cornersMedia - 10.2) * 0.03, "escanteios");
+  if (cornersMedia >= 9.0 && cornersMedia < 10.2) addMercado("Mais de 7.5 escanteios", 0.74 + (cornersMedia - 9.0) * 0.04, "escanteios");
+  if (cornersMedia > 0 && cornersMedia <= 8.0) addMercado("Menos de 10.5 escanteios", 0.76 + (8.0 - cornersMedia) * 0.03, "escanteios");
+  if (cornersMedia > 0 && cornersMedia <= 7.0) addMercado("Menos de 9.5 escanteios", 0.72 + (7.0 - cornersMedia) * 0.04, "escanteios");
+
+  // CARTÕES
+  if (cardsMedia >= 4.2) addMercado("Mais de 3.5 cartões", 0.74 + (cardsMedia - 4.2) * 0.03, "cartoes");
+  if (cardsMedia >= 5.2) addMercado("Mais de 4.5 cartões", 0.71 + (cardsMedia - 5.2) * 0.03, "cartoes");
+
+  // RESULTADO / PROTEÇÃO
+  if (probCasa >= 0.64) addMercado("Vitória do mandante", probCasa + 0.03, "resultado");
+  if (probFora >= 0.64) addMercado("Vitória do visitante", probFora + 0.03, "resultado");
+
+  if (probCasa >= 0.48 && probCasa + probEmpate >= 0.78) {
+    addMercado("Dupla chance mandante ou empate", probCasa + probEmpate + 0.02, "dupla");
+  }
+
+  if (probFora >= 0.48 && probFora + probEmpate >= 0.78) {
+    addMercado("Dupla chance visitante ou empate", probFora + probEmpate + 0.02, "dupla");
+  }
+
+  // AJUSTES DE CONTEXTO
+  if (shotsMedia >= 24 && shotsOnTargetMedia >= 8) {
+    addMercado("Mais de 1.5 gols", 0.83, "gols");
+  }
+
+  if (shotsMedia <= 18 && shotsOnTargetMedia <= 6 && golsMedia <= 2.1) {
+    addMercado("Menos de 3.5 gols", 0.80, "gols");
+  }
+
+  // REMOVER EXCESSO DE REPETIÇÃO DE UMA MESMA FAMÍLIA
+  candidatos.sort((a, b) => b.score - a.score);
+
+  if (!candidatos.length) {
+    if (Number(match?.probability || 0) >= 0.70) return "Mais de 1.5 gols";
+    return "Jogo equilibrado";
+  }
+
+  return candidatos[0].nome;
+}
+    
 function renderRadar() {
   const list = document.getElementById('radarList');
 
@@ -2231,7 +2311,7 @@ if (!hasBrazil) {
    
   const match = item;
   const tier = probabilityToTier(item.probability);
-  const extraMarket = null;
+  const mainMarket = getMainMarket(match);
   const badgeSource = { ...item, ...(match || {}) };  
     
     return `
@@ -2254,7 +2334,7 @@ if (!hasBrazil) {
           ${chipMarkup(tier)}
         </div>
 
-        <div class="radar-market">${item.market || 'Mercado principal'}</div>
+        <div class="radar-market">${mainMarket}</div>
 
         ${
           extraMarket
