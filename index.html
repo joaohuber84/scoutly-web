@@ -2172,20 +2172,23 @@ function getMainMarket(match) {
     candidatos.push({ nome, score, familia });
   }
 
-  // GOLS
- if (probOver25 >= 0.75) addMercado("Mais de 2.5 gols", probOver25 + 0.04, "gols");
+// GOLS
+if (probOver25 >= 0.75) addMercado("Mais de 2.5 gols", probOver25 + 0.04, "gols");
 if (probOver15 >= 0.82) addMercado("Mais de 1.5 gols", probOver15 + 0.05, "gols");
-if (golsMedia > 0 && golsMedia <= 1.8 && probBTTS < 0.55 && shotsOnTargetMedia <= 8) { 
-  addMercado("Menos de 3.5 gols", 0.58 + (1.8 - golsMedia) * 0.06, "gols" );
+
+if (golsMedia > 0 && golsMedia <= 1.5 && probBTTS < 0.50 && shotsOnTargetMedia <= 8) {
+  addMercado("Menos de 3.5 gols", 0.58 + (1.5 - golsMedia) * 0.06, "gols");
 }
-if ( golsMedia > 0 && golsMedia <= 1.4 && probBTTS < 0.50 && shotsOnTargetMedia <= 7) {
-  addMercado("Menos de 2.5 gols", 0.60 + (1.4 - golsMedia) * 0.07, "gols");
+
+if (golsMedia > 0 && golsMedia <= 1.2 && probBTTS < 0.50 && shotsOnTargetMedia <= 7) {
+  addMercado("Menos de 2.5 gols", 0.60 + (1.2 - golsMedia) * 0.07, "gols");
 }
-  // AMBAS MARCAM
-  if (probBTTS >= 0.68) addMercado("Ambas marcam", probBTTS + 0.03, "btts");
-  if (golsMedia > 0 && golsMedia <= 2.0 && probBTTS <= 0.52) {
-    addMercado("Ambas não marcam", 0.70 + (0.52 - probBTTS) * 0.20, "btts");
-  }
+
+// AMBAS MARCAM
+if (probBTTS >= 0.68) addMercado("Ambas marcam", probBTTS + 0.08, "btts");
+if (golsMedia > 0 && golsMedia <= 2.0 && probBTTS <= 0.52) {
+  addMercado("Ambas não marcam", 0.70 + (0.52 - probBTTS) * 0.20, "btts");
+}
 
   // ESCANTEIOS
   if (cornersMedia >= 10.2) addMercado("Mais de 8.5 escanteios", 0.78 + (cornersMedia - 10.2) * 0.03, "escanteios");
@@ -2222,16 +2225,27 @@ console.log("CANDIDATOS Scoutly:", match.home_team, "x", match.away_team, candid
   
   // REMOVER EXCESSO DE REPETIÇÃO DE UMA MESMA FAMÍLIA
   const prioridadeFamilia = {
-  resultado: 0.05,
-  dupla: 0.04,
-  btts: 0.035,
-  escanteios: 0.03,
-  gols: -0.02
+  resultado: 0.06,
+  dupla: 0.05,
+  btts: 0.045,
+  escanteios: 0.045,
+  gols: -0.08
 };
 
 candidatos.sort((a, b) => {
-  const scoreA = a.score + (prioridadeFamilia[a.familia] || 0);
-  const scoreB = b.score + (prioridadeFamilia[b.familia] || 0);
+  const usadaA = window.__usedMarkets[a.familia] || 0;
+  const usadaB = window.__usedMarkets[b.familia] || 0;
+
+  const scoreA =
+    a.score +
+    (prioridadeFamilia[a.familia] || 0) -
+    usadaA * 0.04;
+
+  const scoreB =
+    b.score +
+    (prioridadeFamilia[b.familia] || 0) -
+    usadaB * 0.04;
+
   return scoreB - scoreA;
 });
   
