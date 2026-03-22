@@ -2372,8 +2372,8 @@ function getMainMarket(match) {
       ajuste -= usadoExato * 0.12;
 
       if (c.nome === "Mais de 1.5 gols") ajuste -= 0.08;
-      if (c.nome === "Menos de 3.5 gols") ajuste -= 0.03;
-      if (c.nome === "Mais de 2.5 gols") ajuste += 0.03;
+      if (c.nome === "Menos de 3.5 gols") ajuste -= 0.08;
+      if (c.nome === "Mais de 2.5 gols") ajuste += 0.06;
       if (c.nome === "Menos de 2.5 gols") ajuste += 0.03;
       if (c.nome === "Ambas marcam" || c.nome === "Ambas não marcam") ajuste += 0.01;
 
@@ -2408,6 +2408,11 @@ function getMainMarket(match) {
 
     if (usadoExato >= 2) continue;
     if (usadaFamilia >= limite) continue;
+
+    // NÃO deixar escolher muitos "gols" seguidos
+if (c.familia === "gols" && (window.__usedMarkets["gols"] || 0) >= 1) {
+  continue;
+}
 
     window.__usedMarkets[c.familia] = usadaFamilia + 1;
     window.__usedExactMarkets[c.nome] = usadoExato + 1;
