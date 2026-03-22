@@ -2980,6 +2980,28 @@ if (!match.league || !match.country) return false;
     'LIGAS em state.matches:',
     [...new Set(state.matches.map(m => m.league))].sort()
   );
+
+// 👇 COLA AQUI
+const englandCupDebug = state.matches.filter(m => {
+  const league = String(m.league || '').toLowerCase();
+  const home = String(m.home_team || '').toLowerCase();
+  const away = String(m.away_team || '').toLowerCase();
+
+  return (
+    league.includes('carabao') ||
+    league.includes('league cup') ||
+    league.includes('efl') ||
+    (
+      home.includes('arsenal') && away.includes('manchester city')
+    ) ||
+    (
+      home.includes('manchester city') && away.includes('arsenal')
+    )
+  );
+});
+
+console.log('DEBUG ENGLAND CUP:', englandCupDebug);
+  
 }
 function generateNewTicket() { 
   renderTicket();
