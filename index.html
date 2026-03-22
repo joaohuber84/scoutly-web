@@ -2928,7 +2928,7 @@ state.matches = loadedMatches
       (home === 'paris fc' && away === 'le havre') ||
       (home === 'le havre' && away === 'paris fc')
     ) {
-      safeMatch.league = 'Ligue 2';
+      safeMatch.league = 'Ligue 1';
       safeMatch.country = 'France';
     }
 
@@ -2949,8 +2949,8 @@ state.matches = loadedMatches
 
     if (isCorrupted) return false;
 
-    if (!match.home_team || !match.away_team) return false;
-    if (!match.league || !match.country) return false;
+   if (!safeMatch.home_team || !safeMatch.away_team) return false;
+if (!safeMatch.league || !safeMatch.country) return false;
 
     return true;
   });
