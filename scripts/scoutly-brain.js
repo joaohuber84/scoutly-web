@@ -542,6 +542,20 @@ for (const macro of requiredMacros) {
     }
   }
 
+console.log("DEBUG TOP5 FINAL:")
+top5.forEach((item, index) => {
+  console.log(
+    index + 1,
+    buildMatchLabel(item),
+    "->",
+    item.main_pick,
+    "| macro:",
+    item.main_macro,
+    "| score:",
+    item.main_score
+  )
+})
+  
   return { featured, top5 }
 }
 
