@@ -2903,34 +2903,57 @@ async function loadMatches() {
     (analysisData || []).map(item => [String(item.match_id), item])
   );
 
-state.matches = loadedMatches.map(match => {
-  const analysis = analysisMap.get(String(match.id)) || {};
+state.matches = loadedMatches
+  .map(match => {
+    const analysis = analysisMap.get(String(match.id)) || {};
 
-  return {
-    ...match,
-    ...analysis,
+    let safeMatch = {
+      ...analysis,
+      ...match,
+      id: match.id,
+      league: match.league,
+      country: match.country,
+      home_team: match.home_team,
+      away_team: match.away_team,
+      kickoff: match.kickoff,
+      home_logo: match.home_logo,
+      away_logo: match.away_logo
+    };
 
-    // campos principais do jogo SEMPRE vêm da tabela matches
-    id: match.id,
-    league: match.league,
-    country: match.country,
-    home_team: match.home_team,
-    away_team: match.away_team,
-    kickoff: match.kickoff,
-    home_logo: match.home_logo,
-    away_logo: match.away_logo
-  };
-});
+    const home = String(safeMatch.home_team || '').toLowerCase().trim();
+    const away = String(safeMatch.away_team || '').toLowerCase().trim();
 
-  // 🔍 DEBUG AQUI
-const parisDebug = state.matches.filter(m =>
-  String(m.home_team || '').toLowerCase().includes('paris') ||
-  String(m.away_team || '').toLowerCase().includes('paris') ||
-  String(m.home_team || '').toLowerCase().includes('le havre') ||
-  String(m.away_team || '').toLowerCase().includes('le havre')
-);
+    // corrige Paris FC x Le Havre
+    if (
+      (home === 'paris fc' && away === 'le havre') ||
+      (home === 'le havre' && away === 'paris fc')
+    ) {
+      safeMatch.league = 'Ligue 2';
+      safeMatch.country = 'France';
+    }
 
-console.log('DEBUG PARIS / LE HAVRE:', parisDebug);
+    return safeMatch;
+  })
+  .filter(match => {
+    const home = String(match.home_team || '').toLowerCase().trim();
+    const away = String(match.away_team || '').toLowerCase().trim();
+
+    // remove lixo Nice x PSG na Grécia
+    const isCorrupted =
+      match.country === 'Greece' &&
+      match.league === 'Super League Greece' &&
+      (
+        (home === 'nice' && away === 'paris saint germain') ||
+        (home === 'paris saint germain' && away === 'nice')
+      );
+
+    if (isCorrupted) return false;
+
+    if (!match.home_team || !match.away_team) return false;
+    if (!match.league || !match.country) return false;
+
+    return true;
+  });
 
   console.log('TOTAL state.matches:', state.matches.length);
   console.log(
