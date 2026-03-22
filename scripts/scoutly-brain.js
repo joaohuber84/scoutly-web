@@ -487,10 +487,12 @@ function chooseFeaturedAndTop5(analyses) {
     top5.push(item)
     usedMarkets[item.main_pick] = marketCount + 1
     usedMacros[item.main_macro] = macroCount + 1
-
+if (top5.length === 5) break
+  }
+  
 for (const macro of requiredMacros) {
   if (top5.find(x => x.main_macro === macro)) continue
-
+    
   const found = remaining.find(x =>
     x.main_macro === macro &&
     !top5.find(t => t.match_id === x.match_id)
