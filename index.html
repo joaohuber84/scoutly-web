@@ -2401,21 +2401,36 @@ function getMainMarket(match) {
     dupla: 2
   };
 
+function getMacroFamilia(c) {
+  if (c.familia === "gols" && c.subfamilia === "under") return "defensivo";
+  if (c.familia === "btts" && c.subfamilia === "no") return "defensivo";
+  if (c.familia === "gols" && c.subfamilia === "over") return "ofensivo";
+  if (c.familia === "btts" && c.subfamilia === "yes") return "ofensivo";
+  return c.familia;
+}
+  
   for (const c of filtrados) {
+    const macro = getMacroFamilia(c);
+window.__usedMacro = window.__usedMacro || {};
     const usadaFamilia = window.__usedMarkets[c.familia] || 0;
     const usadoExato = window.__usedExactMarkets[c.nome] || 0;
     const limite = limitePorFamilia[c.familia] || 2;
 
     if (usadoExato >= 2) continue;
     if (usadaFamilia >= limite) continue;
-
+    
     // NÃO deixar escolher muitos "gols" seguidos
 if (c.familia === "gols" && (window.__usedMarkets["gols"] || 0) >= 1) {
+  continue;
+}
+    //CONTROLE DE PERFIL DE (marco)
+    if ((window.__usedMacro[macro] || 0) >= 2) {
   continue;
 }
 
     window.__usedMarkets[c.familia] = usadaFamilia + 1;
     window.__usedExactMarkets[c.nome] = usadoExato + 1;
+    window.__usedMacro[macro] = (window.__usedMacro[macro] || 0) + 1;
 
     return c.nome;
   }
