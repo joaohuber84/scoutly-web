@@ -1467,16 +1467,19 @@ return 'https://upload.wikimedia.org/wikipedia/commons/6/6e/Football_icon.svg';
 
   const now = new Date();
 
-  const start = new Date(now);
-  start.setHours(0, 0, 0, 0);
-
   const end = new Date(now);
   end.setDate(end.getDate() + 2);
   end.setHours(23, 59, 59, 999);
 
-  return d >= start && d <= end;
-} 
-
+  return d >= now && d <= end;
+}
+    
+function getVisibleMatches() {
+  return state.matches.filter(match => {
+    return isMatchVisible(match.kickoff) && !shouldHideLeague(match.league);
+  });
+}
+    
  function shouldHideLeague(leagueName) {
   const name = String(leagueName || "").toLowerCase();
 
@@ -2296,7 +2299,7 @@ function renderRadar() {
   const list = document.getElementById('radarList');
 window.__usedMarkets = {}; // 🔥 ESSENCIAL
 
-const sortedMatches = state.matches
+const sortedMatches = getVisibleMatches()
   .filter(m => {
     const probability = Number(m.probability || 0);
     const league = String(m.league || '').toLowerCase();
