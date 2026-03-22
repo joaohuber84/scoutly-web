@@ -2180,7 +2180,7 @@ if (probOver25 >= 0.75) addMercado("Mais de 2.5 gols", probOver25 + 0.04, "gols"
 if (probOver15 >= 0.82) addMercado("Mais de 1.5 gols", probOver15 + 0.05, "gols");
 
 if (golsMedia > 0 && golsMedia <= 1.5 && probBTTS < 0.50 && shotsOnTargetMedia <= 8) {
-  addMercado("Menos de 3.5 gols", 0.58 + (1.5 - golsMedia) * 0.06, "gols");
+  // addMercado("Menos de 3.5 gols", 0.58 + (1.5 - golsMedia) * 0.06, "gols");
 }
 
 if (golsMedia > 0 && golsMedia <= 1.2 && probBTTS < 0.50 && shotsOnTargetMedia <= 7) {
@@ -2221,7 +2221,7 @@ if (golsMedia > 0 && golsMedia <= 2.0 && probBTTS <= 0.52) {
   }
 
   if (shotsMedia <= 14 && shotsOnTargetMedia <= 4 && golsMedia <= 1.8) {
-    addMercado("Menos de 3.5 gols", 0.50, "gols");
+    // addMercado("Menos de 3.5 gols", 0.50, "gols");
   }
 
 console.log("CANDIDATOS Scoutly:", match.home_team, "x", match.away_team, candidatos);
@@ -2259,8 +2259,8 @@ candidatos.sort((a, b) => {
 
 const limitePorFamilia = {
   gols: 2,
-  btts: 2,
-  escanteios: 2,
+  btts: 3,
+  escanteios: 3,
   resultado: 2,
   dupla: 2
 };
@@ -2270,6 +2270,10 @@ window.__usedMarkets = window.__usedMarkets || {};
 for (let c of candidatos) {
   const usada = window.__usedMarkets[c.familia] || 0;
   const limite = limitePorFamilia[c.familia] || 2;
+
+  if (c.familia === "gols" && usada >= 2) {
+    continue;
+  }
 
   if (usada < limite) {
     window.__usedMarkets[c.familia] = usada + 1;
