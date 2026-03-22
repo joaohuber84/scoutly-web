@@ -2949,8 +2949,8 @@ state.matches = loadedMatches
 
     if (isCorrupted) return false;
 
-   if (!safeMatch.home_team || !safeMatch.away_team) return false;
-if (!safeMatch.league || !safeMatch.country) return false;
+   if (!match.home_team || !match.away_team) return false;
+if (!match.league || !match.country) return false;
 
     return true;
   });
