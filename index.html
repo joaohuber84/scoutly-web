@@ -2903,14 +2903,25 @@ async function loadMatches() {
     (analysisData || []).map(item => [String(item.match_id), item])
   );
 
-  state.matches = loadedMatches.map(match => {
-    const analysis = analysisMap.get(String(match.id)) || {};
-    return {
-      ...match,
-      ...analysis
-    };
-  });
+state.matches = loadedMatches.map(match => {
+  const analysis = analysisMap.get(String(match.id)) || {};
 
+  return {
+    ...match,
+    ...analysis,
+
+    // campos principais do jogo SEMPRE vêm da tabela matches
+    id: match.id,
+    league: match.league,
+    country: match.country,
+    home_team: match.home_team,
+    away_team: match.away_team,
+    kickoff: match.kickoff,
+    home_logo: match.home_logo,
+    away_logo: match.away_logo
+  };
+});
+ 
   console.log('TOTAL state.matches:', state.matches.length);
   console.log(
     'LIGAS em state.matches:',
