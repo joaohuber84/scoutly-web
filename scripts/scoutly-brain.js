@@ -399,6 +399,12 @@ function buildMarketCandidates(row) {
     })
   }
 
+candidates.forEach(c => {
+  if (c.macro === "ofensivo") {
+    c.score = clamp(c.score + 0.05, 0, 1)
+  }
+})
+
   return candidates.sort((a, b) => b.score - a.score)
 }
 
@@ -469,18 +475,33 @@ function chooseFeaturedAndTop5(analyses) {
   const top5 = []
   const usedMarkets = {}
   const usedMacros = {}
-
+  const requiredMacros = ["ofensivo","equilibrado","estatistico"]
+  
   for (const item of remaining) {
     const marketCount = usedMarkets[item.main_pick] || 0
     const macroCount = usedMacros[item.main_macro] || 0
 
     if (marketCount >= 2) continue
-    if (macroCount >= 2) continue
+    if (macroCount >= 2 && item.main.macro === "defensivo") continue
 
     top5.push(item)
     usedMarkets[item.main_pick] = marketCount + 1
     usedMacros[item.main_macro] = macroCount + 1
 
+for (const macro of requiredMacros) {
+  if (top5.find(x => x.main_macro === macro)) continue
+
+  const found = remaining.find(x =>
+    x.main_macro === macro &&
+    !top5.find(t => t.match_id === x.match_id)
+  )
+
+  if (found) {
+    top5.push(found)
+    usedMarkets[found.main_pick] = (usedMarkets[found.main_pick] || 0) + 1
+    usedMacros[found.main_macro] = (usedMacros[found.main_macro] || 0) + 1
+  }
+    
     if (top5.length === 5) break
   }
 
