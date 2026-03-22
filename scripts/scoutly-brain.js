@@ -78,7 +78,55 @@ function safeLeague(row) {
   return row.league || "Liga"
 }
 
-function buildInsight(row, bestPick) {
+function getGameProfile(row) {
+  const avgGoals = toNumber(row.avg_goals)
+  const avgShots = toNumber(row.avg_shots)
+  const avgCorners = toNumber(row.avg_corners)
+
+  const over15Prob = toNumber(row.over15_prob)
+  const over25Prob = toNumber(row.over25_prob)
+  const under25Prob = toNumber(row.under25_prob)
+  const under35Prob = toNumber(row.under35_prob)
+  const bttsProb = toNumber(row.btts_prob)
+  const bttsNoProb = clamp(1 - bttsProb, 0, 1)
+
+  if (
+    avgGoals >= 2.8 ||
+    over25Prob >= 0.67 ||
+    (avgShots >= 24 && bttsProb >= 0.62)
+  ) {
+    return "ofensivo"
+  }
+
+  if (
+    avgGoals <= 2.1 &&
+    under25Prob >= 0.70 &&
+    bttsNoProb >= 0.68 &&
+    avgShots <= 18
+  ) {
+    return "defensivo"
+  }
+
+  if (
+    avgCorners >= 9.2 &&
+    avgShots >= 21 &&
+    avgGoals >= 2.2
+  ) {
+    return "corners"
+  }
+
+  if (
+    under35Prob >= 0.78 &&
+    avgGoals <= 2.5 &&
+    avgShots <= 20
+  ) {
+    return "controlado"
+  }
+
+  return "equilibrado"
+}
+
+function buildInsight(row, bestPick, profile) {
   const avgGoals = round1(row.avg_goals)
   const avgCorners = round1(row.avg_corners)
   const avgShots = Math.round(toNumber(row.avg_shots))
@@ -86,12 +134,20 @@ function buildInsight(row, bestPick) {
 
   const market = normalizeText(bestPick.market)
 
+  if (market.includes("mais de 2.5 gols")) {
+    return `A leitura Scoutly projeta um jogo mais aberto, com potencial real para 3 ou mais gols. A média esperada está em ${avgGoals} gols, com ritmo ofensivo ${rhythm}, reforçando essa linha como a melhor interpretação da partida.`
+  }
+
   if (market.includes("mais de 1.5 gols")) {
     return `A leitura Scoutly projeta um confronto com boa chance de pelo menos 2 gols. A média esperada está em ${avgGoals} gols, com ritmo ofensivo ${rhythm} e cenário favorável para essa linha.`
   }
 
+  if (market.includes("menos de 2.5 gols")) {
+    return `A leitura Scoutly indica um jogo travado, com baixa projeção ofensiva e controle no placar. A expectativa está em ${avgGoals} gols, com ritmo ${rhythm}, sustentando a linha de menos de 2.5 gols.`
+  }
+
   if (market.includes("menos de 3.5 gols")) {
-    return `A leitura Scoutly indica um jogo controlado, sem expectativa de explosão ofensiva. A projeção está em ${avgGoals} gols, com ritmo ${rhythm}, tornando a linha de menos de 3.5 gols a opção mais consistente.`
+    return `A leitura Scoutly indica um jogo controlado, sem expectativa de explosão ofensiva. A projeção está em ${avgGoals} gols, com ritmo ${rhythm}, tornando a linha de menos de 3.5 gols uma opção consistente.`
   }
 
   if (market.includes("ambas não marcam")) {
@@ -99,18 +155,26 @@ function buildInsight(row, bestPick) {
   }
 
   if (market.includes("ambas marcam")) {
-    return `A leitura Scoutly identifica espaço para gols dos dois lados. A expectativa ofensiva e o equilíbrio do confronto criam um cenário interessante para ambas marcam.`
+    return `A leitura Scoutly identifica espaço para gols dos dois lados. A expectativa ofensiva, o ritmo ${rhythm} e o equilíbrio do confronto criam um cenário interessante para ambas marcam.`
   }
 
   if (market.includes("escanteios")) {
-    return `A leitura Scoutly projeta cerca de ${avgCorners} escanteios, com ritmo ${rhythm}. Esse comportamento torna a linha de escanteios a melhor oportunidade estatística deste jogo.`
+    return `A leitura Scoutly projeta cerca de ${avgCorners} escanteios, com ritmo ${rhythm}. Esse comportamento torna a linha de escanteios uma das melhores oportunidades estatísticas deste jogo.`
   }
 
   if (market.includes("dupla chance")) {
     return `A leitura Scoutly aponta vantagem competitiva para um dos lados, mas com proteção ao empate. O equilíbrio da partida ainda pede segurança, e por isso a dupla chance aparece como leitura mais sólida.`
   }
 
-  return `A leitura Scoutly destaca esta linha como a melhor oportunidade estatística da partida, combinando projeção de ${avgGoals} gols, ${avgCorners} escanteios e ritmo ${rhythm}.`
+  return `A leitura Scoutly classifica este confronto como ${profile}, combinando projeção de ${avgGoals} gols, ${avgCorners} escanteios e ritmo ${rhythm} para destacar essa oportunidade.`
+}
+
+function pushCandidate(candidates, item) {
+  candidates.push({
+    ...item,
+    probability: clamp(toNumber(item.probability), 0, 1),
+    score: clamp(toNumber(item.score), 0, 1),
+  })
 }
 
 function buildMarketCandidates(row) {
@@ -146,115 +210,222 @@ function buildMarketCandidates(row) {
   const homeOrDraw = clamp(homeWin + draw, 0, 1)
   const awayOrDraw = clamp(awayWin + draw, 0, 1)
 
-  if (over15Prob >= 0.72) {
-    candidates.push({
+  const profile = getGameProfile(row)
+
+  // OFENSIVOS
+  if (over25Prob >= 0.66) {
+    let score =
+      over25Prob +
+      (avgGoals >= 2.7 ? 0.04 : 0) +
+      (avgShots >= 22 ? 0.03 : 0)
+
+    if (profile === "ofensivo") score += 0.04
+    if (profile === "defensivo") score -= 0.05
+    if (profile === "controlado") score -= 0.03
+
+    pushCandidate(candidates, {
+      market: "Mais de 2.5 gols",
+      probability: over25Prob,
+      score,
+      family: "gols",
+      subfamily: "over",
+      macro: "ofensivo",
+    })
+  }
+
+  if (over15Prob >= 0.78) {
+    let score =
+      over15Prob +
+      (avgGoals >= 2.3 ? 0.03 : 0) +
+      (avgShots >= 20 ? 0.03 : 0)
+
+    if (profile === "ofensivo") score += 0.02
+    if (profile === "defensivo") score -= 0.04
+
+    pushCandidate(candidates, {
       market: "Mais de 1.5 gols",
       probability: over15Prob,
-      score: over15Prob + (avgGoals >= 2 ? 0.03 : 0) + (avgShots >= 18 ? 0.02 : 0),
+      score,
+      family: "gols",
+      subfamily: "over",
+      macro: "ofensivo",
     })
   }
 
-  if (under35Prob >= 0.72) {
-    candidates.push({
-      market: "Menos de 3.5 gols",
-      probability: under35Prob,
-      score:
-        under35Prob +
-        (avgGoals <= 2.8 ? 0.03 : 0) +
-        (avgShots <= 22 ? 0.02 : 0),
-    })
-  }
+  if (bttsProb >= 0.66) {
+    let score =
+      bttsProb +
+      (avgGoals >= 2.6 ? 0.03 : 0) +
+      (avgShots >= 21 ? 0.02 : 0)
 
-  if (under25Prob >= 0.68) {
-    candidates.push({
-      market: "Menos de 2.5 gols",
-      probability: under25Prob,
-      score:
-        under25Prob +
-        (avgGoals <= 2.3 ? 0.04 : 0) +
-        (avgShots <= 18 ? 0.02 : 0),
-    })
-  }
+    if (profile === "ofensivo") score += 0.03
+    if (profile === "defensivo") score -= 0.05
+    if (profile === "controlado") score -= 0.03
 
-  if (bttsNoProb >= 0.64) {
-    candidates.push({
-      market: "Ambas não marcam",
-      probability: bttsNoProb,
-      score:
-        bttsNoProb +
-        (avgGoals <= 2.4 ? 0.03 : 0) +
-        (avgShots <= 20 ? 0.02 : 0),
-    })
-  }
-
-  if (bttsProb >= 0.64) {
-    candidates.push({
+    pushCandidate(candidates, {
       market: "Ambas marcam",
       probability: bttsProb,
-      score:
-        bttsProb +
-        (avgGoals >= 2.5 ? 0.03 : 0) +
-        (avgShots >= 20 ? 0.02 : 0),
+      score,
+      family: "btts",
+      subfamily: "yes",
+      macro: "ofensivo",
     })
   }
 
+  // DEFENSIVOS
+  if (under25Prob >= 0.74) {
+    let score =
+      under25Prob +
+      (avgGoals <= 2.1 ? 0.03 : 0) +
+      (avgShots <= 17 ? 0.01 : 0)
+
+    if (profile === "defensivo") score += 0.04
+    if (profile === "ofensivo") score -= 0.06
+
+    pushCandidate(candidates, {
+      market: "Menos de 2.5 gols",
+      probability: under25Prob,
+      score,
+      family: "gols",
+      subfamily: "under",
+      macro: "defensivo",
+    })
+  }
+
+  if (under35Prob >= 0.78) {
+    let score =
+      under35Prob +
+      (avgGoals <= 2.6 ? 0.02 : 0) +
+      (avgShots <= 20 ? 0.01 : 0)
+
+    if (profile === "controlado") score += 0.03
+    if (profile === "defensivo") score += 0.01
+    if (profile === "ofensivo") score -= 0.05
+
+    pushCandidate(candidates, {
+      market: "Menos de 3.5 gols",
+      probability: under35Prob,
+      score,
+      family: "gols",
+      subfamily: "under",
+      macro: "defensivo",
+    })
+  }
+
+  if (bttsNoProb >= 0.70) {
+    let score =
+      bttsNoProb +
+      (avgGoals <= 2.2 ? 0.02 : 0) +
+      (avgShots <= 18 ? 0.01 : 0)
+
+    if (profile === "defensivo") score += 0.03
+    if (profile === "ofensivo") score -= 0.06
+
+    pushCandidate(candidates, {
+      market: "Ambas não marcam",
+      probability: bttsNoProb,
+      score,
+      family: "btts",
+      subfamily: "no",
+      macro: "defensivo",
+    })
+  }
+
+  // ESCANTEIOS
   if (cornersOver85Prob >= 0.64) {
-    candidates.push({
+    let score =
+      cornersOver85Prob +
+      (avgCorners >= 8.7 ? 0.04 : 0) +
+      (avgShots >= 20 ? 0.01 : 0)
+
+    if (profile === "corners") score += 0.03
+
+    pushCandidate(candidates, {
       market: "Mais de 8.5 escanteios",
       probability: cornersOver85Prob,
-      score:
-        cornersOver85Prob +
-        (avgCorners >= 8.7 ? 0.04 : 0) +
-        (avgShots >= 20 ? 0.01 : 0),
+      score,
+      family: "escanteios",
+      subfamily: "over",
+      macro: "estatistico",
     })
   }
 
   const cornersUnder105Prob = clamp(1 - Math.max(cornersOver85Prob - 0.18, 0), 0, 1)
   if (avgCorners <= 8.8 && cornersUnder105Prob >= 0.62) {
-    candidates.push({
+    let score =
+      cornersUnder105Prob +
+      (avgCorners <= 8.3 ? 0.03 : 0)
+
+    if (profile === "corners") score -= 0.02
+
+    pushCandidate(candidates, {
       market: "Menos de 10.5 escanteios",
       probability: cornersUnder105Prob,
-      score: cornersUnder105Prob + (avgCorners <= 8.3 ? 0.03 : 0),
+      score,
+      family: "escanteios",
+      subfamily: "under",
+      macro: "estatistico",
     })
   }
 
+  // RESULTADO / PROTEÇÃO
   if (homeOrDraw >= 0.72 && homeWin >= awayWin) {
-    candidates.push({
+    let score = homeOrDraw + (homeWin > awayWin ? 0.02 : 0)
+
+    if (homeWin >= 0.50) score += 0.02
+
+    pushCandidate(candidates, {
       market: `Dupla chance ${row.home_team} ou empate`,
       probability: homeOrDraw,
-      score: homeOrDraw + (homeWin > awayWin ? 0.02 : 0),
+      score,
+      family: "dupla",
+      subfamily: "home_draw",
+      macro: "protecao",
     })
   }
 
   if (awayOrDraw >= 0.72 && awayWin > homeWin) {
-    candidates.push({
+    let score = awayOrDraw + (awayWin > homeWin ? 0.02 : 0)
+
+    if (awayWin >= 0.50) score += 0.02
+
+    pushCandidate(candidates, {
       market: `Dupla chance ${row.away_team} ou empate`,
       probability: awayOrDraw,
-      score: awayOrDraw + (awayWin > homeWin ? 0.02 : 0),
+      score,
+      family: "dupla",
+      subfamily: "away_draw",
+      macro: "protecao",
     })
   }
 
-  return candidates
-    .map((c) => ({
-      ...c,
-      probability: clamp(c.probability, 0, 1),
-      score: clamp(c.score, 0, 1),
-    }))
-    .sort((a, b) => b.score - a.score)
+  return candidates.sort((a, b) => b.score - a.score)
 }
 
-function buildAnalysisFromRow(row) {
-  const candidates = buildMarketCandidates(row)
+function chooseBestAndAlternatives(candidates) {
+  if (!candidates.length) return { best: null, alternatives: [] }
 
-  if (!candidates.length) return null
+  const sorted = [...candidates].sort((a, b) => b.score - a.score)
+  const best = sorted[0]
 
-  const best = candidates[0]
-  const alternatives = candidates
+  const alternatives = sorted
     .slice(1)
     .filter((item, index, arr) => {
       return arr.findIndex((x) => x.market === item.market) === index
     })
     .slice(0, 2)
+
+  return { best, alternatives }
+}
+
+function buildAnalysisFromRow(row) {
+  const candidates = buildMarketCandidates(row)
+  if (!candidates.length) return null
+
+  const profile = getGameProfile(row)
+  const { best, alternatives } = chooseBestAndAlternatives(candidates)
+
+  if (!best) return null
 
   const rhythm = getRhythmLabel(row.avg_shots)
 
@@ -269,12 +440,16 @@ function buildAnalysisFromRow(row) {
     avg_goals: round1(row.avg_goals),
     avg_corners: round1(row.avg_corners),
     avg_shots: Math.round(toNumber(row.avg_shots)),
+    game_profile: profile,
     main_pick: best.market,
     main_probability: best.probability,
     main_score: best.score,
+    main_family: best.family,
+    main_subfamily: best.subfamily,
+    main_macro: best.macro,
     strength: getStrengthLabel(best.score),
     rhythm,
-    insight: buildInsight(row, best),
+    insight: buildInsight(row, best, profile),
     alternatives,
   }
 }
@@ -289,9 +464,33 @@ function chooseFeaturedAndTop5(analyses) {
   })
 
   const featured = sorted[0] || null
-  const top5 = sorted
-    .filter((item) => !featured || item.match_id !== featured.match_id)
-    .slice(0, 5)
+  const remaining = sorted.filter((item) => !featured || item.match_id !== featured.match_id)
+
+  const top5 = []
+  const usedMarkets = {}
+  const usedMacros = {}
+
+  for (const item of remaining) {
+    const marketCount = usedMarkets[item.main_pick] || 0
+    const macroCount = usedMacros[item.main_macro] || 0
+
+    if (marketCount >= 2) continue
+    if (macroCount >= 2) continue
+
+    top5.push(item)
+    usedMarkets[item.main_pick] = marketCount + 1
+    usedMacros[item.main_macro] = macroCount + 1
+
+    if (top5.length === 5) break
+  }
+
+  if (top5.length < 5) {
+    for (const item of remaining) {
+      if (top5.find((x) => x.match_id === item.match_id)) continue
+      top5.push(item)
+      if (top5.length === 5) break
+    }
+  }
 
   return { featured, top5 }
 }
@@ -347,6 +546,8 @@ async function loadTodaysMatches() {
         row.avg_corners != null ||
         row.avg_shots != null ||
         row.over15_prob != null ||
+        row.over25_prob != null ||
+        row.under25_prob != null ||
         row.under35_prob != null ||
         row.btts_prob != null
 
@@ -414,7 +615,7 @@ async function rebuildDailyPicks(featured, top5) {
 }
 
 async function runScoutlyBrain() {
-  console.log("🧠 Scoutly Brain V2.3 iniciado...")
+  console.log("🧠 Scoutly Brain V3.0 iniciado...")
 
   const matches = await loadTodaysMatches()
   console.log(`📦 Jogos carregados para análise: ${matches.length}`)
@@ -435,15 +636,16 @@ async function runScoutlyBrain() {
 
   await rebuildDailyPicks(featured, top5)
 
-  console.log("✅ Scoutly Brain V2.3 finalizado com sucesso.")
+  console.log("✅ Scoutly Brain V3.0 finalizado com sucesso.")
   if (featured) {
-    console.log(`⭐ Dica do dia: ${buildMatchLabel(featured)} -> ${featured.main_pick}`)
+    console.log(
+      `⭐ Dica do dia: ${buildMatchLabel(featured)} -> ${featured.main_pick} [${featured.main_macro}]`
+    )
   }
   console.log(`🔥 Top 5 gerado com ${top5.length} jogos.`)
 }
 
 runScoutlyBrain().catch((error) => {
-  console.error("❌ Erro no Scoutly Brain V2.3:", error)
+  console.error("❌ Erro no Scoutly Brain V3.0:", error)
   process.exit(1)
 })
-
