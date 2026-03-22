@@ -2188,139 +2188,255 @@ function getMainMarket(match) {
 
   const candidatos = [];
 
-  function addMercado(nome, score, familia) {
+  function clamp(value, min = 0, max = 1) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function addMercado(nome, score, familia, subfamilia = "", prioridade = 0) {
     if (!Number.isFinite(score) || score <= 0) return;
-    candidatos.push({ nome, score, familia });
+
+    candidatos.push({
+      nome,
+      score: clamp(score, 0, 1.5),
+      familia,
+      subfamilia,
+      prioridade
+    });
   }
 
-// GOLS
-// if (probOver25 >= 0.75) addMercado("Mais de 2.5 gols", probOver25 + 0.04, "gols");
-if (probOver15 >= 0.92) addMercado("Mais de 1.5 gols", probOver15 + 0.01, "gols");
+  function getGameContext() {
+    const aberto =
+      golsMedia >= 2.7 ||
+      probOver25 >= 0.67 ||
+      (shotsMedia >= 24 && shotsOnTargetMedia >= 8) ||
+      (probBTTS >= 0.63 && golsMedia >= 2.4);
 
-if (golsMedia > 0 && golsMedia <= 1.5 && probBTTS < 0.50 && shotsOnTargetMedia <= 8) {
-  addMercado("Menos de 3.5 gols", 0.52 + (1.5 - golsMedia) * 0.04, "gols");
-}
+    const travado =
+      golsMedia <= 2.05 &&
+      probOver25 <= 0.54 &&
+      probBTTS <= 0.56 &&
+      shotsOnTargetMedia <= 7;
 
-if (golsMedia > 0 && golsMedia <= 1.2 && probBTTS < 0.50 && shotsOnTargetMedia <= 7) {
-  addMercado("Menos de 2.5 gols", 0.60 + (1.2 - golsMedia) * 0.07, "gols");
-}
+    const muitoTravado =
+      golsMedia <= 1.55 &&
+      probBTTS <= 0.48 &&
+      shotsOnTargetMedia <= 6 &&
+      shotsMedia <= 18;
 
-// AMBAS MARCAM
-if (probBTTS >= 0.68) addMercado("Ambas marcam", probBTTS + 0.08, "btts");
-if (golsMedia > 0 && golsMedia <= 2.0 && probBTTS <= 0.52) {
-  addMercado("Ambas não marcam", 0.70 + (0.52 - probBTTS) * 0.20, "btts");
-}
+    if (muitoTravado) return "muito_travado";
+    if (travado) return "travado";
+    if (aberto) return "aberto";
+    return "equilibrado";
+  }
 
+  const contexto = getGameContext();
+
+  // =========================
+  // GOLS — agora com contexto real
+  // =========================
+
+  if (contexto === "aberto") {
+    if (probOver25 >= 0.68) {
+      addMercado("Mais de 2.5 gols", probOver25 + 0.10, "gols", "over", 4);
+    } else if (probOver15 >= 0.83) {
+      addMercado("Mais de 1.5 gols", probOver15 + 0.03, "gols", "over", 2);
+    }
+
+    if (probBTTS >= 0.66) {
+      addMercado("Ambas marcam", probBTTS + 0.07, "btts", "yes", 3);
+    }
+  }
+
+  if (contexto === "equilibrado") {
+    if (probOver15 >= 0.84 && probOver25 < 0.72) {
+      addMercado("Mais de 1.5 gols", probOver15 + 0.02, "gols", "over", 2);
+    }
+
+    if (probBTTS >= 0.65 && golsMedia >= 2.2) {
+      addMercado("Ambas marcam", probBTTS + 0.05, "btts", "yes", 2);
+    }
+
+    if (golsMedia <= 2.6 && probBTTS <= 0.57 && shotsOnTargetMedia <= 8) {
+      addMercado("Menos de 3.5 gols", 0.71 + (2.6 - golsMedia) * 0.03, "gols", "under", 2);
+    }
+  }
+
+  if (contexto === "travado") {
+    if (golsMedia <= 2.2 && probBTTS <= 0.55 && shotsOnTargetMedia <= 7) {
+      addMercado("Menos de 3.5 gols", 0.77 + (2.2 - golsMedia) * 0.04, "gols", "under", 4);
+    }
+
+    if (golsMedia <= 1.85 && probBTTS <= 0.50 && shotsOnTargetMedia <= 6) {
+      addMercado("Menos de 2.5 gols", 0.72 + (1.85 - golsMedia) * 0.06, "gols", "under", 5);
+    }
+
+    if (probBTTS <= 0.50) {
+      addMercado("Ambas não marcam", 0.71 + (0.50 - probBTTS) * 0.20, "btts", "no", 3);
+    }
+  }
+
+  if (contexto === "muito_travado") {
+    addMercado("Menos de 2.5 gols", 0.78 + (1.55 - golsMedia) * 0.07, "gols", "under", 6);
+    addMercado("Ambas não marcam", 0.75 + (0.48 - probBTTS) * 0.22, "btts", "no", 4);
+    addMercado("Menos de 3.5 gols", 0.82 + (1.55 - golsMedia) * 0.04, "gols", "under", 3);
+  }
+
+  // =========================
   // ESCANTEIOS
-  if (cornersMedia >= 10.2) addMercado("Mais de 8.5 escanteios", 0.78 + (cornersMedia - 10.2) * 0.03, "escanteios");
-  if (cornersMedia >= 9.0 && cornersMedia < 10.2) addMercado("Mais de 7.5 escanteios", 0.74 + (cornersMedia - 9.0) * 0.04, "escanteios");
-  if (cornersMedia > 0 && cornersMedia <= 8.0) addMercado("Menos de 10.5 escanteios", 0.76 + (8.0 - cornersMedia) * 0.03, "escanteios");
-  if (cornersMedia > 0 && cornersMedia <= 7.0) addMercado("Menos de 9.5 escanteios", 0.72 + (7.0 - cornersMedia) * 0.04, "escanteios");
+  // =========================
+  if (cornersMedia >= 10.4) {
+    addMercado("Mais de 8.5 escanteios", 0.80 + (cornersMedia - 10.4) * 0.025, "escanteios", "over", 3);
+  } else if (cornersMedia >= 9.1) {
+    addMercado("Mais de 7.5 escanteios", 0.75 + (cornersMedia - 9.1) * 0.035, "escanteios", "over", 2);
+  }
 
+  if (cornersMedia > 0 && cornersMedia <= 8.0) {
+    addMercado("Menos de 10.5 escanteios", 0.74 + (8.0 - cornersMedia) * 0.03, "escanteios", "under", 2);
+  }
+
+  if (cornersMedia > 0 && cornersMedia <= 7.0) {
+    addMercado("Menos de 9.5 escanteios", 0.72 + (7.0 - cornersMedia) * 0.035, "escanteios", "under", 3);
+  }
+
+  // =========================
   // CARTÕES
-  if (cardsMedia >= 4.2) addMercado("Mais de 3.5 cartões", 0.74 + (cardsMedia - 4.2) * 0.03, "cartoes");
-  if (cardsMedia >= 5.2) addMercado("Mais de 4.5 cartões", 0.71 + (cardsMedia - 5.2) * 0.03, "cartoes");
+  // =========================
+  if (cardsMedia >= 4.2) {
+    addMercado("Mais de 3.5 cartões", 0.74 + (cardsMedia - 4.2) * 0.03, "cartoes", "over", 2);
+  }
 
+  if (cardsMedia >= 5.2) {
+    addMercado("Mais de 4.5 cartões", 0.71 + (cardsMedia - 5.2) * 0.03, "cartoes", "over", 3);
+  }
+
+  // =========================
   // RESULTADO / PROTEÇÃO
-  if (probCasa >= 0.64) addMercado("Vitória do mandante", probCasa + 0.03, "resultado");
-  if (probFora >= 0.64) addMercado("Vitória do visitante", probFora + 0.03, "resultado");
-
-  if (probCasa >= 0.48 && probCasa + probEmpate >= 0.78) {
-   addMercado(`${match.home_team} ou empate`, probCasa + probEmpate + 0.02, "dupla"); 
+  // =========================
+  if (probCasa >= 0.66) {
+    addMercado("Vitória do mandante", probCasa + 0.05, "resultado", "home", 4);
   }
 
-  if (probFora >= 0.48 && probFora + probEmpate >= 0.78) {
-    addMercado(`${match.away_team} ou empate`, probFora + probEmpate + 0.02, "dupla");
+  if (probFora >= 0.66) {
+    addMercado("Vitória do visitante", probFora + 0.05, "resultado", "away", 4);
   }
 
-  // AJUSTES DE CONTEXTO
-  if (shotsMedia >= 24 && shotsOnTargetMedia >= 8) {
-  // addMercado("Mais de 1.5 gols", 0.80, "gols");
+  if (probCasa >= 0.48 && probCasa + probEmpate >= 0.79) {
+    addMercado(`${match.home_team} ou empate`, probCasa + probEmpate + 0.025, "dupla", "home_draw", 3);
   }
 
-  if (shotsMedia <= 14 && shotsOnTargetMedia <= 4 && golsMedia <= 1.8) {
-    // addMercado("Menos de 3.5 gols", 0.50, "gols");
+  if (probFora >= 0.48 && probFora + probEmpate >= 0.79) {
+    addMercado(`${match.away_team} ou empate`, probFora + probEmpate + 0.025, "dupla", "away_draw", 3);
   }
 
-console.log("CANDIDATOS Scoutly:", match.home_team, "x", match.away_team, candidatos);
-  
-  // REMOVER EXCESSO DE REPETIÇÃO DE UMA MESMA FAMÍLIA
+  // =========================
+  // REMOVER CONTRADIÇÕES DENTRO DO MESMO JOGO
+  // =========================
+  let filtrados = [...candidatos];
+
+  if (contexto === "aberto") {
+    filtrados = filtrados.filter(c =>
+      !["Menos de 2.5 gols", "Menos de 3.5 gols", "Ambas não marcam"].includes(c.nome)
+    );
+  }
+
+  if (contexto === "travado" || contexto === "muito_travado") {
+    filtrados = filtrados.filter(c =>
+      !["Mais de 1.5 gols", "Mais de 2.5 gols", "Ambas marcam"].includes(c.nome)
+    );
+  }
+
+  // =========================
+  // PESOS GLOBAIS PARA VARIEDADE
+  // =========================
+  window.__usedMarkets = window.__usedMarkets || {};
+  window.__usedExactMarkets = window.__usedExactMarkets || {};
+
   const prioridadeFamilia = {
-  resultado: 0.06,
-  dupla: 0.05,
-  btts: 0.045,
-  escanteios: 0.045,
-  gols: -0.08
-};
+    resultado: 0.06,
+    dupla: 0.05,
+    escanteios: 0.04,
+    cartoes: 0.035,
+    btts: 0.025,
+    gols: 0
+  };
 
-candidatos.sort((a, b) => {
-  const usadaA = window.__usedMarkets[a.familia] || 0;
-  const usadaB = window.__usedMarkets[b.familia] || 0;
+  filtrados = filtrados
+    .map(c => {
+      const usadaFamilia = window.__usedMarkets[c.familia] || 0;
+      const usadoExato = window.__usedExactMarkets[c.nome] || 0;
 
-  const scoreA =
-    a.score +
-    (prioridadeFamilia[a.familia] || 0) -
-    usadaA * 0.04;
+      let ajuste = 0;
+      ajuste += (prioridadeFamilia[c.familia] || 0);
+      ajuste += c.prioridade * 0.01;
+      ajuste -= usadaFamilia * 0.05;
+      ajuste -= usadoExato * 0.12;
 
-  const scoreB =
-    b.score +
-    (prioridadeFamilia[b.familia] || 0) -
-    usadaB * 0.04;
+      if (c.nome === "Mais de 1.5 gols") ajuste -= 0.08;
+      if (c.nome === "Menos de 3.5 gols") ajuste -= 0.03;
+      if (c.nome === "Mais de 2.5 gols") ajuste += 0.03;
+      if (c.nome === "Menos de 2.5 gols") ajuste += 0.03;
+      if (c.nome === "Ambas marcam" || c.nome === "Ambas não marcam") ajuste += 0.01;
 
-  return scoreB - scoreA;
-});
-  
-  if (!candidatos.length) {
-    if (Number(match?.probability || 0) >= 0.70) return "Mais de 1.5 gols";
+      return {
+        ...c,
+        scoreFinal: c.score + ajuste
+      };
+    })
+    .sort((a, b) => b.scoreFinal - a.scoreFinal);
+
+  if (!filtrados.length) {
+    if (Number(match?.probability || 0) >= 0.72) return "Mais de 1.5 gols";
     return "Jogo equilibrado";
   }
 
-const limitePorFamilia = {
-  gols: 2,
-  btts: 3,
-  escanteios: 3,
-  resultado: 2,
-  dupla: 2
-};
+  // =========================
+  // LIMITES POR FAMÍLIA / EXATO
+  // =========================
+  const limitePorFamilia = {
+    gols: 2,
+    btts: 2,
+    escanteios: 3,
+    cartoes: 2,
+    resultado: 2,
+    dupla: 2
+  };
 
-window.__usedMarkets = window.__usedMarkets || {};
+  for (const c of filtrados) {
+    const usadaFamilia = window.__usedMarkets[c.familia] || 0;
+    const usadoExato = window.__usedExactMarkets[c.nome] || 0;
+    const limite = limitePorFamilia[c.familia] || 2;
 
-for (let c of candidatos) {
-  const usada = window.__usedMarkets[c.familia] || 0;
-  const limite = limitePorFamilia[c.familia] || 2;
+    if (usadoExato >= 2) continue;
+    if (usadaFamilia >= limite) continue;
 
-  if (c.familia === "gols" && usada >= 2) {
-    continue;
-  }
+    window.__usedMarkets[c.familia] = usadaFamilia + 1;
+    window.__usedExactMarkets[c.nome] = usadoExato + 1;
 
-  if (usada < limite) {
-    window.__usedMarkets[c.familia] = usada + 1;
     return c.nome;
   }
-}
 
-// fallback inteligente: pega a família menos usada
-const candidatoAlternativo = [...candidatos].sort((a, b) => {
-  const usadaA = window.__usedMarkets[a.familia] || 0;
-  const usadaB = window.__usedMarkets[b.familia] || 0;
+  // fallback: pega o menos repetido
+  const fallback = [...filtrados].sort((a, b) => {
+    const usadaA = window.__usedExactMarkets[a.nome] || 0;
+    const usadaB = window.__usedExactMarkets[b.nome] || 0;
+    if (usadaA !== usadaB) return usadaA - usadaB;
+    return b.scoreFinal - a.scoreFinal;
+  })[0];
 
-  if (usadaA !== usadaB) return usadaA - usadaB;
-  return b.score - a.score;
-})[0];
+  if (fallback) {
+    window.__usedMarkets[fallback.familia] = (window.__usedMarkets[fallback.familia] || 0) + 1;
+    window.__usedExactMarkets[fallback.nome] = (window.__usedExactMarkets[fallback.nome] || 0) + 1;
+    return fallback.nome;
+  }
 
-if (candidatoAlternativo) {
-  const familia = candidatoAlternativo.familia;
-  window.__usedMarkets[familia] = (window.__usedMarkets[familia] || 0) + 1;
-  return candidatoAlternativo.nome;
-}
-
-return "Jogo equilibrado";
+  return "Jogo equilibrado";
 }
     
 function renderRadar() {
   const list = document.getElementById('radarList');
-window.__usedMarkets = {}; // 🔥 ESSENCIAL
-
+window.__usedMarkets = {};
+window.__usedExactMarkets = {};
+  
 const sortedMatches = getVisibleMatches()
   .filter(m => {
     const probability = Number(m.probability || 0);
