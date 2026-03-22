@@ -2921,7 +2921,17 @@ state.matches = loadedMatches.map(match => {
     away_logo: match.away_logo
   };
 });
- 
+
+  // 🔍 DEBUG AQUI
+const parisDebug = state.matches.filter(m =>
+  String(m.home_team || '').toLowerCase().includes('paris') ||
+  String(m.away_team || '').toLowerCase().includes('paris') ||
+  String(m.home_team || '').toLowerCase().includes('le havre') ||
+  String(m.away_team || '').toLowerCase().includes('le havre')
+);
+
+console.log('DEBUG PARIS / LE HAVRE:', parisDebug);
+
   console.log('TOTAL state.matches:', state.matches.length);
   console.log(
     'LIGAS em state.matches:',
