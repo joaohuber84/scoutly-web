@@ -212,16 +212,25 @@ function buildMarketCandidates(row) {
 
   const profile = getGameProfile(row)
 
+  function pushCandidate(list, candidate) {
+    list.push({
+      ...candidate,
+      probability: clamp(candidate.probability, 0, 1),
+      score: clamp(candidate.score, 0, 1),
+    })
+  }
+
   // OFENSIVOS
-  if (over25Prob >= 0.66) {
+
+  if (over25Prob >= 0.64) {
     let score =
       over25Prob +
-      (avgGoals >= 2.7 ? 0.04 : 0) +
-      (avgShots >= 22 ? 0.03 : 0)
+      (avgGoals >= 2.7 ? 0.05 : 0) +
+      (avgShots >= 22 ? 0.04 : 0)
 
-    if (profile === "ofensivo") score += 0.04
-    if (profile === "defensivo") score -= 0.05
-    if (profile === "controlado") score -= 0.03
+    if (profile === "ofensivo") score += 0.06
+    if (profile === "defensivo") score -= 0.10
+    if (profile === "controlado") score -= 0.04
 
     pushCandidate(candidates, {
       market: "Mais de 2.5 gols",
@@ -233,14 +242,15 @@ function buildMarketCandidates(row) {
     })
   }
 
-  if (over15Prob >= 0.78) {
+  if (over15Prob >= 0.75) {
     let score =
       over15Prob +
-      (avgGoals >= 2.3 ? 0.03 : 0) +
-      (avgShots >= 20 ? 0.03 : 0)
+      (avgGoals >= 2.3 ? 0.04 : 0) +
+      (avgShots >= 20 ? 0.04 : 0)
 
-    if (profile === "ofensivo") score += 0.02
-    if (profile === "defensivo") score -= 0.04
+    if (profile === "ofensivo") score += 0.04
+    if (profile === "defensivo") score -= 0.05
+    if (profile === "controlado") score -= 0.02
 
     pushCandidate(candidates, {
       market: "Mais de 1.5 gols",
@@ -252,15 +262,15 @@ function buildMarketCandidates(row) {
     })
   }
 
-  if (bttsProb >= 0.66) {
+  if (bttsProb >= 0.63) {
     let score =
       bttsProb +
-      (avgGoals >= 2.6 ? 0.03 : 0) +
-      (avgShots >= 21 ? 0.02 : 0)
+      (avgGoals >= 2.6 ? 0.04 : 0) +
+      (avgShots >= 21 ? 0.03 : 0)
 
-    if (profile === "ofensivo") score += 0.03
-    if (profile === "defensivo") score -= 0.05
-    if (profile === "controlado") score -= 0.03
+    if (profile === "ofensivo") score += 0.05
+    if (profile === "defensivo") score -= 0.09
+    if (profile === "controlado") score -= 0.04
 
     pushCandidate(candidates, {
       market: "Ambas marcam",
@@ -273,14 +283,16 @@ function buildMarketCandidates(row) {
   }
 
   // DEFENSIVOS
-  if (under25Prob >= 0.74) {
+
+  if (under25Prob >= 0.76) {
     let score =
       under25Prob +
-      (avgGoals <= 2.1 ? 0.03 : 0) +
+      (avgGoals <= 2.1 ? 0.02 : 0) +
       (avgShots <= 17 ? 0.01 : 0)
 
-    if (profile === "defensivo") score += 0.04
-    if (profile === "ofensivo") score -= 0.06
+    if (profile === "defensivo") score += 0.02
+    if (profile === "ofensivo") score -= 0.10
+    if (profile === "controlado") score += 0.01
 
     pushCandidate(candidates, {
       market: "Menos de 2.5 gols",
@@ -292,15 +304,15 @@ function buildMarketCandidates(row) {
     })
   }
 
-  if (under35Prob >= 0.78) {
+  if (under35Prob >= 0.80) {
     let score =
       under35Prob +
-      (avgGoals <= 2.6 ? 0.02 : 0) +
+      (avgGoals <= 2.6 ? 0.01 : 0) +
       (avgShots <= 20 ? 0.01 : 0)
 
-    if (profile === "controlado") score += 0.03
+    if (profile === "controlado") score += 0.02
     if (profile === "defensivo") score += 0.01
-    if (profile === "ofensivo") score -= 0.05
+    if (profile === "ofensivo") score -= 0.08
 
     pushCandidate(candidates, {
       market: "Menos de 3.5 gols",
@@ -312,14 +324,15 @@ function buildMarketCandidates(row) {
     })
   }
 
-  if (bttsNoProb >= 0.70) {
+  if (bttsNoProb >= 0.72) {
     let score =
       bttsNoProb +
-      (avgGoals <= 2.2 ? 0.02 : 0) +
+      (avgGoals <= 2.2 ? 0.01 : 0) +
       (avgShots <= 18 ? 0.01 : 0)
 
-    if (profile === "defensivo") score += 0.03
-    if (profile === "ofensivo") score -= 0.06
+    if (profile === "defensivo") score += 0.02
+    if (profile === "ofensivo") score -= 0.10
+    if (profile === "controlado") score += 0.01
 
     pushCandidate(candidates, {
       market: "Ambas não marcam",
@@ -332,13 +345,15 @@ function buildMarketCandidates(row) {
   }
 
   // ESCANTEIOS
-  if (cornersOver85Prob >= 0.64) {
+
+  if (cornersOver85Prob >= 0.62) {
     let score =
       cornersOver85Prob +
-      (avgCorners >= 8.7 ? 0.04 : 0) +
-      (avgShots >= 20 ? 0.01 : 0)
+      (avgCorners >= 8.7 ? 0.05 : 0) +
+      (avgShots >= 20 ? 0.02 : 0)
 
-    if (profile === "corners") score += 0.03
+    if (profile === "corners") score += 0.04
+    if (profile === "ofensivo") score += 0.01
 
     pushCandidate(candidates, {
       market: "Mais de 8.5 escanteios",
@@ -351,7 +366,8 @@ function buildMarketCandidates(row) {
   }
 
   const cornersUnder105Prob = clamp(1 - Math.max(cornersOver85Prob - 0.18, 0), 0, 1)
-  if (avgCorners <= 8.8 && cornersUnder105Prob >= 0.62) {
+
+  if (avgCorners <= 8.8 && cornersUnder105Prob >= 0.64) {
     let score =
       cornersUnder105Prob +
       (avgCorners <= 8.3 ? 0.03 : 0)
@@ -368,10 +384,10 @@ function buildMarketCandidates(row) {
     })
   }
 
-  // RESULTADO / PROTEÇÃO
+  // PROTEÇÃO
+
   if (homeOrDraw >= 0.72 && homeWin >= awayWin) {
     let score = homeOrDraw + (homeWin > awayWin ? 0.02 : 0)
-
     if (homeWin >= 0.50) score += 0.02
 
     pushCandidate(candidates, {
@@ -386,7 +402,6 @@ function buildMarketCandidates(row) {
 
   if (awayOrDraw >= 0.72 && awayWin > homeWin) {
     let score = awayOrDraw + (awayWin > homeWin ? 0.02 : 0)
-
     if (awayWin >= 0.50) score += 0.02
 
     pushCandidate(candidates, {
@@ -399,11 +414,23 @@ function buildMarketCandidates(row) {
     })
   }
 
-candidates.forEach(c => {
-  if (c.macro === "ofensivo") {
-    c.score = clamp(c.score + 0.05, 0, 1)
-  }
-})
+  candidates.forEach(c => {
+    if (c.macro === "ofensivo") {
+      c.score = clamp(c.score + 0.04, 0, 1)
+    }
+
+    if (c.macro === "defensivo" && c.subfamily === "under") {
+      c.score = clamp(c.score - 0.04, 0, 1)
+    }
+
+    if (c.market === "Ambas não marcam") {
+      c.score = clamp(c.score - 0.03, 0, 1)
+    }
+
+    if (c.market === "Mais de 8.5 escanteios") {
+      c.score = clamp(c.score + 0.02, 0, 1)
+    }
+  })
 
   return candidates.sort((a, b) => b.score - a.score)
 }
