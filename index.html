@@ -1473,6 +1473,24 @@ return 'https://upload.wikimedia.org/wikipedia/commons/6/6e/Football_icon.svg';
 
   return d >= now && d <= end;
 }
+
+function isCompetitionVisible(value) {
+  if (!value) return false;
+
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return false;
+
+  const now = new Date();
+
+  const start = new Date(now);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(now);
+  end.setDate(end.getDate() + 2);
+  end.setHours(23, 59, 59, 999);
+
+  return d >= start && d <= end;
+}
     
 function getVisibleMatches() {
   return state.matches.filter(match => {
@@ -2454,7 +2472,7 @@ function buildCompetitions() {
   const map = new Map();
 
   const visibleMatches = state.matches.filter(match =>
-    isMatchVisible(match.kickoff) && !shouldHideLeague(match.league)
+    isCompetitionVisible(match.kickoff) && !shouldHideLeague(match.league)
   );
 
   for (const match of visibleMatches) {
@@ -2548,7 +2566,7 @@ function openCompetition(league) {
   const competition = state.competitions.find(c => c.league === league);
   const matches = competition?.matches || [];
   const filteredMatches = matches.filter(match =>
-    isMatchVisible(match.kickoff) && !shouldHideLeague(match.league)
+    isCompetitionVisible(match.kickoff) && !shouldHideLeague(match.league)
   );
  
   document.getElementById('competitionsWrap').classList.add('hidden');
