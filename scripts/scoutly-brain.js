@@ -426,7 +426,8 @@ function buildMarketCandidates(row) {
     if (c.market === "Ambas não marcam") {
       c.score = clamp(c.score - 0.01, 0, 1)
     }
-
+  })
+  
   return candidates.sort((a, b) => b.score - a.score)
 }
 
