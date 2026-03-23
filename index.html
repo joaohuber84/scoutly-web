@@ -1486,7 +1486,7 @@ function isCompetitionVisible(value) {
   start.setHours(0, 0, 0, 0);
 
   const end = new Date(now);
-  end.setDate(end.getDate() + 2);
+  end.setDate(end.getDate() + 5);
   end.setHours(23, 59, 59, 999);
 
   return d >= start && d <= end;
