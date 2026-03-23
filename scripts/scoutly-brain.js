@@ -628,15 +628,7 @@ console.log("DEBUG TOTAL RAW MATCHES:", (data || []).length)
   return filtered
     .filter((row) => row.home_team && row.away_team && row.league)
     .filter((row) => {
-      const hasCoreNumbers =
-        row.avg_goals != null ||
-        row.avg_corners != null ||
-        row.avg_shots != null ||
-        row.over15_prob != null ||
-        row.over25_prob != null ||
-        row.under25_prob != null ||
-        row.under35_prob != null ||
-        row.btts_prob != null
+     const hasCoreNumbers = true
 
       return hasCoreNumbers
     })
