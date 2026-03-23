@@ -424,13 +424,8 @@ function buildMarketCandidates(row) {
     }
 
     if (c.market === "Ambas não marcam") {
-      c.score = clamp(c.score - 0.03, 0, 1)
+      c.score = clamp(c.score - 0.01, 0, 1)
     }
-
-    if (c.market === "Mais de 8.5 escanteios") {
-      c.score = clamp(c.score + 0.02, 0, 1)
-    }
-  })
 
   return candidates.sort((a, b) => b.score - a.score)
 }
