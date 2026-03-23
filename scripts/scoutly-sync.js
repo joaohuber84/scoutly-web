@@ -84,6 +84,15 @@ const TARGET_COMPETITIONS = [
   { mode: "search", search: "Copa Libertadores", display: "Libertadores", region: "brazil", priority: 91 },
   { mode: "search", search: "CONMEBOL Sudamericana", display: "Sul-Americana", region: "brazil", priority: 86 },
   { mode: "search", search: "Copa Sudamericana", display: "Sul-Americana", region: "brazil", priority: 85 },
+
+  // Seleções / Internacional
+{ mode: "international", type: "national", names: ["International Friendlies"], display: "Amistosos Internacionais", region: "international", priority: 85 },
+{ mode: "international", type: "national", names: ["UEFA Nations League"], display: "UEFA Nations League", region: "international", priority: 95 },
+{ mode: "international", type: "national", names: ["CONMEBOL World Cup Qualifiers"], display: "Eliminatórias Sul-Americanas", region: "international", priority: 96 },
+{ mode: "international", type: "national", names: ["UEFA Euro Qualifiers"], display: "Eliminatórias da Euro", region: "international", priority: 94 },
+{ mode: "international", type: "national", names: ["FIFA World Cup"], display: "Copa do Mundo", region: "international", priority: 100 },
+{ mode: "international", type: "national", names: ["Copa America"], display: "Copa América", region: "international", priority: 98 },
+{ mode: "international", type: "national", names: ["UEFA European Championship"], display: "Eurocopa", region: "international", priority: 98 },
 ]
 
 const apiCache = new Map()
