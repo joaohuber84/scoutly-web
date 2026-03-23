@@ -595,6 +595,29 @@ async function loadTodaysMatches() {
 
   if (error) throw error
 
+console.log("DEBUG DATA HOJE:", today)
+console.log("DEBUG TOTAL RAW MATCHES:", (data || []).length)
+
+;(data || []).slice(0, 15).forEach((row, index) => {
+  const kickoffDay = getKickoffDateOnly(row.kickoff)
+  const matchDay = row.match_date ? String(row.match_date) : null
+
+  console.log(
+    `RAW ${index + 1}:`,
+    row.home_team,
+    "x",
+    row.away_team,
+    "| kickoff:",
+    row.kickoff,
+    "| kickoffDay:",
+    kickoffDay,
+    "| match_date:",
+    matchDay,
+    "| league:",
+    row.league
+  )
+})
+  
   const filtered = (data || []).filter((row) => {
     const kickoffDay = getKickoffDateOnly(row.kickoff)
     const matchDay = row.match_date ? String(row.match_date) : null
