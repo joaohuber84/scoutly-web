@@ -1191,7 +1191,9 @@ const allFixtures = uniqBy(
         comp.season,
         allFixtures
       )
-
+       const analysis = buildMatchAnalysis(fixture, homeProfile, awayProfile)
+      const metrics = build CoreMetrics(fixture, homeProfile, awayProfile)
+      
       const enrichedAnalysis = {
   ...analysis,
   metrics,
