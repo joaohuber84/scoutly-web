@@ -1192,7 +1192,7 @@ const allFixtures = uniqBy(
         allFixtures
       )
        const analysis = buildMatchAnalysis(fixture, homeProfile, awayProfile)
-      const metrics = build CoreMetrics(fixture, homeProfile, awayProfile)
+      const metrics = buildCoreMetrics(fixture, homeProfile, awayProfile)
       
       const enrichedAnalysis = {
   ...analysis,
