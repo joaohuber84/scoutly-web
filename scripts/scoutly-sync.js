@@ -884,27 +884,187 @@ function normalizeLeagueByTeams(comp, fixture) {
 }
 
 function buildPrimaryMarket(analysis) {
-  const { probabilities, markets } = analysis
+  const { probabilities, markets, metrics = {} } = analysis
 
-  if (markets.over25 >= 0.72) return "Mais de 2.5 gols"
-  if (markets.over15 >= 0.82) return "Mais de 1.5 gols"
-  if (markets.btts >= 0.68) return "Ambas marcam"
-  if (markets.corners >= 9.2) return "Mais de 8.5 escanteios"
-  if (probabilities.home >= 0.62) return "Vitória do mandante"
-  if (probabilities.away >= 0.62) return "Vitória do visitante"
+  const goals = Number(metrics.goals || 0)
+  const shots = Number(metrics.shots || 0)
+  const shotsOnTarget = Number(metrics.shots_on_target || 0)
+  const corners = Number(metrics.corners || 0)
+
+  const home = Number(probabilities.home || 0)
+  const away = Number(probabilities.away || 0)
+  const draw = Number(probabilities.draw || 0)
+
+  const over15 = Number(markets.over15 || 0)
+  const over25 = Number(markets.over25 || 0)
+  const btts = Number(markets.btts || 0)
+
+  const strongestSide = Math.max(home, away)
+  const balancedGame = Math.abs(home - away) <= 0.12
+
+  const veryLowTempoGame =
+    goals <= 1.8 &&
+    shots <= 18 &&
+    shotsOnTarget <= 5.5 &&
+    btts <= 0.48
+
+  const lowTempoGame =
+    goals <= 2.05 &&
+    shots <= 22 &&
+    shotsOnTarget <= 7 &&
+    btts <= 0.56
+
+  const openGame =
+    goals >= 2.7 &&
+    shots >= 24 &&
+    shotsOnTarget >= 8 &&
+    over25 >= 0.68
+
+  const veryOpenGame =
+    goals >= 3.0 &&
+    shots >= 27 &&
+    shotsOnTarget >= 9 &&
+    over25 >= 0.74 &&
+    btts >= 0.60
+
+  const oneSidedGame =
+    strongestSide >= 0.64 &&
+    Math.abs(home - away) >= 0.22
+
+  // 1) Jogo muito travado
+  if (veryLowTempoGame) {
+    return "Menos de 2.5 gols"
+  }
+
+  // 2) Jogo travado, mas não extremo
+  if (lowTempoGame && draw <= 0.34) {
+    return "Menos de 3.5 gols"
+  }
+
+  // 3) Jogo muito aberto
+  if (veryOpenGame) {
+    return "Mais de 2.5 gols"
+  }
+
+  // 4) Jogo aberto equilibrado
+  if (openGame && balancedGame && btts >= 0.62) {
+    return "Ambas marcam"
+  }
+
+  // 5) Jogo aberto com segurança
+  if (openGame && over15 >= 0.80) {
+    return "Mais de 1.5 gols"
+  }
+
+  // 6) Favorito muito claro
+  if (oneSidedGame) {
+    if (home > away) return "Vitória do mandante"
+    if (away > home) return "Vitória do visitante"
+  }
+
+  // 7) Escanteios só quando o volume ofensivo sustenta
+  if (corners >= 9.6 && shots >= 23) {
+    return "Mais de 8.5 escanteios"
+  }
+
+  // 8) Ambas não marcam em cenário de baixa troca ofensiva
+  if (btts <= 0.50 && goals <= 2.1 && shotsOnTarget <= 7) {
+    return "Ambas não marcam"
+  }
+
+  // 9) Over leve
+  if (over15 >= 0.84 && goals >= 2.2) {
+    return "Mais de 1.5 gols"
+  }
+
+  // 10) Fallback
   return "Menos de 3.5 gols"
 }
 
 function buildPrimaryProbability(analysis, market) {
-  const { probabilities, markets } = analysis
+  const { probabilities, markets, metrics = {} } = analysis
 
-  if (market === "Mais de 2.5 gols") return markets.over25
-  if (market === "Mais de 1.5 gols") return markets.over15
-  if (market === "Ambas marcam") return markets.btts
-  if (market === "Mais de 8.5 escanteios") return clamp(markets.corners / 12, 0.1, 0.9)
-  if (market === "Vitória do mandante") return probabilities.home
-  if (market === "Vitória do visitante") return probabilities.away
-  if (market === "Menos de 3.5 gols") return clamp(1 - markets.over25 / 1.2, 0.2, 0.92)
+  const goals = Number(metrics.goals || 0)
+  const shots = Number(metrics.shots || 0)
+  const shotsOnTarget = Number(metrics.shots_on_target || 0)
+  const corners = Number(metrics.corners || 0)
+
+  if (market === "Mais de 2.5 gols") {
+    return clamp(
+      Number(markets.over25 || 0) +
+        (goals >= 3 ? 0.04 : 0) +
+        (shotsOnTarget >= 9 ? 0.03 : 0),
+      0.2,
+      0.93
+    )
+  }
+
+  if (market === "Mais de 1.5 gols") {
+    return clamp(
+      Number(markets.over15 || 0) +
+        (goals >= 2.4 ? 0.03 : 0),
+      0.2,
+      0.94
+    )
+  }
+
+  if (market === "Ambas marcam") {
+    return clamp(
+      Number(markets.btts || 0) +
+        (shotsOnTarget >= 8 ? 0.03 : 0),
+      0.15,
+      0.90
+    )
+  }
+
+  if (market === "Ambas não marcam") {
+    return clamp(
+      0.72 +
+        (goals <= 1.9 ? 0.06 : 0) +
+        (shotsOnTarget <= 6 ? 0.05 : 0) +
+        (Number(markets.btts || 0) <= 0.48 ? 0.04 : 0),
+      0.2,
+      0.91
+    )
+  }
+
+  if (market === "Menos de 2.5 gols") {
+    return clamp(
+      0.74 +
+        (goals <= 1.8 ? 0.07 : 0) +
+        (shots <= 18 ? 0.05 : 0) +
+        (shotsOnTarget <= 5.5 ? 0.04 : 0),
+      0.2,
+      0.92
+    )
+  }
+
+  if (market === "Menos de 3.5 gols") {
+    return clamp(
+      0.70 +
+        (goals <= 2.1 ? 0.05 : 0) +
+        (shotsOnTarget <= 7 ? 0.04 : 0),
+      0.2,
+      0.90
+    )
+  }
+
+  if (market === "Mais de 8.5 escanteios") {
+    return clamp(
+      Math.max(0.2, Number(corners || 0) / 12) +
+        (shots >= 24 ? 0.04 : 0),
+      0.2,
+      0.88
+    )
+  }
+
+  if (market === "Vitória do mandante") {
+    return clamp(Number(probabilities.home || 0), 0.15, 0.92)
+  }
+
+  if (market === "Vitória do visitante") {
+    return clamp(Number(probabilities.away || 0), 0.15, 0.92)
+  }
 
   return 0.55
 }
@@ -1032,13 +1192,16 @@ const allFixtures = uniqBy(
         allFixtures
       )
 
-      const analysis = buildMatchAnalysis(fixture, homeProfile, awayProfile)
-      const metrics = buildCoreMetrics(fixture, homeProfile, awayProfile)
-      const primaryMarket = buildPrimaryMarket(analysis)
-      const primaryProbability = buildPrimaryProbability(
-        analysis,
-        primaryMarket
-      )
+      const enrichedAnalysis = {
+  ...analysis,
+  metrics,
+}
+
+const primaryMarket = buildPrimaryMarket(enrichedAnalysis)
+const primaryProbability = buildPrimaryProbability(
+  enrichedAnalysis,
+  primaryMarket
+)
 
       const { leagueDisplay, country } = normalizeLeagueByTeams(comp, fixture)
 
