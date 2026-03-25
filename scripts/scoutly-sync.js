@@ -612,6 +612,29 @@ function isCompletedFixture(fixture) {
   const short = fixture?.fixture?.status?.short || ""
   return ["FT", "AET", "PEN"].includes(short)
 }
+
+async function fetchRecentFinishedFixtures(teamId, limit = 10) {
+  try {
+    const fixtures = await api("/fixtures", {
+      team: teamId,
+      last: limit,
+      timezone: TIMEZONE,
+    })
+
+    return fixtures
+      .filter((f) => isCompletedFixture(f))
+      .sort(
+        (a, b) =>
+          new Date(b.fixture.date).getTime() -
+          new Date(a.fixture.date).getTime()
+      )
+      .slice(0, limit)
+  } catch (error) {
+    console.error(`Falha buscando histórico do time ${teamId}:`, error.message)
+    return []
+  }
+}
+
 function collectRecentFixtures(allFixtures, teamId, limit = 10) {
   return allFixtures
     .filter(
@@ -633,8 +656,8 @@ async function buildTeamProfile(teamId, leagueId, season, allFixtures) {
     return teamProfileCache.get(cacheKey)
   }
 
-  const recentFixtures = collectRecentFixtures(allFixtures, teamId, 10)
-
+  const recentFixtures = await fetchRecentFinishedFixtures(teamId, 10)
+  
   const goalsFor = []
   const goalsAgainst = []
   const shots = []
