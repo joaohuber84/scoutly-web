@@ -657,6 +657,22 @@ async function buildTeamProfile(teamId, leagueId, season, allFixtures) {
   }
 
   const recentFixtures = await fetchRecentFinishedFixtures(teamId, 10)
+  console.log("====================================")
+console.log("DEBUG TEAM PROFILE")
+console.log("teamId:", teamId)
+console.log(
+  "recentFixtures usados:",
+  recentFixtures.map((f) => ({
+    fixtureId: f?.fixture?.id,
+    date: f?.fixture?.date,
+    league: f?.league?.name,
+    home: f?.teams?.home?.name,
+    away: f?.teams?.away?.name,
+    goalsHome: f?.goals?.home,
+    goalsAway: f?.goals?.away,
+    status: f?.fixture?.status?.short,
+  }))
+)
   
   const goalsFor = []
   const goalsAgainst = []
@@ -695,6 +711,22 @@ async function buildTeamProfile(teamId, leagueId, season, allFixtures) {
     )
   }
 
+console.log("TEAM MATCH DEBUG:", {
+  teamId,
+  fixtureId: f?.fixture?.id,
+  home: f?.teams?.home?.name,
+  away: f?.teams?.away?.name,
+  isHome,
+  gf,
+  ga,
+  shots: extractStatValue(teamStats, "Total Shots"),
+  shotsOnGoal: extractStatValue(teamStats, "Shots on Goal"),
+  corners: extractStatValue(teamStats, "Corner Kicks"),
+  fouls: extractStatValue(teamStats, "Fouls"),
+  yellow: extractStatValue(teamStats, "Yellow Cards"),
+  red: extractStatValue(teamStats, "Red Cards"),
+})
+  
   const profile = {
     matches: recentFixtures.length,
     avgGoalsFor: round(avg(goalsFor)),
@@ -706,6 +738,13 @@ async function buildTeamProfile(teamId, leagueId, season, allFixtures) {
     avgCards: round(avg(cards)),
   }
 
+console.log("TEAM PROFILE FINAL:", {
+  teamId,
+  profile,
+})
+console.log("====================================")
+
+  
   teamProfileCache.set(cacheKey, profile)
   return profile
 }
