@@ -30,6 +30,10 @@ function round1(value) {
   return Math.round(toNumber(value) * 10) / 10
 }
 
+function round2(value) {
+  return Math.round(toNumber(value) * 100) / 100
+}
+
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value))
 }
@@ -87,14 +91,48 @@ function safeLeague(row) {
   return row.league || "Liga"
 }
 
+function hasRealMetrics(row) {
+  const metrics = row?.metrics || {}
+  const markets = row?.markets || {}
+  const probabilities = row?.probabilities || {}
+
+  const values = [
+    metrics.goals,
+    metrics.corners,
+    metrics.shots,
+    metrics.shots_on_target,
+    metrics.cards,
+    markets.over15,
+    markets.over25,
+    markets.btts,
+    markets.corners,
+    probabilities.home,
+    probabilities.draw,
+    probabilities.away,
+  ]
+
+  return values.some((v) => Number.isFinite(Number(v)) && Number(v) > 0)
+}
+
+function buildCornersOver85Prob(avgCorners, avgShots, avgGoals) {
+  const base =
+    avgCorners * 0.07 +
+    avgShots * 0.01 +
+    avgGoals * 0.04
+
+  return clamp(base, 0.18, 0.88)
+}
+
 function normalizeMatchRow(row) {
   const metrics = row.metrics || {}
   const markets = row.markets || {}
   const probabilities = row.probabilities || {}
 
   const avgGoals = toNumber(metrics.goals, 0)
-  const avgCorners = toNumber(metrics.corners, 0)
+  const avgCorners = toNumber(metrics.corners ?? markets.corners, 0)
   const avgShots = toNumber(metrics.shots, 0)
+  const avgShotsOnTarget = toNumber(metrics.shots_on_target, 0)
+  const avgCards = toNumber(metrics.cards, 0)
 
   const over15Prob = clamp(toNumber(markets.over15, 0), 0, 1)
   const over25Prob = clamp(toNumber(markets.over25, 0), 0, 1)
@@ -107,14 +145,19 @@ function normalizeMatchRow(row) {
   const under25Prob = clamp(1 - over25Prob, 0, 1)
   const under35Prob = clamp(1 - Math.max(over25Prob - 0.18, 0), 0, 1)
 
-  // aproximação coerente para o brain enquanto o sync não grava linha específica de corners_over85_prob
-  const cornersOver85Prob = clamp(avgCorners / 10, 0, 1)
+  const cornersOver85Prob = buildCornersOver85Prob(
+    avgCorners,
+    avgShots,
+    avgGoals
+  )
 
   return {
     ...row,
     avg_goals: avgGoals,
     avg_corners: avgCorners,
     avg_shots: avgShots,
+    avg_shots_on_target: avgShotsOnTarget,
+    avg_cards: avgCards,
     over15_prob: over15Prob,
     over25_prob: over25Prob,
     under25_prob: under25Prob,
@@ -679,18 +722,19 @@ async function loadTodaysMatches() {
 
   return filtered
     .filter((row) => row.home_team && row.away_team && row.league)
+    .filter((row) => hasRealMetrics(row))
     .map(normalizeMatchRow)
     .filter((row) => {
       const hasCoreNumbers =
-        row.avg_goals != null ||
-        row.avg_corners != null ||
-        row.avg_shots != null ||
-        row.over15_prob != null ||
-        row.over25_prob != null ||
-        row.btts_prob != null ||
-        row.home_win_prob != null ||
-        row.draw_prob != null ||
-        row.away_win_prob != null
+        row.avg_goals > 0 ||
+        row.avg_corners > 0 ||
+        row.avg_shots > 0 ||
+        row.over15_prob > 0 ||
+        row.over25_prob > 0 ||
+        row.btts_prob > 0 ||
+        row.home_win_prob > 0 ||
+        row.draw_prob > 0 ||
+        row.away_win_prob > 0
 
       return hasCoreNumbers
     })
@@ -703,6 +747,7 @@ async function updateMatchesInsights(analyses) {
       .update({
         pick: item.main_pick,
         insight: item.insight,
+        probability: round2(item.main_probability),
       })
       .eq("id", item.match_id)
 
@@ -730,7 +775,7 @@ async function rebuildDailyPicks(featured, picks) {
       away_team: featured.away_team,
       league: featured.league,
       market: featured.main_pick,
-      probability: round1(featured.main_probability * 100) / 100,
+      probability: round2(featured.main_probability),
       is_opportunity: true,
     })
   }
@@ -743,7 +788,7 @@ async function rebuildDailyPicks(featured, picks) {
       away_team: item.away_team,
       league: item.league,
       market: item.main_pick,
-      probability: round1(item.main_probability * 100) / 100,
+      probability: round2(item.main_probability),
       is_opportunity: true,
     })
   })
@@ -761,7 +806,7 @@ async function rebuildDailyPicks(featured, picks) {
 }
 
 async function runScoutlyBrain() {
-  console.log("🧠 Scoutly Brain V3.1 iniciado...")
+  console.log("🧠 Scoutly Brain V3.2 iniciado...")
 
   const matches = await loadTodaysMatches()
   console.log(`📦 Jogos carregados para análise: ${matches.length}`)
@@ -780,7 +825,7 @@ async function runScoutlyBrain() {
 
   await rebuildDailyPicks(featured, picks)
 
-  console.log("✅ Scoutly Brain V3.1 finalizado com sucesso.")
+  console.log("✅ Scoutly Brain V3.2 finalizado com sucesso.")
   if (featured) {
     console.log(
       `⭐ Dica do dia: ${buildMatchLabel(featured)} -> ${featured.main_pick} [${featured.main_macro}]`
@@ -790,6 +835,6 @@ async function runScoutlyBrain() {
 }
 
 runScoutlyBrain().catch((error) => {
-  console.error("❌ Erro no Scoutly Brain V3.1:", error)
+  console.error("❌ Erro no Scoutly Brain V3.2:", error)
   process.exit(1)
 })
