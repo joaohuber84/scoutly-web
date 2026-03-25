@@ -711,22 +711,6 @@ console.log(
     )
   }
 
-console.log("TEAM MATCH DEBUG:", {
-  teamId,
-  fixtureId: f?.fixture?.id,
-  home: f?.teams?.home?.name,
-  away: f?.teams?.away?.name,
-  isHome,
-  gf,
-  ga,
-  shots: extractStatValue(teamStats, "Total Shots"),
-  shotsOnGoal: extractStatValue(teamStats, "Shots on Goal"),
-  corners: extractStatValue(teamStats, "Corner Kicks"),
-  fouls: extractStatValue(teamStats, "Fouls"),
-  yellow: extractStatValue(teamStats, "Yellow Cards"),
-  red: extractStatValue(teamStats, "Red Cards"),
-})
-  
   const profile = {
     matches: recentFixtures.length,
     avgGoalsFor: round(avg(goalsFor)),
