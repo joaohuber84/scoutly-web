@@ -87,6 +87,49 @@ function safeLeague(row) {
   return row.league || "Liga"
 }
 
+function normalizeMatchRow(row) {
+  const metrics = row.metrics || {}
+  const markets = row.markets || {}
+  const probabilities = row.probabilities || {}
+
+  const avgGoals = toNumber(metrics.goals, 0)
+  const avgCorners = toNumber(metrics.corners, 0)
+  const avgShots = toNumber(metrics.shots, 0)
+
+  const over15Prob = clamp(toNumber(markets.over15, 0), 0, 1)
+  const over25Prob = clamp(toNumber(markets.over25, 0), 0, 1)
+  const bttsProb = clamp(toNumber(markets.btts, 0), 0, 1)
+
+  const homeProb = clamp(toNumber(probabilities.home, 0), 0, 1)
+  const drawProb = clamp(toNumber(probabilities.draw, 0), 0, 1)
+  const awayProb = clamp(toNumber(probabilities.away, 0), 0, 1)
+
+  const under25Prob = clamp(1 - over25Prob, 0, 1)
+  const under35Prob = clamp(1 - Math.max(over25Prob - 0.18, 0), 0, 1)
+
+  // aproximação coerente para o brain enquanto o sync não grava linha específica de corners_over85_prob
+  const cornersOver85Prob = clamp(avgCorners / 10, 0, 1)
+
+  return {
+    ...row,
+    avg_goals: avgGoals,
+    avg_corners: avgCorners,
+    avg_shots: avgShots,
+    over15_prob: over15Prob,
+    over25_prob: over25Prob,
+    under25_prob: under25Prob,
+    under35_prob: under35Prob,
+    btts_prob: bttsProb,
+    corners_over85_prob: cornersOver85Prob,
+    home_win_prob: homeProb,
+    draw_prob: drawProb,
+    away_win_prob: awayProb,
+    home_result_prob: homeProb,
+    draw_result_prob: drawProb,
+    away_result_prob: awayProb,
+  }
+}
+
 function getGameProfile(row) {
   const avgGoals = toNumber(row.avg_goals)
   const avgShots = toNumber(row.avg_shots)
@@ -212,8 +255,6 @@ function buildMarketCandidates(row) {
 
   const profile = getGameProfile(row)
 
-  // OFENSIVOS
-
   if (over25Prob >= 0.65) {
     let score =
       over25Prob +
@@ -273,8 +314,6 @@ function buildMarketCandidates(row) {
       macro: "ofensivo",
     })
   }
-
-  // DEFENSIVOS
 
   if (under25Prob >= 0.77) {
     let score =
@@ -336,8 +375,6 @@ function buildMarketCandidates(row) {
     })
   }
 
-  // ESCANTEIOS
-
   if (cornersOver85Prob >= 0.64) {
     let score =
       cornersOver85Prob +
@@ -379,8 +416,6 @@ function buildMarketCandidates(row) {
     })
   }
 
-  // PROTEÇÃO
-
   if (homeOrDraw >= 0.73 && homeWin >= awayWin) {
     let score = homeOrDraw + (homeWin > awayWin ? 0.02 : 0)
     if (homeWin >= 0.50) score += 0.02
@@ -409,7 +444,6 @@ function buildMarketCandidates(row) {
     })
   }
 
-  // AJUSTES FINAIS DE BALANCEAMENTO
   candidates.forEach((c) => {
     if (c.macro === "ofensivo") {
       c.score = clamp(c.score + 0.03, 0, 1)
@@ -585,26 +619,14 @@ async function loadTodaysMatches() {
       away_team,
       league,
       kickoff,
-      match_date,
       home_logo,
       away_logo,
-      avg_goals,
-      avg_corners,
-      avg_shots,
       insight,
       pick,
-      home_win_prob,
-      draw_prob,
-      away_win_prob,
-      home_result_prob,
-      draw_result_prob,
-      away_result_prob,
-      over15_prob,
-      over25_prob,
-      under25_prob,
-      under35_prob,
-      btts_prob,
-      corners_over85_prob
+      probability,
+      probabilities,
+      markets,
+      metrics
     `)
     .order("kickoff", { ascending: true, nullsFirst: false })
 
@@ -616,7 +638,6 @@ async function loadTodaysMatches() {
 
   ;(data || []).slice(0, 20).forEach((row, index) => {
     const kickoffDay = getKickoffDateOnly(row.kickoff)
-    const matchDay = row.match_date ? String(row.match_date) : null
 
     console.log(
       `RAW ${index + 1}:`,
@@ -627,10 +648,14 @@ async function loadTodaysMatches() {
       row.kickoff,
       "| kickoffDay:",
       kickoffDay,
-      "| match_date:",
-      matchDay,
       "| league:",
-      row.league
+      row.league,
+      "| metrics:",
+      row.metrics,
+      "| markets:",
+      row.markets,
+      "| probabilities:",
+      row.probabilities
     )
   })
 
@@ -639,7 +664,6 @@ async function loadTodaysMatches() {
     const kickoffValid = kickoffDate && !Number.isNaN(kickoffDate.getTime())
 
     const kickoffDay = getKickoffDateOnly(row.kickoff)
-    const matchDay = row.match_date ? String(row.match_date) : null
 
     const insideWindow =
       kickoffValid &&
@@ -648,15 +672,14 @@ async function loadTodaysMatches() {
 
     const byCalendar =
       kickoffDay === today ||
-      kickoffDay === tomorrow ||
-      matchDay === today ||
-      matchDay === tomorrow
+      kickoffDay === tomorrow
 
     return insideWindow || byCalendar
   })
 
   return filtered
     .filter((row) => row.home_team && row.away_team && row.league)
+    .map(normalizeMatchRow)
     .filter((row) => {
       const hasCoreNumbers =
         row.avg_goals != null ||
@@ -664,16 +687,10 @@ async function loadTodaysMatches() {
         row.avg_shots != null ||
         row.over15_prob != null ||
         row.over25_prob != null ||
-        row.under25_prob != null ||
-        row.under35_prob != null ||
         row.btts_prob != null ||
-        row.corners_over85_prob != null ||
         row.home_win_prob != null ||
         row.draw_prob != null ||
-        row.away_win_prob != null ||
-        row.home_result_prob != null ||
-        row.draw_result_prob != null ||
-        row.away_result_prob != null
+        row.away_win_prob != null
 
       return hasCoreNumbers
     })
@@ -744,7 +761,7 @@ async function rebuildDailyPicks(featured, picks) {
 }
 
 async function runScoutlyBrain() {
-  console.log("🧠 Scoutly Brain V3.0 iniciado...")
+  console.log("🧠 Scoutly Brain V3.1 iniciado...")
 
   const matches = await loadTodaysMatches()
   console.log(`📦 Jogos carregados para análise: ${matches.length}`)
@@ -763,7 +780,7 @@ async function runScoutlyBrain() {
 
   await rebuildDailyPicks(featured, picks)
 
-  console.log("✅ Scoutly Brain V3.0 finalizado com sucesso.")
+  console.log("✅ Scoutly Brain V3.1 finalizado com sucesso.")
   if (featured) {
     console.log(
       `⭐ Dica do dia: ${buildMatchLabel(featured)} -> ${featured.main_pick} [${featured.main_macro}]`
@@ -773,6 +790,6 @@ async function runScoutlyBrain() {
 }
 
 runScoutlyBrain().catch((error) => {
-  console.error("❌ Erro no Scoutly Brain V3.0:", error)
+  console.error("❌ Erro no Scoutly Brain V3.1:", error)
   process.exit(1)
 })
