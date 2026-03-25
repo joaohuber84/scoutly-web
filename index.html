@@ -1522,40 +1522,21 @@ function getVisibleMatches() {
   );
 }   
 
-    function buildCoreMetrics(match) {
-      const recentGoals = firstNumeric(match, ['avg_goals_recent', 'recent_avg_goals', 'last5_avg_goals']);
-      const seasonGoals = firstNumeric(match, ['avg_goals', 'goals_avg', 'season_avg_goals'], 2.4);
+  function buildCoreMetrics(match) {
+  const metrics = match?.metrics || {};
+  const probabilities = match?.probabilities || {};
+  const markets = match?.markets || {};
 
-      const recentCorners = firstNumeric(match, ['avg_corners_recent', 'recent_avg_corners', 'last5_avg_corners']);
-      const seasonCorners = firstNumeric(match, ['avg_corners', 'corners_avg', 'season_avg_corners'], 8.8);
+  const avgGoals = clamp(Number(metrics.goals || 2.4), 0.8, 5.4);
+  const avgCorners = clamp(Number(metrics.corners || markets.corners || 8.8), 5.5, 15.5);
+  const avgShots = clamp(Number(metrics.shots || 21), 8, 36);
+  const avgShotsOnTarget = clamp(Number(metrics.shots_on_target || 7), 2, 14);
 
-      const recentShots = firstNumeric(match, ['avg_shots_recent', 'recent_avg_shots', 'last5_avg_shots']);
-      const seasonShots = firstNumeric(match, ['avg_shots', 'shots_avg', 'season_avg_shots'], 21);
+  const powerHome = clamp(Number(probabilities.home || 1), 0.45, 2.25);
+  const powerAway = clamp(Number(probabilities.away || 1), 0.45, 2.25);
 
-      const recentSOT = firstNumeric(match, [
-        'avg_shots_on_target_recent',
-        'recent_avg_shots_on_target',
-        'last5_avg_shots_on_target',
-        'avg_sot_recent',
-        'recent_avg_sot'
-      ]);
-      const seasonSOT = firstNumeric(match, [
-        'avg_shots_on_target',
-        'shots_on_target_avg',
-        'season_avg_shots_on_target',
-        'avg_sot'
-      ], 7);
-
-      const avgGoals = clamp(weightedMetric(recentGoals, seasonGoals, 0.68) ?? 2.4, 0.8, 5.4);
-      const avgCorners = clamp(weightedMetric(recentCorners, seasonCorners, 0.65) ?? 8.8, 5.5, 15.5);
-      const avgShots = clamp(weightedMetric(recentShots, seasonShots, 0.65) ?? 21, 8, 36);
-      const avgShotsOnTarget = clamp(weightedMetric(recentSOT, seasonSOT, 0.65) ?? 7, 2, 14);
-
-      const powerHome = clamp(firstNumeric(match, ['power_home'], 1), 0.45, 2.25);
-      const powerAway = clamp(firstNumeric(match, ['power_away'], 1), 0.45, 2.25);
-
-      return { avgGoals, avgCorners, avgShots, avgShotsOnTarget, powerHome, powerAway };
-    }
+  return { avgGoals, avgCorners, avgShots, avgShotsOnTarget, powerHome, powerAway };
+}
 
     function buildExpectedGoals(match) {
       const { avgGoals, powerHome, powerAway } = buildCoreMetrics(match);
