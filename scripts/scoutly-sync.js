@@ -66,65 +66,6 @@ const TARGET_COMPETITIONS = [
     region: "brazil",
     priority: 94,
   },
- 
-
-  // ===== SELEÇÕES / INTERNACIONAL =====
-  {
-    mode: "search",
-    search: "International Friendlies",
-    display: "Amistosos Internacionais",
-    region: "international",
-    priority: 90,
-  },
-  {
-    mode: "search",
-    search: "Friendlies",
-    display: "Amistosos Internacionais",
-    region: "international",
-    priority: 88,
-  },
-  {
-    mode: "search",
-    search: "World Cup - Qualification Europe",
-    display: "Eliminatórias Europeias",
-    region: "international",
-    priority: 94,
-  },
-  {
-    mode: "search",
-    search: "UEFA Euro Qualifiers",
-    display: "Eliminatórias da Euro",
-    region: "international",
-    priority: 94,
-  },
-  {
-    mode: "search",
-    search: "CONMEBOL World Cup Qualifiers",
-    display: "Eliminatórias Sul-Americanas",
-    region: "international",
-    priority: 96,
-  },
-  {
-    mode: "search",
-    search: "World Cup - Qualification South America",
-    display: "Eliminatórias Sul-Americanas",
-    region: "international",
-    priority: 96,
-  },
-  {
-    mode: "search",
-    search: "World Cup - Qualification Africa",
-    display: "Eliminatórias Africanas",
-    region: "international",
-    priority: 88,
-  },
-  {
-    mode: "search",
-    search: "World Cup - Qualification Asia",
-    display: "Eliminatórias Asiáticas",
-    region: "international",
-    priority: 88,
-  },
 
 const apiCache = new Map()
 const fixtureStatsCache = new Map()
