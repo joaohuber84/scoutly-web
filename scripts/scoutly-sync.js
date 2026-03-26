@@ -10,7 +10,9 @@ const SUPABASE_KEY =
 
 if (!APISPORTS_KEY) throw new Error("APISPORTS_KEY não encontrada.")
 if (!SUPABASE_URL) throw new Error("SUPABASE_URL não encontrada.")
-if (!SUPABASE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY não encontrada.")
+if (!SUPABASE_KEY) {
+  throw new Error("SUPABASE_SERVICE_ROLE_KEY não encontrada.")
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
@@ -18,18 +20,18 @@ const API = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
 
 /**
- * CONFIG GERAL
- * Mantém 5 dias porque foi o que a gente alinhou.
- * Delay moderado para não matar a API e nem travar demais.
+ * V6
+ * - mantém janela de 5 dias
+ * - mantém as competições importantes
+ * - reduz desperdício de request
+ * - evita amistoso de clube misturado com seleção
+ * - não deixa jogo zerado/lixo entrar
  */
 const WINDOW_HOURS = 120
-const REQUEST_DELAY_MS = 700
+const REQUEST_DELAY_MS = 450
 
 /**
  * HISTÓRICO
- * General: base mais ampla
- * Home/Away: recorte por mando
- * Stats: recorte menor para performance
  */
 const FORM_LIMIT_GENERAL = 10
 const FORM_LIMIT_HOME_AWAY = 5
@@ -42,20 +44,26 @@ const MAX_RECENT_FIXTURES_FETCH = 20
 const MAX_DAILY_PICKS = 20
 
 /**
- * REGRAS DE QUALIDADE
- * Só entra no app se tiver mínimo coerente.
+ * QUALIDADE MÍNIMA
  */
 const MIN_REQUIRED_RECENT_MATCHES = 3
 const MIN_REQUIRED_SHOTS_DATA_MATCHES = 2
 
 /**
+ * CACHE
+ */
+const apiCache = new Map()
+const fixtureStatsCache = new Map()
+const teamRecentFixturesCache = new Map()
+const teamContextCache = new Map()
+const competitionFixturesCache = new Map()
+
+/**
  * COMPETIÇÕES-ALVO
- * Mantendo as que vocês já conquistaram
- * + adicionando as internacionais importantes
- * + sem remover o que já estava bom
+ * Mantém o que vocês já vinham trabalhando
+ * e inclui o internacional importante.
  */
 const TARGET_COMPETITIONS = [
-  
   // ===== BRASIL =====
   {
     mode: "country",
@@ -66,12 +74,415 @@ const TARGET_COMPETITIONS = [
     region: "brazil",
     priority: 94,
   },
-  ]
+  {
+    mode: "country",
+    country: "Brazil",
+    type: "league",
+    names: ["Serie B", "Brasileirão Série B", "Campeonato Brasileiro Série B"],
+    display: "Brasileirão Série B",
+    region: "brazil",
+    priority: 88,
+  },
+  {
+    mode: "country",
+    country: "Brazil",
+    type: "cup",
+    names: ["Copa do Brasil"],
+    display: "Copa do Brasil",
+    region: "brazil",
+    priority: 91,
+  },
+  {
+    mode: "search",
+    search: "Copa do Nordeste",
+    display: "Copa do Nordeste",
+    region: "brazil",
+    priority: 90,
+  },
+  {
+    mode: "search",
+    search: "Brasileiro Women",
+    display: "Brasileirão Feminino",
+    region: "brazil",
+    priority: 84,
+  },
+  {
+    mode: "search",
+    search: "Brazil Women",
+    display: "Brasileirão Feminino",
+    region: "brazil",
+    priority: 84,
+  },
+  {
+    mode: "search",
+    search: "Serie A Women Brazil",
+    display: "Brasileirão Feminino",
+    region: "brazil",
+    priority: 84,
+  },
 
-const apiCache = new Map()
-const fixtureStatsCache = new Map()
-const teamRecentFixturesCache = new Map()
-const teamContextCache = new Map()
+  // ===== ARGENTINA =====
+  {
+    mode: "country",
+    country: "Argentina",
+    type: "league",
+    names: ["Liga Profesional Argentina", "Primera División"],
+    display: "Liga Argentina",
+    region: "general",
+    priority: 84,
+  },
+  {
+    mode: "country",
+    country: "Argentina",
+    type: "cup",
+    names: ["Copa Argentina"],
+    display: "Copa Argentina",
+    region: "general",
+    priority: 78,
+  },
+
+  // ===== EUROPA =====
+  {
+    mode: "country",
+    country: "England",
+    type: "league",
+    names: ["Premier League"],
+    display: "Premier League",
+    region: "general",
+    priority: 100,
+  },
+  {
+    mode: "country",
+    country: "England",
+    type: "cup",
+    names: ["FA Cup", "EFL Cup", "League Cup"],
+    display: "England - Cup",
+    region: "general",
+    priority: 74,
+  },
+  {
+    mode: "country",
+    country: "Spain",
+    type: "league",
+    names: ["La Liga"],
+    display: "La Liga",
+    region: "general",
+    priority: 98,
+  },
+  {
+    mode: "country",
+    country: "Spain",
+    type: "cup",
+    names: ["Copa del Rey"],
+    display: "Copa del Rey",
+    region: "general",
+    priority: 72,
+  },
+  {
+    mode: "country",
+    country: "Italy",
+    type: "league",
+    names: ["Serie A"],
+    display: "Serie A",
+    region: "general",
+    priority: 97,
+  },
+  {
+    mode: "country",
+    country: "Italy",
+    type: "cup",
+    names: ["Coppa Italia"],
+    display: "Coppa Italia",
+    region: "general",
+    priority: 73,
+  },
+  {
+    mode: "country",
+    country: "Germany",
+    type: "league",
+    names: ["Bundesliga"],
+    display: "Bundesliga",
+    region: "general",
+    priority: 96,
+  },
+  {
+    mode: "country",
+    country: "Germany",
+    type: "cup",
+    names: ["DFB Pokal", "DFB-Pokal"],
+    display: "DFB-Pokal",
+    region: "general",
+    priority: 70,
+  },
+  {
+    mode: "country",
+    country: "France",
+    type: "league",
+    names: ["Ligue 1"],
+    display: "Ligue 1",
+    region: "general",
+    priority: 95,
+  },
+  {
+    mode: "country",
+    country: "France",
+    type: "cup",
+    names: ["Coupe de France"],
+    display: "Coupe de France",
+    region: "general",
+    priority: 71,
+  },
+  {
+    mode: "country",
+    country: "Netherlands",
+    type: "league",
+    names: ["Eredivisie"],
+    display: "Eredivisie",
+    region: "general",
+    priority: 90,
+  },
+  {
+    mode: "country",
+    country: "Portugal",
+    type: "league",
+    names: ["Primeira Liga", "Liga Portugal Betclic"],
+    display: "Primeira Liga",
+    region: "general",
+    priority: 89,
+  },
+  {
+    mode: "country",
+    country: "Turkey",
+    type: "league",
+    names: ["Süper Lig", "Super Lig"],
+    display: "Super Lig",
+    region: "general",
+    priority: 78,
+  },
+  {
+    mode: "country",
+    country: "Denmark",
+    type: "league",
+    names: ["Superliga", "Superligaen"],
+    display: "Superliga",
+    region: "general",
+    priority: 75,
+  },
+  {
+    mode: "country",
+    country: "Greece",
+    type: "league",
+    names: ["Super League 1", "Super League"],
+    display: "Super League Greece",
+    region: "general",
+    priority: 74,
+  },
+  {
+    mode: "country",
+    country: "Belgium",
+    type: "league",
+    names: ["Pro League", "Jupiler Pro League"],
+    display: "Belgian Pro League",
+    region: "general",
+    priority: 85,
+  },
+  {
+    mode: "country",
+    country: "Austria",
+    type: "league",
+    names: ["Bundesliga"],
+    display: "Austrian Bundesliga",
+    region: "general",
+    priority: 84,
+  },
+  {
+    mode: "search",
+    search: "Saudi League",
+    display: "Saudi Pro League",
+    region: "general",
+    priority: 85,
+  },
+  {
+    mode: "search",
+    search: "Saudi Pro League",
+    display: "Saudi Pro League",
+    region: "general",
+    priority: 85,
+  },
+
+  // ===== AMÉRICA =====
+  {
+    mode: "country",
+    country: "USA",
+    type: "league",
+    names: ["Major League Soccer"],
+    display: "MLS",
+    region: "america",
+    priority: 90,
+  },
+  {
+    mode: "country",
+    country: "Mexico",
+    type: "league",
+    names: ["Liga MX"],
+    display: "Liga MX",
+    region: "general",
+    priority: 79,
+  },
+  {
+    mode: "search",
+    search: "CONCACAF Champions",
+    display: "CONCACAF Champions Cup",
+    region: "america",
+    priority: 88,
+  },
+
+  // ===== UEFA =====
+  {
+    mode: "search",
+    search: "UEFA Champions League",
+    display: "UEFA Champions League",
+    region: "general",
+    priority: 98,
+  },
+  {
+    mode: "search",
+    search: "UEFA Europa League",
+    display: "UEFA Europa League",
+    region: "general",
+    priority: 93,
+  },
+  {
+    mode: "search",
+    search: "UEFA Conference League",
+    display: "UEFA Conference League",
+    region: "general",
+    priority: 88,
+  },
+
+  // ===== CONMEBOL =====
+  {
+    mode: "search",
+    search: "CONMEBOL Libertadores",
+    display: "Libertadores",
+    region: "brazil",
+    priority: 92,
+  },
+  {
+    mode: "search",
+    search: "Copa Libertadores",
+    display: "Libertadores",
+    region: "brazil",
+    priority: 92,
+  },
+  {
+    mode: "search",
+    search: "CONMEBOL Sudamericana",
+    display: "Sul-Americana",
+    region: "brazil",
+    priority: 86,
+  },
+  {
+    mode: "search",
+    search: "Copa Sudamericana",
+    display: "Sul-Americana",
+    region: "brazil",
+    priority: 86,
+  },
+
+  // ===== SELEÇÕES / INTERNACIONAL =====
+  {
+    mode: "search",
+    search: "UEFA Nations League",
+    display: "Nations League",
+    region: "international",
+    priority: 95,
+  },
+  {
+    mode: "search",
+    search: "International Friendlies",
+    display: "Amistosos Internacionais",
+    region: "international",
+    priority: 90,
+  },
+  {
+    mode: "search",
+    search: "Friendlies",
+    display: "Amistosos Internacionais",
+    region: "international",
+    priority: 88,
+  },
+  {
+    mode: "search",
+    search: "World Cup - Qualification Europe",
+    display: "Eliminatórias Europeias",
+    region: "international",
+    priority: 94,
+  },
+  {
+    mode: "search",
+    search: "UEFA Euro Qualifiers",
+    display: "Eliminatórias da Euro",
+    region: "international",
+    priority: 94,
+  },
+  {
+    mode: "search",
+    search: "CONMEBOL World Cup Qualifiers",
+    display: "Eliminatórias Sul-Americanas",
+    region: "international",
+    priority: 96,
+  },
+  {
+    mode: "search",
+    search: "World Cup - Qualification South America",
+    display: "Eliminatórias Sul-Americanas",
+    region: "international",
+    priority: 96,
+  },
+  {
+    mode: "search",
+    search: "World Cup - Qualification Africa",
+    display: "Eliminatórias Africanas",
+    region: "international",
+    priority: 88,
+  },
+  {
+    mode: "search",
+    search: "World Cup - Qualification Asia",
+    display: "Eliminatórias Asiáticas",
+    region: "international",
+    priority: 88,
+  },
+  {
+    mode: "search",
+    search: "World Cup - Qualification CONCACAF",
+    display: "Eliminatórias CONCACAF",
+    region: "international",
+    priority: 88,
+  },
+  {
+    mode: "search",
+    search: "Copa America",
+    display: "Copa América",
+    region: "international",
+    priority: 98,
+  },
+  {
+    mode: "search",
+    search: "UEFA European Championship",
+    display: "Eurocopa",
+    region: "international",
+    priority: 98,
+  },
+  {
+    mode: "search",
+    search: "FIFA World Cup",
+    display: "Copa do Mundo",
+    region: "international",
+    priority: 100,
+  },
+]
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms))
@@ -136,7 +547,6 @@ async function api(path, params = {}) {
   await sleep(REQUEST_DELAY_MS)
 
   const url = new URL(API + path)
-
   Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== null && v !== "") {
       url.searchParams.set(k, String(v))
@@ -210,11 +620,35 @@ function isClubFriendlyFixture(fixture) {
   const homeName = normalizeText(fixture?.teams?.home?.name || "")
   const awayName = normalizeText(fixture?.teams?.away?.name || "")
 
-  const likelyNationalTeam =
-    (homeCountry && homeName === homeCountry) ||
-    (awayCountry && awayName === awayCountry)
+  const clubMarkers = [
+    "fc",
+    "sc",
+    "afc",
+    "cf",
+    "ac",
+    "club",
+    "if",
+    "fk",
+    "jk",
+    "bk",
+    "united",
+    "city",
+    "rovers",
+    "athletic",
+    "atletico",
+    "deportivo",
+    "sporting",
+  ]
 
-  return !likelyNationalTeam
+  const homeLooksClub =
+    clubMarkers.some((m) => homeName.includes(m)) ||
+    (homeCountry && homeName !== homeCountry)
+
+  const awayLooksClub =
+    clubMarkers.some((m) => awayName.includes(m)) ||
+    (awayCountry && awayName !== awayCountry)
+
+  return homeLooksClub || awayLooksClub
 }
 
 function normalizeCompetitionName(country, rawName, fallbackDisplay) {
@@ -246,7 +680,6 @@ function normalizeCompetitionName(country, rawName, fallbackDisplay) {
   if (name === "UEFA Europa Conference League") return "UEFA Conference League"
   if (name === "CONMEBOL Libertadores") return "Libertadores"
   if (name === "CONMEBOL Sudamericana") return "Sul-Americana"
-
   if (normalizeText(name).includes("nations league")) return "Nations League"
   if (normalizeText(name).includes("friendlies")) return "Amistosos Internacionais"
 
@@ -371,6 +804,12 @@ async function resolveTargetCompetitions() {
 }
 
 async function fetchFixturesForCompetition(comp) {
+  const cacheKey = `${comp.leagueId}:${comp.season}`
+
+  if (competitionFixturesCache.has(cacheKey)) {
+    return competitionFixturesCache.get(cacheKey)
+  }
+
   const { start, end } = getSyncWindowRange()
   const startDate = isoDate(start)
   const endDate = isoDate(end)
@@ -384,7 +823,7 @@ async function fetchFixturesForCompetition(comp) {
       timezone: TIMEZONE,
     })
 
-    return fixtures
+    const cleaned = fixtures
       .filter((f) => {
         const home = f?.teams?.home?.name || ""
         const away = f?.teams?.away?.name || ""
@@ -396,7 +835,6 @@ async function fetchFixturesForCompetition(comp) {
         if (hasForbiddenMarker(league)) return false
         if (normalizeText(league).includes("open cup")) return false
 
-        // Evitar amistoso de clubes dentro dos amistosos internacionais
         if (compDisplay.includes("amistosos internacionais")) {
           if (isClubFriendlyFixture(f)) return false
         }
@@ -407,8 +845,12 @@ async function fetchFixturesForCompetition(comp) {
         ...fixture,
         __comp: comp,
       }))
+
+    competitionFixturesCache.set(cacheKey, cleaned)
+    return cleaned
   } catch (error) {
     console.error(`Falha buscando fixtures de ${comp.display}:`, error.message)
+    competitionFixturesCache.set(cacheKey, [])
     return []
   }
 }
@@ -593,11 +1035,24 @@ async function buildTeamContext(teamId) {
     return teamContextCache.get(teamId)
   }
 
-  const allFixtures = await fetchRecentFinishedFixtures(teamId, MAX_RECENT_FIXTURES_FETCH)
+  const allFixtures = await fetchRecentFinishedFixtures(
+    teamId,
+    MAX_RECENT_FIXTURES_FETCH
+  )
 
   const generalFixtures = allFixtures.slice(0, FORM_LIMIT_GENERAL)
-  const homeFixtures = splitVenueFixtures(allFixtures, teamId, true, FORM_LIMIT_HOME_AWAY)
-  const awayFixtures = splitVenueFixtures(allFixtures, teamId, false, FORM_LIMIT_HOME_AWAY)
+  const homeFixtures = splitVenueFixtures(
+    allFixtures,
+    teamId,
+    true,
+    FORM_LIMIT_HOME_AWAY
+  )
+  const awayFixtures = splitVenueFixtures(
+    allFixtures,
+    teamId,
+    false,
+    FORM_LIMIT_HOME_AWAY
+  )
 
   const general = await collectProfileFromFixtures(teamId, generalFixtures)
   const home = await collectProfileFromFixtures(teamId, homeFixtures)
@@ -664,20 +1119,15 @@ function buildSideProfile(teamContext, side) {
 }
 
 function isUsableTeamProfile(sideProfile, generalProfile) {
-  const recentOk = safeNumber(generalProfile.matches, 0) >= MIN_REQUIRED_RECENT_MATCHES
-  const statsOk = safeNumber(generalProfile.statsMatches, 0) >= MIN_REQUIRED_SHOTS_DATA_MATCHES
+  const recentOk =
+    safeNumber(generalProfile.matches, 0) >= MIN_REQUIRED_RECENT_MATCHES
+  const statsOk =
+    safeNumber(generalProfile.statsMatches, 0) >= MIN_REQUIRED_SHOTS_DATA_MATCHES
 
   return recentOk && statsOk
 }
 
 function buildExpectedMetrics(homeProfile, awayProfile) {
-  /**
-   * Aqui está um dos ajustes mais importantes:
-   * - menos achatamento
-   * - mas sem explodir corners absurdamente
-   * - sem zerar tudo quando stats vierem fracos
-   */
-
   const expectedHomeGoals = clamp(
     round(homeProfile.avgGoalsFor * 0.60 + awayProfile.avgGoalsAgainst * 0.40),
     0.25,
@@ -716,14 +1166,11 @@ function buildExpectedMetrics(homeProfile, awayProfile) {
     8
   )
 
-  /**
-   * corners com comportamento menos travado e menos exagerado
-   */
   const expectedCorners = clamp(
     round(
       homeProfile.avgCorners * 0.52 +
-      awayProfile.avgCorners * 0.48 +
-      (expectedHomeShots + expectedAwayShots) * 0.045
+        awayProfile.avgCorners * 0.48 +
+        (expectedHomeShots + expectedAwayShots) * 0.045
     ),
     4.5,
     12.8
@@ -890,10 +1337,6 @@ function buildCandidateMarkets(payload) {
   const under25 = clamp(1 - probabilities.over25, 0, 1)
   const bttsNo = clamp(1 - probabilities.btts, 0, 1)
 
-  /**
-   * Aqui está o ponto para NÃO travar em 8.5 escanteios:
-   * escolhe linha conforme faixa de corners esperados.
-   */
   let bestCornersOverLine = null
   let bestCornersOverProb = 0
 
@@ -1054,8 +1497,6 @@ function buildInsight(mainPick, metrics, profile) {
     return `A leitura Scoutly vê um confronto com menor troca ofensiva entre os lados, sustentando o cenário de uma equipe passar em branco.`
   }
 
-
-
   if (mainPick === "Ambas marcam") {
     return `A leitura Scoutly identifica espaço para gols dos dois lados, combinando projeção ofensiva e comportamento recente das equipes.`
   }
@@ -1083,14 +1524,6 @@ function isInternationalNationalTeamsFixture(fixture, comp) {
   const homeTeam = fixture?.teams?.home || {}
   const awayTeam = fixture?.teams?.away || {}
 
-  const homeNational =
-    homeTeam.national === true ||
-    normalizeText(homeTeam.name).includes("u23") === false
-
-  const awayNational =
-    awayTeam.national === true ||
-    normalizeText(awayTeam.name).includes("u23") === false
-
   if (
     leagueDisplay.includes("amistosos internacionais") ||
     normalizeText(fixture?.league?.name || "").includes("friend")
@@ -1117,7 +1550,7 @@ function isInternationalNationalTeamsFixture(fixture, comp) {
       "athletic",
       "atletico",
       "deportivo",
-      "sporting"
+      "sporting",
     ]
 
     const homeLooksClub = clubMarkers.some((m) => homeName.includes(m))
@@ -1127,7 +1560,7 @@ function isInternationalNationalTeamsFixture(fixture, comp) {
     if (homeCountry && awayCountry) return true
   }
 
-  return homeNational && awayNational
+  return true
 }
 
 function hasMinimumMatchData(homeContext, awayContext) {
@@ -1135,6 +1568,7 @@ function hasMinimumMatchData(homeContext, awayContext) {
     buildSideProfile(homeContext, "home"),
     homeContext.general
   )
+
   const awayOk = isUsableTeamProfile(
     buildSideProfile(awayContext, "away"),
     awayContext.general
@@ -1400,9 +1834,6 @@ async function buildAndStoreMatches(fixtureLists) {
       const markets = buildMarkets(metricsExp, probabilities)
       const metrics = buildMetrics(metricsExp)
 
-      /**
-       * trava anti-jogo zerado/lixo
-       */
       const hasUsableMetrics =
         metrics.goals > 0 &&
         metrics.corners > 0 &&
@@ -1560,9 +1991,6 @@ async function buildAndStoreMatches(fixtureLists) {
 async function rebuildDailyPicks(matches) {
   if (!matches.length) return 0
 
-  /**
-   * evita daily picks travado num único mercado/família
-   */
   const sorted = [...matches]
     .filter((m) => m.id && m.pick && m.metrics && m.metrics.goals > 0)
     .sort((a, b) => {
@@ -1621,7 +2049,7 @@ async function rebuildDailyPicks(matches) {
 }
 
 async function run() {
-  console.log("🚀 Scoutly Sync V5 iniciado")
+  console.log("🚀 Scoutly Sync V6 iniciado")
 
   const { start, end } = getSyncWindowRange()
   console.log(`📆 Janela ativa: ${start.toISOString()} -> ${end.toISOString()}`)
@@ -1641,10 +2069,10 @@ async function run() {
 
   console.log(`🏁 Daily picks gerados: ${picksCount}`)
   console.log(`✅ Matches gravados: ${storedMatches.length}`)
-  console.log("✅ Scoutly Sync V5 concluído")
+  console.log("✅ Scoutly Sync V6 concluído")
 }
 
 run().catch((error) => {
-  console.error("❌ Erro fatal no Scoutly Sync V5:", error)
+  console.error("❌ Erro fatal no Scoutly Sync V6:", error)
   process.exit(1)
 })
