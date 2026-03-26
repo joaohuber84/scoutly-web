@@ -66,6 +66,7 @@ const TARGET_COMPETITIONS = [
     region: "brazil",
     priority: 94,
   },
+  ]
 
 const apiCache = new Map()
 const fixtureStatsCache = new Map()
