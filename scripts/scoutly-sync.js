@@ -843,13 +843,22 @@ async function clearFutureWindow() {
   }
 
   const oldIds = (oldRows || []).map((x) => x.id)
-  if (oldIds.length) {
-    await supabase.from("match_stats").delete().in("match_id", oldIds)
-    await supabase.from("match_analysis").delete().in("match_id", oldIds).catch(() => {})
-    const { error: deleteOldError } = await supabase
-      .from("matches")
-      .delete()
-      .in("id", oldIds)
+if (oldIds.length) {
+  await supabase.from("match_stats").delete().in("match_id", oldIds)
+
+  const { error: deleteOldAnalysisError } = await supabase
+    .from("match_analysis")
+    .delete()
+    .in("match_id", oldIds)
+
+  if (deleteOldAnalysisError) {
+    console.log("Aviso ao limpar match_analysis antigo:", deleteOldAnalysisError.message)
+  }
+
+  const { error: deleteOldError } = await supabase
+    .from("matches")
+    .delete()
+    .in("id", oldIds)  
 
     if (deleteOldError) {
       throw new Error(`Supabase delete old matches: ${deleteOldError.message}`)
@@ -871,19 +880,27 @@ async function clearFutureWindow() {
   }
 
   const futureIds = (futureRows || []).map((x) => x.id)
+if (futureIds.length) {
+  await supabase.from("match_stats").delete().in("match_id", futureIds)
 
-  if (futureIds.length) {
-    await supabase.from("match_stats").delete().in("match_id", futureIds)
-    await supabase.from("match_analysis").delete().in("match_id", futureIds).catch(() => {})
-    const { error: futureDeleteError } = await supabase
-      .from("matches")
-      .delete()
-      .in("id", futureIds)
+  const { error: deleteFutureAnalysisError } = await supabase
+    .from("match_analysis")
+    .delete()
+    .in("match_id", futureIds)
 
-    if (futureDeleteError) {
-      throw new Error(`Supabase delete future matches: ${futureDeleteError.message}`)
-    }
+  if (deleteFutureAnalysisError) {
+    console.log("Aviso ao limpar match_analysis futuro:", deleteFutureAnalysisError.message)
   }
+
+  const { error: futureDeleteError } = await supabase
+    .from("matches")
+    .delete()
+    .in("id", futureIds)
+
+  if (futureDeleteError) {
+    throw new Error(`Supabase delete future matches: ${futureDeleteError.message}`)
+  }
+}
 
   return oldIds.length + futureIds.length
 }
