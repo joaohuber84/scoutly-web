@@ -8,8 +8,14 @@ const SUPABASE_KEY =
   process.env.SUPABASE_KEY ||
   ""
 
-if (!APISPORTS_KEY) throw new Error("APISPORTS_KEY não encontrada.")
-if (!SUPABASE_URL) throw new Error("SUPABASE_URL não encontrada.")
+if (!APISPORTS_KEY) {
+  throw new Error("APISPORTS_KEY não encontrada.")
+}
+
+if (!SUPABASE_URL) {
+  throw new Error("SUPABASE_URL não encontrada.")
+}
+
 if (!SUPABASE_KEY) {
   throw new Error("SUPABASE_SERVICE_ROLE_KEY não encontrada.")
 }
@@ -20,34 +26,35 @@ const API = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
 
 /**
- * V6
- * - mantém janela de 5 dias
- * - mantém as competições importantes
- * - reduz desperdício de request
- * - evita amistoso de clube misturado com seleção
- * - não deixa jogo zerado/lixo entrar
+ * SYNC V7
+ * Objetivo:
+ * - manter janela prática de 5 dias
+ * - popular matches corretamente
+ * - popular match_stats corretamente
+ * - popular match_analysis corretamente
+ * - evitar jogos sem base mínima
+ * - evitar excesso inútil de requests
  */
 const WINDOW_HOURS = 120
-const REQUEST_DELAY_MS = 450
+const REQUEST_DELAY_MS = 350
 
 /**
  * HISTÓRICO
  */
 const FORM_LIMIT_GENERAL = 10
 const FORM_LIMIT_HOME_AWAY = 5
-const STATS_FIXTURES_LIMIT = 5
 const MAX_RECENT_FIXTURES_FETCH = 20
-
-/**
- * RADAR / DAILY PICKS
- */
-const MAX_DAILY_PICKS = 20
 
 /**
  * QUALIDADE MÍNIMA
  */
 const MIN_REQUIRED_RECENT_MATCHES = 3
-const MIN_REQUIRED_SHOTS_DATA_MATCHES = 2
+const MIN_REQUIRED_STATS_MATCHES = 2
+
+/**
+ * RADAR
+ */
+const MAX_DAILY_PICKS = 20
 
 /**
  * CACHE
@@ -60,8 +67,8 @@ const competitionFixturesCache = new Map()
 
 /**
  * COMPETIÇÕES-ALVO
- * Mantém o que vocês já vinham trabalhando
- * e inclui o internacional importante.
+ * Mantendo o que já está no projeto,
+ * mas organizado para evitar ruído e duplicação inútil.
  */
 const TARGET_COMPETITIONS = [
   // ===== BRASIL =====
@@ -297,13 +304,6 @@ const TARGET_COMPETITIONS = [
   },
   {
     mode: "search",
-    search: "Saudi League",
-    display: "Saudi Pro League",
-    region: "general",
-    priority: 85,
-  },
-  {
-    mode: "search",
     search: "Saudi Pro League",
     display: "Saudi Pro League",
     region: "general",
@@ -501,13 +501,8 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value))
 }
 
-function avg(arr) {
-  if (!arr.length) return 0
-  return arr.reduce((a, b) => a + b, 0) / arr.length
-}
-
 function sum(arr) {
-  return arr.reduce((a, b) => a + b, 0)
+  return arr.reduce((acc, value) => acc + value, 0)
 }
 
 function isoDate(date) {
@@ -525,6 +520,7 @@ function normalizeText(value) {
 
 function uniqBy(arr, getKey) {
   const seen = new Set()
+
   return arr.filter((item) => {
     const key = getKey(item)
     if (seen.has(key)) return false
@@ -542,11 +538,15 @@ function makeApiCacheKey(path, params = {}) {
 
 async function api(path, params = {}) {
   const cacheKey = makeApiCacheKey(path, params)
-  if (apiCache.has(cacheKey)) return apiCache.get(cacheKey)
+
+  if (apiCache.has(cacheKey)) {
+    return apiCache.get(cacheKey)
+  }
 
   await sleep(REQUEST_DELAY_MS)
 
   const url = new URL(API + path)
+
   Object.entries(params).forEach(([k, v]) => {
     if (v !== undefined && v !== null && v !== "") {
       url.searchParams.set(k, String(v))
@@ -614,11 +614,8 @@ function hasForbiddenMarker(value = "") {
   )
 }
 
-function isClubFriendlyFixture(fixture) {
-  const homeCountry = normalizeText(fixture?.teams?.home?.country || "")
-  const awayCountry = normalizeText(fixture?.teams?.away?.country || "")
-  const homeName = normalizeText(fixture?.teams?.home?.name || "")
-  const awayName = normalizeText(fixture?.teams?.away?.name || "")
+function isLikelyClubName(name = "") {
+  const v = normalizeText(name)
 
   const clubMarkers = [
     "fc",
@@ -627,10 +624,6 @@ function isClubFriendlyFixture(fixture) {
     "cf",
     "ac",
     "club",
-    "if",
-    "fk",
-    "jk",
-    "bk",
     "united",
     "city",
     "rovers",
@@ -638,17 +631,29 @@ function isClubFriendlyFixture(fixture) {
     "atletico",
     "deportivo",
     "sporting",
+    "jk",
+    "fk",
+    "bk",
+    "if",
   ]
 
-  const homeLooksClub =
-    clubMarkers.some((m) => homeName.includes(m)) ||
-    (homeCountry && homeName !== homeCountry)
+  return clubMarkers.some((marker) => v.includes(marker))
+}
 
-  const awayLooksClub =
-    clubMarkers.some((m) => awayName.includes(m)) ||
-    (awayCountry && awayName !== awayCountry)
+function isClubFriendlyFixture(fixture) {
+  const homeName = fixture?.teams?.home?.name || ""
+  const awayName = fixture?.teams?.away?.name || ""
 
-  return homeLooksClub || awayLooksClub
+  if (isLikelyClubName(homeName) || isLikelyClubName(awayName)) {
+    return true
+  }
+
+  const homeNational = fixture?.teams?.home?.national === true
+  const awayNational = fixture?.teams?.away?.national === true
+
+  if (homeNational && awayNational) return false
+
+  return false
 }
 
 function normalizeCompetitionName(country, rawName, fallbackDisplay) {
@@ -751,6 +756,7 @@ async function resolveSearchCompetition(target) {
           (haystack.includes("women") ||
             haystack.includes("feminino") ||
             haystack.includes("feminina"))
+
         if (!ok) return null
       }
 
@@ -824,10 +830,10 @@ async function fetchFixturesForCompetition(comp) {
     })
 
     const cleaned = fixtures
-      .filter((f) => {
-        const home = f?.teams?.home?.name || ""
-        const away = f?.teams?.away?.name || ""
-        const league = f?.league?.name || ""
+      .filter((fixture) => {
+        const home = fixture?.teams?.home?.name || ""
+        const away = fixture?.teams?.away?.name || ""
+        const league = fixture?.league?.name || ""
         const compDisplay = normalizeText(comp.display)
 
         if (hasForbiddenMarker(home)) return false
@@ -836,7 +842,7 @@ async function fetchFixturesForCompetition(comp) {
         if (normalizeText(league).includes("open cup")) return false
 
         if (compDisplay.includes("amistosos internacionais")) {
-          if (isClubFriendlyFixture(f)) return false
+          if (isClubFriendlyFixture(fixture)) return false
         }
 
         return true
@@ -907,7 +913,7 @@ async function fetchRecentFinishedFixtures(teamId, limit = MAX_RECENT_FIXTURES_F
     })
 
     const cleaned = fixtures
-      .filter((f) => isCompletedFixture(f))
+      .filter((fixture) => isCompletedFixture(fixture))
       .sort(
         (a, b) =>
           new Date(b.fixture.date).getTime() - new Date(a.fixture.date).getTime()
@@ -924,9 +930,11 @@ async function fetchRecentFinishedFixtures(teamId, limit = MAX_RECENT_FIXTURES_F
 
 function buildScoreLabelForTeam(fixture, teamId) {
   const isHome = fixture?.teams?.home?.id === teamId
+
   const goalsFor = isHome
     ? safeNumber(fixture?.goals?.home)
     : safeNumber(fixture?.goals?.away)
+
   const goalsAgainst = isHome
     ? safeNumber(fixture?.goals?.away)
     : safeNumber(fixture?.goals?.home)
@@ -936,9 +944,11 @@ function buildScoreLabelForTeam(fixture, teamId) {
 
 function getGoalsForAgainst(fixture, teamId) {
   const isHome = fixture?.teams?.home?.id === teamId
+
   const gf = isHome
     ? safeNumber(fixture?.goals?.home)
     : safeNumber(fixture?.goals?.away)
+
   const ga = isHome
     ? safeNumber(fixture?.goals?.away)
     : safeNumber(fixture?.goals?.home)
@@ -1006,13 +1016,13 @@ async function collectProfileFromFixtures(teamId, fixturesSubset) {
     })
   }
 
-  const statsRows = rows.filter((r) => {
+  const statsRows = rows.filter((row) => {
     return (
-      r.shots > 0 ||
-      r.shotsOnTarget > 0 ||
-      r.corners > 0 ||
-      r.fouls > 0 ||
-      r.cards > 0
+      row.shots > 0 ||
+      row.shotsOnTarget > 0 ||
+      row.corners > 0 ||
+      row.fouls > 0 ||
+      row.cards > 0
     )
   })
 
@@ -1026,7 +1036,7 @@ async function collectProfileFromFixtures(teamId, fixturesSubset) {
     avgCorners: round(weightedAverage(statsRows, "corners")),
     avgCards: round(weightedAverage(statsRows, "cards")),
     avgFouls: round(weightedAverage(statsRows, "fouls")),
-    recentScores: rows.map((r) => r.scoreLabel).slice(0, 5),
+    recentScores: rows.map((row) => row.scoreLabel).slice(0, 5),
   }
 }
 
@@ -1035,24 +1045,11 @@ async function buildTeamContext(teamId) {
     return teamContextCache.get(teamId)
   }
 
-  const allFixtures = await fetchRecentFinishedFixtures(
-    teamId,
-    MAX_RECENT_FIXTURES_FETCH
-  )
+  const allFixtures = await fetchRecentFinishedFixtures(teamId, MAX_RECENT_FIXTURES_FETCH)
 
   const generalFixtures = allFixtures.slice(0, FORM_LIMIT_GENERAL)
-  const homeFixtures = splitVenueFixtures(
-    allFixtures,
-    teamId,
-    true,
-    FORM_LIMIT_HOME_AWAY
-  )
-  const awayFixtures = splitVenueFixtures(
-    allFixtures,
-    teamId,
-    false,
-    FORM_LIMIT_HOME_AWAY
-  )
+  const homeFixtures = splitVenueFixtures(allFixtures, teamId, true, FORM_LIMIT_HOME_AWAY)
+  const awayFixtures = splitVenueFixtures(allFixtures, teamId, false, FORM_LIMIT_HOME_AWAY)
 
   const general = await collectProfileFromFixtures(teamId, generalFixtures)
   const home = await collectProfileFromFixtures(teamId, homeFixtures)
@@ -1114,15 +1111,15 @@ function buildSideProfile(teamContext, side) {
         ? blendValue(sideProfile.avgFouls, general.avgFouls, 0.66)
         : general.avgFouls
     ),
-    recentScores: general.recentScores || [],
+    recentScores: sideProfile.recentScores?.length
+      ? sideProfile.recentScores
+      : general.recentScores || [],
   }
 }
 
 function isUsableTeamProfile(sideProfile, generalProfile) {
-  const recentOk =
-    safeNumber(generalProfile.matches, 0) >= MIN_REQUIRED_RECENT_MATCHES
-  const statsOk =
-    safeNumber(generalProfile.statsMatches, 0) >= MIN_REQUIRED_SHOTS_DATA_MATCHES
+  const recentOk = safeNumber(generalProfile.matches, 0) >= MIN_REQUIRED_RECENT_MATCHES
+  const statsOk = safeNumber(generalProfile.statsMatches, 0) >= MIN_REQUIRED_STATS_MATCHES
 
   return recentOk && statsOk
 }
@@ -1169,8 +1166,8 @@ function buildExpectedMetrics(homeProfile, awayProfile) {
   const expectedCorners = clamp(
     round(
       homeProfile.avgCorners * 0.52 +
-        awayProfile.avgCorners * 0.48 +
-        (expectedHomeShots + expectedAwayShots) * 0.045
+      awayProfile.avgCorners * 0.48 +
+      (expectedHomeShots + expectedAwayShots) * 0.045
     ),
     4.5,
     12.8
@@ -1226,7 +1223,10 @@ function cumulativePoisson(lambda, maxK = 10) {
     arr.push(p)
   }
 
-  if (total < 0.999) arr.push(1 - total)
+  if (total < 0.999) {
+    arr.push(1 - total)
+  }
+
   return arr
 }
 
@@ -1320,7 +1320,6 @@ function lineScore(prob, family, market) {
 
 function buildCandidateMarkets(payload) {
   const { homeTeam, awayTeam, metrics, probabilities } = payload
-
   const candidates = []
 
   function add(market, probability, family) {
@@ -1521,43 +1520,11 @@ function isInternationalNationalTeamsFixture(fixture, comp) {
 
   if (!internationalContext) return true
 
-  const homeTeam = fixture?.teams?.home || {}
-  const awayTeam = fixture?.teams?.away || {}
-
   if (
     leagueDisplay.includes("amistosos internacionais") ||
     normalizeText(fixture?.league?.name || "").includes("friend")
   ) {
-    const homeCountry = normalizeText(homeTeam.country || "")
-    const awayCountry = normalizeText(awayTeam.country || "")
-    const homeName = normalizeText(homeTeam.name || "")
-    const awayName = normalizeText(awayTeam.name || "")
-
-    const clubMarkers = [
-      "fc",
-      "sc",
-      "afc",
-      "cf",
-      "ac",
-      "club",
-      "if",
-      "fk",
-      "jk",
-      "bk",
-      "united",
-      "city",
-      "rovers",
-      "athletic",
-      "atletico",
-      "deportivo",
-      "sporting",
-    ]
-
-    const homeLooksClub = clubMarkers.some((m) => homeName.includes(m))
-    const awayLooksClub = clubMarkers.some((m) => awayName.includes(m))
-
-    if (homeLooksClub || awayLooksClub) return false
-    if (homeCountry && awayCountry) return true
+    if (isClubFriendlyFixture(fixture)) return false
   }
 
   return true
@@ -1715,6 +1682,7 @@ async function upsertMatchStats(row) {
     away_shots_on_target: row.away_shots_on_target,
     away_corners: row.away_corners,
     away_yellow_cards: row.away_yellow_cards,
+    created_at: new Date().toISOString(),
   }
 
   const { error } = await supabase
@@ -1766,6 +1734,7 @@ async function upsertMatchAnalysis(row) {
     safe_pick: row.safe_pick,
     balanced_pick: row.balanced_pick,
     aggressive_pick: row.aggressive_pick,
+    created_at: new Date().toISOString(),
   }
 
   const { error } = await supabase
@@ -1911,13 +1880,13 @@ async function buildAndStoreMatches(fixtureLists) {
         match_id: matchPayload.id,
         home_strength: round(
           homeProfile.avgGoalsFor * 1.4 +
-            homeProfile.avgShotsOnTarget * 0.55 +
-            homeProfile.avgCorners * 0.25
+          homeProfile.avgShotsOnTarget * 0.55 +
+          homeProfile.avgCorners * 0.25
         ),
         away_strength: round(
           awayProfile.avgGoalsFor * 1.35 +
-            awayProfile.avgShotsOnTarget * 0.52 +
-            awayProfile.avgCorners * 0.23
+          awayProfile.avgShotsOnTarget * 0.52 +
+          awayProfile.avgCorners * 0.23
         ),
         expected_home_goals: round(metricsExp.expectedHomeGoals),
         expected_away_goals: round(metricsExp.expectedAwayGoals),
@@ -2023,8 +1992,8 @@ async function rebuildDailyPicks(matches) {
   }
 
   const rows = selected.map((m, index) => ({
-    match_id: m.id,
     rank: index,
+    match_id: m.id,
     league: m.league,
     home_team: m.home_team,
     away_team: m.away_team,
@@ -2039,7 +2008,9 @@ async function rebuildDailyPicks(matches) {
 
   if (!rows.length) return 0
 
-  const { error } = await supabase.from("daily_picks").insert(rows)
+  const { error } = await supabase
+    .from("daily_picks")
+    .insert(rows)
 
   if (error) {
     throw new Error(`Supabase daily_picks: ${error.message}`)
