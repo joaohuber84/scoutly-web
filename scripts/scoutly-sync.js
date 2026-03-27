@@ -31,7 +31,7 @@ const TIMEZONE = "America/Sao_Paulo"
  * - manter janela prática de 5 dias
  * - popular matches corretamente
  * - popular match_stats corretamente
- * - popular match_analysis corretamente
+ * - popular match_analysis somente com colunas reais
  * - evitar jogos sem base mínima
  * - evitar excesso inútil de requests
  */
@@ -67,8 +67,6 @@ const competitionFixturesCache = new Map()
 
 /**
  * COMPETIÇÕES-ALVO
- * Mantendo o que já está no projeto,
- * mas organizado para evitar ruído e duplicação inútil.
  */
 const TARGET_COMPETITIONS = [
   // ===== BRASIL =====
@@ -1341,13 +1339,13 @@ function buildCandidateMarkets(payload) {
 
   if (metrics.expectedCorners >= 10.6) {
     bestCornersOverLine = "Mais de 9.5 escanteios"
-    bestCornersOverProb = clamp((metrics.expectedCorners - 7.3) / 3.2, 0.10, 0.92)
+    bestCornersOverProb = clamp((metrics.expectedCorners - 7.3) / 3.2, 0.1, 0.92)
   } else if (metrics.expectedCorners >= 9.3) {
     bestCornersOverLine = "Mais de 8.5 escanteios"
-    bestCornersOverProb = clamp((metrics.expectedCorners - 6.8) / 3.0, 0.10, 0.91)
+    bestCornersOverProb = clamp((metrics.expectedCorners - 6.8) / 3.0, 0.1, 0.91)
   } else if (metrics.expectedCorners >= 8.2) {
     bestCornersOverLine = "Mais de 7.5 escanteios"
-    bestCornersOverProb = clamp((metrics.expectedCorners - 6.0) / 2.8, 0.10, 0.89)
+    bestCornersOverProb = clamp((metrics.expectedCorners - 6.0) / 2.8, 0.1, 0.89)
   }
 
   let bestCornersUnderLine = null
@@ -1355,16 +1353,16 @@ function buildCandidateMarkets(payload) {
 
   if (metrics.expectedCorners <= 7.0) {
     bestCornersUnderLine = "Menos de 9.5 escanteios"
-    bestCornersUnderProb = clamp((10.3 - metrics.expectedCorners) / 3.2, 0.10, 0.90)
+    bestCornersUnderProb = clamp((10.3 - metrics.expectedCorners) / 3.2, 0.1, 0.9)
   } else if (metrics.expectedCorners <= 8.0) {
     bestCornersUnderLine = "Menos de 10.5 escanteios"
-    bestCornersUnderProb = clamp((11.0 - metrics.expectedCorners) / 3.3, 0.10, 0.90)
+    bestCornersUnderProb = clamp((11.0 - metrics.expectedCorners) / 3.3, 0.1, 0.9)
   }
 
   if (probabilities.over25 >= 0.66) add("Mais de 2.5 gols", probabilities.over25, "gols")
   if (probabilities.over15 >= 0.76) add("Mais de 1.5 gols", probabilities.over15, "gols")
   if (under25 >= 0.74) add("Menos de 2.5 gols", under25, "gols")
-  if (probabilities.under35 >= 0.80) add("Menos de 3.5 gols", probabilities.under35, "gols")
+  if (probabilities.under35 >= 0.8) add("Menos de 3.5 gols", probabilities.under35, "gols")
   if (probabilities.btts >= 0.63) add("Ambas marcam", probabilities.btts, "ambas")
   if (bttsNo >= 0.72) add("Ambas não marcam", bttsNo, "ambas")
 
@@ -1387,8 +1385,8 @@ function buildCandidateMarkets(payload) {
 function chooseMainPick(candidates) {
   return candidates[0] || {
     market: "Menos de 3.5 gols",
-    probability: 0.60,
-    score: 0.60,
+    probability: 0.6,
+    score: 0.6,
     family: "gols",
   }
 }
@@ -1458,7 +1456,7 @@ function normalizeLeagueByTeams(comp, fixture) {
 function buildGameProfile(metrics, probabilities) {
   if (metrics.expectedGoals >= 2.9 || probabilities.over25 >= 0.66) return "ofensivo"
   if (metrics.expectedCorners >= 9.3 && metrics.expectedShots >= 22) return "corners"
-  if (metrics.expectedGoals <= 2.0 && probabilities.under35 >= 0.80) return "controlado"
+  if (metrics.expectedGoals <= 2.0 && probabilities.under35 >= 0.8) return "controlado"
   if (metrics.expectedGoals <= 1.7 && metrics.expectedShots <= 17) return "defensivo"
   return "equilibrado"
 }
@@ -1692,6 +1690,11 @@ async function upsertMatchStats(row) {
   if (error) throw error
 }
 
+/**
+ * IMPORTANTE:
+ * Aqui está a correção principal.
+ * Essa função grava SOMENTE as colunas que existem hoje em match_analysis.
+ */
 async function upsertMatchAnalysis(row) {
   const payload = {
     match_id: row.match_id,
@@ -1714,26 +1717,8 @@ async function upsertMatchAnalysis(row) {
     best_pick_1: row.best_pick_1,
     best_pick_2: row.best_pick_2,
     best_pick_3: row.best_pick_3,
-    home_form: row.home_form,
-    away_form: row.away_form,
-    over25_prob: row.over25_prob,
-    btts_prob: row.btts_prob,
-    under25_prob: row.under25_prob,
-    under35_prob: row.under35_prob,
-    corners_over85_prob: row.corners_over85_prob,
-    draw_result_prob: row.draw_result_prob,
-    away_result_prob: row.away_result_prob,
-    home_result_prob: row.home_result_prob,
-    game_profile: row.game_profile,
-    confidence_score: row.confidence_score,
-    analysis_text: row.analysis_text,
-    country: row.country,
-    fixture_id: row.fixture_id,
-    markets: row.markets,
-    value_pick: row.value_pick,
-    safe_pick: row.safe_pick,
-    balanced_pick: row.balanced_pick,
     aggressive_pick: row.aggressive_pick,
+    analysis_text: row.analysis_text,
     created_at: new Date().toISOString(),
   }
 
@@ -1880,13 +1865,13 @@ async function buildAndStoreMatches(fixtureLists) {
         match_id: matchPayload.id,
         home_strength: round(
           homeProfile.avgGoalsFor * 1.4 +
-          homeProfile.avgShotsOnTarget * 0.55 +
-          homeProfile.avgCorners * 0.25
+            homeProfile.avgShotsOnTarget * 0.55 +
+            homeProfile.avgCorners * 0.25
         ),
         away_strength: round(
           awayProfile.avgGoalsFor * 1.35 +
-          awayProfile.avgShotsOnTarget * 0.52 +
-          awayProfile.avgCorners * 0.23
+            awayProfile.avgShotsOnTarget * 0.52 +
+            awayProfile.avgCorners * 0.23
         ),
         expected_home_goals: round(metricsExp.expectedHomeGoals),
         expected_away_goals: round(metricsExp.expectedAwayGoals),
@@ -1905,33 +1890,6 @@ async function buildAndStoreMatches(fixtureLists) {
         best_pick_1: mainPick.market,
         best_pick_2: pick2,
         best_pick_3: pick3,
-        home_form: (homeProfile.recentScores || []).join("|"),
-        away_form: (awayProfile.recentScores || []).join("|"),
-        over25_prob: round(probabilities.over25),
-        btts_prob: round(probabilities.btts),
-        under25_prob: round(clamp(1 - probabilities.over25, 0, 1)),
-        under35_prob: round(probabilities.under35),
-        corners_over85_prob: round(
-          clamp((metricsExp.expectedCorners - 6.8) / 3.0, 0.08, 0.93)
-        ),
-        draw_result_prob: round(probabilities.draw),
-        away_result_prob: round(probabilities.away),
-        home_result_prob: round(probabilities.home),
-        game_profile: gameProfile,
-        confidence_score: round(mainPick.score),
-        analysis_text: insight,
-        country,
-        fixture_id: matchPayload.id,
-        markets,
-        value_pick: mainPick.market,
-        safe_pick:
-          candidates.find(
-            (x) =>
-              x.family === "dupla_chance" ||
-              x.market === "Menos de 3.5 gols" ||
-              x.market === "Menos de 2.5 gols"
-          )?.market || null,
-        balanced_pick: pick2,
         aggressive_pick:
           candidates.find(
             (x) =>
@@ -1939,6 +1897,7 @@ async function buildAndStoreMatches(fixtureLists) {
               x.market === "Ambas marcam" ||
               x.market.includes("Mais de 9.5 escanteios")
           )?.market || null,
+        analysis_text: insight,
       })
 
       stored.push(matchPayload)
@@ -2020,7 +1979,7 @@ async function rebuildDailyPicks(matches) {
 }
 
 async function run() {
-  console.log("🚀 Scoutly Sync V6 iniciado")
+  console.log("🚀 Scoutly Sync V7 iniciado")
 
   const { start, end } = getSyncWindowRange()
   console.log(`📆 Janela ativa: ${start.toISOString()} -> ${end.toISOString()}`)
@@ -2039,11 +1998,11 @@ async function run() {
   const picksCount = await rebuildDailyPicks(storedMatches)
 
   console.log(`🏁 Daily picks gerados: ${picksCount}`)
-  console.log(`✅ Matches gravados: ${storedMatches.length}`)
-  console.log("✅ Scoutly Sync V6 concluído")
+  console.log(`✅ Matches gravados com pipeline completo: ${storedMatches.length}`)
+  console.log("✅ Scoutly Sync V7 concluído")
 }
 
 run().catch((error) => {
-  console.error("❌ Erro fatal no Scoutly Sync V6:", error)
+  console.error("❌ Erro fatal no Scoutly Sync V7:", error)
   process.exit(1)
 })
