@@ -47,7 +47,7 @@
 
     .app-shell {
       width: 100%;
-      padding: 18px 14px 46px;
+      padding: 18px 12px 42px;
     }
 
     .container {
@@ -60,37 +60,37 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 14px;
-      margin-bottom: 16px;
+      gap: 16px;
+      margin-bottom: 18px;
       flex-wrap: wrap;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 14px;
     }
 
     .brand-fallback {
-      width: 52px;
-      height: 52px;
-      border-radius: 16px;
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
       display: grid;
       place-items: center;
       background: linear-gradient(180deg, #00ff88, #0bd06f);
       color: #081b12;
       font-weight: 900;
-      font-size: 24px;
+      font-size: 26px;
       box-shadow: 0 10px 24px rgba(0,255,136,0.24);
       flex-shrink: 0;
     }
 
     .brand-logo {
-      height: 52px;
-      width: 52px;
+      height: 56px;
+      width: 56px;
       object-fit: cover;
       display: none;
-      border-radius: 16px;
+      border-radius: 18px;
       box-shadow: 0 10px 24px rgba(0,0,0,0.22);
       flex-shrink: 0;
       background: rgba(255,255,255,0.03);
@@ -104,9 +104,10 @@
     }
 
     .brand-subtitle {
-      margin: 4px 0 0;
+      margin: 6px 0 0;
       color: var(--muted);
       font-size: 12px;
+      line-height: 1.4;
     }
 
     .status-chip {
@@ -132,8 +133,8 @@
 
     .hero-grid {
       display: grid;
-      grid-template-columns: 1.04fr 0.96fr;
-      gap: 16px;
+      grid-template-columns: 1fr;
+      gap: 18px;
       margin-bottom: 18px;
     }
 
@@ -146,7 +147,7 @@
     }
 
     .panel-header {
-      padding: 20px 20px 0;
+      padding: 22px 18px 0;
     }
 
     .eyebrow {
@@ -160,19 +161,20 @@
 
     .panel-title {
       margin: 0;
-      font-size: 24px;
+      font-size: 22px;
       letter-spacing: -0.04em;
+      line-height: 1.1;
     }
 
     .panel-subtitle {
-      margin: 8px 0 0;
+      margin: 10px 0 0;
       color: var(--muted);
-      font-size: 13px;
-      line-height: 1.55;
+      font-size: 14px;
+      line-height: 1.5;
     }
 
     .panel-body {
-      padding: 18px 20px 20px;
+      padding: 16px 18px 18px;
     }
 
     .league-pill {
@@ -187,6 +189,7 @@
       color: #d7e3fa;
       font-size: 12px;
       font-weight: 700;
+      max-width: 100%;
     }
 
     .pick-match {
@@ -197,19 +200,20 @@
     }
 
     .pick-market {
-      font-size: 24px;
-      line-height: 1.08;
+      font-size: 22px;
+      line-height: 1.1;
       letter-spacing: -0.04em;
       font-weight: 900;
       text-transform: uppercase;
       margin: 0;
+      word-break: break-word;
     }
 
     .chip-row {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-top: 12px;
+      margin-top: 14px;
     }
 
     .chip {
@@ -269,10 +273,10 @@
     .teams-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: 10px;
       margin-bottom: 10px;
-      width: 100%;
+      flex-wrap: nowrap;
+      min-width: 0;
     }
 
     .teams-row.compact {
@@ -281,9 +285,9 @@
     }
 
     .team-badge {
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
       display: grid;
       place-items: center;
       background: rgba(255,255,255,0.05);
@@ -292,7 +296,7 @@
       flex-shrink: 0;
       font-weight: 900;
       color: #dfe9ff;
-      font-size: 13px;
+      font-size: 12px;
     }
 
     .team-badge img {
@@ -303,21 +307,21 @@
     }
 
     .team-names {
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.3;
       flex: 1;
       min-width: 0;
-      text-align: left;
-      font-size: 15px;
-      font-weight: 800;
-      line-height: 1.28;
+      word-break: break-word;
     }
 
     .radar-list {
       display: grid;
       gap: 10px;
       margin-top: 8px;
-      max-height: 780px;
-      overflow: auto;
-      padding-right: 4px;
+      max-height: none;
+      overflow: visible;
+      padding-right: 0;
     }
 
     .radar-time-group {
@@ -374,18 +378,20 @@
     }
 
     .radar-market {
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: -0.03em;
-      line-height: 1.2;
+      line-height: 1.25;
       margin-top: 8px;
+      word-break: break-word;
     }
 
     .radar-kickoff {
       color: var(--muted);
       font-size: 12px;
       margin-top: 8px;
+      line-height: 1.4;
     }
 
     .ticket-card {
@@ -409,7 +415,7 @@
     }
 
     .ticket-header {
-      padding: 20px 20px 0;
+      padding: 22px 18px 0;
     }
 
     .ticket-eyebrow {
@@ -423,19 +429,20 @@
 
     .ticket-title {
       margin: 0;
-      font-size: 24px;
+      font-size: 22px;
       letter-spacing: -0.04em;
+      line-height: 1.1;
     }
 
     .ticket-subtitle {
       margin: 10px 0 0;
       color: var(--muted);
-      font-size: 13px;
-      line-height: 1.55;
+      font-size: 14px;
+      line-height: 1.5;
     }
 
     .ticket-body {
-      padding: 18px 20px 20px;
+      padding: 16px 18px 18px;
     }
 
     .ticket-main {
@@ -500,6 +507,7 @@
       text-transform: uppercase;
       letter-spacing: -0.02em;
       line-height: 1.35;
+      word-break: break-word;
     }
 
     .ticket-footer {
@@ -549,6 +557,7 @@
       color: white;
       padding: 12px 18px;
       box-shadow: 0 12px 24px rgba(249,115,22,0.24);
+      width: 100%;
     }
 
     .ticket-button:hover,
@@ -559,7 +568,7 @@
     }
 
     .section {
-      margin-top: 22px;
+      margin-top: 24px;
     }
 
     .section-head {
@@ -568,6 +577,7 @@
       justify-content: space-between;
       gap: 14px;
       margin-bottom: 14px;
+      flex-wrap: wrap;
     }
 
     .section-title {
@@ -580,8 +590,8 @@
     .section-copy {
       margin: 8px 0 0;
       color: var(--muted);
-      font-size: 13px;
-      line-height: 1.55;
+      font-size: 14px;
+      line-height: 1.5;
     }
 
     .ghost-button {
@@ -589,6 +599,7 @@
       color: #d7e3fa;
       border: 1px solid var(--border);
       padding: 12px 16px;
+      width: 100%;
     }
 
     .primary-button {
@@ -596,11 +607,12 @@
       color: #082012;
       padding: 12px 18px;
       box-shadow: 0 12px 24px rgba(0,255,136,0.20);
+      width: 100%;
     }
 
     .competitions-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 1fr;
       gap: 14px;
     }
 
@@ -666,7 +678,7 @@
       color: var(--muted);
       font-size: 13px;
       margin-top: 10px;
-      line-height: 1.45;
+      line-height: 1.5;
     }
 
     .games-grid {
@@ -677,7 +689,7 @@
 
     .game-card {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr;
       gap: 14px;
       align-items: center;
       background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));
@@ -693,9 +705,10 @@
     }
 
     .game-match {
-      font-size: 17px;
+      font-size: 18px;
       font-weight: 800;
-      line-height: 1.28;
+      line-height: 1.3;
+      word-break: break-word;
     }
 
     .game-meta {
@@ -705,6 +718,7 @@
       color: var(--muted);
       font-size: 13px;
       margin-top: 8px;
+      line-height: 1.4;
     }
 
     .analysis-overlay {
@@ -715,7 +729,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: 12px;
       z-index: 50;
     }
 
@@ -726,7 +740,7 @@
     .analysis-card {
       width: 100%;
       max-width: 1040px;
-      max-height: 92vh;
+      max-height: 94vh;
       overflow: auto;
       background: linear-gradient(180deg, rgba(19, 33, 60, 0.98), rgba(10, 18, 34, 0.98));
       border: 1px solid var(--border);
@@ -735,7 +749,7 @@
     }
 
     .analysis-header {
-      padding: 22px 22px 0;
+      padding: 20px 16px 0;
       display: flex;
       align-items: start;
       justify-content: space-between;
@@ -744,9 +758,10 @@
 
     .analysis-title {
       margin: 8px 0 0;
-      font-size: 28px;
-      line-height: 1.05;
+      font-size: 24px;
+      line-height: 1.08;
       letter-spacing: -0.05em;
+      word-break: break-word;
     }
 
     .close-button {
@@ -762,12 +777,12 @@
     }
 
     .analysis-body {
-      padding: 20px 22px 22px;
+      padding: 16px;
     }
 
     .analysis-main-grid {
       display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
+      grid-template-columns: 1fr;
       gap: 16px;
       margin-top: 18px;
     }
@@ -776,12 +791,12 @@
       background: rgba(255,255,255,0.04);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 18px;
+      padding: 16px;
     }
 
     .box-title {
       margin: 0 0 12px;
-      font-size: 17px;
+      font-size: 18px;
       letter-spacing: -0.03em;
     }
 
@@ -789,17 +804,18 @@
       border: 1px solid rgba(0,255,136,0.16);
       background: linear-gradient(135deg, rgba(0,255,136,0.10), rgba(105,167,255,0.08));
       border-radius: var(--radius-lg);
-      padding: 18px;
+      padding: 16px;
       margin-bottom: 16px;
     }
 
     .analysis-market {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 900;
-      line-height: 1.1;
+      line-height: 1.12;
       text-transform: uppercase;
       letter-spacing: -0.04em;
       margin-top: 10px;
+      word-break: break-word;
     }
 
     .analysis-section-grid {
@@ -811,7 +827,7 @@
 
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: 1fr;
       gap: 12px;
       margin-top: 14px;
     }
@@ -827,13 +843,13 @@
       color: var(--muted);
       font-size: 12px;
       margin-bottom: 8px;
-      line-height: 1.4;
     }
 
     .stat-value {
-      font-size: 17px;
+      font-size: 18px;
       font-weight: 800;
-      line-height: 1.25;
+      line-height: 1.3;
+      word-break: break-word;
     }
 
     .markets-list {
@@ -854,6 +870,7 @@
       margin-top: 8px;
       text-transform: uppercase;
       line-height: 1.25;
+      word-break: break-word;
     }
 
     .market-line-copy {
@@ -864,12 +881,12 @@
     }
 
     .about-panel {
-      margin-top: 24px;
+      margin-top: 26px;
       background: linear-gradient(180deg, rgba(16, 29, 54, 0.96), rgba(11, 22, 41, 0.98));
       border: 1px solid rgba(112, 154, 255, 0.14);
       border-radius: var(--radius-xl);
       box-shadow: 0 20px 40px rgba(0,0,0,0.32);
-      padding: 22px;
+      padding: 18px;
       position: relative;
       overflow: hidden;
     }
@@ -886,6 +903,7 @@
       margin: 0 0 10px;
       font-size: 22px;
       letter-spacing: -0.03em;
+      line-height: 1.15;
     }
 
     .about-copy {
@@ -901,6 +919,7 @@
       margin-top: 14px;
       color: #dfe9ff;
       font-size: 14px;
+      line-height: 1.5;
     }
 
     .empty-state,
@@ -912,6 +931,7 @@
       padding: 22px;
       color: var(--muted);
       text-align: center;
+      line-height: 1.6;
     }
 
     .error-state {
@@ -936,85 +956,95 @@
       opacity: 0.9;
     }
 
-    @media (max-width: 1080px) {
-      .hero-grid,
-      .analysis-main-grid,
-      .competitions-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 720px) {
+    @media (min-width: 721px) {
       .app-shell {
-        padding: 16px 12px 40px;
+        padding: 24px 16px 60px;
       }
 
-      .topbar {
-        flex-direction: column;
-        align-items: stretch;
+      .hero-grid {
+        grid-template-columns: 1.04fr 0.96fr;
+      }
+
+      .panel-header {
+        padding: 22px 22px 0;
+      }
+
+      .panel-body,
+      .ticket-body,
+      .analysis-body,
+      .about-panel {
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+
+      .ticket-header {
+        padding: 22px 22px 0;
+      }
+
+      .analysis-header {
+        padding: 24px 24px 0;
       }
 
       .brand-title {
-        font-size: 24px;
+        font-size: 30px;
       }
 
       .panel-title,
       .section-title,
       .about-title,
       .ticket-title {
-        font-size: 20px;
+        font-size: 26px;
       }
 
       .pick-market,
       .analysis-market {
-        font-size: 20px;
+        font-size: 26px;
       }
 
       .analysis-title {
-        font-size: 22px;
+        font-size: 32px;
+      }
+
+      .team-badge {
+        width: 38px;
+        height: 38px;
       }
 
       .team-names {
-        font-size: 14px;
+        font-size: 16px;
       }
 
       .stats-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .competitions-grid {
+        grid-template-columns: repeat(2, 1fr);
       }
 
       .game-card {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr auto;
       }
 
-      .ticket-body,
-      .panel-body,
-      .analysis-body,
-      .about-panel {
-        padding-left: 16px;
-        padding-right: 16px;
-      }
-
-      .ticket-leg,
-      .radar-item,
-      .competition-card,
-      .game-card,
-      .box {
-        padding: 14px;
-      }
-
-      .ticket-footer {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .ticket-actions {
-        width: 100%;
-      }
-
-      .ticket-button,
       .primary-button,
-      .ghost-button {
-        width: 100%;
+      .ghost-button,
+      .ticket-button {
+        width: auto;
+      }
+    }
+
+    @media (min-width: 1081px) {
+      .analysis-main-grid,
+      .competitions-grid {
+        grid-template-columns: 1.05fr 0.95fr;
+      }
+
+      .competitions-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
       }
     }
   </style>
@@ -1123,9 +1153,9 @@
         <div class="about-list">
           <div>• Bilhete Scoutly automático e variável</div>
           <div>• Radar do dia organizado por horário</div>
-          <div>• Competições organizadas por liga</div>
+          <div>• Competições organizadas com bandeiras</div>
           <div>• Análise completa do jogo com números projetados</div>
-          <div>• Pick principal + alternativas realmente diferentes</div>
+          <div>• Pick principal + 2 alternativas por partida</div>
         </div>
 
         <div class="footer-note">
@@ -1157,7 +1187,7 @@
           <div>
             <div class="box">
               <h3 class="box-title">Leitura do Scoutly</h3>
-              <div id="analysisInsight" style="color:#dbe6fb;line-height:1.7;font-size:15px;">
+              <div id="analysisInsight" style="color:#dbe6fb;line-height:1.65;font-size:15px;">
                 Nenhuma leitura disponível para esta partida.
               </div>
             </div>
@@ -1169,14 +1199,14 @@
               </div>
 
               <div class="box">
-                <h3 class="box-title">Cenário da partida</h3>
+                <h3 class="box-title">Contexto do Scoutly</h3>
                 <div id="analysisContext" class="stats-grid"></div>
               </div>
             </div>
           </div>
 
           <div class="box">
-            <h3 class="box-title">Alternativas do Scoutly</h3>
+            <h3 class="box-title">Oportunidades detectadas</h3>
             <div id="marketsList" class="markets-list"></div>
           </div>
         </div>
@@ -1184,7 +1214,7 @@
     </div>
   </div>
 
-<script>
+  <script>
     const supabaseClient = window.supabase.createClient(
       'https://zngdcatlxlxamceqpxij.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuZ2RjYXRseGx4YW1jZXFweGlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ0MDUsImV4cCI6MjA4NzkzMDQwNX0.fExn5-TVJKzljnLdg2wqF2I8FjBoNmb1wDmugLUP04M'
@@ -1199,61 +1229,7 @@
       currentTicketSeed: 0
     };
 
-    const leagueMeta = {
-      'FIFA World Cup': { label: 'Copa do Mundo', badge: '🌍', sort: 1 },
-      'FIFA Club World Cup': { label: 'Mundial de Clubes', badge: '🌍', sort: 2 },
-      'UEFA European Championship': { label: 'Eurocopa', badge: '🌍', sort: 3 },
-      'Copa America': { label: 'Copa América', badge: '🌍', sort: 4 },
-      'UEFA Nations League': { label: 'Nations League', badge: '🌍', sort: 5 },
-      'Nations League': { label: 'Nations League', badge: '🌍', sort: 5 },
-      'International Friendlies': { label: 'Amistosos Internacionais', badge: '🌍', sort: 6 },
-      'Amistosos Internacionais': { label: 'Amistosos Internacionais', badge: '🌍', sort: 6 },
-      'World Cup - Qualification Europe': { label: 'Eliminatórias Europeias', badge: '🌍', sort: 7 },
-      'Eliminatórias Europeias': { label: 'Eliminatórias Europeias', badge: '🌍', sort: 7 },
-      'World Cup - Qualification South America': { label: 'Eliminatórias Sul-Americanas', badge: '🌍', sort: 8 },
-      'Eliminatórias Sul-Americanas': { label: 'Eliminatórias Sul-Americanas', badge: '🌍', sort: 8 },
-      'UEFA Champions League': { label: 'Champions League', badge: '🏆', sort: 10 },
-      'Champions League': { label: 'Champions League', badge: '🏆', sort: 10 },
-      'Libertadores': { label: 'Libertadores', badge: '🏆', sort: 11 },
-      'CONMEBOL Libertadores': { label: 'Libertadores', badge: '🏆', sort: 11 },
-      'UEFA Europa League': { label: 'Europa League', badge: '🏆', sort: 12 },
-      'UEFA Conference League': { label: 'Conference League', badge: '🏆', sort: 13 },
-      'UEFA Europa Conference League': { label: 'Conference League', badge: '🏆', sort: 13 },
-      'Sul-Americana': { label: 'Sul-Americana', badge: '🏆', sort: 14 },
-      'CONMEBOL Sudamericana': { label: 'Sul-Americana', badge: '🏆', sort: 14 },
-      'CONCACAF Champions Cup': { label: 'CONCACAF Champions Cup', badge: '🏆', sort: 15 },
-      'Copa do Brasil': { label: 'Copa do Brasil', badge: '🏆', sort: 20 },
-      'Brasileirão Série A': { label: 'Brasileirão Série A', badge: 'BR', sort: 21 },
-      'Serie A Brazil': { label: 'Brasileirão Série A', badge: 'BR', sort: 21 },
-      'Brasileirão Série B': { label: 'Brasileirão Série B', badge: 'BR', sort: 22 },
-      'Serie B Brazil': { label: 'Brasileirão Série B', badge: 'BR', sort: 22 },
-      'Copa do Nordeste': { label: 'Copa do Nordeste', badge: 'BR', sort: 23 },
-      'Copa Verde': { label: 'Copa Verde', badge: 'BR', sort: 24 },
-      'Copa Sul-Sudeste': { label: 'Copa Sul-Sudeste', badge: 'BR', sort: 25 },
-      'Brasileirão Feminino': { label: 'Brasileirão Feminino', badge: 'BR', sort: 26 },
-      'Brazil Women': { label: 'Brasileirão Feminino', badge: 'BR', sort: 26 },
-      'Liga Argentina': { label: 'Liga Argentina', badge: 'AR', sort: 30 },
-      'Liga Profesional Argentina': { label: 'Liga Argentina', badge: 'AR', sort: 30 },
-      'Copa Argentina': { label: 'Copa Argentina', badge: 'AR', sort: 31 },
-      'Serie A': { label: 'Serie A', badge: 'IT', sort: 32 },
-      'La Liga': { label: 'La Liga', badge: 'ES', sort: 33 },
-      'Premier League': { label: 'Premier League', badge: 'GB', sort: 34 },
-      'Bundesliga': { label: 'Bundesliga', badge: 'DE', sort: 35 },
-      'Ligue 1': { label: 'Ligue 1', badge: 'FR', sort: 36 },
-      'Eredivisie': { label: 'Eredivisie', badge: 'NL', sort: 37 },
-      'Liga MX': { label: 'Liga MX', badge: 'MX', sort: 38 },
-      'Primeira Liga': { label: 'Primeira Liga', badge: 'PT', sort: 39 },
-      'MLS': { label: 'MLS', badge: 'US', sort: 40 },
-      'Austrian Bundesliga': { label: 'Austrian Bundesliga', badge: 'AT', sort: 41 },
-      'Belgian Pro League': { label: 'Bélgica', badge: 'BE', sort: 42 },
-      'Superliga': { label: 'Dinamarca', badge: 'DK', sort: 43 },
-      'Super League Greece': { label: 'Grécia', badge: 'GR', sort: 44 },
-      'Super Lig': { label: 'Turquia', badge: 'TR', sort: 45 },
-      'Süper Lig': { label: 'Turquia', badge: 'TR', sort: 45 },
-      'Saudi Pro League': { label: 'Arábia Saudita', badge: 'SA', sort: 46 }
-    };
-
-const TEAM_NAME_MAP = {
+    const TEAM_NAME_MAP = {
       'South Korea': 'Coreia do Sul',
       'Korea Republic': 'Coreia do Sul',
       'Ivory Coast': 'Costa do Marfim',
@@ -1295,6 +1271,51 @@ const TEAM_NAME_MAP = {
       'Egypt': 'Egito'
     };
 
+    const leagueMeta = {
+      'FIFA World Cup': { label: 'Copa do Mundo', badge: '🌍', sort: 1 },
+      'FIFA Club World Cup': { label: 'Mundial de Clubes', badge: '🌍', sort: 2 },
+      'UEFA European Championship': { label: 'Eurocopa', badge: '🌍', sort: 3 },
+      'Copa America': { label: 'Copa América', badge: '🌍', sort: 4 },
+      'UEFA Nations League': { label: 'Nations League', badge: '🌍', sort: 5 },
+      'Nations League': { label: 'Nations League', badge: '🌍', sort: 5 },
+      'International Friendlies': { label: 'Amistosos Internacionais', badge: '🌍', sort: 6 },
+      'Amistosos Internacionais': { label: 'Amistosos Internacionais', badge: '🌍', sort: 6 },
+      'Eliminatórias Europeias': { label: 'Eliminatórias Europeias', badge: '🌍', sort: 7 },
+      'Eliminatórias da Euro': { label: 'Eliminatórias da Euro', badge: '🌍', sort: 8 },
+      'Eliminatórias Sul-Americanas': { label: 'Eliminatórias Sul-Americanas', badge: '🌍', sort: 9 },
+      'UEFA Champions League': { label: 'Champions League', badge: '🏆', sort: 10 },
+      'Libertadores': { label: 'Libertadores', badge: '🏆', sort: 11 },
+      'CONMEBOL Libertadores': { label: 'Libertadores', badge: '🏆', sort: 11 },
+      'UEFA Europa League': { label: 'Europa League', badge: '🏆', sort: 12 },
+      'UEFA Europa Conference League': { label: 'Conference League', badge: '🏆', sort: 13 },
+      'UEFA Conference League': { label: 'Conference League', badge: '🏆', sort: 13 },
+      'Sul-Americana': { label: 'Sul-Americana', badge: '🏆', sort: 14 },
+      'CONMEBOL Sudamericana': { label: 'Sul-Americana', badge: '🏆', sort: 14 },
+      'CONCACAF Champions Cup': { label: 'CONCACAF Champions Cup', badge: '🏆', sort: 15 },
+      'Copa do Brasil': { label: 'Copa do Brasil', badge: '🏆', sort: 20 },
+      'Brasileirão Série A': { label: 'Brasileirão Série A', badge: 'BR', sort: 21 },
+      'Brasileirão Série B': { label: 'Brasileirão Série B', badge: 'BR', sort: 22 },
+      'Brasileirão Feminino': { label: 'Brasileirão Feminino', badge: 'BR', sort: 23 },
+      'Copa do Nordeste': { label: 'Copa do Nordeste', badge: 'BR', sort: 24 },
+      'Liga Argentina': { label: 'Liga Argentina', badge: 'AR', sort: 30 },
+      'Copa Argentina': { label: 'Copa Argentina', badge: 'AR', sort: 31 },
+      'Serie A': { label: 'Serie A', badge: 'IT', sort: 32 },
+      'La Liga': { label: 'La Liga', badge: 'ES', sort: 33 },
+      'Premier League': { label: 'Premier League', badge: 'GB', sort: 34 },
+      'Bundesliga': { label: 'Bundesliga', badge: 'DE', sort: 35 },
+      'Ligue 1': { label: 'Ligue 1', badge: 'FR', sort: 36 },
+      'Eredivisie': { label: 'Eredivisie', badge: 'NL', sort: 37 },
+      'Liga MX': { label: 'Liga MX', badge: 'MX', sort: 38 },
+      'Primeira Liga': { label: 'Primeira Liga', badge: 'PT', sort: 39 },
+      'MLS': { label: 'MLS', badge: 'US', sort: 40 },
+      'Austrian Bundesliga': { label: 'Austrian Bundesliga', badge: 'AT', sort: 41 },
+      'Belgian Pro League': { label: 'Belgian Pro League', badge: 'BE', sort: 42 },
+      'Superliga': { label: 'Superliga', badge: 'DK', sort: 43 },
+      'Super League Greece': { label: 'Super League Greece', badge: 'GR', sort: 44 },
+      'Super Lig': { label: 'Super Lig', badge: 'TR', sort: 45 },
+      'Saudi Pro League': { label: 'Saudi Pro League', badge: 'SA', sort: 46 }
+    };
+
     function escapeHtml(value) {
       return String(value ?? '')
         .replaceAll('&', '&amp;')
@@ -1320,57 +1341,16 @@ const TEAM_NAME_MAP = {
       return TEAM_NAME_MAP[raw] || raw || '-';
     }
 
-    function normalizeLeagueName(league) {
-      const raw = String(league || '').trim();
-      const l = raw.toLowerCase();
-
-      if (!raw) return raw;
-
-      if (l.includes('nordeste')) return 'Copa do Nordeste';
-      if (l.includes('copa verde')) return 'Copa Verde';
-
-      if (
-        (l.includes('sul') && l.includes('sudeste')) ||
-        l.includes('sul-sudeste') ||
-        l.includes('sul sudeste')
-      ) {
-        return 'Copa Sul-Sudeste';
-      }
-
-      if (
-        (l.includes('women') || l.includes('feminino') || l.includes('feminina')) &&
-        (l.includes('brazil') || l.includes('brasile') || l.includes('serie a women'))
-      ) {
-        return 'Brasileirão Feminino';
-      }
-
-      if (l === 'serie a' || l === 'serie a brazil') return 'Brasileirão Série A';
-      if (l === 'serie b' || l === 'serie b brazil') return 'Brasileirão Série B';
-      if (l.includes('liga profesional argentina')) return 'Liga Argentina';
-      if (l.includes('uefa europa conference league')) return 'UEFA Conference League';
-      if (l.includes('conmebol libertadores')) return 'Libertadores';
-      if (l.includes('conmebol sudamericana')) return 'Sul-Americana';
-      if (l.includes('friendlies')) return 'Amistosos Internacionais';
-      if (l.includes('nations league')) return 'Nations League';
-      if (l.includes('qualification europe')) return 'Eliminatórias Europeias';
-      if (l.includes('qualification south america')) return 'Eliminatórias Sul-Americanas';
-
-      return raw;
-    }
-
     function getLeagueDisplay(league) {
-      const normalized = normalizeLeagueName(league);
-      return leagueMeta[normalized]?.label || normalized || '-';
+      return leagueMeta[league]?.label || league || '-';
     }
 
     function getLeagueBadge(league) {
-      const normalized = normalizeLeagueName(league);
-      return leagueMeta[normalized]?.badge || 'LG';
+      return leagueMeta[league]?.badge || 'LG';
     }
 
     function getLeagueSort(league) {
-      const normalized = normalizeLeagueName(league);
-      return leagueMeta[normalized]?.sort || 999;
+      return leagueMeta[league]?.sort || 999;
     }
 
     function toNumber(value, fallback = null) {
@@ -1501,38 +1481,40 @@ const TEAM_NAME_MAP = {
     }
 
     function labelChipMarkup(label) {
-      if (label === 'Alternativa segura') {
-        return `<span class="chip chip-alt">✅ Alternativa segura</span>`;
+      if (label === 'Best Pick') {
+        return `<span class="chip chip-best">🔥 Best Pick</span>`;
       }
-      return `<span class="chip chip-risk">⚠️ Alternativa agressiva</span>`;
+      if (label === 'Boa opção') {
+        return `<span class="chip chip-alt">✅ Boa opção</span>`;
+      }
+      return `<span class="chip chip-risk">⚠️ Mais arriscada</span>`;
     }
 
     function shouldHideLeague(leagueName) {
-      const normalized = String(leagueName || '').toLowerCase();
+      const name = String(leagueName || '').toLowerCase();
 
       return (
-        normalized.includes('u17') ||
-        normalized.includes('u18') ||
-        normalized.includes('u19') ||
-        normalized.includes('u20') ||
-        normalized.includes('u21') ||
-        normalized.includes('u23') ||
-        normalized.includes('under 17') ||
-        normalized.includes('under 18') ||
-        normalized.includes('under 19') ||
-        normalized.includes('under 20') ||
-        normalized.includes('under 21') ||
-        normalized.includes('under 23') ||
-        normalized.includes('sub 17') ||
-        normalized.includes('sub 18') ||
-        normalized.includes('sub 19') ||
-        normalized.includes('sub 20') ||
-        normalized.includes('sub 21') ||
-        normalized.includes('sub 23') ||
-        normalized.includes('reserve') ||
-        normalized.includes('reserves') ||
-        normalized.includes('youth') ||
-        normalized.includes('open cup')
+        name.includes('u17') ||
+        name.includes('u18') ||
+        name.includes('u19') ||
+        name.includes('u20') ||
+        name.includes('u21') ||
+        name.includes('u23') ||
+        name.includes('under 17') ||
+        name.includes('under 18') ||
+        name.includes('under 19') ||
+        name.includes('under 20') ||
+        name.includes('under 21') ||
+        name.includes('under 23') ||
+        name.includes('sub 17') ||
+        name.includes('sub 18') ||
+        name.includes('sub 19') ||
+        name.includes('sub 20') ||
+        name.includes('sub 21') ||
+        name.includes('sub 23') ||
+        name.includes('reserve') ||
+        name.includes('reserves') ||
+        name.includes('open cup')
       );
     }
 
@@ -1572,7 +1554,7 @@ const TEAM_NAME_MAP = {
       return d >= start && d <= end;
     }
 
-    function getVisibleMatches() {
+function getVisibleMatches() {
       return state.matches.filter(match =>
         isMatchVisible(match.kickoff) &&
         !shouldHideLeague(match.league)
@@ -1592,6 +1574,8 @@ const TEAM_NAME_MAP = {
       const expectedAwaySOT = toNumber(match.expected_away_sot, null);
       const expectedCorners = toNumber(match.expected_corners, null);
       const expectedCards = toNumber(match.expected_cards, null);
+      const homeStrength = toNumber(match.home_strength, null);
+      const awayStrength = toNumber(match.away_strength, null);
 
       const avgGoals =
         (expectedHomeGoals !== null || expectedAwayGoals !== null)
@@ -1654,6 +1638,8 @@ const TEAM_NAME_MAP = {
         avgCards,
         avgFouls,
         confidence,
+        homeStrength,
+        awayStrength,
         homeProb,
         drawProb,
         awayProb
@@ -1664,51 +1650,40 @@ const TEAM_NAME_MAP = {
       return (
         match.best_pick_1 ||
         match.pick ||
+        match.safe_pick ||
+        match.balanced_pick ||
+        match.aggressive_pick ||
+        match.value_pick ||
         'Mercado em revisão'
       );
     }
 
     function getSecondaryPicks(match) {
+      const seen = new Set();
+      const picks = [];
+
       const primary = String(getPrimaryPick(match) || '').trim().toLowerCase();
+      if (primary) seen.add(primary);
+
       const candidates = [
         match.best_pick_2,
         match.best_pick_3,
-        match.aggressive_pick
-      ]
-        .map(x => String(x || '').trim())
-        .filter(Boolean);
-
-      const families = new Set();
-      const results = [];
-
-      function marketFamily(market) {
-        const m = String(market || '').toLowerCase();
-
-        if (m.includes('escanteio')) return 'escanteios';
-        if (m.includes('ambas')) return 'btts';
-        if (m.includes('dupla chance') || m.includes('empate') || m.includes('vitória')) return 'resultado';
-        if (m.includes('gol')) return 'gols';
-        return 'outro';
-      }
-
-      const primaryFamily = marketFamily(primary);
+        match.balanced_pick,
+        match.aggressive_pick,
+        match.value_pick,
+        match.safe_pick
+      ];
 
       for (const item of candidates) {
         const clean = String(item || '').trim();
         if (!clean) continue;
-        if (clean.toLowerCase() === primary) continue;
-
-        const family = marketFamily(clean);
-        if (family === primaryFamily) continue;
-        if (families.has(family)) continue;
-
-        results.push(clean);
-        families.add(family);
-
-        if (results.length === 2) break;
+        if (seen.has(clean.toLowerCase())) continue;
+        picks.push(clean);
+        seen.add(clean.toLowerCase());
+        if (picks.length === 2) break;
       }
 
-      return results;
+      return picks;
     }
 
     function getMatchProbability(match) {
@@ -1738,7 +1713,7 @@ const TEAM_NAME_MAP = {
     }
 
     function getMatchTier(match) {
-      return probabilityToTier(getMatchProbability(match));
+      return match.strength || probabilityToTier(getMatchProbability(match));
     }
 
     function buildFallbackInsight(match) {
@@ -1746,7 +1721,7 @@ const TEAM_NAME_MAP = {
       const { avgGoals, avgCorners, avgShots } = getMetrics(match);
 
       if (primary.includes('escanteios')) {
-        return `A leitura do Scoutly aponta um jogo com tendência mais controlada nas ações de linha de fundo, sustentando um cenário coerente para o mercado de escanteios em torno de ${formatDecimal(avgCorners, 1)} projetados.`;
+        return `A leitura do Scoutly aponta volume estatístico suficiente para sustentar esse mercado, com cerca de ${formatDecimal(avgCorners, 1)} escanteios projetados para a partida.`;
       }
 
       if (primary.includes('menos')) {
@@ -1757,11 +1732,11 @@ const TEAM_NAME_MAP = {
         return `A leitura do Scoutly aponta produção ofensiva suficiente para sustentar esse mercado, com cerca de ${formatDecimal(avgGoals, 1)} gols esperados e ${formatDecimal(avgShots, 0)} finalizações projetadas.`;
       }
 
-      if (primary.includes('dupla chance') || primary.includes('empate') || primary.includes('vitória')) {
-        return `O Scoutly vê equilíbrio competitivo, mas com leve vantagem estatística para um dos lados. Por isso, a leitura favorece um mercado de proteção ou resultado.`;
+      if (primary.includes('dupla chance') || primary.includes('empate')) {
+        return `O Scoutly vê equilíbrio no confronto, mas com leve vantagem estatística para o lado recomendado. Por isso, a leitura mais segura fica na linha protegida.`;
       }
 
-      return `Leitura construída a partir dos dados do confronto, cruzando projeção ofensiva, escanteios e contexto estatístico para destacar a melhor oportunidade da partida.`;
+      return `Leitura construída a partir dos dados reais do confronto, cruzando ritmo ofensivo, probabilidade e contexto estatístico para destacar a melhor oportunidade do jogo.`;
     }
 
     function getInsight(match) {
@@ -1802,15 +1777,32 @@ const TEAM_NAME_MAP = {
     }
 
     function getContextForDisplay(match) {
-      const { homeProb, drawProb, awayProb } = getMetrics(match);
-      const homeTeam = normalizeTeamName(match.home_team);
-      const awayTeam = normalizeTeamName(match.away_team);
+      const {
+        confidence,
+        homeStrength,
+        awayStrength,
+        homeProb,
+        drawProb,
+        awayProb
+      } = getMetrics(match);
 
       return [
-        { label: 'Leitura do Scoutly', value: getMatchTier(match) },
-        { label: `Vitória ${homeTeam}`, value: percentText(homeProb) },
-        { label: 'Empate', value: percentText(drawProb) },
-        { label: `Vitória ${awayTeam}`, value: percentText(awayProb) },
+        { label: 'Força da leitura', value: getMatchTier(match) },
+        { label: 'Confiança da leitura', value: percentText(confidence) },
+        {
+          label: 'Probabilidades 1X2',
+          value:
+            (homeProb !== null || drawProb !== null || awayProb !== null)
+              ? `${percentText(homeProb)} / ${percentText(drawProb)} / ${percentText(awayProb)}`
+              : '—'
+        },
+        {
+          label: 'Força projetada',
+          value:
+            (homeStrength !== null || awayStrength !== null)
+              ? `${formatDecimal(homeStrength, 1)} x ${formatDecimal(awayStrength, 1)}`
+              : '—'
+        },
         { label: 'Liga', value: getLeagueDisplay(match.league) },
         { label: 'Horário', value: formatKickoffHour(match.kickoff) }
       ];
@@ -1830,273 +1822,686 @@ const TEAM_NAME_MAP = {
     }
 
     function getDetectedMarkets(match) {
+      const primary = getPrimaryPick(match);
       const alternatives = getSecondaryPicks(match);
+      const probability = getMatchProbability(match);
 
       const items = [];
 
+      if (primary) {
+        items.push({
+          label: 'Best Pick',
+          market: primary,
+          tier: probabilityToTier(probability),
+          copy: 'Leitura principal do Scoutly para este confronto.'
+        });
+      }
+
       if (alternatives[0]) {
         items.push({
-          label: 'Alternativa segura',
+          label: 'Boa opção',
           market: alternatives[0],
           tier: 'Boa',
-          copy: 'Leitura alternativa com perfil mais equilibrado dentro do cenário do jogo.'
+          copy: 'Alternativa consistente para quem quiser variar a entrada.'
         });
       }
 
       if (alternatives[1]) {
         items.push({
-          label: 'Alternativa agressiva',
+          label: 'Mais arriscada',
           market: alternatives[1],
           tier: 'Moderada',
-          copy: 'Opção complementar para quem quiser buscar uma abordagem mais ousada.'
+          copy: 'Linha extra com risco maior, mas ainda dentro da leitura do jogo.'
         });
       }
 
-      return items.slice(0, 2);
+      return items.slice(0, 3);
     }
 
-function renderRadar() {
-      const container = document.getElementById('radarList');
-      if (!container) return;
+    function normalizeTicketPick(rawPick) {
+      const match = getMatchById(rawPick.match_id);
+      if (!match) return null;
 
-      const matches = getVisibleMatches()
+      const probability = Number(rawPick.probability ?? getMatchProbability(match));
+      const tier = probabilityToTier(probability);
+
+      return {
+        match_id: match.id,
+        home_team: normalizeTeamName(match.home_team),
+        away_team: normalizeTeamName(match.away_team),
+        league: match.league,
+        country: match.country,
+        kickoff: match.kickoff,
+        market: rawPick.market || getPrimaryPick(match),
+        probability,
+        tier,
+        home_logo: match.home_logo || null,
+        away_logo: match.away_logo || null,
+        tierWeight:
+          tier === 'Muito forte' ? 4 :
+          tier === 'Boa' ? 3 :
+          tier === 'Moderada' ? 2 : 1
+      };
+    }
+
+    function buildDailyTicketPool() {
+      return state.dailyPicks
+        .filter(item => item && item.match_id && item.market && isTodayMatch(item.kickoff))
+        .map(normalizeTicketPick)
+        .filter(Boolean)
         .sort((a, b) => {
-          const diffLeague = getLeagueSort(a.league) - getLeagueSort(b.league);
-          if (diffLeague !== 0) return diffLeague;
-
-          return new Date(a.kickoff) - new Date(b.kickoff);
+          const aRank = state.dailyPicks.find(x => String(x.match_id) === String(a.match_id) && x.market === a.market)?.rank ?? 999;
+          const bRank = state.dailyPicks.find(x => String(x.match_id) === String(b.match_id) && x.market === b.market)?.rank ?? 999;
+          if (aRank !== bRank) return aRank - bRank;
+          return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
         });
+    }
 
-      state.radarMatches = matches;
+    function buildFallbackTicketPool() {
+      return getVisibleMatches()
+        .sort((a, b) => {
+          const pDiff = getMatchProbability(b) - getMatchProbability(a);
+          if (pDiff !== 0) return pDiff;
+          return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
+        })
+        .slice(0, 18)
+        .map(match => normalizeTicketPick({
+          match_id: match.id,
+          market: getPrimaryPick(match),
+          probability: getMatchProbability(match)
+        }))
+        .filter(Boolean);
+    }
 
-      if (!matches.length) {
-        container.innerHTML = `<div class="empty">Nenhum jogo disponível no radar.</div>`;
+    function uniqueByMatchAndMarket(items) {
+      const seen = new Set();
+
+      return items.filter(item => {
+        const key = `${item.match_id}::${String(item.market).toLowerCase()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+
+    function pickOnePerMatch(pool, maxPicks = 3) {
+      const usedMatches = new Set();
+      const result = [];
+
+      for (const item of pool) {
+        if (usedMatches.has(item.match_id)) continue;
+
+        result.push(item);
+        usedMatches.add(item.match_id);
+
+        if (result.length >= maxPicks) break;
+      }
+
+      return result;
+    }
+
+    function weightedShuffle(pool, seed = 0) {
+      const arr = [...pool];
+
+      return arr
+        .map(item => ({
+          item,
+          weight: item.tierWeight || 1,
+          rand: Math.random() + seed * 0.0001
+        }))
+        .sort((a, b) => (b.weight + b.rand) - (a.weight + a.rand))
+        .map(x => x.item);
+    }
+
+    function generateTicket() {
+      const poolRaw = buildDailyTicketPool();
+      const pool = uniqueByMatchAndMarket(
+        poolRaw.length ? poolRaw : buildFallbackTicketPool()
+      );
+
+      const shuffled = weightedShuffle(pool, state.currentTicketSeed++);
+      const picks = pickOnePerMatch(shuffled, 3);
+
+      state.currentTicket = picks;
+      renderTicket();
+    }
+
+    function ticketItemMarkup(item) {
+      return `
+        <div class="ticket-leg">
+          <div class="teams-row compact">
+            ${teamBadge(item, 'home')}
+            <div class="team-names">${escapeHtml(item.home_team)} x ${escapeHtml(item.away_team)}</div>
+            ${teamBadge(item, 'away')}
+          </div>
+
+          <div class="chip-row">
+            ${chipMarkup(item.tier)}
+          </div>
+
+          <div class="ticket-market">${escapeHtml(item.market)}</div>
+
+          <div class="radar-kickoff">
+            ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTicket() {
+      const el = document.getElementById('ticketContainer');
+      if (!el) return;
+
+      if (!state.currentTicket.length) {
+        el.innerHTML = `<div class="empty-state">Nenhum bilhete disponível para hoje.</div>`;
         return;
       }
 
-      container.innerHTML = matches.map(match => {
-        const homeTeam = normalizeTeamName(match.home_team);
-        const awayTeam = normalizeTeamName(match.away_team);
-        const tier = getMatchTier(match);
-        const league = getLeagueDisplay(match.league);
-        const badge = getLeagueBadge(match.league);
-        const kickoff = formatKickoffHour(match.kickoff);
-        const primary = getPrimaryPick(match);
+      const avgProbability =
+        state.currentTicket.reduce((acc, item) => acc + Number(item.probability || 0), 0) / state.currentTicket.length;
 
-        return `
-          <div class="card" onclick="openMatchModal('${match.id}')">
-            <div class="card-top">
-              <div class="league">
-                <span class="badge">${escapeHtml(badge)}</span>
-                ${escapeHtml(league)}
-              </div>
-              <div class="time">${escapeHtml(kickoff)}</div>
-            </div>
+      el.innerHTML = `
+        <div class="ticket-legs">
+          ${state.currentTicket.map(ticketItemMarkup).join('')}
+        </div>
 
-            <div class="teams-row">
-              ${teamBadge(match, 'home')}
-              <div class="team-names">
-                ${escapeHtml(homeTeam)} x ${escapeHtml(awayTeam)}
-              </div>
-              ${teamBadge(match, 'away')}
-            </div>
-
-            <div class="market-line">
-              ${chipMarkup(tier)}
-              <div class="market-line-name">${escapeHtml(primary)}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
+        <div class="ticket-footer">
+          <div class="ticket-confidence">Confiança geral: ${escapeHtml(probabilityToTier(avgProbability))}</div>
+          <div class="ticket-helper">Bilhete automático montado a partir do radar do dia.</div>
+        </div>
+      `;
     }
 
-    function renderCompetitions() {
-      const container = document.getElementById('competitionsList');
-      if (!container) return;
+    function renderRadar() {
+      const list = document.getElementById('radarList');
+      if (!list) return;
 
-      const filtered = state.matches.filter(match =>
+      const rankedFromDaily = state.dailyPicks
+        .map(item => {
+          const match = getMatchById(item.match_id);
+          if (!match) return null;
+
+          return {
+            ...match,
+            home_team: normalizeTeamName(match.home_team),
+            away_team: normalizeTeamName(match.away_team),
+            radar_market: item.market || getPrimaryPick(match),
+            radar_probability: Number(item.probability || getMatchProbability(match)),
+            radar_rank: Number(item.rank || 999),
+            is_opportunity: !!item.is_opportunity
+          };
+        })
+        .filter(Boolean)
+        .filter(item => isMatchVisible(item.kickoff) && !shouldHideLeague(item.league))
+        .sort((a, b) => {
+          if (a.radar_rank !== b.radar_rank) return a.radar_rank - b.radar_rank;
+          return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
+        });
+
+      const fallback = getVisibleMatches()
+        .filter(match => !rankedFromDaily.some(item => String(item.id) === String(match.id)))
+        .sort((a, b) => {
+          const pDiff = getMatchProbability(b) - getMatchProbability(a);
+          if (pDiff !== 0) return pDiff;
+          return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
+        })
+        .slice(0, 20)
+        .map((match, index) => ({
+          ...match,
+          home_team: normalizeTeamName(match.home_team),
+          away_team: normalizeTeamName(match.away_team),
+          radar_market: getPrimaryPick(match),
+          radar_probability: getMatchProbability(match),
+          radar_rank: rankedFromDaily.length + index + 1,
+          is_opportunity: false
+        }));
+
+      const merged = [...rankedFromDaily, ...fallback];
+      const radarItems = merged.slice(0, 15);
+
+      if (!radarItems.length) {
+        list.innerHTML = `<div class="empty-state">Nenhuma oportunidade encontrada para hoje.</div>`;
+        return;
+      }
+
+      const groups = new Map();
+
+      radarItems.forEach((item, index) => {
+        const hourKey = formatKickoffHour(item.kickoff);
+        if (!groups.has(hourKey)) groups.set(hourKey, []);
+        groups.get(hourKey).push({ ...item, visualRank: index + 1 });
+      });
+
+      list.innerHTML = Array.from(groups.entries()).map(([hour, items]) => `
+        <div class="radar-time-group">
+          <div class="radar-time-label">${escapeHtml(hour)}</div>
+          ${items.map(item => {
+            const tier = probabilityToTier(item.radar_probability);
+            return `
+              <div class="radar-item" data-match-id="${escapeHtml(item.id)}">
+                <div class="radar-top">
+                  <div class="radar-rank">${item.visualRank}</div>
+                  <div class="league-pill">
+                    <span>${escapeHtml(getLeagueBadge(item.league))}</span>
+                    <span>${escapeHtml(getLeagueDisplay(item.league))}</span>
+                  </div>
+                </div>
+
+                <div class="teams-row compact">
+                  ${teamBadge(item, 'home')}
+                  <div class="team-names">${escapeHtml(item.home_team)} x ${escapeHtml(item.away_team)}</div>
+                  ${teamBadge(item, 'away')}
+                </div>
+
+                <div class="chip-row">
+                  ${chipMarkup(tier)}
+                  ${item.is_opportunity ? `<span class="chip chip-best">🎯 Bilhete</span>` : ``}
+                </div>
+
+                <div class="radar-market">${escapeHtml(item.radar_market)}</div>
+                <div class="radar-kickoff">
+                  ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `).join('');
+
+      list.querySelectorAll('.radar-item').forEach(el => {
+        el.addEventListener('click', () => openAnalysis(el.dataset.matchId));
+      });
+    }
+
+    function getFlag(country) {
+      const flags = {
+        Brazil: 'BR',
+        England: 'GB',
+        Spain: 'ES',
+        Italy: 'IT',
+        Germany: 'DE',
+        France: 'FR',
+        Portugal: 'PT',
+        Netherlands: 'NL',
+        Belgium: 'BE',
+        USA: 'US',
+        Argentina: 'AR',
+        Mexico: 'MX',
+        Turkey: 'TR',
+        Greece: 'GR',
+        Switzerland: 'CH',
+        Denmark: 'DK',
+        Austria: 'AT',
+        'Saudi Arabia': 'SA',
+        KSA: 'SA',
+        World: null
+      };
+
+      return flags[country] || null;
+    }
+
+    function buildCompetitions() {
+      const map = new Map();
+
+      const visibleMatches = state.matches.filter(match =>
         isCompetitionVisible(match.kickoff) &&
         !shouldHideLeague(match.league)
       );
 
-      if (!filtered.length) {
-        container.innerHTML = `<div class="empty">Sem competições disponíveis.</div>`;
+      for (const match of visibleMatches) {
+        const league = match.league || '';
+        const country = match.country || null;
+
+        if (!map.has(league)) {
+          map.set(league, {
+            league,
+            country,
+            count: 0,
+            matches: [],
+            kickoff: match.kickoff
+          });
+        }
+
+        const item = map.get(league);
+        if (!item.country && country) item.country = country;
+        if (!item.kickoff || new Date(match.kickoff) < new Date(item.kickoff)) {
+          item.kickoff = match.kickoff;
+        }
+
+        item.count += 1;
+        item.matches.push(match);
+      }
+
+      state.competitions = Array.from(map.values()).sort((a, b) => {
+        const sortDiff = getLeagueSort(a.league) - getLeagueSort(b.league);
+        if (sortDiff !== 0) return sortDiff;
+        return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
+      });
+    }
+
+    function renderCompetitions() {
+      buildCompetitions();
+      const grid = document.getElementById('competitionsGrid');
+      if (!grid) return;
+
+      if (!state.competitions.length) {
+        grid.innerHTML = `<div class="empty-state">Nenhuma competição encontrada para os próximos jogos.</div>`;
         return;
       }
 
-      const grouped = {};
-
-      filtered.forEach(match => {
-        const league = normalizeLeagueName(match.league);
-
-        if (!grouped[league]) grouped[league] = [];
-        grouped[league].push(match);
-      });
-
-      const leagues = Object.keys(grouped)
-        .sort((a, b) => getLeagueSort(a) - getLeagueSort(b));
-
-      container.innerHTML = leagues.map(league => {
-        const matches = grouped[league]
-          .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff));
+      grid.innerHTML = state.competitions.map(comp => {
+        const flagCode = getFlag(comp.country);
+        const flagMarkup = flagCode
+          ? `<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="28" alt="${escapeHtml(comp.country || 'flag')}" />`
+          : `<span>${escapeHtml(getLeagueBadge(comp.league))}</span>`;
 
         return `
-          <div class="competition">
-            <div class="competition-title">
-              <span class="badge">${escapeHtml(getLeagueBadge(league))}</span>
-              ${escapeHtml(getLeagueDisplay(league))}
+          <div class="competition-card" data-league="${encodeURIComponent(comp.league)}" role="button" tabindex="0">
+            <div class="competition-top">
+              <div class="competition-flag">${flagMarkup}</div>
+              <div class="competition-count">${comp.count} jogo(s)</div>
             </div>
 
-            ${matches.map(match => {
-              const homeTeam = normalizeTeamName(match.home_team);
-              const awayTeam = normalizeTeamName(match.away_team);
-              const kickoff = formatKickoffHour(match.kickoff);
-              const tier = getMatchTier(match);
-
-              return `
-                <div class="match-row" onclick="openMatchModal('${match.id}')">
-                  <div class="match-teams">
-                    ${escapeHtml(homeTeam)} x ${escapeHtml(awayTeam)}
-                  </div>
-                  <div class="match-info">
-                    ${escapeHtml(kickoff)} • ${escapeHtml(tier)}
-                  </div>
-                </div>
-              `;
-            }).join('')}
+            <div class="competition-name">${escapeHtml(getLeagueDisplay(comp.league))}</div>
+            <div class="competition-bottom">Toque para ver os jogos desta competição.</div>
           </div>
         `;
       }).join('');
+
+      grid.onclick = (e) => {
+        const card = e.target.closest('.competition-card');
+        if (!card) return;
+
+        const league = decodeURIComponent(card.dataset.league || '');
+        if (!league) return;
+        openCompetition(league);
+      };
+
+      grid.onkeydown = (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        const card = e.target.closest('.competition-card');
+        if (!card) return;
+
+        e.preventDefault();
+        const league = decodeURIComponent(card.dataset.league || '');
+        if (!league) return;
+        openCompetition(league);
+      };
     }
 
-    function renderBilhete() {
-      const container = document.getElementById('ticketList');
-      if (!container) return;
+function openCompetition(league) {
+      state.selectedLeague = league;
 
-      const matches = [...state.radarMatches].slice(0, 3);
+      const competition = state.competitions.find(c => c.league === league);
+      const matches = (competition?.matches || [])
+        .filter(match => isCompetitionVisible(match.kickoff) && !shouldHideLeague(match.league))
+        .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
+
+      document.getElementById('competitionsWrap')?.classList.add('hidden');
+      document.getElementById('gamesWrap')?.classList.remove('hidden');
+      document.getElementById('backToCompetitionsBtn')?.classList.remove('hidden');
+
+      const selectedTitle = document.getElementById('selectedCompetitionTitle');
+      const selectedCopy = document.getElementById('selectedCompetitionCopy');
+      const gamesGrid = document.getElementById('gamesGrid');
+
+      if (selectedTitle) selectedTitle.textContent = getLeagueDisplay(league);
+      if (selectedCopy) {
+        selectedCopy.textContent = `${matches.length} jogo(s) entre hoje e os próximos 5 dias nesta competição.`;
+      }
+
+      if (!gamesGrid) return;
 
       if (!matches.length) {
-        container.innerHTML = `<div class="empty">Sem jogos para o bilhete.</div>`;
+        gamesGrid.innerHTML = `<div class="empty-state">Nenhum jogo encontrado.</div>`;
         return;
       }
 
-      container.innerHTML = matches.map(match => {
+      gamesGrid.innerHTML = matches.map(match => {
         const homeTeam = normalizeTeamName(match.home_team);
         const awayTeam = normalizeTeamName(match.away_team);
-        const primary = getPrimaryPick(match);
 
         return `
-          <div class="ticket-item">
-            <div><strong>${escapeHtml(homeTeam)} x ${escapeHtml(awayTeam)}</strong></div>
-            <div>${escapeHtml(primary)}</div>
+          <div class="game-card">
+            <div class="game-main">
+              <div class="teams-row compact">
+                ${teamBadge(match, 'home')}
+                <div class="game-match">${escapeHtml(homeTeam)} x ${escapeHtml(awayTeam)}</div>
+                ${teamBadge(match, 'away')}
+              </div>
+
+              <div class="game-meta">
+                <span>${escapeHtml(getLeagueBadge(match.league))} ${escapeHtml(getLeagueDisplay(match.league))}</span>
+                <span>${escapeHtml(formatKickoff(match.kickoff))}</span>
+              </div>
+
+              <div class="ticket-helper" style="margin-top:8px;">
+                Mercado principal: ${escapeHtml(getPrimaryPick(match))}
+              </div>
+            </div>
+
+            <div>
+              <button class="primary-button" data-analyze-id="${escapeHtml(match.id)}">
+                Ver análise →
+              </button>
+            </div>
           </div>
         `;
       }).join('');
+
+      gamesGrid.onclick = (e) => {
+        const btn = e.target.closest('[data-analyze-id]');
+        if (!btn) return;
+        openAnalysis(btn.dataset.analyzeId);
+      };
     }
 
-    function openMatchModal(matchId) {
+    function backToCompetitions() {
+      state.selectedLeague = null;
+      document.getElementById('competitionsWrap')?.classList.remove('hidden');
+      document.getElementById('gamesWrap')?.classList.add('hidden');
+      document.getElementById('backToCompetitionsBtn')?.classList.add('hidden');
+    }
+
+    function openAnalysis(matchId) {
       const match = getMatchById(matchId);
       if (!match) return;
 
-      const modal = document.getElementById('modal');
-      const body = document.getElementById('modalBody');
-
-      if (!modal || !body) return;
-
+      const primaryPick = getPrimaryPick(match);
+      const primaryTier = getMatchTier(match);
+      const detectedMarkets = getDetectedMarkets(match);
       const homeTeam = normalizeTeamName(match.home_team);
       const awayTeam = normalizeTeamName(match.away_team);
-      const league = getLeagueDisplay(match.league);
-      const kickoff = formatKickoff(match.kickoff);
-      const tier = getMatchTier(match);
-      const primary = getPrimaryPick(match);
-      const insight = getInsight(match);
-      const markets = getDetectedMarkets(match);
 
-      body.innerHTML = `
-        <div class="analysis-header">
-          <div class="analysis-title">
-            ${escapeHtml(homeTeam)} x ${escapeHtml(awayTeam)}
+      const analysisTitle = document.getElementById('analysisTitle');
+      const analysisSubtitle = document.getElementById('analysisSubtitle');
+      const analysisMatchSmall = document.getElementById('analysisMatchSmall');
+      const analysisTipChip = document.getElementById('analysisTipChip');
+      const analysisBestPick = document.getElementById('analysisBestPick');
+      const analysisInsight = document.getElementById('analysisInsight');
+      const analysisStats = document.getElementById('analysisStats');
+      const analysisContext = document.getElementById('analysisContext');
+      const marketsList = document.getElementById('marketsList');
+      const overlay = document.getElementById('analysisOverlay');
+
+      if (analysisTitle) {
+        analysisTitle.textContent = `${homeTeam} x ${awayTeam}`;
+      }
+
+      if (analysisSubtitle) {
+        analysisSubtitle.textContent = `${getLeagueBadge(match.league)} ${getLeagueDisplay(match.league)} • ${formatKickoff(match.kickoff)}`;
+      }
+
+      if (analysisMatchSmall) {
+        analysisMatchSmall.innerHTML = `
+          <div class="teams-row compact" style="margin-bottom:0;">
+            ${teamBadge(match, 'home')}
+            <div class="team-names">${escapeHtml(homeTeam)} x ${escapeHtml(awayTeam)}</div>
+            ${teamBadge(match, 'away')}
           </div>
-          <div class="analysis-sub">
-            ${escapeHtml(league)} • ${escapeHtml(kickoff)}
-          </div>
-        </div>
+        `;
+      }
 
-        <div class="primary-pick">
-          ${chipMarkup(tier)}
-          <div class="primary-market">${escapeHtml(primary)}</div>
-        </div>
+      if (analysisTipChip) {
+        analysisTipChip.innerHTML = `
+          ${chipMarkup(primaryTier)}
+          ${labelChipMarkup('Best Pick')}
+        `;
+      }
 
-        <div class="section">
-          <div class="section-title">Leitura do Scoutly</div>
-          <div class="insight">${escapeHtml(insight)}</div>
-        </div>
+      if (analysisBestPick) analysisBestPick.textContent = primaryPick;
+      if (analysisInsight) analysisInsight.textContent = getInsight(match);
+      if (analysisStats) analysisStats.innerHTML = statCardsMarkup(match);
+      if (analysisContext) analysisContext.innerHTML = contextCardsMarkup(match);
 
-        <div class="section">
-          <div class="section-title">Estatísticas projetadas</div>
-          <div class="stats-grid">
-            ${statCardsMarkup(match)}
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Cenário da partida</div>
-          <div class="stats-grid">
-            ${contextCardsMarkup(match)}
-          </div>
-        </div>
-
-        <div class="section">
-          <div class="section-title">Alternativas do Scoutly</div>
-          ${
-            markets.length
-              ? markets.map(m => `
-                <div class="market-card">
-                  ${labelChipMarkup(m.label)}
-                  <div class="market-title">${escapeHtml(m.market)}</div>
-                  <div class="market-copy">${escapeHtml(m.copy)}</div>
+      if (marketsList) {
+        marketsList.innerHTML = detectedMarkets.length
+          ? detectedMarkets.map(item => `
+              <div class="market-line">
+                <div class="chip-row" style="margin-top:0;">
+                  ${labelChipMarkup(item.label)}
+                  ${chipMarkup(item.tier)}
                 </div>
-              `).join('')
-              : `<div class="empty">Sem alternativas relevantes.</div>`
-          }
-        </div>
-      `;
+                <div class="market-line-name">${escapeHtml(item.market)}</div>
+                <div class="market-line-copy">${escapeHtml(item.copy)}</div>
+              </div>
+            `).join('')
+          : `<div class="empty-state">Nenhuma oportunidade extra encontrada para este jogo.</div>`;
+      }
 
-      modal.classList.add('active');
+      if (overlay) overlay.classList.add('open');
     }
 
-    function closeModal() {
-      const modal = document.getElementById('modal');
-      if (modal) modal.classList.remove('active');
+    function closeAnalysis() {
+      document.getElementById('analysisOverlay')?.classList.remove('open');
+    }
+
+    function renderLoadError(errorMap = {}) {
+      const parts = Object.entries(errorMap).map(([k, v]) => `${k}: ${v}`);
+      const message = parts.join('\n') || 'Erro desconhecido';
+
+      setStatus('Erro ao carregar dados do Scoutly.', false);
+
+      const radarList = document.getElementById('radarList');
+      const competitionsGrid = document.getElementById('competitionsGrid');
+      const ticketContainer = document.getElementById('ticketContainer');
+
+      if (radarList) radarList.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
+      if (competitionsGrid) competitionsGrid.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
+      if (ticketContainer) ticketContainer.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
+    }
+
+    async function loadDailyPicks() {
+      const { data, error } = await supabaseClient
+        .from('daily_picks')
+        .select('*')
+        .order('rank', { ascending: true });
+
+      if (error) throw error;
+      state.dailyPicks = data || [];
     }
 
     async function loadMatches() {
-      setStatus('Carregando dados...', true);
+      const { data: matchesData, error: matchesError } = await supabaseClient
+        .from('matches')
+        .select('*')
+        .order('priority', { ascending: false })
+        .order('kickoff', { ascending: true });
+
+      if (matchesError) throw matchesError;
+
+      let analysisData = [];
+      try {
+        const { data, error } = await supabaseClient
+          .from('match_analysis')
+          .select('*');
+
+        if (!error) analysisData = data || [];
+      } catch (_) {}
+
+      const analysisMap = new Map(
+        (analysisData || []).map(item => [String(item.match_id), item])
+      );
+
+      state.matches = (matchesData || [])
+        .map(match => {
+          const analysis = analysisMap.get(String(match.id)) || {};
+
+          return {
+            ...match,
+            ...analysis,
+            id: match.id,
+            home_team: normalizeTeamName(match.home_team),
+            away_team: normalizeTeamName(match.away_team),
+            league: match.league,
+            country: match.country,
+            kickoff: match.kickoff,
+            home_logo: match.home_logo,
+            away_logo: match.away_logo,
+            probabilities: match.probabilities,
+            metrics: match.metrics,
+            markets: match.markets
+          };
+        })
+        .filter(match => {
+          if (!match.home_team || !match.away_team) return false;
+          if (!match.league) return false;
+          if (shouldHideLeague(match.league)) return false;
+          return true;
+        });
+
+      console.log('MATCHES CARREGADOS:', state.matches.length);
+      console.log('DAILY PICKS CARREGADOS:', state.dailyPicks.length);
+      window.debugMatches = state.matches;
+      window.debugDailyPicks = state.dailyPicks;
+    }
+
+    async function initialize() {
+      const errors = {};
+      setStatus('Conectando ao Scoutly...', true);
 
       try {
-        const { data, error } = await supabase
-          .from('matches')
-          .select('*')
-          .order('kickoff', { ascending: true });
+        await loadDailyPicks();
+      } catch (error) {
+        console.error('daily_picks error:', error);
+        errors.daily_picks = error.message || JSON.stringify(error);
+      }
 
-        if (error) throw error;
+      try {
+        await loadMatches();
+      } catch (error) {
+        console.error('matches error:', error);
+        errors.matches = error.message || JSON.stringify(error);
+      }
 
-        state.matches = data || [];
+      if (Object.keys(errors).length) {
+        renderLoadError(errors);
+        return;
+      }
 
-        renderRadar();
-        renderCompetitions();
-        renderBilhete();
+      renderRadar();
+      renderCompetitions();
+      generateTicket();
 
-        setStatus('Dados atualizados com sucesso', true);
+      setStatus(`Conexão OK · Matches carregados: ${state.matches.length}`, true);
 
-        console.log('Ligas carregadas:', state.matches.map(m => m.league));
-      } catch (err) {
-        console.error(err);
-        setStatus('Erro ao carregar dados', false);
+      const generateBtn = document.getElementById('generateTicketBtn');
+      if (generateBtn) {
+        generateBtn.addEventListener('click', () => generateTicket());
+      }
+
+      document.getElementById('backToCompetitionsBtn')?.addEventListener('click', backToCompetitions);
+      document.getElementById('closeAnalysisBtn')?.addEventListener('click', closeAnalysis);
+
+      const overlay = document.getElementById('analysisOverlay');
+      if (overlay) {
+        overlay.addEventListener('click', (e) => {
+          if (e.target.id === 'analysisOverlay') closeAnalysis();
+        });
       }
     }
 
-    window.addEventListener('load', loadMatches);
+    initialize();
   </script>
 </body>
 </html>
