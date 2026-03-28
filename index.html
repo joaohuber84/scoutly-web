@@ -47,7 +47,7 @@
 
     .app-shell {
       width: 100%;
-      padding: 24px 16px 60px;
+      padding: 18px 12px 42px;
     }
 
     .container {
@@ -98,7 +98,7 @@
 
     .brand-title {
       margin: 0;
-      font-size: 30px;
+      font-size: 28px;
       line-height: 1;
       letter-spacing: -0.04em;
     }
@@ -106,7 +106,8 @@
     .brand-subtitle {
       margin: 6px 0 0;
       color: var(--muted);
-      font-size: 13px;
+      font-size: 12px;
+      line-height: 1.4;
     }
 
     .status-chip {
@@ -132,7 +133,7 @@
 
     .hero-grid {
       display: grid;
-      grid-template-columns: 1.04fr 0.96fr;
+      grid-template-columns: 1fr;
       gap: 18px;
       margin-bottom: 18px;
     }
@@ -146,7 +147,7 @@
     }
 
     .panel-header {
-      padding: 22px 22px 0;
+      padding: 22px 18px 0;
     }
 
     .eyebrow {
@@ -160,8 +161,9 @@
 
     .panel-title {
       margin: 0;
-      font-size: 28px;
+      font-size: 22px;
       letter-spacing: -0.04em;
+      line-height: 1.1;
     }
 
     .panel-subtitle {
@@ -172,7 +174,7 @@
     }
 
     .panel-body {
-      padding: 20px 22px 22px;
+      padding: 16px 18px 18px;
     }
 
     .league-pill {
@@ -187,6 +189,7 @@
       color: #d7e3fa;
       font-size: 12px;
       font-weight: 700;
+      max-width: 100%;
     }
 
     .pick-match {
@@ -197,12 +200,13 @@
     }
 
     .pick-market {
-      font-size: 28px;
-      line-height: 1.08;
+      font-size: 22px;
+      line-height: 1.1;
       letter-spacing: -0.04em;
       font-weight: 900;
       text-transform: uppercase;
       margin: 0;
+      word-break: break-word;
     }
 
     .chip-row {
@@ -269,9 +273,10 @@
     .teams-row {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       margin-bottom: 10px;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
+      min-width: 0;
     }
 
     .teams-row.compact {
@@ -280,9 +285,9 @@
     }
 
     .team-badge {
-      width: 38px;
-      height: 38px;
-      border-radius: 12px;
+      width: 34px;
+      height: 34px;
+      border-radius: 11px;
       display: grid;
       place-items: center;
       background: rgba(255,255,255,0.05);
@@ -291,7 +296,7 @@
       flex-shrink: 0;
       font-weight: 900;
       color: #dfe9ff;
-      font-size: 13px;
+      font-size: 12px;
     }
 
     .team-badge img {
@@ -302,18 +307,21 @@
     }
 
     .team-names {
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 800;
       line-height: 1.3;
+      flex: 1;
+      min-width: 0;
+      word-break: break-word;
     }
 
     .radar-list {
       display: grid;
       gap: 10px;
       margin-top: 8px;
-      max-height: 640px;
-      overflow: auto;
-      padding-right: 4px;
+      max-height: none;
+      overflow: visible;
+      padding-right: 0;
     }
 
     .radar-time-group {
@@ -370,18 +378,20 @@
     }
 
     .radar-market {
-      font-size: 17px;
+      font-size: 15px;
       font-weight: 900;
       text-transform: uppercase;
       letter-spacing: -0.03em;
-      line-height: 1.2;
+      line-height: 1.25;
       margin-top: 8px;
+      word-break: break-word;
     }
 
     .radar-kickoff {
       color: var(--muted);
       font-size: 12px;
       margin-top: 8px;
+      line-height: 1.4;
     }
 
     .ticket-card {
@@ -405,7 +415,7 @@
     }
 
     .ticket-header {
-      padding: 22px 22px 0;
+      padding: 22px 18px 0;
     }
 
     .ticket-eyebrow {
@@ -419,8 +429,9 @@
 
     .ticket-title {
       margin: 0;
-      font-size: 30px;
+      font-size: 22px;
       letter-spacing: -0.04em;
+      line-height: 1.1;
     }
 
     .ticket-subtitle {
@@ -431,7 +442,7 @@
     }
 
     .ticket-body {
-      padding: 20px 22px 22px;
+      padding: 16px 18px 18px;
     }
 
     .ticket-main {
@@ -496,6 +507,7 @@
       text-transform: uppercase;
       letter-spacing: -0.02em;
       line-height: 1.35;
+      word-break: break-word;
     }
 
     .ticket-footer {
@@ -516,6 +528,7 @@
     .ticket-helper {
       color: var(--muted);
       font-size: 12px;
+      line-height: 1.5;
     }
 
     .ticket-actions {
@@ -534,6 +547,9 @@
       font-weight: 800;
       font-size: 14px;
       transition: 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .ticket-button {
@@ -541,6 +557,7 @@
       color: white;
       padding: 12px 18px;
       box-shadow: 0 12px 24px rgba(249,115,22,0.24);
+      width: 100%;
     }
 
     .ticket-button:hover,
@@ -560,18 +577,21 @@
       justify-content: space-between;
       gap: 14px;
       margin-bottom: 14px;
+      flex-wrap: wrap;
     }
 
     .section-title {
       margin: 0;
-      font-size: 26px;
+      font-size: 22px;
       letter-spacing: -0.04em;
+      line-height: 1.15;
     }
 
     .section-copy {
       margin: 8px 0 0;
       color: var(--muted);
       font-size: 14px;
+      line-height: 1.5;
     }
 
     .ghost-button {
@@ -579,6 +599,7 @@
       color: #d7e3fa;
       border: 1px solid var(--border);
       padding: 12px 16px;
+      width: 100%;
     }
 
     .primary-button {
@@ -586,11 +607,12 @@
       color: #082012;
       padding: 12px 18px;
       box-shadow: 0 12px 24px rgba(0,255,136,0.20);
+      width: 100%;
     }
 
     .competitions-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 1fr;
       gap: 14px;
     }
 
@@ -656,6 +678,7 @@
       color: var(--muted);
       font-size: 13px;
       margin-top: 10px;
+      line-height: 1.5;
     }
 
     .games-grid {
@@ -666,7 +689,7 @@
 
     .game-card {
       display: grid;
-      grid-template-columns: 1fr auto;
+      grid-template-columns: 1fr;
       gap: 14px;
       align-items: center;
       background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));
@@ -685,6 +708,7 @@
       font-size: 18px;
       font-weight: 800;
       line-height: 1.3;
+      word-break: break-word;
     }
 
     .game-meta {
@@ -694,6 +718,7 @@
       color: var(--muted);
       font-size: 13px;
       margin-top: 8px;
+      line-height: 1.4;
     }
 
     .analysis-overlay {
@@ -704,7 +729,7 @@
       display: none;
       align-items: center;
       justify-content: center;
-      padding: 24px;
+      padding: 12px;
       z-index: 50;
     }
 
@@ -715,7 +740,7 @@
     .analysis-card {
       width: 100%;
       max-width: 1040px;
-      max-height: 92vh;
+      max-height: 94vh;
       overflow: auto;
       background: linear-gradient(180deg, rgba(19, 33, 60, 0.98), rgba(10, 18, 34, 0.98));
       border: 1px solid var(--border);
@@ -724,7 +749,7 @@
     }
 
     .analysis-header {
-      padding: 24px 24px 0;
+      padding: 20px 16px 0;
       display: flex;
       align-items: start;
       justify-content: space-between;
@@ -733,9 +758,10 @@
 
     .analysis-title {
       margin: 8px 0 0;
-      font-size: 34px;
-      line-height: 1.05;
+      font-size: 24px;
+      line-height: 1.08;
       letter-spacing: -0.05em;
+      word-break: break-word;
     }
 
     .close-button {
@@ -747,15 +773,16 @@
       color: #fff;
       font-size: 18px;
       cursor: pointer;
+      flex-shrink: 0;
     }
 
     .analysis-body {
-      padding: 24px;
+      padding: 16px;
     }
 
     .analysis-main-grid {
       display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
+      grid-template-columns: 1fr;
       gap: 16px;
       margin-top: 18px;
     }
@@ -764,7 +791,7 @@
       background: rgba(255,255,255,0.04);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
-      padding: 18px;
+      padding: 16px;
     }
 
     .box-title {
@@ -777,17 +804,18 @@
       border: 1px solid rgba(0,255,136,0.16);
       background: linear-gradient(135deg, rgba(0,255,136,0.10), rgba(105,167,255,0.08));
       border-radius: var(--radius-lg);
-      padding: 18px;
+      padding: 16px;
       margin-bottom: 16px;
     }
 
     .analysis-market {
-      font-size: 28px;
+      font-size: 22px;
       font-weight: 900;
-      line-height: 1.1;
+      line-height: 1.12;
       text-transform: uppercase;
       letter-spacing: -0.04em;
       margin-top: 10px;
+      word-break: break-word;
     }
 
     .analysis-section-grid {
@@ -799,7 +827,7 @@
 
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 1fr;
       gap: 12px;
       margin-top: 14px;
     }
@@ -820,6 +848,8 @@
     .stat-value {
       font-size: 18px;
       font-weight: 800;
+      line-height: 1.3;
+      word-break: break-word;
     }
 
     .markets-list {
@@ -840,6 +870,7 @@
       margin-top: 8px;
       text-transform: uppercase;
       line-height: 1.25;
+      word-break: break-word;
     }
 
     .market-line-copy {
@@ -855,7 +886,7 @@
       border: 1px solid rgba(112, 154, 255, 0.14);
       border-radius: var(--radius-xl);
       box-shadow: 0 20px 40px rgba(0,0,0,0.32);
-      padding: 24px;
+      padding: 18px;
       position: relative;
       overflow: hidden;
     }
@@ -872,6 +903,7 @@
       margin: 0 0 10px;
       font-size: 22px;
       letter-spacing: -0.03em;
+      line-height: 1.15;
     }
 
     .about-copy {
@@ -887,6 +919,7 @@
       margin-top: 14px;
       color: #dfe9ff;
       font-size: 14px;
+      line-height: 1.5;
     }
 
     .empty-state,
@@ -898,6 +931,7 @@
       padding: 22px;
       color: var(--muted);
       text-align: center;
+      line-height: 1.6;
     }
 
     .error-state {
@@ -922,86 +956,95 @@
       opacity: 0.9;
     }
 
-    @media (max-width: 1080px) {
-      .hero-grid,
-      .analysis-main-grid,
-      .competitions-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 720px) {
+    @media (min-width: 721px) {
       .app-shell {
-        padding: 18px 12px 42px;
+        padding: 24px 16px 60px;
       }
 
-      .topbar {
-        flex-direction: column;
-        align-items: stretch;
+      .hero-grid {
+        grid-template-columns: 1.04fr 0.96fr;
+      }
+
+      .panel-header {
+        padding: 22px 22px 0;
+      }
+
+      .panel-body,
+      .ticket-body,
+      .analysis-body,
+      .about-panel {
+        padding-left: 22px;
+        padding-right: 22px;
+      }
+
+      .ticket-header {
+        padding: 22px 22px 0;
+      }
+
+      .analysis-header {
+        padding: 24px 24px 0;
       }
 
       .brand-title {
-        font-size: 26px;
+        font-size: 30px;
       }
 
       .panel-title,
       .section-title,
       .about-title,
       .ticket-title {
-        font-size: 24px;
+        font-size: 26px;
       }
 
       .pick-market,
       .analysis-market {
-        font-size: 24px;
+        font-size: 26px;
       }
 
       .analysis-title {
-        font-size: 28px;
+        font-size: 32px;
+      }
+
+      .team-badge {
+        width: 38px;
+        height: 38px;
       }
 
       .team-names {
-        font-size: 15px;
+        font-size: 16px;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .competitions-grid {
+        grid-template-columns: repeat(2, 1fr);
       }
 
       .game-card {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr auto;
       }
 
-      .ticket-body,
-      .panel-body,
-      .analysis-body,
-      .about-panel {
-        padding-left: 16px;
-        padding-right: 16px;
-      }
-
-      .ticket-leg,
-      .radar-item,
-      .competition-card,
-      .game-card,
-      .box {
-        padding: 14px;
-      }
-
-      .ticket-footer {
-        flex-direction: column;
-        align-items: flex-start;
-      }
-
-      .ticket-actions {
-        width: 100%;
-      }
-
-      .ticket-button,
       .primary-button,
-      .ghost-button {
-        width: 100%;
-        justify-content: center;
+      .ghost-button,
+      .ticket-button {
+        width: auto;
+      }
+    }
+
+    @media (min-width: 1081px) {
+      .analysis-main-grid,
+      .competitions-grid {
+        grid-template-columns: 1.05fr 0.95fr;
+      }
+
+      .competitions-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(3, 1fr);
       }
     }
   </style>
@@ -1171,7 +1214,7 @@
     </div>
   </div>
 
-<script>
+  <script>
     const supabaseClient = window.supabase.createClient(
       'https://zngdcatlxlxamceqpxij.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuZ2RjYXRseGx4YW1jZXFweGlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ0MDUsImV4cCI6MjA4NzkzMDQwNX0.fExn5-TVJKzljnLdg2wqF2I8FjBoNmb1wDmugLUP04M'
@@ -1186,14 +1229,60 @@
       currentTicketSeed: 0
     };
 
+    const TEAM_NAME_MAP = {
+      'South Korea': 'Coreia do Sul',
+      'Korea Republic': 'Coreia do Sul',
+      'Ivory Coast': 'Costa do Marfim',
+      'Faroe Islands': 'Ilhas Faroé',
+      'USA': 'Estados Unidos',
+      'United States': 'Estados Unidos',
+      'Mexico': 'México',
+      'Czech Republic': 'República Tcheca',
+      'Bosnia and Herzegovina': 'Bósnia e Herzegovina',
+      'Saudi Arabia': 'Arábia Saudita',
+      'Turkey': 'Turquia',
+      'Wales': 'País de Gales',
+      'Scotland': 'Escócia',
+      'Netherlands': 'Holanda',
+      'Iran': 'Irã',
+      'Russia': 'Rússia',
+      'Slovakia': 'Eslováquia',
+      'Slovenia': 'Eslovênia',
+      'Croatia': 'Croácia',
+      'Serbia': 'Sérvia',
+      'Sweden': 'Suécia',
+      'Norway': 'Noruega',
+      'Denmark': 'Dinamarca',
+      'Germany': 'Alemanha',
+      'France': 'França',
+      'Spain': 'Espanha',
+      'England': 'Inglaterra',
+      'Portugal': 'Portugal',
+      'Belgium': 'Bélgica',
+      'Switzerland': 'Suíça',
+      'Austria': 'Áustria',
+      'Greece': 'Grécia',
+      'Poland': 'Polônia',
+      'Japan': 'Japão',
+      'China': 'China',
+      'Morocco': 'Marrocos',
+      'Tunisia': 'Tunísia',
+      'Algeria': 'Argélia',
+      'Egypt': 'Egito'
+    };
+
     const leagueMeta = {
       'FIFA World Cup': { label: 'Copa do Mundo', badge: '🌍', sort: 1 },
       'FIFA Club World Cup': { label: 'Mundial de Clubes', badge: '🌍', sort: 2 },
       'UEFA European Championship': { label: 'Eurocopa', badge: '🌍', sort: 3 },
       'Copa America': { label: 'Copa América', badge: '🌍', sort: 4 },
       'UEFA Nations League': { label: 'Nations League', badge: '🌍', sort: 5 },
+      'Nations League': { label: 'Nations League', badge: '🌍', sort: 5 },
       'International Friendlies': { label: 'Amistosos Internacionais', badge: '🌍', sort: 6 },
       'Amistosos Internacionais': { label: 'Amistosos Internacionais', badge: '🌍', sort: 6 },
+      'Eliminatórias Europeias': { label: 'Eliminatórias Europeias', badge: '🌍', sort: 7 },
+      'Eliminatórias da Euro': { label: 'Eliminatórias da Euro', badge: '🌍', sort: 8 },
+      'Eliminatórias Sul-Americanas': { label: 'Eliminatórias Sul-Americanas', badge: '🌍', sort: 9 },
       'UEFA Champions League': { label: 'Champions League', badge: '🏆', sort: 10 },
       'Libertadores': { label: 'Libertadores', badge: '🏆', sort: 11 },
       'CONMEBOL Libertadores': { label: 'Libertadores', badge: '🏆', sort: 11 },
@@ -1206,8 +1295,9 @@
       'Copa do Brasil': { label: 'Copa do Brasil', badge: '🏆', sort: 20 },
       'Brasileirão Série A': { label: 'Brasileirão Série A', badge: 'BR', sort: 21 },
       'Brasileirão Série B': { label: 'Brasileirão Série B', badge: 'BR', sort: 22 },
-      'Copa do Nordeste': { label: 'Copa do Nordeste', badge: 'BR', sort: 23 },
-      'Liga Profesional Argentina': { label: 'Liga Argentina', badge: 'AR', sort: 30 },
+      'Brasileirão Feminino': { label: 'Brasileirão Feminino', badge: 'BR', sort: 23 },
+      'Copa do Nordeste': { label: 'Copa do Nordeste', badge: 'BR', sort: 24 },
+      'Liga Argentina': { label: 'Liga Argentina', badge: 'AR', sort: 30 },
       'Copa Argentina': { label: 'Copa Argentina', badge: 'AR', sort: 31 },
       'Serie A': { label: 'Serie A', badge: 'IT', sort: 32 },
       'La Liga': { label: 'La Liga', badge: 'ES', sort: 33 },
@@ -1219,12 +1309,11 @@
       'Primeira Liga': { label: 'Primeira Liga', badge: 'PT', sort: 39 },
       'MLS': { label: 'MLS', badge: 'US', sort: 40 },
       'Austrian Bundesliga': { label: 'Austrian Bundesliga', badge: 'AT', sort: 41 },
-      'Belgian Pro League': { label: 'Bélgica', badge: 'BE', sort: 42 },
-      'Superliga': { label: 'Dinamarca', badge: 'DK', sort: 43 },
-      'Super League Greece': { label: 'Grécia', badge: 'GR', sort: 44 },
-      'Super Lig': { label: 'Turquia', badge: 'TR', sort: 45 },
-      'Süper Lig': { label: 'Turquia', badge: 'TR', sort: 45 },
-      'Saudi Pro League': { label: 'Arábia Saudita', badge: 'SA', sort: 46 }
+      'Belgian Pro League': { label: 'Belgian Pro League', badge: 'BE', sort: 42 },
+      'Superliga': { label: 'Superliga', badge: 'DK', sort: 43 },
+      'Super League Greece': { label: 'Super League Greece', badge: 'GR', sort: 44 },
+      'Super Lig': { label: 'Super Lig', badge: 'TR', sort: 45 },
+      'Saudi Pro League': { label: 'Saudi Pro League', badge: 'SA', sort: 46 }
     };
 
     function escapeHtml(value) {
@@ -1245,6 +1334,11 @@
       chip.style.borderColor = ok
         ? 'rgba(0,255,136,0.18)'
         : 'rgba(255,107,122,0.22)';
+    }
+
+    function normalizeTeamName(name) {
+      const raw = String(name || '').trim();
+      return TEAM_NAME_MAP[raw] || raw || '-';
     }
 
     function getLeagueDisplay(league) {
@@ -1321,8 +1415,10 @@
     }
 
     function teamInitials(name) {
-      if (!name) return 'TM';
-      return String(name)
+      const normalized = normalizeTeamName(name);
+      if (!normalized) return 'TM';
+
+      return normalized
         .trim()
         .split(/\s+/)
         .slice(0, 2)
@@ -1344,7 +1440,8 @@
     }
 
     function teamBadge(match, side) {
-      const teamName = side === 'home' ? match?.home_team : match?.away_team;
+      const rawTeamName = side === 'home' ? match?.home_team : match?.away_team;
+      const teamName = normalizeTeamName(rawTeamName);
       const logo = teamLogoUrl(match, side);
 
       if (logo) {
@@ -1457,7 +1554,7 @@
       return d >= start && d <= end;
     }
 
-    function getVisibleMatches() {
+function getVisibleMatches() {
       return state.matches.filter(match =>
         isMatchVisible(match.kickoff) &&
         !shouldHideLeague(match.league)
@@ -1469,60 +1566,69 @@
       const markets = maybeJson(match.markets) || {};
       const probabilities = maybeJson(match.probabilities) || {};
 
+      const expectedHomeGoals = toNumber(match.expected_home_goals, null);
+      const expectedAwayGoals = toNumber(match.expected_away_goals, null);
+      const expectedHomeShots = toNumber(match.expected_home_shots, null);
+      const expectedAwayShots = toNumber(match.expected_away_shots, null);
+      const expectedHomeSOT = toNumber(match.expected_home_sot, null);
+      const expectedAwaySOT = toNumber(match.expected_away_sot, null);
+      const expectedCorners = toNumber(match.expected_corners, null);
+      const expectedCards = toNumber(match.expected_cards, null);
+      const homeStrength = toNumber(match.home_strength, null);
+      const awayStrength = toNumber(match.away_strength, null);
+
       const avgGoals =
-        toNumber(match.avg_goals, null) ??
-        toNumber(metrics.goals, null) ??
-        (() => {
-          const ehg = toNumber(match.expected_home_goals, null);
-          const eag = toNumber(match.expected_away_goals, null);
-          if (ehg !== null || eag !== null) {
-            return (ehg || 0) + (eag || 0);
-          }
-          return null;
-        })();
+        (expectedHomeGoals !== null || expectedAwayGoals !== null)
+          ? (expectedHomeGoals || 0) + (expectedAwayGoals || 0)
+          : (
+              toNumber(metrics.goals, null) ??
+              toNumber(markets.goals, null) ??
+              toNumber(match.avg_goals, null)
+            );
 
       const avgCorners =
-        toNumber(match.avg_corners, null) ??
-        toNumber(match.expected_corners, null) ??
+        expectedCorners ??
         toNumber(metrics.corners, null) ??
-        toNumber(markets.corners, null);
+        toNumber(markets.corners, null) ??
+        toNumber(match.avg_corners, null);
 
       const avgShots =
-        toNumber(match.avg_shots, null) ??
-        toNumber(metrics.shots, null);
+        (expectedHomeShots !== null || expectedAwayShots !== null)
+          ? (expectedHomeShots || 0) + (expectedAwayShots || 0)
+          : (
+              toNumber(metrics.shots, null) ??
+              toNumber(markets.shots, null) ??
+              toNumber(match.avg_shots, null)
+            );
 
       const avgShotsOnTarget =
-        toNumber(match.avg_shots_on_target, null) ??
-        toNumber(metrics.shots_on_target, null) ??
-        toNumber(metrics.sot, null);
+        (expectedHomeSOT !== null || expectedAwaySOT !== null)
+          ? (expectedHomeSOT || 0) + (expectedAwaySOT || 0)
+          : (
+              toNumber(metrics.shots_on_target, null) ??
+              toNumber(metrics.sot, null) ??
+              toNumber(markets.shots_on_target, null) ??
+              toNumber(match.avg_shots_on_target, null)
+            );
 
       const avgCards =
-        toNumber(match.avg_cards, null) ??
-        toNumber(match.expected_cards, null) ??
-        toNumber(metrics.cards, null);
+        expectedCards ??
+        toNumber(metrics.cards, null) ??
+        toNumber(markets.cards, null) ??
+        toNumber(match.avg_cards, null);
 
       const avgFouls =
-        toNumber(match.avg_fouls, null) ??
-        toNumber(metrics.fouls, null);
+        toNumber(metrics.fouls, null) ??
+        toNumber(markets.fouls, null) ??
+        toNumber(match.avg_fouls, null);
 
       const confidence =
         toNumber(match.confidence_score, null) ??
         toNumber(match.probability, null);
 
-      const homeStrength = toNumber(match.home_strength, null);
-      const awayStrength = toNumber(match.away_strength, null);
-
-      const homeProb =
-        toNumber(match.home_result_prob, null) ??
-        toNumber(probabilities.home, null);
-
-      const drawProb =
-        toNumber(match.draw_result_prob, null) ??
-        toNumber(probabilities.draw, null);
-
-      const awayProb =
-        toNumber(match.away_result_prob, null) ??
-        toNumber(probabilities.away, null);
+      const homeProb = toNumber(probabilities.home, null);
+      const drawProb = toNumber(probabilities.draw, null);
+      const awayProb = toNumber(probabilities.away, null);
 
       return {
         avgGoals,
@@ -1542,8 +1648,8 @@
 
     function getPrimaryPick(match) {
       return (
-        match.pick ||
         match.best_pick_1 ||
+        match.pick ||
         match.safe_pick ||
         match.balanced_pick ||
         match.aggressive_pick ||
@@ -1588,6 +1694,19 @@
 
       if (direct !== null) {
         return direct > 1 ? clamp(direct / 100, 0, 1) : clamp(direct, 0, 1);
+      }
+
+      const probabilities = maybeJson(match.probabilities) || {};
+      const home = toNumber(probabilities.home, null);
+      const draw = toNumber(probabilities.draw, null);
+      const away = toNumber(probabilities.away, null);
+
+      const max1x2 = [home, draw, away]
+        .filter(v => v !== null)
+        .sort((a, b) => b - a)[0];
+
+      if (max1x2 !== undefined) {
+        return clamp(max1x2, 0, 1);
       }
 
       return 0.62;
@@ -1702,12 +1821,6 @@
       return state.matches.find(match => String(match.id) === String(id)) || null;
     }
 
-    function getDailyPicksForMatch(matchId) {
-      return state.dailyPicks
-        .filter(item => String(item.match_id) === String(matchId))
-        .sort((a, b) => Number(a.rank || 999) - Number(b.rank || 999));
-    }
-
     function getDetectedMarkets(match) {
       const primary = getPrimaryPick(match);
       const alternatives = getSecondaryPicks(match);
@@ -1754,8 +1867,8 @@
 
       return {
         match_id: match.id,
-        home_team: match.home_team,
-        away_team: match.away_team,
+        home_team: normalizeTeamName(match.home_team),
+        away_team: normalizeTeamName(match.away_team),
         league: match.league,
         country: match.country,
         kickoff: match.kickoff,
@@ -1791,7 +1904,7 @@
           if (pDiff !== 0) return pDiff;
           return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
         })
-        .slice(0, 14)
+        .slice(0, 18)
         .map(match => normalizeTicketPick({
           match_id: match.id,
           market: getPrimaryPick(match),
@@ -1899,7 +2012,7 @@
       `;
     }
 
-function renderRadar() {
+    function renderRadar() {
       const list = document.getElementById('radarList');
       if (!list) return;
 
@@ -1910,9 +2023,12 @@ function renderRadar() {
 
           return {
             ...match,
+            home_team: normalizeTeamName(match.home_team),
+            away_team: normalizeTeamName(match.away_team),
             radar_market: item.market || getPrimaryPick(match),
             radar_probability: Number(item.probability || getMatchProbability(match)),
-            radar_rank: Number(item.rank || 999)
+            radar_rank: Number(item.rank || 999),
+            is_opportunity: !!item.is_opportunity
           };
         })
         .filter(Boolean)
@@ -1929,28 +2045,19 @@ function renderRadar() {
           if (pDiff !== 0) return pDiff;
           return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
         })
-        .slice(0, 16)
+        .slice(0, 20)
         .map((match, index) => ({
           ...match,
+          home_team: normalizeTeamName(match.home_team),
+          away_team: normalizeTeamName(match.away_team),
           radar_market: getPrimaryPick(match),
           radar_probability: getMatchProbability(match),
-          radar_rank: rankedFromDaily.length + index + 1
+          radar_rank: rankedFromDaily.length + index + 1,
+          is_opportunity: false
         }));
 
       const merged = [...rankedFromDaily, ...fallback];
-      const leagueCount = {};
-      const radarItems = [];
-
-      for (const item of merged) {
-        const leagueKey = String(item.league || '').toLowerCase();
-        leagueCount[leagueKey] = leagueCount[leagueKey] || 0;
-        if (leagueCount[leagueKey] >= 2) continue;
-
-        radarItems.push(item);
-        leagueCount[leagueKey] += 1;
-
-        if (radarItems.length === 10) break;
-      }
+      const radarItems = merged.slice(0, 15);
 
       if (!radarItems.length) {
         list.innerHTML = `<div class="empty-state">Nenhuma oportunidade encontrada para hoje.</div>`;
@@ -1988,6 +2095,7 @@ function renderRadar() {
 
                 <div class="chip-row">
                   ${chipMarkup(tier)}
+                  ${item.is_opportunity ? `<span class="chip chip-best">🎯 Bilhete</span>` : ``}
                 </div>
 
                 <div class="radar-market">${escapeHtml(item.radar_market)}</div>
@@ -2121,7 +2229,7 @@ function renderRadar() {
       };
     }
 
-    function openCompetition(league) {
+function openCompetition(league) {
       state.selectedLeague = league;
 
       const competition = state.competitions.find(c => c.league === league);
@@ -2149,32 +2257,37 @@ function renderRadar() {
         return;
       }
 
-      gamesGrid.innerHTML = matches.map(match => `
-        <div class="game-card">
-          <div class="game-main">
-            <div class="teams-row compact">
-              ${teamBadge(match, 'home')}
-              <div class="game-match">${escapeHtml(match.home_team)} x ${escapeHtml(match.away_team)}</div>
-              ${teamBadge(match, 'away')}
+      gamesGrid.innerHTML = matches.map(match => {
+        const homeTeam = normalizeTeamName(match.home_team);
+        const awayTeam = normalizeTeamName(match.away_team);
+
+        return `
+          <div class="game-card">
+            <div class="game-main">
+              <div class="teams-row compact">
+                ${teamBadge(match, 'home')}
+                <div class="game-match">${escapeHtml(homeTeam)} x ${escapeHtml(awayTeam)}</div>
+                ${teamBadge(match, 'away')}
+              </div>
+
+              <div class="game-meta">
+                <span>${escapeHtml(getLeagueBadge(match.league))} ${escapeHtml(getLeagueDisplay(match.league))}</span>
+                <span>${escapeHtml(formatKickoff(match.kickoff))}</span>
+              </div>
+
+              <div class="ticket-helper" style="margin-top:8px;">
+                Mercado principal: ${escapeHtml(getPrimaryPick(match))}
+              </div>
             </div>
 
-            <div class="game-meta">
-              <span>${escapeHtml(getLeagueBadge(match.league))} ${escapeHtml(getLeagueDisplay(match.league))}</span>
-              <span>${escapeHtml(formatKickoff(match.kickoff))}</span>
-            </div>
-
-            <div class="ticket-helper" style="margin-top:8px;">
-              Mercado principal: ${escapeHtml(getPrimaryPick(match))}
+            <div>
+              <button class="primary-button" data-analyze-id="${escapeHtml(match.id)}">
+                Ver análise →
+              </button>
             </div>
           </div>
-
-          <div>
-            <button class="primary-button" data-analyze-id="${escapeHtml(match.id)}">
-              Ver análise →
-            </button>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
 
       gamesGrid.onclick = (e) => {
         const btn = e.target.closest('[data-analyze-id]');
@@ -2197,6 +2310,8 @@ function renderRadar() {
       const primaryPick = getPrimaryPick(match);
       const primaryTier = getMatchTier(match);
       const detectedMarkets = getDetectedMarkets(match);
+      const homeTeam = normalizeTeamName(match.home_team);
+      const awayTeam = normalizeTeamName(match.away_team);
 
       const analysisTitle = document.getElementById('analysisTitle');
       const analysisSubtitle = document.getElementById('analysisSubtitle');
@@ -2210,7 +2325,7 @@ function renderRadar() {
       const overlay = document.getElementById('analysisOverlay');
 
       if (analysisTitle) {
-        analysisTitle.textContent = `${match.home_team || '-'} x ${match.away_team || '-'}`;
+        analysisTitle.textContent = `${homeTeam} x ${awayTeam}`;
       }
 
       if (analysisSubtitle) {
@@ -2221,7 +2336,7 @@ function renderRadar() {
         analysisMatchSmall.innerHTML = `
           <div class="teams-row compact" style="margin-bottom:0;">
             ${teamBadge(match, 'home')}
-            <div class="team-names">${escapeHtml(match.home_team || '-')} x ${escapeHtml(match.away_team || '-')}</div>
+            <div class="team-names">${escapeHtml(homeTeam)} x ${escapeHtml(awayTeam)}</div>
             ${teamBadge(match, 'away')}
           </div>
         `;
@@ -2311,17 +2426,21 @@ function renderRadar() {
       state.matches = (matchesData || [])
         .map(match => {
           const analysis = analysisMap.get(String(match.id)) || {};
+
           return {
             ...match,
             ...analysis,
             id: match.id,
-            home_team: match.home_team,
-            away_team: match.away_team,
+            home_team: normalizeTeamName(match.home_team),
+            away_team: normalizeTeamName(match.away_team),
             league: match.league,
             country: match.country,
             kickoff: match.kickoff,
             home_logo: match.home_logo,
-            away_logo: match.away_logo
+            away_logo: match.away_logo,
+            probabilities: match.probabilities,
+            metrics: match.metrics,
+            markets: match.markets
           };
         })
         .filter(match => {
