@@ -319,9 +319,25 @@
       display: grid;
       gap: 10px;
       margin-top: 8px;
-      max-height: none;
-      overflow: visible;
-      padding-right: 0;
+      max-height: 720px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 6px;
+      scrollbar-width: thin;
+      scrollbar-color: rgba(116,167,255,0.45) transparent;
+    }
+
+    .radar-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .radar-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .radar-list::-webkit-scrollbar-thumb {
+      background: rgba(116,167,255,0.35);
+      border-radius: 999px;
     }
 
     .radar-time-group {
@@ -1155,7 +1171,7 @@
           <div>• Radar do dia organizado por horário</div>
           <div>• Competições organizadas com bandeiras</div>
           <div>• Análise completa do jogo com números projetados</div>
-          <div>• Pick principal + 2 alternativas por partida</div>
+          <div>• Pick principal + oportunidades alternativas</div>
         </div>
 
         <div class="footer-note">
@@ -1206,7 +1222,7 @@
           </div>
 
           <div class="box">
-            <h3 class="box-title">Oportunidades detectadas</h3>
+            <h3 class="box-title">Oportunidades alternativas</h3>
             <div id="marketsList" class="markets-list"></div>
           </div>
         </div>
@@ -1219,6 +1235,10 @@
       'https://zngdcatlxlxamceqpxij.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuZ2RjYXRseGx4YW1jZXFweGlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ0MDUsImV4cCI6MjA4NzkzMDQwNX0.fExn5-TVJKzljnLdg2wqF2I8FjBoNmb1wDmugLUP04M'
     );
+
+    const MATCH_END_GRACE_MINUTES = 115;
+    const AUTO_UI_REFRESH_MS = 60000;
+    const AUTO_DATA_REFRESH_MS = 180000;
 
     const state = {
       dailyPicks: [],
@@ -1297,6 +1317,8 @@
       'Brasileirão Série B': { label: 'Brasileirão Série B', badge: 'BR', sort: 22 },
       'Brasileirão Feminino': { label: 'Brasileirão Feminino', badge: 'BR', sort: 23 },
       'Copa do Nordeste': { label: 'Copa do Nordeste', badge: 'BR', sort: 24 },
+      'Copa Sul-Sudeste': { label: 'Copa Sul-Sudeste', badge: 'BR', sort: 25 },
+      'Copa Verde': { label: 'Copa Verde', badge: 'BR', sort: 26 },
       'Liga Argentina': { label: 'Liga Argentina', badge: 'AR', sort: 30 },
       'Copa Argentina': { label: 'Copa Argentina', badge: 'AR', sort: 31 },
       'Serie A': { label: 'Serie A', badge: 'IT', sort: 32 },
@@ -1490,6 +1512,17 @@
       return `<span class="chip chip-risk">⚠️ Mais arriscada</span>`;
     }
 
+    function marketFamily(market) {
+      const m = String(market || '').trim().toLowerCase();
+
+      if (!m) return 'outro';
+      if (m.includes('escanteio')) return 'escanteios';
+      if (m.includes('ambas')) return 'btts';
+      if (m.includes('dupla chance') || m.includes('empate') || m.includes('vitória')) return 'resultado';
+      if (m.includes('gol')) return 'gols';
+      return 'outro';
+    }
+
     function shouldHideLeague(leagueName) {
       const name = String(leagueName || '').toLowerCase();
 
@@ -1533,8 +1566,23 @@
       return d >= today && d <= end;
     }
 
+    function isStillRelevantForRadar(value) {
+      if (!value) return false;
+      const d = new Date(value);
+      if (Number.isNaN(d.getTime())) return false;
+
+      const now = new Date();
+      const endWindow = new Date(d.getTime() + MATCH_END_GRACE_MINUTES * 60000);
+
+      return isTodayMatch(value) && endWindow > now;
+    }
+
+    function isStillRelevantForTicket(value) {
+      return isStillRelevantForRadar(value);
+    }
+
     function isMatchVisible(value) {
-      return isTodayMatch(value);
+      return isStillRelevantForRadar(value);
     }
 
     function isCompetitionVisible(value) {
@@ -1554,7 +1602,7 @@
       return d >= start && d <= end;
     }
 
-function getVisibleMatches() {
+    function getVisibleMatches() {
       return state.matches.filter(match =>
         isMatchVisible(match.kickoff) &&
         !shouldHideLeague(match.league)
@@ -1659,11 +1707,13 @@ function getVisibleMatches() {
     }
 
     function getSecondaryPicks(match) {
-      const seen = new Set();
-      const picks = [];
+      const primary = String(getPrimaryPick(match) || '').trim();
+      const primaryLower = primary.toLowerCase();
+      const primaryFamily = marketFamily(primary);
 
-      const primary = String(getPrimaryPick(match) || '').trim().toLowerCase();
-      if (primary) seen.add(primary);
+      const preferred = [];
+      const fallback = [];
+      const seen = new Set([primaryLower]);
 
       const candidates = [
         match.best_pick_2,
@@ -1677,13 +1727,21 @@ function getVisibleMatches() {
       for (const item of candidates) {
         const clean = String(item || '').trim();
         if (!clean) continue;
-        if (seen.has(clean.toLowerCase())) continue;
-        picks.push(clean);
-        seen.add(clean.toLowerCase());
-        if (picks.length === 2) break;
+
+        const key = clean.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        const family = marketFamily(clean);
+
+        if (family !== primaryFamily) {
+          preferred.push(clean);
+        } else {
+          fallback.push(clean);
+        }
       }
 
-      return picks;
+      return [...preferred, ...fallback].slice(0, 2);
     }
 
     function getMatchProbability(match) {
@@ -1778,34 +1836,23 @@ function getVisibleMatches() {
 
     function getContextForDisplay(match) {
       const {
-        confidence,
-        homeStrength,
-        awayStrength,
         homeProb,
         drawProb,
         awayProb
       } = getMetrics(match);
 
-      return [
-        { label: 'Força da leitura', value: getMatchTier(match) },
-        { label: 'Confiança da leitura', value: percentText(confidence) },
-        {
-          label: 'Probabilidades 1X2',
-          value:
-            (homeProb !== null || drawProb !== null || awayProb !== null)
-              ? `${percentText(homeProb)} / ${percentText(drawProb)} / ${percentText(awayProb)}`
-              : '—'
-        },
-        {
-          label: 'Força projetada',
-          value:
-            (homeStrength !== null || awayStrength !== null)
-              ? `${formatDecimal(homeStrength, 1)} x ${formatDecimal(awayStrength, 1)}`
-              : '—'
-        },
-        { label: 'Liga', value: getLeagueDisplay(match.league) },
-        { label: 'Horário', value: formatKickoffHour(match.kickoff) }
+      const items = [
+        { label: 'Força da leitura', value: getMatchTier(match) }
       ];
+
+      if (homeProb !== null) items.push({ label: 'Mandante', value: percentText(homeProb) });
+      if (drawProb !== null) items.push({ label: 'Empate', value: percentText(drawProb) });
+      if (awayProb !== null) items.push({ label: 'Visitante', value: percentText(awayProb) });
+
+      items.push({ label: 'Liga', value: getLeagueDisplay(match.league) });
+      items.push({ label: 'Horário', value: formatKickoffHour(match.kickoff) });
+
+      return items.slice(0, 6);
     }
 
     function contextCardsMarkup(match) {
@@ -1822,20 +1869,9 @@ function getVisibleMatches() {
     }
 
     function getDetectedMarkets(match) {
-      const primary = getPrimaryPick(match);
       const alternatives = getSecondaryPicks(match);
-      const probability = getMatchProbability(match);
 
       const items = [];
-
-      if (primary) {
-        items.push({
-          label: 'Best Pick',
-          market: primary,
-          tier: probabilityToTier(probability),
-          copy: 'Leitura principal do Scoutly para este confronto.'
-        });
-      }
 
       if (alternatives[0]) {
         items.push({
@@ -1855,12 +1891,13 @@ function getVisibleMatches() {
         });
       }
 
-      return items.slice(0, 3);
+      return items;
     }
 
-    function normalizeTicketPick(rawPick) {
+function normalizeTicketPick(rawPick) {
       const match = getMatchById(rawPick.match_id);
       if (!match) return null;
+      if (!isStillRelevantForTicket(match.kickoff)) return null;
 
       const probability = Number(rawPick.probability ?? getMatchProbability(match));
       const tier = probabilityToTier(probability);
@@ -1886,12 +1923,18 @@ function getVisibleMatches() {
 
     function buildDailyTicketPool() {
       return state.dailyPicks
-        .filter(item => item && item.match_id && item.market && isTodayMatch(item.kickoff))
+        .filter(item => item && item.match_id && item.market)
         .map(normalizeTicketPick)
         .filter(Boolean)
         .sort((a, b) => {
-          const aRank = state.dailyPicks.find(x => String(x.match_id) === String(a.match_id) && x.market === a.market)?.rank ?? 999;
-          const bRank = state.dailyPicks.find(x => String(x.match_id) === String(b.match_id) && x.market === b.market)?.rank ?? 999;
+          const aRank = state.dailyPicks.find(
+            x => String(x.match_id) === String(a.match_id) && x.market === a.market
+          )?.rank ?? 999;
+
+          const bRank = state.dailyPicks.find(
+            x => String(x.match_id) === String(b.match_id) && x.market === b.market
+          )?.rank ?? 999;
+
           if (aRank !== bRank) return aRank - bRank;
           return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
         });
@@ -1899,6 +1942,7 @@ function getVisibleMatches() {
 
     function buildFallbackTicketPool() {
       return getVisibleMatches()
+        .filter(match => isStillRelevantForTicket(match.kickoff))
         .sort((a, b) => {
           const pDiff = getMatchProbability(b) - getMatchProbability(a);
           if (pDiff !== 0) return pDiff;
@@ -1926,15 +1970,31 @@ function getVisibleMatches() {
 
     function pickOnePerMatch(pool, maxPicks = 3) {
       const usedMatches = new Set();
+      const usedFamilies = new Set();
       const result = [];
 
       for (const item of pool) {
         if (usedMatches.has(item.match_id)) continue;
 
+        const family = marketFamily(item.market);
+        if (usedFamilies.has(family) && result.length < 2) continue;
+
         result.push(item);
         usedMatches.add(item.match_id);
+        usedFamilies.add(family);
 
         if (result.length >= maxPicks) break;
+      }
+
+      if (result.length < maxPicks) {
+        for (const item of pool) {
+          if (usedMatches.has(item.match_id)) continue;
+
+          result.push(item);
+          usedMatches.add(item.match_id);
+
+          if (result.length >= maxPicks) break;
+        }
       }
 
       return result;
@@ -1993,7 +2053,7 @@ function getVisibleMatches() {
       if (!el) return;
 
       if (!state.currentTicket.length) {
-        el.innerHTML = `<div class="empty-state">Nenhum bilhete disponível para hoje.</div>`;
+        el.innerHTML = `<div class="empty-state">Nenhum bilhete disponível para este momento.</div>`;
         return;
       }
 
@@ -2007,7 +2067,7 @@ function getVisibleMatches() {
 
         <div class="ticket-footer">
           <div class="ticket-confidence">Confiança geral: ${escapeHtml(probabilityToTier(avgProbability))}</div>
-          <div class="ticket-helper">Bilhete automático montado a partir do radar do dia.</div>
+          <div class="ticket-helper">Bilhete automático montado a partir dos jogos ainda ativos do radar.</div>
         </div>
       `;
     }
@@ -2020,6 +2080,7 @@ function getVisibleMatches() {
         .map(item => {
           const match = getMatchById(item.match_id);
           if (!match) return null;
+          if (!isStillRelevantForRadar(match.kickoff)) return null;
 
           return {
             ...match,
@@ -2027,12 +2088,11 @@ function getVisibleMatches() {
             away_team: normalizeTeamName(match.away_team),
             radar_market: item.market || getPrimaryPick(match),
             radar_probability: Number(item.probability || getMatchProbability(match)),
-            radar_rank: Number(item.rank || 999),
-            is_opportunity: !!item.is_opportunity
+            radar_rank: Number(item.rank || 999)
           };
         })
         .filter(Boolean)
-        .filter(item => isMatchVisible(item.kickoff) && !shouldHideLeague(item.league))
+        .filter(item => !shouldHideLeague(item.league))
         .sort((a, b) => {
           if (a.radar_rank !== b.radar_rank) return a.radar_rank - b.radar_rank;
           return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
@@ -2040,6 +2100,7 @@ function getVisibleMatches() {
 
       const fallback = getVisibleMatches()
         .filter(match => !rankedFromDaily.some(item => String(item.id) === String(match.id)))
+        .filter(match => isStillRelevantForRadar(match.kickoff))
         .sort((a, b) => {
           const pDiff = getMatchProbability(b) - getMatchProbability(a);
           if (pDiff !== 0) return pDiff;
@@ -2052,15 +2113,14 @@ function getVisibleMatches() {
           away_team: normalizeTeamName(match.away_team),
           radar_market: getPrimaryPick(match),
           radar_probability: getMatchProbability(match),
-          radar_rank: rankedFromDaily.length + index + 1,
-          is_opportunity: false
+          radar_rank: rankedFromDaily.length + index + 1
         }));
 
       const merged = [...rankedFromDaily, ...fallback];
       const radarItems = merged.slice(0, 15);
 
       if (!radarItems.length) {
-        list.innerHTML = `<div class="empty-state">Nenhuma oportunidade encontrada para hoje.</div>`;
+        list.innerHTML = `<div class="empty-state">Nenhuma oportunidade ativa encontrada para agora.</div>`;
         return;
       }
 
@@ -2095,7 +2155,6 @@ function getVisibleMatches() {
 
                 <div class="chip-row">
                   ${chipMarkup(tier)}
-                  ${item.is_opportunity ? `<span class="chip chip-best">🎯 Bilhete</span>` : ``}
                 </div>
 
                 <div class="radar-market">${escapeHtml(item.radar_market)}</div>
@@ -2229,7 +2288,7 @@ function getVisibleMatches() {
       };
     }
 
-function openCompetition(league) {
+    function openCompetition(league) {
       state.selectedLeague = league;
 
       const competition = state.competitions.find(c => c.league === league);
@@ -2366,7 +2425,7 @@ function openCompetition(league) {
                 <div class="market-line-copy">${escapeHtml(item.copy)}</div>
               </div>
             `).join('')
-          : `<div class="empty-state">Nenhuma oportunidade extra encontrada para este jogo.</div>`;
+          : `<div class="empty-state">Nenhuma oportunidade alternativa encontrada para este jogo.</div>`;
       }
 
       if (overlay) overlay.classList.add('open');
@@ -2419,36 +2478,30 @@ function openCompetition(league) {
         if (!error) analysisData = data || [];
       } catch (_) {}
 
-      const analysisMap = new Map(
-        (analysisData || []).map(item => [String(item.match_id), item])
-      );
+      state.matches = (matchesData || []).map(match => {
+        const analysis = (analysisData || []).find(item => String(item.match_id) === String(match.id)) || {};
 
-      state.matches = (matchesData || [])
-        .map(match => {
-          const analysis = analysisMap.get(String(match.id)) || {};
-
-          return {
-            ...match,
-            ...analysis,
-            id: match.id,
-            home_team: normalizeTeamName(match.home_team),
-            away_team: normalizeTeamName(match.away_team),
-            league: match.league,
-            country: match.country,
-            kickoff: match.kickoff,
-            home_logo: match.home_logo,
-            away_logo: match.away_logo,
-            probabilities: match.probabilities,
-            metrics: match.metrics,
-            markets: match.markets
-          };
-        })
-        .filter(match => {
-          if (!match.home_team || !match.away_team) return false;
-          if (!match.league) return false;
-          if (shouldHideLeague(match.league)) return false;
-          return true;
-        });
+        return {
+          ...match,
+          ...analysis,
+          id: match.id,
+          home_team: normalizeTeamName(match.home_team),
+          away_team: normalizeTeamName(match.away_team),
+          league: match.league,
+          country: match.country,
+          kickoff: match.kickoff,
+          home_logo: match.home_logo,
+          away_logo: match.away_logo,
+          probabilities: match.probabilities,
+          metrics: match.metrics,
+          markets: match.markets
+        };
+      }).filter(match => {
+        if (!match.home_team || !match.away_team) return false;
+        if (!match.league) return false;
+        if (shouldHideLeague(match.league)) return false;
+        return true;
+      });
 
       console.log('MATCHES CARREGADOS:', state.matches.length);
       console.log('DAILY PICKS CARREGADOS:', state.dailyPicks.length);
@@ -2456,7 +2509,7 @@ function openCompetition(league) {
       window.debugDailyPicks = state.dailyPicks;
     }
 
-    async function initialize() {
+async function initialize() {
       const errors = {};
       setStatus('Conectando ao Scoutly...', true);
 
@@ -2499,6 +2552,10 @@ function openCompetition(league) {
           if (e.target.id === 'analysisOverlay') closeAnalysis();
         });
       }
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeAnalysis();
+      });
     }
 
     initialize();
