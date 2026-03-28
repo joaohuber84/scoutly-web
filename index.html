@@ -26,10 +26,12 @@
       --radius-xl: 24px;
       --radius-lg: 18px;
       --radius-md: 14px;
-      --max-width: 1240px;
+      --max-width: 1200px;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     html, body {
       margin: 0;
@@ -130,7 +132,7 @@
 
     .hero-grid {
       display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
+      grid-template-columns: 1.04fr 0.96fr;
       gap: 18px;
       margin-bottom: 18px;
     }
@@ -145,10 +147,6 @@
 
     .panel-header {
       padding: 22px 22px 0;
-    }
-
-    .panel-body {
-      padding: 20px 22px 22px;
     }
 
     .eyebrow {
@@ -173,11 +171,45 @@
       line-height: 1.5;
     }
 
+    .panel-body {
+      padding: 20px 22px 22px;
+    }
+
+    .league-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      align-self: flex-start;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      color: #d7e3fa;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pick-match {
+      font-size: 15px;
+      color: var(--muted);
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .pick-market {
+      font-size: 28px;
+      line-height: 1.08;
+      letter-spacing: -0.04em;
+      font-weight: 900;
+      text-transform: uppercase;
+      margin: 0;
+    }
+
     .chip-row {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      margin-top: 12px;
+      margin-top: 14px;
     }
 
     .chip {
@@ -234,20 +266,6 @@
       border-color: rgba(240,211,107,0.14);
     }
 
-    .league-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      align-self: flex-start;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid var(--border);
-      color: #d7e3fa;
-      font-size: 12px;
-      font-weight: 700;
-    }
-
     .teams-row {
       display: flex;
       align-items: center;
@@ -289,11 +307,89 @@
       line-height: 1.3;
     }
 
+    .radar-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 8px;
+      max-height: 640px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .radar-time-group {
+      margin-top: 4px;
+    }
+
+    .radar-time-label {
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--amber);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin: 6px 2px 8px;
+    }
+
+    .radar-item {
+      background: rgba(255,255,255,0.045);
+      border: 1px solid rgba(112, 154, 255, 0.14);
+      border-radius: var(--radius-lg);
+      padding: 14px;
+      cursor: pointer;
+      transition: 0.2s ease;
+    }
+
+    .competition-card:hover,
+    .radar-item:hover,
+    .game-card:hover,
+    .ticket-card:hover,
+    .ticket-leg:hover {
+      transform: translateY(-2px);
+      border-color: rgba(105,167,255,0.30);
+    }
+
+    .radar-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .radar-rank {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 12px;
+      background: rgba(0,255,136,0.10);
+      border: 1px solid rgba(0,255,136,0.14);
+      color: var(--green);
+      font-weight: 900;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .radar-market {
+      font-size: 17px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-top: 8px;
+    }
+
+    .radar-kickoff {
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 8px;
+    }
+
     .ticket-card {
       background: linear-gradient(135deg, rgba(18, 36, 66, 0.98), rgba(15, 31, 56, 0.98));
       border: 1px solid rgba(240, 211, 107, 0.24);
       border-radius: var(--radius-xl);
       box-shadow: 0 24px 50px rgba(0, 0, 0, 0.42);
+      transition: 0.2s ease;
       position: relative;
       overflow: hidden;
     }
@@ -447,99 +543,11 @@
       box-shadow: 0 12px 24px rgba(249,115,22,0.24);
     }
 
-    .ghost-button {
-      background: rgba(255,255,255,0.05);
-      color: #d7e3fa;
-      border: 1px solid var(--border);
-      padding: 12px 16px;
-    }
-
-    .primary-button {
-      background: linear-gradient(180deg, #00ff88, #0bd06f);
-      color: #082012;
-      padding: 12px 18px;
-      box-shadow: 0 12px 24px rgba(0,255,136,0.20);
-    }
-
     .ticket-button:hover,
     .ghost-button:hover,
-    .primary-button:hover,
-    .competition-card:hover,
-    .radar-item:hover,
-    .game-card:hover,
-    .ticket-card:hover,
-    .ticket-leg:hover {
-      transform: translateY(-2px);
+    .primary-button:hover {
+      transform: translateY(-1px);
       filter: brightness(1.03);
-      border-color: rgba(105,167,255,0.30);
-    }
-
-    .radar-list {
-      display: grid;
-      gap: 10px;
-      margin-top: 8px;
-      max-height: 660px;
-      overflow: auto;
-      padding-right: 4px;
-    }
-
-    .radar-time-group {
-      margin-top: 4px;
-    }
-
-    .radar-time-label {
-      font-size: 12px;
-      font-weight: 900;
-      color: var(--amber);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin: 6px 2px 8px;
-    }
-
-    .radar-item {
-      background: rgba(255,255,255,0.045);
-      border: 1px solid rgba(112, 154, 255, 0.14);
-      border-radius: var(--radius-lg);
-      padding: 14px;
-      cursor: pointer;
-      transition: 0.2s ease;
-    }
-
-    .radar-top {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 8px;
-    }
-
-    .radar-rank {
-      width: 34px;
-      height: 34px;
-      display: grid;
-      place-items: center;
-      border-radius: 12px;
-      background: rgba(0,255,136,0.10);
-      border: 1px solid rgba(0,255,136,0.14);
-      color: var(--green);
-      font-weight: 900;
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-
-    .radar-market {
-      font-size: 17px;
-      font-weight: 900;
-      text-transform: uppercase;
-      letter-spacing: -0.03em;
-      line-height: 1.2;
-      margin-top: 8px;
-    }
-
-    .radar-kickoff {
-      color: var(--muted);
-      font-size: 12px;
-      margin-top: 8px;
     }
 
     .section {
@@ -564,6 +572,20 @@
       margin: 8px 0 0;
       color: var(--muted);
       font-size: 14px;
+    }
+
+    .ghost-button {
+      background: rgba(255,255,255,0.05);
+      color: #d7e3fa;
+      border: 1px solid var(--border);
+      padding: 12px 16px;
+    }
+
+    .primary-button {
+      background: linear-gradient(180deg, #00ff88, #0bd06f);
+      color: #082012;
+      padding: 12px 18px;
+      box-shadow: 0 12px 24px rgba(0,255,136,0.20);
     }
 
     .competitions-grid {
@@ -692,7 +714,7 @@
 
     .analysis-card {
       width: 100%;
-      max-width: 1080px;
+      max-width: 1040px;
       max-height: 92vh;
       overflow: auto;
       background: linear-gradient(180deg, rgba(19, 33, 60, 0.98), rgba(10, 18, 34, 0.98));
@@ -731,6 +753,26 @@
       padding: 24px;
     }
 
+    .analysis-main-grid {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    .box {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+    }
+
+    .box-title {
+      margin: 0 0 12px;
+      font-size: 18px;
+      letter-spacing: -0.03em;
+    }
+
     .analysis-highlight {
       border: 1px solid rgba(0,255,136,0.16);
       background: linear-gradient(135deg, rgba(0,255,136,0.10), rgba(105,167,255,0.08));
@@ -748,31 +790,11 @@
       margin-top: 10px;
     }
 
-    .analysis-main-grid {
-      display: grid;
-      grid-template-columns: 1.02fr 0.98fr;
-      gap: 16px;
-      margin-top: 18px;
-    }
-
     .analysis-section-grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: 16px;
       margin-top: 16px;
-    }
-
-    .box {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 18px;
-    }
-
-    .box-title {
-      margin: 0 0 12px;
-      font-size: 18px;
-      letter-spacing: -0.03em;
     }
 
     .stats-grid {
@@ -800,31 +822,6 @@
       font-weight: 800;
     }
 
-    .context-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    .context-item {
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 14px;
-    }
-
-    .context-label {
-      color: var(--muted);
-      font-size: 12px;
-      margin-bottom: 8px;
-    }
-
-    .context-value {
-      font-size: 16px;
-      font-weight: 800;
-    }
-
     .markets-list {
       display: grid;
       gap: 10px;
@@ -849,7 +846,7 @@
       color: var(--muted);
       font-size: 12px;
       margin-top: 6px;
-      line-height: 1.5;
+      line-height: 1.45;
     }
 
     .about-panel {
@@ -932,26 +929,80 @@
         grid-template-columns: 1fr;
       }
 
-      .stats-grid,
-      .context-grid {
+      .stats-grid {
         grid-template-columns: 1fr;
       }
     }
 
     @media (max-width: 720px) {
-      .app-shell { padding: 18px 12px 42px; }
-      .topbar { flex-direction: column; align-items: stretch; }
-      .brand-title { font-size: 26px; }
-      .panel-title, .section-title, .about-title, .ticket-title { font-size: 24px; }
-      .analysis-title { font-size: 28px; }
-      .pick-market, .analysis-market { font-size: 24px; }
-      .team-names { font-size: 15px; }
-      .game-card { grid-template-columns: 1fr; }
-      .ticket-body, .panel-body, .analysis-body, .about-panel { padding-left: 16px; padding-right: 16px; }
-      .ticket-leg, .radar-item, .competition-card, .game-card, .box { padding: 14px; }
-      .ticket-footer { flex-direction: column; align-items: flex-start; }
-      .ticket-actions { width: 100%; }
-      .ticket-button, .primary-button, .ghost-button { width: 100%; justify-content: center; }
+      .app-shell {
+        padding: 18px 12px 42px;
+      }
+
+      .topbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .brand-title {
+        font-size: 26px;
+      }
+
+      .panel-title,
+      .section-title,
+      .about-title,
+      .ticket-title {
+        font-size: 24px;
+      }
+
+      .pick-market,
+      .analysis-market {
+        font-size: 24px;
+      }
+
+      .analysis-title {
+        font-size: 28px;
+      }
+
+      .team-names {
+        font-size: 15px;
+      }
+
+      .game-card {
+        grid-template-columns: 1fr;
+      }
+
+      .ticket-body,
+      .panel-body,
+      .analysis-body,
+      .about-panel {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+
+      .ticket-leg,
+      .radar-item,
+      .competition-card,
+      .game-card,
+      .box {
+        padding: 14px;
+      }
+
+      .ticket-footer {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .ticket-actions {
+        width: 100%;
+      }
+
+      .ticket-button,
+      .primary-button,
+      .ghost-button {
+        width: 100%;
+        justify-content: center;
+      }
     }
   </style>
 </head>
@@ -1053,14 +1104,14 @@
         <h3 class="about-title">Sobre o Scoutly</h3>
         <p class="about-copy">
           O Scoutly é um radar inteligente que analisa dados reais de partidas para identificar oportunidades em apostas de futebol.
-          Nosso modelo cruza estatísticas como gols, escanteios, finalizações e equilíbrio dos confrontos para destacar mercados com maior probabilidade estatística.
+          Nosso sistema cruza estatísticas como gols, escanteios, finalizações e equilíbrio dos confrontos para destacar mercados com maior probabilidade estatística.
         </p>
 
         <div class="about-list">
           <div>• Bilhete Scoutly automático e variável</div>
           <div>• Radar do dia organizado por horário</div>
           <div>• Competições organizadas com bandeiras</div>
-          <div>• Análise completa do jogo com números-chave</div>
+          <div>• Análise completa do jogo com números projetados</div>
           <div>• Pick principal + 2 alternativas por partida</div>
         </div>
 
@@ -1092,7 +1143,7 @@
         <div class="analysis-main-grid">
           <div>
             <div class="box">
-              <h3 class="box-title">Leitura do jogo</h3>
+              <h3 class="box-title">Leitura do Scoutly</h3>
               <div id="analysisInsight" style="color:#dbe6fb;line-height:1.65;font-size:15px;">
                 Nenhuma leitura disponível para esta partida.
               </div>
@@ -1100,13 +1151,13 @@
 
             <div class="analysis-section-grid">
               <div class="box">
-                <h3 class="box-title">Números-chave</h3>
+                <h3 class="box-title">Números projetados do jogo</h3>
                 <div id="analysisStats" class="stats-grid"></div>
               </div>
 
               <div class="box">
-                <h3 class="box-title">Contexto do modelo</h3>
-                <div id="analysisContext" class="context-grid"></div>
+                <h3 class="box-title">Contexto do Scoutly</h3>
+                <div id="analysisContext" class="stats-grid"></div>
               </div>
             </div>
           </div>
@@ -1120,7 +1171,7 @@
     </div>
   </div>
 
-  <script>
+<script>
     const supabaseClient = window.supabase.createClient(
       'https://zngdcatlxlxamceqpxij.supabase.co',
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuZ2RjYXRseGx4YW1jZXFweGlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ0MDUsImV4cCI6MjA4NzkzMDQwNX0.fExn5-TVJKzljnLdg2wqF2I8FjBoNmb1wDmugLUP04M'
@@ -1129,7 +1180,6 @@
     const state = {
       dailyPicks: [],
       matches: [],
-      analysis: [],
       competitions: [],
       selectedLeague: null,
       currentTicket: [],
@@ -1142,11 +1192,9 @@
       'UEFA European Championship': { label: 'Eurocopa', badge: '🌍', sort: 3 },
       'Copa America': { label: 'Copa América', badge: '🌍', sort: 4 },
       'UEFA Nations League': { label: 'Nations League', badge: '🌍', sort: 5 },
-      'Nations League': { label: 'Nations League', badge: '🌍', sort: 5 },
       'International Friendlies': { label: 'Amistosos Internacionais', badge: '🌍', sort: 6 },
       'Amistosos Internacionais': { label: 'Amistosos Internacionais', badge: '🌍', sort: 6 },
       'UEFA Champions League': { label: 'Champions League', badge: '🏆', sort: 10 },
-      'Champions League': { label: 'Champions League', badge: '🏆', sort: 10 },
       'Libertadores': { label: 'Libertadores', badge: '🏆', sort: 11 },
       'CONMEBOL Libertadores': { label: 'Libertadores', badge: '🏆', sort: 11 },
       'UEFA Europa League': { label: 'Europa League', badge: '🏆', sort: 12 },
@@ -1160,7 +1208,6 @@
       'Brasileirão Série B': { label: 'Brasileirão Série B', badge: 'BR', sort: 22 },
       'Copa do Nordeste': { label: 'Copa do Nordeste', badge: 'BR', sort: 23 },
       'Liga Profesional Argentina': { label: 'Liga Argentina', badge: 'AR', sort: 30 },
-      'Liga Argentina': { label: 'Liga Argentina', badge: 'AR', sort: 30 },
       'Copa Argentina': { label: 'Copa Argentina', badge: 'AR', sort: 31 },
       'Serie A': { label: 'Serie A', badge: 'IT', sort: 32 },
       'La Liga': { label: 'La Liga', badge: 'ES', sort: 33 },
@@ -1232,6 +1279,7 @@
           return null;
         }
       }
+
       return null;
     }
 
@@ -1248,7 +1296,7 @@
       });
     }
 
-    function formatHour(value) {
+    function formatKickoffHour(value) {
       if (!value) return '--:--';
       const d = new Date(value);
       if (Number.isNaN(d.getTime())) return '--:--';
@@ -1259,10 +1307,17 @@
       });
     }
 
-    function formatDecimal(value, digits = 1) {
+    function formatDecimal(value, digits = 1, empty = '—') {
       const num = toNumber(value, null);
-      if (num === null) return '-';
+      if (num === null) return empty;
       return num.toFixed(digits);
+    }
+
+    function percentText(value, empty = '—') {
+      const num = toNumber(value, null);
+      if (num === null) return empty;
+      const normalized = num > 1 ? num : num * 100;
+      return `${Math.round(normalized)}%`;
     }
 
     function teamInitials(name) {
@@ -1284,6 +1339,7 @@
         const value = match?.[key];
         if (typeof value === 'string' && value.trim()) return value.trim();
       }
+
       return '';
     }
 
@@ -1328,8 +1384,12 @@
     }
 
     function labelChipMarkup(label) {
-      if (label === 'Best Pick') return `<span class="chip chip-best">🔥 Best Pick</span>`;
-      if (label === 'Boa opção') return `<span class="chip chip-alt">✅ Boa opção</span>`;
+      if (label === 'Best Pick') {
+        return `<span class="chip chip-best">🔥 Best Pick</span>`;
+      }
+      if (label === 'Boa opção') {
+        return `<span class="chip chip-alt">✅ Boa opção</span>`;
+      }
       return `<span class="chip chip-risk">⚠️ Mais arriscada</span>`;
     }
 
@@ -1367,11 +1427,17 @@
       if (Number.isNaN(d.getTime())) return false;
 
       const now = new Date();
-      return (
-        d.getFullYear() === now.getFullYear() &&
-        d.getMonth() === now.getMonth() &&
-        d.getDate() === now.getDate()
-      );
+      const today = new Date(now);
+      today.setHours(0, 0, 0, 0);
+
+      const end = new Date(now);
+      end.setHours(23, 59, 59, 999);
+
+      return d >= today && d <= end;
+    }
+
+    function isMatchVisible(value) {
+      return isTodayMatch(value);
     }
 
     function isCompetitionVisible(value) {
@@ -1391,104 +1457,115 @@
       return d >= start && d <= end;
     }
 
-    function getVisibleMatchesToday() {
+    function getVisibleMatches() {
       return state.matches.filter(match =>
-        isTodayMatch(match.kickoff) && !shouldHideLeague(match.league)
+        isMatchVisible(match.kickoff) &&
+        !shouldHideLeague(match.league)
       );
     }
 
-    function getMatchById(id) {
-      return state.matches.find(match => String(match.id) === String(id)) || null;
-    }
-
-    function getAnalysisByMatchId(id) {
-      return state.analysis.find(row => String(row.match_id) === String(id)) || null;
-    }
-
-    function formatConfidence(prob) {
-      const p = getNormalizedProbability(prob);
-      return `${Math.round(p * 100)}%`;
-    }
-
-    function getNormalizedProbability(prob) {
-      const p = toNumber(prob, 0.62);
-      return p > 1 ? clamp(p / 100, 0, 1) : clamp(p, 0, 1);
-    }
-
-function getMetrics(match) {
+    function getMetrics(match) {
       const metrics = maybeJson(match.metrics) || {};
       const markets = maybeJson(match.markets) || {};
-      const analysis = getAnalysisByMatchId(match.id) || {};
+      const probabilities = maybeJson(match.probabilities) || {};
 
       const avgGoals =
         toNumber(match.avg_goals, null) ??
         toNumber(metrics.goals, null) ??
-        (
-          (toNumber(analysis.expected_home_goals, 0) || 0) +
-          (toNumber(analysis.expected_away_goals, 0) || 0)
-        );
+        (() => {
+          const ehg = toNumber(match.expected_home_goals, null);
+          const eag = toNumber(match.expected_away_goals, null);
+          if (ehg !== null || eag !== null) {
+            return (ehg || 0) + (eag || 0);
+          }
+          return null;
+        })();
 
       const avgCorners =
         toNumber(match.avg_corners, null) ??
+        toNumber(match.expected_corners, null) ??
         toNumber(metrics.corners, null) ??
-        toNumber(markets.corners, null) ??
-        toNumber(analysis.expected_corners, null);
+        toNumber(markets.corners, null);
 
       const avgShots =
         toNumber(match.avg_shots, null) ??
-        toNumber(metrics.shots, null) ??
-        (
-          (toNumber(analysis.expected_home_shots, 0) || 0) +
-          (toNumber(analysis.expected_away_shots, 0) || 0)
-        );
+        toNumber(metrics.shots, null);
 
       const avgShotsOnTarget =
         toNumber(match.avg_shots_on_target, null) ??
         toNumber(metrics.shots_on_target, null) ??
-        toNumber(metrics.sot, null) ??
-        (
-          (toNumber(analysis.expected_home_sot, 0) || 0) +
-          (toNumber(analysis.expected_away_sot, 0) || 0)
-        );
+        toNumber(metrics.sot, null);
 
       const avgCards =
         toNumber(match.avg_cards, null) ??
-        toNumber(metrics.cards, null) ??
-        toNumber(analysis.expected_cards, null);
+        toNumber(match.expected_cards, null) ??
+        toNumber(metrics.cards, null);
 
       const avgFouls =
         toNumber(match.avg_fouls, null) ??
         toNumber(metrics.fouls, null);
 
-      return { avgGoals, avgCorners, avgShots, avgShotsOnTarget, avgCards, avgFouls };
+      const confidence =
+        toNumber(match.confidence_score, null) ??
+        toNumber(match.probability, null);
+
+      const homeStrength = toNumber(match.home_strength, null);
+      const awayStrength = toNumber(match.away_strength, null);
+
+      const homeProb =
+        toNumber(match.home_result_prob, null) ??
+        toNumber(probabilities.home, null);
+
+      const drawProb =
+        toNumber(match.draw_result_prob, null) ??
+        toNumber(probabilities.draw, null);
+
+      const awayProb =
+        toNumber(match.away_result_prob, null) ??
+        toNumber(probabilities.away, null);
+
+      return {
+        avgGoals,
+        avgCorners,
+        avgShots,
+        avgShotsOnTarget,
+        avgCards,
+        avgFouls,
+        confidence,
+        homeStrength,
+        awayStrength,
+        homeProb,
+        drawProb,
+        awayProb
+      };
     }
 
     function getPrimaryPick(match) {
-      const analysis = getAnalysisByMatchId(match.id) || {};
       return (
         match.pick ||
-        analysis.best_pick_1 ||
-        analysis.safe_pick ||
-        analysis.balanced_pick ||
-        analysis.aggressive_pick ||
-        analysis.value_pick ||
+        match.best_pick_1 ||
+        match.safe_pick ||
+        match.balanced_pick ||
+        match.aggressive_pick ||
+        match.value_pick ||
         'Mercado em revisão'
       );
     }
 
     function getSecondaryPicks(match) {
-      const analysis = getAnalysisByMatchId(match.id) || {};
-      const primary = String(getPrimaryPick(match) || '').trim().toLowerCase();
-      const seen = new Set(primary ? [primary] : []);
+      const seen = new Set();
       const picks = [];
 
+      const primary = String(getPrimaryPick(match) || '').trim().toLowerCase();
+      if (primary) seen.add(primary);
+
       const candidates = [
-        analysis.best_pick_2,
-        analysis.best_pick_3,
-        analysis.balanced_pick,
-        analysis.aggressive_pick,
-        analysis.value_pick,
-        analysis.safe_pick
+        match.best_pick_2,
+        match.best_pick_3,
+        match.balanced_pick,
+        match.aggressive_pick,
+        match.value_pick,
+        match.safe_pick
       ];
 
       for (const item of candidates) {
@@ -1504,25 +1581,20 @@ function getMetrics(match) {
     }
 
     function getMatchProbability(match) {
-      const analysis = getAnalysisByMatchId(match.id) || {};
-
       const direct =
         toNumber(match.probability, null) ??
         toNumber(match.main_probability, null) ??
-        toNumber(match.confidence_score, null) ??
-        toNumber(analysis.main_probability, null) ??
-        toNumber(analysis.prob_over25, null);
+        toNumber(match.confidence_score, null);
 
-      return getNormalizedProbability(direct);
+      if (direct !== null) {
+        return direct > 1 ? clamp(direct / 100, 0, 1) : clamp(direct, 0, 1);
+      }
+
+      return 0.62;
     }
 
     function getMatchTier(match) {
       return match.strength || probabilityToTier(getMatchProbability(match));
-    }
-
-    function getGameProfile(match) {
-      const analysis = getAnalysisByMatchId(match.id) || {};
-      return match.game_profile || analysis.game_profile || 'equilibrado';
     }
 
     function buildFallbackInsight(match) {
@@ -1530,11 +1602,11 @@ function getMetrics(match) {
       const { avgGoals, avgCorners, avgShots } = getMetrics(match);
 
       if (primary.includes('escanteios')) {
-        return `A leitura Scoutly destaca um jogo com volume suficiente para trabalhar o mercado de escanteios. A projeção atual está em ${formatDecimal(avgCorners, 1)} escanteios.`;
+        return `A leitura do Scoutly aponta volume estatístico suficiente para sustentar esse mercado, com cerca de ${formatDecimal(avgCorners, 1)} escanteios projetados para a partida.`;
       }
 
       if (primary.includes('menos')) {
-        return `O modelo identifica um jogo mais controlado, com menor tendência de explosão ofensiva. A projeção atual gira em torno de ${formatDecimal(avgGoals, 1)} gols esperados.`;
+        return `O Scoutly enxerga um confronto mais controlado, com menor tendência de explosão ofensiva. A projeção atual gira em torno de ${formatDecimal(avgGoals, 1)} gols para o jogo.`;
       }
 
       if (primary.includes('mais')) {
@@ -1542,16 +1614,14 @@ function getMetrics(match) {
       }
 
       if (primary.includes('dupla chance') || primary.includes('empate')) {
-        return `Mercado mais protegido para o confronto. O modelo enxerga equilíbrio com leve vantagem estatística para o lado recomendado.`;
+        return `O Scoutly vê equilíbrio no confronto, mas com leve vantagem estatística para o lado recomendado. Por isso, a leitura mais segura fica na linha protegida.`;
       }
 
       return `Leitura construída a partir dos dados reais do confronto, cruzando ritmo ofensivo, probabilidade e contexto estatístico para destacar a melhor oportunidade do jogo.`;
     }
 
     function getInsight(match) {
-      const analysis = getAnalysisByMatchId(match.id) || {};
       return (
-        analysis.analysis_text ||
         match.analysis_text ||
         match.insight ||
         buildFallbackInsight(match)
@@ -1559,9 +1629,16 @@ function getMetrics(match) {
     }
 
     function getStatsForDisplay(match) {
-      const { avgGoals, avgCorners, avgShots, avgShotsOnTarget, avgCards, avgFouls } = getMetrics(match);
+      const {
+        avgGoals,
+        avgCorners,
+        avgShots,
+        avgShotsOnTarget,
+        avgCards,
+        avgFouls
+      } = getMetrics(match);
 
-      const items = [
+      return [
         { label: 'Gols esperados', value: formatDecimal(avgGoals, 1) },
         { label: 'Escanteios', value: formatDecimal(avgCorners, 1) },
         { label: 'Finalizações', value: formatDecimal(avgShots, 0) },
@@ -1569,18 +1646,10 @@ function getMetrics(match) {
         { label: 'Cartões', value: formatDecimal(avgCards, 1) },
         { label: 'Faltas', value: formatDecimal(avgFouls, 1) }
       ];
-
-      return items.filter(item => item.value !== '-').slice(0, 6);
     }
 
     function statCardsMarkup(match) {
-      const stats = getStatsForDisplay(match);
-
-      if (!stats.length) {
-        return `<div class="empty-state">Sem números suficientes para este jogo.</div>`;
-      }
-
-      return stats.map(item => `
+      return getStatsForDisplay(match).map(item => `
         <div class="stat-item">
           <div class="stat-label">${escapeHtml(item.label)}</div>
           <div class="stat-value">${escapeHtml(item.value)}</div>
@@ -1588,63 +1657,86 @@ function getMetrics(match) {
       `).join('');
     }
 
-    function getContextItems(match) {
-      const analysis = getAnalysisByMatchId(match.id) || {};
-      const probability = getMatchProbability(match);
-      const items = [
-        { label: 'Confiança', value: formatConfidence(probability) },
-        { label: 'Perfil', value: getGameProfile(match) },
-        { label: 'Liga', value: getLeagueDisplay(match.league) },
-        { label: 'Horário', value: formatHour(match.kickoff) }
-      ];
+    function getContextForDisplay(match) {
+      const {
+        confidence,
+        homeStrength,
+        awayStrength,
+        homeProb,
+        drawProb,
+        awayProb
+      } = getMetrics(match);
 
-      if (analysis.home_strength != null && analysis.away_strength != null) {
-        items[1] = {
+      return [
+        { label: 'Força da leitura', value: getMatchTier(match) },
+        { label: 'Confiança da leitura', value: percentText(confidence) },
+        {
+          label: 'Probabilidades 1X2',
+          value:
+            (homeProb !== null || drawProb !== null || awayProb !== null)
+              ? `${percentText(homeProb)} / ${percentText(drawProb)} / ${percentText(awayProb)}`
+              : '—'
+        },
+        {
           label: 'Força projetada',
-          value: `${formatDecimal(analysis.home_strength, 1)} x ${formatDecimal(analysis.away_strength, 1)}`
-        };
-      }
-
-      return items;
+          value:
+            (homeStrength !== null || awayStrength !== null)
+              ? `${formatDecimal(homeStrength, 1)} x ${formatDecimal(awayStrength, 1)}`
+              : '—'
+        },
+        { label: 'Liga', value: getLeagueDisplay(match.league) },
+        { label: 'Horário', value: formatKickoffHour(match.kickoff) }
+      ];
     }
 
-    function contextMarkup(match) {
-      return getContextItems(match).map(item => `
-        <div class="context-item">
-          <div class="context-label">${escapeHtml(item.label)}</div>
-          <div class="context-value">${escapeHtml(item.value)}</div>
+    function contextCardsMarkup(match) {
+      return getContextForDisplay(match).map(item => `
+        <div class="stat-item">
+          <div class="stat-label">${escapeHtml(item.label)}</div>
+          <div class="stat-value">${escapeHtml(item.value)}</div>
         </div>
       `).join('');
     }
 
+    function getMatchById(id) {
+      return state.matches.find(match => String(match.id) === String(id)) || null;
+    }
+
+    function getDailyPicksForMatch(matchId) {
+      return state.dailyPicks
+        .filter(item => String(item.match_id) === String(matchId))
+        .sort((a, b) => Number(a.rank || 999) - Number(b.rank || 999));
+    }
+
     function getDetectedMarkets(match) {
-      const probability = getMatchProbability(match);
       const primary = getPrimaryPick(match);
-      const secondary = getSecondaryPicks(match);
+      const alternatives = getSecondaryPicks(match);
+      const probability = getMatchProbability(match);
 
       const items = [];
+
       if (primary) {
         items.push({
           label: 'Best Pick',
           market: primary,
           tier: probabilityToTier(probability),
-          copy: 'Leitura principal do modelo para este confronto.'
+          copy: 'Leitura principal do Scoutly para este confronto.'
         });
       }
 
-      if (secondary[0]) {
+      if (alternatives[0]) {
         items.push({
           label: 'Boa opção',
-          market: secondary[0],
+          market: alternatives[0],
           tier: 'Boa',
           copy: 'Alternativa consistente para quem quiser variar a entrada.'
         });
       }
 
-      if (secondary[1]) {
+      if (alternatives[1]) {
         items.push({
           label: 'Mais arriscada',
-          market: secondary[1],
+          market: alternatives[1],
           tier: 'Moderada',
           copy: 'Linha extra com risco maior, mas ainda dentro da leitura do jogo.'
         });
@@ -1653,24 +1745,11 @@ function getMetrics(match) {
       return items.slice(0, 3);
     }
 
-    function getDailyPicksForToday() {
-      return state.dailyPicks
-        .filter(item => item && item.match_id && item.market && isTodayMatch(item.kickoff))
-        .sort((a, b) => {
-          const rankDiff = Number(a.rank || 999) - Number(b.rank || 999);
-          if (rankDiff !== 0) return rankDiff;
-          return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
-        });
-    }
-
     function normalizeTicketPick(rawPick) {
       const match = getMatchById(rawPick.match_id);
       if (!match) return null;
 
-      const probability = getNormalizedProbability(
-        rawPick.probability ?? getMatchProbability(match)
-      );
-
+      const probability = Number(rawPick.probability ?? getMatchProbability(match));
       const tier = probabilityToTier(probability);
 
       return {
@@ -1693,13 +1772,20 @@ function getMetrics(match) {
     }
 
     function buildDailyTicketPool() {
-      return getDailyPicksForToday()
+      return state.dailyPicks
+        .filter(item => item && item.match_id && item.market && isTodayMatch(item.kickoff))
         .map(normalizeTicketPick)
-        .filter(Boolean);
+        .filter(Boolean)
+        .sort((a, b) => {
+          const aRank = state.dailyPicks.find(x => String(x.match_id) === String(a.match_id) && x.market === a.market)?.rank ?? 999;
+          const bRank = state.dailyPicks.find(x => String(x.match_id) === String(b.match_id) && x.market === b.market)?.rank ?? 999;
+          if (aRank !== bRank) return aRank - bRank;
+          return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
+        });
     }
 
     function buildFallbackTicketPool() {
-      return getVisibleMatchesToday()
+      return getVisibleMatches()
         .sort((a, b) => {
           const pDiff = getMatchProbability(b) - getMatchProbability(a);
           if (pDiff !== 0) return pDiff;
@@ -1725,19 +1811,6 @@ function getMetrics(match) {
       });
     }
 
-    function weightedShuffle(pool, seed = 0) {
-      const arr = [...pool];
-
-      return arr
-        .map(item => ({
-          item,
-          weight: item.tierWeight || 1,
-          rand: Math.random() + seed * 0.0001
-        }))
-        .sort((a, b) => (b.weight + b.rand) - (a.weight + a.rand))
-        .map(x => x.item);
-    }
-
     function pickOnePerMatch(pool, maxPicks = 3) {
       const usedMatches = new Set();
       const result = [];
@@ -1754,6 +1827,19 @@ function getMetrics(match) {
       return result;
     }
 
+    function weightedShuffle(pool, seed = 0) {
+      const arr = [...pool];
+
+      return arr
+        .map(item => ({
+          item,
+          weight: item.tierWeight || 1,
+          rand: Math.random() + seed * 0.0001
+        }))
+        .sort((a, b) => (b.weight + b.rand) - (a.weight + a.rand))
+        .map(x => x.item);
+    }
+
     function generateTicket() {
       const poolRaw = buildDailyTicketPool();
       const pool = uniqueByMatchAndMarket(
@@ -1761,56 +1847,63 @@ function getMetrics(match) {
       );
 
       const shuffled = weightedShuffle(pool, state.currentTicketSeed++);
-      state.currentTicket = pickOnePerMatch(shuffled, 3);
+      const picks = pickOnePerMatch(shuffled, 3);
+
+      state.currentTicket = picks;
       renderTicket();
     }
 
+    function ticketItemMarkup(item) {
+      return `
+        <div class="ticket-leg">
+          <div class="teams-row compact">
+            ${teamBadge(item, 'home')}
+            <div class="team-names">${escapeHtml(item.home_team)} x ${escapeHtml(item.away_team)}</div>
+            ${teamBadge(item, 'away')}
+          </div>
+
+          <div class="chip-row">
+            ${chipMarkup(item.tier)}
+          </div>
+
+          <div class="ticket-market">${escapeHtml(item.market)}</div>
+
+          <div class="radar-kickoff">
+            ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
+          </div>
+        </div>
+      `;
+    }
+
     function renderTicket() {
-      const container = document.getElementById('ticketContainer');
+      const el = document.getElementById('ticketContainer');
+      if (!el) return;
 
       if (!state.currentTicket.length) {
-        container.innerHTML = `<div class="empty-state">Nenhum bilhete disponível para hoje.</div>`;
+        el.innerHTML = `<div class="empty-state">Nenhum bilhete disponível para hoje.</div>`;
         return;
       }
 
       const avgProbability =
-        state.currentTicket.reduce((acc, item) => acc + (item.probability || 0), 0) /
-        state.currentTicket.length;
+        state.currentTicket.reduce((acc, item) => acc + Number(item.probability || 0), 0) / state.currentTicket.length;
 
-      const confidenceLabel = probabilityToTier(avgProbability);
-
-      container.innerHTML = `
+      el.innerHTML = `
         <div class="ticket-legs">
-          ${state.currentTicket.map(item => `
-            <div class="ticket-leg">
-              <div class="teams-row compact">
-                ${teamBadge(item, 'home')}
-                <div class="team-names">${escapeHtml(item.home_team)} x ${escapeHtml(item.away_team)}</div>
-                ${teamBadge(item, 'away')}
-              </div>
-
-              <div class="chip-row">
-                ${chipMarkup(item.tier)}
-              </div>
-
-              <div class="ticket-market">${escapeHtml(item.market)}</div>
-
-              <div class="radar-kickoff">
-                ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
-              </div>
-            </div>
-          `).join('')}
+          ${state.currentTicket.map(ticketItemMarkup).join('')}
         </div>
 
         <div class="ticket-footer">
-          <div class="ticket-confidence">Confiança geral: ${escapeHtml(confidenceLabel)}</div>
+          <div class="ticket-confidence">Confiança geral: ${escapeHtml(probabilityToTier(avgProbability))}</div>
           <div class="ticket-helper">Bilhete automático montado a partir do radar do dia.</div>
         </div>
       `;
     }
 
-    function getRadarItems() {
-      const fromDaily = getDailyPicksForToday()
+function renderRadar() {
+      const list = document.getElementById('radarList');
+      if (!list) return;
+
+      const rankedFromDaily = state.dailyPicks
         .map(item => {
           const match = getMatchById(item.match_id);
           if (!match) return null;
@@ -1818,72 +1911,69 @@ function getMetrics(match) {
           return {
             ...match,
             radar_market: item.market || getPrimaryPick(match),
-            radar_probability: getNormalizedProbability(item.probability || getMatchProbability(match)),
+            radar_probability: Number(item.probability || getMatchProbability(match)),
             radar_rank: Number(item.rank || 999)
           };
         })
         .filter(Boolean)
-        .filter(match => !shouldHideLeague(match.league))
+        .filter(item => isMatchVisible(item.kickoff) && !shouldHideLeague(item.league))
         .sort((a, b) => {
-          const rankDiff = a.radar_rank - b.radar_rank;
-          if (rankDiff !== 0) return rankDiff;
+          if (a.radar_rank !== b.radar_rank) return a.radar_rank - b.radar_rank;
           return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
         });
 
-      if (fromDaily.length) return fromDaily.slice(0, 10);
-
-      return getVisibleMatchesToday()
+      const fallback = getVisibleMatches()
+        .filter(match => !rankedFromDaily.some(item => String(item.id) === String(match.id)))
         .sort((a, b) => {
           const pDiff = getMatchProbability(b) - getMatchProbability(a);
           if (pDiff !== 0) return pDiff;
           return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
         })
-        .slice(0, 10)
+        .slice(0, 16)
         .map((match, index) => ({
           ...match,
           radar_market: getPrimaryPick(match),
           radar_probability: getMatchProbability(match),
-          radar_rank: index + 1
+          radar_rank: rankedFromDaily.length + index + 1
         }));
-    }
 
-    function groupRadarByHour(items) {
-      const groups = new Map();
+      const merged = [...rankedFromDaily, ...fallback];
+      const leagueCount = {};
+      const radarItems = [];
 
-      for (const item of items) {
-        const key = formatHour(item.kickoff);
-        if (!groups.has(key)) groups.set(key, []);
-        groups.get(key).push(item);
+      for (const item of merged) {
+        const leagueKey = String(item.league || '').toLowerCase();
+        leagueCount[leagueKey] = leagueCount[leagueKey] || 0;
+        if (leagueCount[leagueKey] >= 2) continue;
+
+        radarItems.push(item);
+        leagueCount[leagueKey] += 1;
+
+        if (radarItems.length === 10) break;
       }
-
-      return Array.from(groups.entries()).sort((a, b) => {
-        const ah = a[0] === '--:--' ? '99:99' : a[0];
-        const bh = b[0] === '--:--' ? '99:99' : b[0];
-        return ah.localeCompare(bh);
-      });
-    }
-
-    function renderRadar() {
-      const list = document.getElementById('radarList');
-      const radarItems = getRadarItems();
 
       if (!radarItems.length) {
         list.innerHTML = `<div class="empty-state">Nenhuma oportunidade encontrada para hoje.</div>`;
         return;
       }
 
-      const groups = groupRadarByHour(radarItems);
+      const groups = new Map();
 
-      let rankCounter = 1;
-      list.innerHTML = groups.map(([hour, items]) => `
+      radarItems.forEach((item, index) => {
+        const hourKey = formatKickoffHour(item.kickoff);
+        if (!groups.has(hourKey)) groups.set(hourKey, []);
+        groups.get(hourKey).push({ ...item, visualRank: index + 1 });
+      });
+
+      list.innerHTML = Array.from(groups.entries()).map(([hour, items]) => `
         <div class="radar-time-group">
           <div class="radar-time-label">${escapeHtml(hour)}</div>
           ${items.map(item => {
-            const currentRank = rankCounter++;
+            const tier = probabilityToTier(item.radar_probability);
             return `
               <div class="radar-item" data-match-id="${escapeHtml(item.id)}">
                 <div class="radar-top">
-                  <div class="radar-rank">${currentRank}</div>
+                  <div class="radar-rank">${item.visualRank}</div>
                   <div class="league-pill">
                     <span>${escapeHtml(getLeagueBadge(item.league))}</span>
                     <span>${escapeHtml(getLeagueDisplay(item.league))}</span>
@@ -1897,7 +1987,7 @@ function getMetrics(match) {
                 </div>
 
                 <div class="chip-row">
-                  ${chipMarkup(probabilityToTier(item.radar_probability))}
+                  ${chipMarkup(tier)}
                 </div>
 
                 <div class="radar-market">${escapeHtml(item.radar_market)}</div>
@@ -1915,7 +2005,7 @@ function getMetrics(match) {
       });
     }
 
-function getFlag(country) {
+    function getFlag(country) {
       const flags = {
         Brazil: 'BR',
         England: 'GB',
@@ -1945,10 +2035,12 @@ function getFlag(country) {
     function buildCompetitions() {
       const map = new Map();
 
-      for (const match of state.matches) {
-        if (!isCompetitionVisible(match.kickoff)) continue;
-        if (shouldHideLeague(match.league)) continue;
+      const visibleMatches = state.matches.filter(match =>
+        isCompetitionVisible(match.kickoff) &&
+        !shouldHideLeague(match.league)
+      );
 
+      for (const match of visibleMatches) {
         const league = match.league || '';
         const country = match.country || null;
 
@@ -1957,24 +2049,32 @@ function getFlag(country) {
             league,
             country,
             count: 0,
-            matches: []
+            matches: [],
+            kickoff: match.kickoff
           });
         }
 
         const item = map.get(league);
         if (!item.country && country) item.country = country;
+        if (!item.kickoff || new Date(match.kickoff) < new Date(item.kickoff)) {
+          item.kickoff = match.kickoff;
+        }
+
         item.count += 1;
         item.matches.push(match);
       }
 
-      state.competitions = Array.from(map.values()).sort(
-        (a, b) => getLeagueSort(a.league) - getLeagueSort(b.league)
-      );
+      state.competitions = Array.from(map.values()).sort((a, b) => {
+        const sortDiff = getLeagueSort(a.league) - getLeagueSort(b.league);
+        if (sortDiff !== 0) return sortDiff;
+        return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
+      });
     }
 
     function renderCompetitions() {
       buildCompetitions();
       const grid = document.getElementById('competitionsGrid');
+      if (!grid) return;
 
       if (!state.competitions.length) {
         grid.innerHTML = `<div class="empty-state">Nenhuma competição encontrada para os próximos jogos.</div>`;
@@ -2003,6 +2103,7 @@ function getFlag(country) {
       grid.onclick = (e) => {
         const card = e.target.closest('.competition-card');
         if (!card) return;
+
         const league = decodeURIComponent(card.dataset.league || '');
         if (!league) return;
         openCompetition(league);
@@ -2026,21 +2127,22 @@ function getFlag(country) {
       const competition = state.competitions.find(c => c.league === league);
       const matches = (competition?.matches || [])
         .filter(match => isCompetitionVisible(match.kickoff) && !shouldHideLeague(match.league))
-        .sort((a, b) => {
-          const ka = a.kickoff ? new Date(a.kickoff).getTime() : 0;
-          const kb = b.kickoff ? new Date(b.kickoff).getTime() : 0;
-          return ka - kb;
-        });
+        .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
 
-      document.getElementById('competitionsWrap').classList.add('hidden');
-      document.getElementById('gamesWrap').classList.remove('hidden');
-      document.getElementById('backToCompetitionsBtn').classList.remove('hidden');
+      document.getElementById('competitionsWrap')?.classList.add('hidden');
+      document.getElementById('gamesWrap')?.classList.remove('hidden');
+      document.getElementById('backToCompetitionsBtn')?.classList.remove('hidden');
 
-      document.getElementById('selectedCompetitionTitle').textContent = getLeagueDisplay(league);
-      document.getElementById('selectedCompetitionCopy').textContent =
-        `${matches.length} jogo(s) entre hoje e os próximos 5 dias nesta competição.`;
-
+      const selectedTitle = document.getElementById('selectedCompetitionTitle');
+      const selectedCopy = document.getElementById('selectedCompetitionCopy');
       const gamesGrid = document.getElementById('gamesGrid');
+
+      if (selectedTitle) selectedTitle.textContent = getLeagueDisplay(league);
+      if (selectedCopy) {
+        selectedCopy.textContent = `${matches.length} jogo(s) entre hoje e os próximos 5 dias nesta competição.`;
+      }
+
+      if (!gamesGrid) return;
 
       if (!matches.length) {
         gamesGrid.innerHTML = `<div class="empty-state">Nenhum jogo encontrado.</div>`;
@@ -2083,9 +2185,9 @@ function getFlag(country) {
 
     function backToCompetitions() {
       state.selectedLeague = null;
-      document.getElementById('competitionsWrap').classList.remove('hidden');
-      document.getElementById('gamesWrap').classList.add('hidden');
-      document.getElementById('backToCompetitionsBtn').classList.add('hidden');
+      document.getElementById('competitionsWrap')?.classList.remove('hidden');
+      document.getElementById('gamesWrap')?.classList.add('hidden');
+      document.getElementById('backToCompetitionsBtn')?.classList.add('hidden');
     }
 
     function openAnalysis(matchId) {
@@ -2096,46 +2198,67 @@ function getFlag(country) {
       const primaryTier = getMatchTier(match);
       const detectedMarkets = getDetectedMarkets(match);
 
-      document.getElementById('analysisTitle').textContent =
-        `${match.home_team || '-'} x ${match.away_team || '-'}`;
+      const analysisTitle = document.getElementById('analysisTitle');
+      const analysisSubtitle = document.getElementById('analysisSubtitle');
+      const analysisMatchSmall = document.getElementById('analysisMatchSmall');
+      const analysisTipChip = document.getElementById('analysisTipChip');
+      const analysisBestPick = document.getElementById('analysisBestPick');
+      const analysisInsight = document.getElementById('analysisInsight');
+      const analysisStats = document.getElementById('analysisStats');
+      const analysisContext = document.getElementById('analysisContext');
+      const marketsList = document.getElementById('marketsList');
+      const overlay = document.getElementById('analysisOverlay');
 
-      document.getElementById('analysisSubtitle').textContent =
-        `${getLeagueBadge(match.league)} ${getLeagueDisplay(match.league)} • ${formatKickoff(match.kickoff)}`;
+      if (analysisTitle) {
+        analysisTitle.textContent = `${match.home_team || '-'} x ${match.away_team || '-'}`;
+      }
 
-      document.getElementById('analysisMatchSmall').innerHTML = `
-        <div class="teams-row compact" style="margin-bottom:0;">
-          ${teamBadge(match, 'home')}
-          <div class="team-names">${escapeHtml(match.home_team || '-')} x ${escapeHtml(match.away_team || '-')}</div>
-          ${teamBadge(match, 'away')}
-        </div>
-      `;
+      if (analysisSubtitle) {
+        analysisSubtitle.textContent = `${getLeagueBadge(match.league)} ${getLeagueDisplay(match.league)} • ${formatKickoff(match.kickoff)}`;
+      }
 
-      document.getElementById('analysisTipChip').innerHTML =
-        chipMarkup(primaryTier) + labelChipMarkup('Best Pick');
+      if (analysisMatchSmall) {
+        analysisMatchSmall.innerHTML = `
+          <div class="teams-row compact" style="margin-bottom:0;">
+            ${teamBadge(match, 'home')}
+            <div class="team-names">${escapeHtml(match.home_team || '-')} x ${escapeHtml(match.away_team || '-')}</div>
+            ${teamBadge(match, 'away')}
+          </div>
+        `;
+      }
 
-      document.getElementById('analysisBestPick').textContent = primaryPick;
-      document.getElementById('analysisInsight').textContent = getInsight(match);
-      document.getElementById('analysisStats').innerHTML = statCardsMarkup(match);
-      document.getElementById('analysisContext').innerHTML = contextMarkup(match);
+      if (analysisTipChip) {
+        analysisTipChip.innerHTML = `
+          ${chipMarkup(primaryTier)}
+          ${labelChipMarkup('Best Pick')}
+        `;
+      }
 
-      document.getElementById('marketsList').innerHTML = detectedMarkets.length
-        ? detectedMarkets.map(item => `
-            <div class="market-line">
-              <div class="chip-row" style="margin-top:0;">
-                ${labelChipMarkup(item.label)}
-                ${chipMarkup(item.tier)}
+      if (analysisBestPick) analysisBestPick.textContent = primaryPick;
+      if (analysisInsight) analysisInsight.textContent = getInsight(match);
+      if (analysisStats) analysisStats.innerHTML = statCardsMarkup(match);
+      if (analysisContext) analysisContext.innerHTML = contextCardsMarkup(match);
+
+      if (marketsList) {
+        marketsList.innerHTML = detectedMarkets.length
+          ? detectedMarkets.map(item => `
+              <div class="market-line">
+                <div class="chip-row" style="margin-top:0;">
+                  ${labelChipMarkup(item.label)}
+                  ${chipMarkup(item.tier)}
+                </div>
+                <div class="market-line-name">${escapeHtml(item.market)}</div>
+                <div class="market-line-copy">${escapeHtml(item.copy)}</div>
               </div>
-              <div class="market-line-name">${escapeHtml(item.market)}</div>
-              <div class="market-line-copy">${escapeHtml(item.copy)}</div>
-            </div>
-          `).join('')
-        : `<div class="empty-state">Nenhuma oportunidade extra encontrada para este jogo.</div>`;
+            `).join('')
+          : `<div class="empty-state">Nenhuma oportunidade extra encontrada para este jogo.</div>`;
+      }
 
-      document.getElementById('analysisOverlay').classList.add('open');
+      if (overlay) overlay.classList.add('open');
     }
 
     function closeAnalysis() {
-      document.getElementById('analysisOverlay').classList.remove('open');
+      document.getElementById('analysisOverlay')?.classList.remove('open');
     }
 
     function renderLoadError(errorMap = {}) {
@@ -2144,14 +2267,13 @@ function getFlag(country) {
 
       setStatus('Erro ao carregar dados do Scoutly.', false);
 
-      document.getElementById('radarList').innerHTML =
-        `<div class="error-state">${escapeHtml(message)}</div>`;
+      const radarList = document.getElementById('radarList');
+      const competitionsGrid = document.getElementById('competitionsGrid');
+      const ticketContainer = document.getElementById('ticketContainer');
 
-      document.getElementById('competitionsGrid').innerHTML =
-        `<div class="error-state">${escapeHtml(message)}</div>`;
-
-      document.getElementById('ticketContainer').innerHTML =
-        `<div class="error-state">${escapeHtml(message)}</div>`;
+      if (radarList) radarList.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
+      if (competitionsGrid) competitionsGrid.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
+      if (ticketContainer) ticketContainer.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
     }
 
     async function loadDailyPicks() {
@@ -2165,28 +2287,54 @@ function getFlag(country) {
     }
 
     async function loadMatches() {
-      const { data, error } = await supabaseClient
+      const { data: matchesData, error: matchesError } = await supabaseClient
         .from('matches')
         .select('*')
         .order('priority', { ascending: false })
         .order('kickoff', { ascending: true });
 
-      if (error) throw error;
-      state.matches = (data || []).filter(match => {
-        if (!match.home_team || !match.away_team) return false;
-        if (!match.league) return false;
-        if (shouldHideLeague(match.league)) return false;
-        return true;
-      });
-    }
+      if (matchesError) throw matchesError;
 
-    async function loadAnalysis() {
-      const { data, error } = await supabaseClient
-        .from('match_analysis')
-        .select('*');
+      let analysisData = [];
+      try {
+        const { data, error } = await supabaseClient
+          .from('match_analysis')
+          .select('*');
 
-      if (error) throw error;
-      state.analysis = data || [];
+        if (!error) analysisData = data || [];
+      } catch (_) {}
+
+      const analysisMap = new Map(
+        (analysisData || []).map(item => [String(item.match_id), item])
+      );
+
+      state.matches = (matchesData || [])
+        .map(match => {
+          const analysis = analysisMap.get(String(match.id)) || {};
+          return {
+            ...match,
+            ...analysis,
+            id: match.id,
+            home_team: match.home_team,
+            away_team: match.away_team,
+            league: match.league,
+            country: match.country,
+            kickoff: match.kickoff,
+            home_logo: match.home_logo,
+            away_logo: match.away_logo
+          };
+        })
+        .filter(match => {
+          if (!match.home_team || !match.away_team) return false;
+          if (!match.league) return false;
+          if (shouldHideLeague(match.league)) return false;
+          return true;
+        });
+
+      console.log('MATCHES CARREGADOS:', state.matches.length);
+      console.log('DAILY PICKS CARREGADOS:', state.dailyPicks.length);
+      window.debugMatches = state.matches;
+      window.debugDailyPicks = state.dailyPicks;
     }
 
     async function initialize() {
@@ -2207,41 +2355,31 @@ function getFlag(country) {
         errors.matches = error.message || JSON.stringify(error);
       }
 
-      try {
-        await loadAnalysis();
-      } catch (error) {
-        console.error('match_analysis error:', error);
-        errors.match_analysis = error.message || JSON.stringify(error);
-      }
-
       if (Object.keys(errors).length) {
         renderLoadError(errors);
         return;
       }
 
-      renderTicket();
       renderRadar();
       renderCompetitions();
       generateTicket();
 
       setStatus(`Conexão OK · Matches carregados: ${state.matches.length}`, true);
 
-      document.getElementById('generateTicketBtn').addEventListener('click', generateTicket);
-      document.getElementById('backToCompetitionsBtn').addEventListener('click', backToCompetitions);
-      document.getElementById('closeAnalysisBtn').addEventListener('click', closeAnalysis);
+      const generateBtn = document.getElementById('generateTicketBtn');
+      if (generateBtn) {
+        generateBtn.addEventListener('click', () => generateTicket());
+      }
+
+      document.getElementById('backToCompetitionsBtn')?.addEventListener('click', backToCompetitions);
+      document.getElementById('closeAnalysisBtn')?.addEventListener('click', closeAnalysis);
 
       const overlay = document.getElementById('analysisOverlay');
-      overlay.addEventListener('click', (e) => {
-        if (e.target.id === 'analysisOverlay') closeAnalysis();
-      });
-
-      window.debugScoutly = {
-        state,
-        getVisibleMatchesToday,
-        getRadarItems,
-        getMatchById,
-        getAnalysisByMatchId
-      };
+      if (overlay) {
+        overlay.addEventListener('click', (e) => {
+          if (e.target.id === 'analysisOverlay') closeAnalysis();
+        });
+      }
     }
 
     initialize();
