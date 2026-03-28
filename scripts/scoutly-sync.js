@@ -26,13 +26,14 @@ const API = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
 
 /**
- * SYNC V7.1
+ * SYNC V7
  * Objetivo:
- * - manter estabilidade da base
- * - evitar sumiço desnecessário de jogos/competições
- * - gravar matches com payload forte para o front
- * - manter match_analysis só com colunas reais
- * - manter daily_picks consistente
+ * - manter janela prática de 5 dias
+ * - popular matches corretamente
+ * - popular match_stats corretamente
+ * - popular match_analysis somente com colunas reais
+ * - evitar jogos sem base mínima
+ * - evitar excesso inútil de requests
  */
 const WINDOW_HOURS = 120
 const REQUEST_DELAY_MS = 350
@@ -1474,11 +1475,11 @@ function buildInsight(mainPick, metrics, profile) {
   }
 
   if (mainPick === "Menos de 2.5 gols") {
-    return `O Scoutly identifica um cenário mais travado, com baixa explosão ofensiva e bom suporte estatístico para até 2 gols no jogo.`
+    return `O modelo identifica um cenário mais travado, com baixa explosão ofensiva e bom suporte estatístico para até 2 gols no jogo.`
   }
 
   if (mainPick === "Menos de 3.5 gols") {
-    return `O Scoutly identifica um cenário mais controlado, com boa sustentação estatística para até 3 gols no jogo.`
+    return `O modelo identifica um cenário mais controlado, com boa sustentação estatística para até 3 gols no jogo.`
   }
 
   if (mainPick.includes("escanteios")) {
@@ -1541,13 +1542,25 @@ function hasMinimumMatchData(homeContext, awayContext) {
   return homeOk && awayOk
 }
 
-async function clearOldMatchesOnly() {
+async function clearFutureWindow() {
   const now = new Date().toISOString()
+  const { start, end } = getSyncWindowRange()
+  const startIso = start.toISOString()
+  const endIso = end.toISOString()
+
+  const { error: dailyError } = await supabase
+    .from("daily_picks")
+    .delete()
+    .neq("id", 0)
+
+  if (dailyError) {
+    throw new Error(`Supabase delete daily_picks: ${dailyError.message}`)
+  }
 
   const { data: oldRows, error: oldError } = await supabase
     .from("matches")
     .select("id")
-    .lt("kickoff", now)
+    .lte("kickoff", now)
 
   if (oldError) {
     throw new Error(`Supabase select old matches: ${oldError.message}`)
@@ -1555,47 +1568,77 @@ async function clearOldMatchesOnly() {
 
   const oldIds = (oldRows || []).map((x) => x.id)
 
-  if (!oldIds.length) return 0
+  if (oldIds.length) {
+    const { error: statsOldError } = await supabase
+      .from("match_stats")
+      .delete()
+      .in("match_id", oldIds)
 
-  const { error: statsOldError } = await supabase
-    .from("match_stats")
-    .delete()
-    .in("match_id", oldIds)
+    if (statsOldError) {
+      console.log("Aviso ao limpar match_stats antigo:", statsOldError.message)
+    }
 
-  if (statsOldError) {
-    console.log("Aviso ao limpar match_stats antigo:", statsOldError.message)
+    const { error: analysisOldError } = await supabase
+      .from("match_analysis")
+      .delete()
+      .in("match_id", oldIds)
+
+    if (analysisOldError) {
+      console.log("Aviso ao limpar match_analysis antigo:", analysisOldError.message)
+    }
+
+    const { error: deleteOldError } = await supabase
+      .from("matches")
+      .delete()
+      .in("id", oldIds)
+
+    if (deleteOldError) {
+      throw new Error(`Supabase delete old matches: ${deleteOldError.message}`)
+    }
   }
 
-  const { error: analysisOldError } = await supabase
-    .from("match_analysis")
-    .delete()
-    .in("match_id", oldIds)
-
-  if (analysisOldError) {
-    console.log("Aviso ao limpar match_analysis antigo:", analysisOldError.message)
-  }
-
-  const { error: deleteOldError } = await supabase
+  const { data: futureRows, error: futureError } = await supabase
     .from("matches")
-    .delete()
-    .in("id", oldIds)
+    .select("id")
+    .gte("kickoff", startIso)
+    .lte("kickoff", endIso)
 
-  if (deleteOldError) {
-    throw new Error(`Supabase delete old matches: ${deleteOldError.message}`)
+  if (futureError) {
+    throw new Error(`Supabase select future matches: ${futureError.message}`)
   }
 
-  return oldIds.length
-}
+  const futureIds = (futureRows || []).map((x) => x.id)
 
-async function clearDailyPicksOnly() {
-  const { error } = await supabase
-    .from("daily_picks")
-    .delete()
-    .neq("id", 0)
+  if (futureIds.length) {
+    const { error: statsFutureError } = await supabase
+      .from("match_stats")
+      .delete()
+      .in("match_id", futureIds)
 
-  if (error) {
-    throw new Error(`Supabase delete daily_picks: ${error.message}`)
+    if (statsFutureError) {
+      console.log("Aviso ao limpar match_stats futuro:", statsFutureError.message)
+    }
+
+    const { error: analysisFutureError } = await supabase
+      .from("match_analysis")
+      .delete()
+      .in("match_id", futureIds)
+
+    if (analysisFutureError) {
+      console.log("Aviso ao limpar match_analysis futuro:", analysisFutureError.message)
+    }
+
+    const { error: deleteFutureError } = await supabase
+      .from("matches")
+      .delete()
+      .in("id", futureIds)
+
+    if (deleteFutureError) {
+      throw new Error(`Supabase delete future matches: ${deleteFutureError.message}`)
+    }
   }
+
+  return oldIds.length + futureIds.length
 }
 
 async function upsertMatch(match) {
@@ -1610,18 +1653,12 @@ async function upsertMatch(match) {
     away_team: match.away_team || null,
     home_logo: match.home_logo || null,
     away_logo: match.away_logo || null,
-
     probabilities: match.probabilities || null,
     markets: match.markets || null,
     metrics: match.metrics || null,
-
     pick: match.pick || null,
     probability: match.probability || null,
     insight: match.insight || null,
-
-    game_profile: match.game_profile || null,
-    confidence_score: match.confidence_score || null,
-
     updated_at: new Date().toISOString(),
   }
 
@@ -1653,6 +1690,11 @@ async function upsertMatchStats(row) {
   if (error) throw error
 }
 
+/**
+ * IMPORTANTE:
+ * Aqui está a correção principal.
+ * Essa função grava SOMENTE as colunas que existem hoje em match_analysis.
+ */
 async function upsertMatchAnalysis(row) {
   const payload = {
     match_id: row.match_id,
@@ -1707,9 +1749,8 @@ async function buildAndStoreMatches(fixtureLists) {
 
   console.log(`📅 Fixtures na janela ativa: ${allFixtures.length}`)
 
-  const clearedOld = await clearOldMatchesOnly()
-  await clearDailyPicksOnly()
-  console.log(`🧹 Limpeza concluída. Antigos removidos: ${clearedOld}`)
+  const cleared = await clearFutureWindow()
+  console.log(`🧹 Limpeza prévia concluída: ${cleared}`)
 
   const stored = []
 
@@ -1794,36 +1835,16 @@ async function buildAndStoreMatches(fixtureLists) {
         away_team: fixture?.teams?.away?.name || null,
         home_logo: fixture?.teams?.home?.logo || null,
         away_logo: fixture?.teams?.away?.logo || null,
-
         probabilities: {
           home: probabilities.home,
           draw: probabilities.draw,
           away: probabilities.away,
         },
-
-        markets: {
-          ...markets,
-          over15: probabilities.over15,
-          over25: probabilities.over25,
-          btts: probabilities.btts,
-          under35: probabilities.under35,
-        },
-
-        metrics: {
-          ...metrics,
-          goals: metrics.goals,
-          corners: metrics.corners,
-          shots: metrics.shots,
-          shots_on_target: metrics.shots_on_target,
-          cards: metrics.cards,
-          fouls: metrics.fouls,
-        },
-
+        markets,
+        metrics,
         pick: mainPick.market,
         probability: mainPick.probability,
         insight,
-        game_profile: gameProfile,
-        confidence_score: mainPick.score,
       }
 
       await upsertMatch(matchPayload)
@@ -1899,7 +1920,7 @@ async function rebuildDailyPicks(matches) {
   if (!matches.length) return 0
 
   const sorted = [...matches]
-    .filter((m) => m.id && m.pick && m.metrics && m.metrics.goals > 0 && isTodayMatchForSync(m.kickoff))
+    .filter((m) => m.id && m.pick && m.metrics && m.metrics.goals > 0)
     .sort((a, b) => {
       const pa = safeNumber(a.probability, 0)
       const pb = safeNumber(b.probability, 0)
@@ -1930,7 +1951,7 @@ async function rebuildDailyPicks(matches) {
   }
 
   const rows = selected.map((m, index) => ({
-    rank: index + 1,
+    rank: index,
     match_id: m.id,
     league: m.league,
     home_team: m.home_team,
@@ -1957,21 +1978,8 @@ async function rebuildDailyPicks(matches) {
   return rows.length
 }
 
-function isTodayMatchForSync(kickoff) {
-  if (!kickoff) return false
-  const d = new Date(kickoff)
-  if (Number.isNaN(d.getTime())) return false
-
-  const now = new Date()
-  return (
-    d.getFullYear() === now.getFullYear() &&
-    d.getMonth() === now.getMonth() &&
-    d.getDate() === now.getDate()
-  )
-}
-
 async function run() {
-  console.log("🚀 Scoutly Sync V7.1 iniciado")
+  console.log("🚀 Scoutly Sync V7 iniciado")
 
   const { start, end } = getSyncWindowRange()
   console.log(`📆 Janela ativa: ${start.toISOString()} -> ${end.toISOString()}`)
@@ -1991,10 +1999,10 @@ async function run() {
 
   console.log(`🏁 Daily picks gerados: ${picksCount}`)
   console.log(`✅ Matches gravados com pipeline completo: ${storedMatches.length}`)
-  console.log("✅ Scoutly Sync V7.1 concluído")
+  console.log("✅ Scoutly Sync V7 concluído")
 }
 
 run().catch((error) => {
-  console.error("❌ Erro fatal no Scoutly Sync V7.1:", error)
+  console.error("❌ Erro fatal no Scoutly Sync V7:", error)
   process.exit(1)
 })
