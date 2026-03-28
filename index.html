@@ -1250,10 +1250,13 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuZ2RjYXRseGx4YW1jZXFweGlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ0MDUsImV4cCI6MjA4NzkzMDQwNX0.fExn5-TVJKzljnLdg2wqF2I8FjBoNmb1wDmugLUP04M'
     );
 
-    const MATCH_END_GRACE_MINUTES = 115;
-    const AUTO_UI_REFRESH_MS = 60000;
-    const AUTO_DATA_REFRESH_MS = 180000;
-
+   const MATCH_END_GRACE_MINUTES = 115;
+const RADAR_LOOKAHEAD_HOURS = 24;
+const RADAR_MIN_ITEMS = 10;
+const RADAR_MAX_ITEMS = 15;
+const AUTO_UI_REFRESH_MS = 60000;
+const AUTO_DATA_REFRESH_MS = 180000;
+    
     const state = {
       dailyPicks: [],
       matches: [],
@@ -1568,38 +1571,46 @@
     }
 
     function isTodayMatch(value) {
-      if (!value) return false;
-      const d = new Date(value);
-      if (Number.isNaN(d.getTime())) return false;
+  if (!value) return false;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return false;
 
-      const now = new Date();
-      const today = new Date(now);
-      today.setHours(0, 0, 0, 0);
+  const now = new Date();
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
 
-      const end = new Date(now);
-      end.setHours(23, 59, 59, 999);
+  const end = new Date(now);
+  end.setHours(23, 59, 59, 999);
 
-      return d >= today && d <= end;
-    }
+  return d >= today && d <= end;
+}
 
-    function isStillRelevantForRadar(value) {
-      if (!value) return false;
-      const d = new Date(value);
-      if (Number.isNaN(d.getTime())) return false;
+function isStillRelevantForRadar(value) {
+  if (!value) return false;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return false;
 
-      const now = new Date();
-      const endWindow = new Date(d.getTime() + MATCH_END_GRACE_MINUTES * 60000);
+  const now = new Date();
+  const endWindow = new Date(d.getTime() + MATCH_END_GRACE_MINUTES * 60000);
+  const lookAhead = new Date(now.getTime() + RADAR_LOOKAHEAD_HOURS * 60 * 60 * 1000);
 
-      return isTodayMatch(value) && endWindow > now;
-    }
+  return endWindow > now && d <= lookAhead;
+}
 
-    function isStillRelevantForTicket(value) {
-      return isStillRelevantForRadar(value);
-    }
+function isStillRelevantForTicket(value) {
+  return isStillRelevantForRadar(value);
+}
 
-    function isMatchVisible(value) {
-      return isStillRelevantForRadar(value);
-    }
+function isMatchVisible(value) {
+  return isStillRelevantForRadar(value);
+}
+
+function getRadarEligibleMatches() {
+  return state.matches.filter(match =>
+    isStillRelevantForRadar(match.kickoff) &&
+    !shouldHideLeague(match.league)
+  );
+}
 
     function isCompetitionVisible(value) {
       if (!value) return false;
@@ -1619,10 +1630,7 @@
     }
 
     function getVisibleMatches() {
-      return state.matches.filter(match =>
-        isMatchVisible(match.kickoff) &&
-        !shouldHideLeague(match.league)
-      );
+      return getRadarEligibleMatches();
     }
 
     function getMetrics(match) {
@@ -1952,22 +1960,22 @@
         });
     }
 
-    function buildFallbackTicketPool() {
-      return getVisibleMatches()
-        .filter(match => isStillRelevantForTicket(match.kickoff))
-        .sort((a, b) => {
-          const pDiff = getMatchProbability(b) - getMatchProbability(a);
-          if (pDiff !== 0) return pDiff;
-          return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
-        })
-        .slice(0, 18)
-        .map(match => normalizeTicketPick({
-          match_id: match.id,
-          market: getPrimaryPick(match),
-          probability: getMatchProbability(match)
-        }))
-        .filter(Boolean);
-    }
+   function buildFallbackTicketPool() {
+  return getRadarEligibleMatches()
+    .filter(match => isStillRelevantForTicket(match.kickoff))
+    .sort((a, b) => {
+      const pDiff = getMatchProbability(b) - getMatchProbability(a);
+      if (Math.abs(pDiff) > 0.0001) return pDiff;
+      return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
+    })
+    .slice(0, 24)
+    .map(match => normalizeTicketPick({
+      match_id: match.id,
+      market: getPrimaryPick(match),
+      probability: getMatchProbability(match)
+    }))
+    .filter(Boolean);
+}
 
     function uniqueByMatchAndMarket(items) {
       const seen = new Set();
@@ -2085,104 +2093,162 @@
     }
 
 function renderRadar() {
-      const list = document.getElementById('radarList');
-      if (!list) return;
+  const list = document.getElementById('radarList');
+  if (!list) return;
 
-      const rankedFromDaily = state.dailyPicks
-        .map(item => {
-          const match = getMatchById(item.match_id);
-          if (!match) return null;
-          if (!isStillRelevantForRadar(match.kickoff)) return null;
+  const eligibleMatches = getRadarEligibleMatches();
 
-          return {
-            ...match,
-            home_team: normalizeTeamName(match.home_team),
-            away_team: normalizeTeamName(match.away_team),
-            radar_market: item.market || getPrimaryPick(match),
-            radar_probability: Number(item.probability || getMatchProbability(match)),
-            radar_rank: Number(item.rank || 999)
-          };
-        })
-        .filter(Boolean)
-        .filter(item => !shouldHideLeague(item.league))
-        .sort((a, b) => {
-          if (a.radar_rank !== b.radar_rank) return a.radar_rank - b.radar_rank;
-          return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
-        });
+  const rankedFromDaily = state.dailyPicks
+    .map(item => {
+      const match = getMatchById(item.match_id);
+      if (!match) return null;
+      if (!isStillRelevantForRadar(match.kickoff)) return null;
 
-      const fallback = getVisibleMatches()
-        .filter(match => !rankedFromDaily.some(item => String(item.id) === String(match.id)))
-        .filter(match => isStillRelevantForRadar(match.kickoff))
-        .sort((a, b) => {
-          const pDiff = getMatchProbability(b) - getMatchProbability(a);
-          if (pDiff !== 0) return pDiff;
-          return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
-        })
-        .slice(0, 20)
-        .map((match, index) => ({
-          ...match,
-          home_team: normalizeTeamName(match.home_team),
-          away_team: normalizeTeamName(match.away_team),
-          radar_market: getPrimaryPick(match),
-          radar_probability: getMatchProbability(match),
-          radar_rank: rankedFromDaily.length + index + 1
-        }));
+      return {
+        ...match,
+        home_team: normalizeTeamName(match.home_team),
+        away_team: normalizeTeamName(match.away_team),
+        radar_market: item.market || getPrimaryPick(match),
+        radar_probability: Number(item.probability || getMatchProbability(match)),
+        radar_rank: Number(item.rank || 999)
+      };
+    })
+    .filter(Boolean)
+    .filter(item => !shouldHideLeague(item.league))
+    .sort((a, b) => {
+      if (a.radar_rank !== b.radar_rank) return a.radar_rank - b.radar_rank;
+      return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
+    });
 
-      const merged = [...rankedFromDaily, ...fallback];
-      const radarItems = merged.slice(0, 15);
+  const fallback = eligibleMatches
+    .filter(match => !rankedFromDaily.some(item => String(item.id) === String(match.id)))
+    .sort((a, b) => {
+      const aTime = new Date(a.kickoff).getTime();
+      const bTime = new Date(b.kickoff).getTime();
 
-      if (!radarItems.length) {
-        list.innerHTML = `<div class="empty-state">Nenhuma oportunidade ativa encontrada para agora.</div>`;
-        return;
-      }
+      const pDiff = getMatchProbability(b) - getMatchProbability(a);
+      if (Math.abs(pDiff) > 0.0001) return pDiff;
 
-      const groups = new Map();
+      return aTime - bTime;
+    })
+    .slice(0, 30)
+    .map((match, index) => ({
+      ...match,
+      home_team: normalizeTeamName(match.home_team),
+      away_team: normalizeTeamName(match.away_team),
+      radar_market: getPrimaryPick(match),
+      radar_probability: getMatchProbability(match),
+      radar_rank: rankedFromDaily.length + index + 1
+    }));
 
-      radarItems.forEach((item, index) => {
-        const hourKey = formatKickoffHour(item.kickoff);
-        if (!groups.has(hourKey)) groups.set(hourKey, []);
-        groups.get(hourKey).push({ ...item, visualRank: index + 1 });
-      });
+  let merged = [...rankedFromDaily, ...fallback];
 
-      list.innerHTML = Array.from(groups.entries()).map(([hour, items]) => `
-        <div class="radar-time-group">
-          <div class="radar-time-label">${escapeHtml(hour)}</div>
-          ${items.map(item => {
-            const tier = probabilityToTier(item.radar_probability);
-            return `
-              <div class="radar-item" data-match-id="${escapeHtml(item.id)}">
-                <div class="radar-top">
-                  <div class="radar-rank">${item.visualRank}</div>
-                  <div class="league-pill">
-                    <span>${escapeHtml(getLeagueBadge(item.league))}</span>
-                    <span>${escapeHtml(getLeagueDisplay(item.league))}</span>
-                  </div>
-                </div>
+  merged = merged
+    .sort((a, b) => {
+      const aTime = new Date(a.kickoff).getTime();
+      const bTime = new Date(b.kickoff).getTime();
 
-                <div class="teams-row compact">
-                  ${teamBadge(item, 'home')}
-                  <div class="team-names">${escapeHtml(item.home_team)} x ${escapeHtml(item.away_team)}</div>
-                  ${teamBadge(item, 'away')}
-                </div>
+      const aStarted = aTime <= Date.now();
+      const bStarted = bTime <= Date.now();
 
-                <div class="chip-row">
-                  ${chipMarkup(tier)}
-                </div>
+      if (aStarted !== bStarted) return aStarted ? -1 : 1;
 
-                <div class="radar-market">${escapeHtml(item.radar_market)}</div>
-                <div class="radar-kickoff">
-                  ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
-                </div>
+      if (a.radar_rank !== b.radar_rank) return a.radar_rank - b.radar_rank;
+
+      return aTime - bTime;
+    })
+    .slice(0, RADAR_MAX_ITEMS);
+
+  if (merged.length < RADAR_MIN_ITEMS) {
+    const extra = state.matches
+      .filter(match =>
+        !merged.some(item => String(item.id) === String(match.id)) &&
+        !shouldHideLeague(match.league)
+      )
+      .filter(match => {
+        if (!match.kickoff) return false;
+        const d = new Date(match.kickoff);
+        if (Number.isNaN(d.getTime())) return false;
+
+        const now = new Date();
+        const extraLookAhead = new Date(now.getTime() + 48 * 60 * 60 * 1000);
+
+        return d > now && d <= extraLookAhead;
+      })
+      .sort((a, b) => {
+        const pDiff = getMatchProbability(b) - getMatchProbability(a);
+        if (Math.abs(pDiff) > 0.0001) return pDiff;
+        return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
+      })
+      .slice(0, RADAR_MIN_ITEMS - merged.length)
+      .map((match, index) => ({
+        ...match,
+        home_team: normalizeTeamName(match.home_team),
+        away_team: normalizeTeamName(match.away_team),
+        radar_market: getPrimaryPick(match),
+        radar_probability: getMatchProbability(match),
+        radar_rank: merged.length + index + 1
+      }));
+
+    merged = [...merged, ...extra]
+      .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime())
+      .slice(0, RADAR_MAX_ITEMS);
+  }
+
+  const radarItems = merged;
+
+  if (!radarItems.length) {
+    list.innerHTML = `<div class="empty-state">Nenhuma oportunidade ativa encontrada para agora.</div>`;
+    return;
+  }
+
+  const groups = new Map();
+
+  radarItems.forEach((item, index) => {
+    const hourKey = formatKickoffHour(item.kickoff);
+    if (!groups.has(hourKey)) groups.set(hourKey, []);
+    groups.get(hourKey).push({ ...item, visualRank: index + 1 });
+  });
+
+  list.innerHTML = Array.from(groups.entries()).map(([hour, items]) => `
+    <div class="radar-time-group">
+      <div class="radar-time-label">${escapeHtml(hour)}</div>
+      ${items.map(item => {
+        const tier = probabilityToTier(item.radar_probability);
+        return `
+          <div class="radar-item" data-match-id="${escapeHtml(item.id)}">
+            <div class="radar-top">
+              <div class="radar-rank">${item.visualRank}</div>
+              <div class="league-pill">
+                <span>${escapeHtml(getLeagueBadge(item.league))}</span>
+                <span>${escapeHtml(getLeagueDisplay(item.league))}</span>
               </div>
-            `;
-          }).join('')}
-        </div>
-      `).join('');
+            </div>
 
-      list.querySelectorAll('.radar-item').forEach(el => {
-        el.addEventListener('click', () => openAnalysis(el.dataset.matchId));
-      });
-    }
+            <div class="teams-row compact">
+              ${teamBadge(item, 'home')}
+              <div class="team-names">${escapeHtml(item.home_team)} x ${escapeHtml(item.away_team)}</div>
+              ${teamBadge(item, 'away')}
+            </div>
+
+            <div class="chip-row">
+              ${chipMarkup(tier)}
+            </div>
+
+            <div class="radar-market">${escapeHtml(item.radar_market)}</div>
+            <div class="radar-kickoff">
+              ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
+            </div>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `).join('');
+
+  list.querySelectorAll('.radar-item').forEach(el => {
+    el.addEventListener('click', () => openAnalysis(el.dataset.matchId));
+  });
+}
 
     function getFlag(country) {
       const flags = {
