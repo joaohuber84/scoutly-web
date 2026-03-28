@@ -26,7 +26,7 @@ const API = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
 
 /**
- * SYNC V7
+ * SYNC V8
  * Objetivo:
  * - manter janela prática de 5 dias
  * - popular matches corretamente
@@ -34,6 +34,8 @@ const TIMEZONE = "America/Sao_Paulo"
  * - popular match_analysis somente com colunas reais
  * - evitar jogos sem base mínima
  * - evitar excesso inútil de requests
+ * - reduzir repetição exagerada de under escanteios
+ * - equilibrar melhor picks entre gols / dupla chance / ambas / escanteios
  */
 const WINDOW_HOURS = 120
 const REQUEST_DELAY_MS = 350
@@ -55,6 +57,8 @@ const MIN_REQUIRED_STATS_MATCHES = 2
  * RADAR
  */
 const MAX_DAILY_PICKS = 20
+const MAX_SAME_MARKET_IN_DAILY = 2
+const MAX_SAME_LEAGUE_IN_DAILY = 4
 
 /**
  * CACHE
@@ -103,6 +107,20 @@ const TARGET_COMPETITIONS = [
     display: "Copa do Nordeste",
     region: "brazil",
     priority: 90,
+  },
+  {
+    mode: "search",
+    search: "Copa Verde",
+    display: "Copa Verde",
+    region: "brazil",
+    priority: 82,
+  },
+  {
+    mode: "search",
+    search: "Copa Sul-Sudeste",
+    display: "Copa Sul-Sudeste",
+    region: "brazil",
+    priority: 80,
   },
   {
     mode: "search",
@@ -662,6 +680,14 @@ function normalizeCompetitionName(country, rawName, fallbackDisplay) {
   if (c === "Brazil" && name === "Serie B") return "Brasileirão Série B"
   if (c === "Brazil" && normalizeText(name).includes("copa do brasil")) return "Copa do Brasil"
   if (c === "Brazil" && normalizeText(name).includes("nordeste")) return "Copa do Nordeste"
+  if (c === "Brazil" && normalizeText(name).includes("verde")) return "Copa Verde"
+  if (
+    c === "Brazil" &&
+    (normalizeText(name).includes("sul-sudeste") ||
+      normalizeText(name).includes("sul sudeste"))
+  ) {
+    return "Copa Sul-Sudeste"
+  }
   if (c === "Brazil" && normalizeText(name).includes("women")) return "Brasileirão Feminino"
 
   if (c === "Argentina" && (name === "Liga Profesional Argentina" || name === "Primera División")) {
@@ -760,6 +786,17 @@ async function resolveSearchCompetition(target) {
 
       if (target.display === "Copa do Nordeste") {
         if (!haystack.includes("nordeste")) return null
+      }
+
+      if (target.display === "Copa Verde") {
+        if (!haystack.includes("verde")) return null
+      }
+
+      if (target.display === "Copa Sul-Sudeste") {
+        const ok =
+          haystack.includes("sul-sudeste") ||
+          haystack.includes("sul sudeste")
+        if (!ok) return null
       }
 
       if (target.display === "Amistosos Internacionais") {
@@ -1337,40 +1374,40 @@ function buildCandidateMarkets(payload) {
   let bestCornersOverLine = null
   let bestCornersOverProb = 0
 
-  if (metrics.expectedCorners >= 10.6) {
+  if (metrics.expectedCorners >= 10.8) {
     bestCornersOverLine = "Mais de 9.5 escanteios"
-    bestCornersOverProb = clamp((metrics.expectedCorners - 7.3) / 3.2, 0.1, 0.92)
-  } else if (metrics.expectedCorners >= 9.3) {
+    bestCornersOverProb = clamp((metrics.expectedCorners - 7.4) / 3.1, 0.1, 0.92)
+  } else if (metrics.expectedCorners >= 9.5) {
     bestCornersOverLine = "Mais de 8.5 escanteios"
-    bestCornersOverProb = clamp((metrics.expectedCorners - 6.8) / 3.0, 0.1, 0.91)
-  } else if (metrics.expectedCorners >= 8.2) {
+    bestCornersOverProb = clamp((metrics.expectedCorners - 6.9) / 3.0, 0.1, 0.90)
+  } else if (metrics.expectedCorners >= 8.4) {
     bestCornersOverLine = "Mais de 7.5 escanteios"
-    bestCornersOverProb = clamp((metrics.expectedCorners - 6.0) / 2.8, 0.1, 0.89)
+    bestCornersOverProb = clamp((metrics.expectedCorners - 6.1) / 2.8, 0.1, 0.87)
   }
 
   let bestCornersUnderLine = null
   let bestCornersUnderProb = 0
 
-  if (metrics.expectedCorners <= 7.0) {
+  if (metrics.expectedCorners <= 6.6) {
     bestCornersUnderLine = "Menos de 9.5 escanteios"
-    bestCornersUnderProb = clamp((10.3 - metrics.expectedCorners) / 3.2, 0.1, 0.9)
-  } else if (metrics.expectedCorners <= 8.0) {
+    bestCornersUnderProb = clamp((10.1 - metrics.expectedCorners) / 3.1, 0.1, 0.88)
+  } else if (metrics.expectedCorners <= 7.6) {
     bestCornersUnderLine = "Menos de 10.5 escanteios"
-    bestCornersUnderProb = clamp((11.0 - metrics.expectedCorners) / 3.3, 0.1, 0.9)
+    bestCornersUnderProb = clamp((10.8 - metrics.expectedCorners) / 3.2, 0.1, 0.85)
   }
 
   if (probabilities.over25 >= 0.66) add("Mais de 2.5 gols", probabilities.over25, "gols")
   if (probabilities.over15 >= 0.76) add("Mais de 1.5 gols", probabilities.over15, "gols")
   if (under25 >= 0.74) add("Menos de 2.5 gols", under25, "gols")
-  if (probabilities.under35 >= 0.8) add("Menos de 3.5 gols", probabilities.under35, "gols")
+  if (probabilities.under35 >= 0.80) add("Menos de 3.5 gols", probabilities.under35, "gols")
   if (probabilities.btts >= 0.63) add("Ambas marcam", probabilities.btts, "ambas")
   if (bttsNo >= 0.72) add("Ambas não marcam", bttsNo, "ambas")
 
-  if (bestCornersOverLine && bestCornersOverProb >= 0.64) {
+  if (bestCornersOverLine && bestCornersOverProb >= 0.67) {
     add(bestCornersOverLine, bestCornersOverProb, "escanteios")
   }
 
-  if (bestCornersUnderLine && bestCornersUnderProb >= 0.68) {
+  if (bestCornersUnderLine && bestCornersUnderProb >= 0.74) {
     add(bestCornersUnderLine, bestCornersUnderProb, "escanteios")
   }
 
@@ -1383,12 +1420,27 @@ function buildCandidateMarkets(payload) {
 }
 
 function chooseMainPick(candidates) {
-  return candidates[0] || {
-    market: "Menos de 3.5 gols",
-    probability: 0.6,
-    score: 0.6,
-    family: "gols",
+  if (!candidates.length) {
+    return {
+      market: "Menos de 3.5 gols",
+      probability: 0.6,
+      score: 0.6,
+      family: "gols",
+    }
   }
+
+  const sorted = [...candidates].sort((a, b) => b.score - a.score)
+  const top = sorted[0]
+
+  if (top.family !== "escanteios") return top
+
+  const alt = sorted.find((item) => {
+    if (!item || item.market === top.market) return false
+    if (item.family === "escanteios") return false
+    return item.score >= top.score - 0.03
+  })
+
+  return alt || top
 }
 
 function chooseExtraPicks(candidates, mainPick) {
@@ -1427,6 +1479,19 @@ function normalizeLeagueByTeams(comp, fixture) {
 
   if (normalizeText(leagueNameRaw).includes("nordeste")) {
     leagueDisplay = "Copa do Nordeste"
+    country = "Brazil"
+  }
+
+  if (normalizeText(leagueNameRaw).includes("verde")) {
+    leagueDisplay = "Copa Verde"
+    country = "Brazil"
+  }
+
+  if (
+    normalizeText(leagueNameRaw).includes("sul-sudeste") ||
+    normalizeText(leagueNameRaw).includes("sul sudeste")
+  ) {
+    leagueDisplay = "Copa Sul-Sudeste"
     country = "Brazil"
   }
 
@@ -1895,7 +1960,8 @@ async function buildAndStoreMatches(fixtureLists) {
             (x) =>
               x.market === "Mais de 2.5 gols" ||
               x.market === "Ambas marcam" ||
-              x.market.includes("Mais de 9.5 escanteios")
+              x.market.includes("Mais de 9.5 escanteios") ||
+              x.market.includes("Mais de 8.5 escanteios")
           )?.market || null,
         analysis_text: insight,
       })
@@ -1932,26 +1998,42 @@ async function rebuildDailyPicks(matches) {
   const selected = []
   const marketCount = {}
   const leagueCount = {}
+  const familyCount = {}
+
+  function detectFamily(market = "") {
+    const m = normalizeText(market)
+    if (m.includes("escanteio")) return "escanteios"
+    if (m.includes("ambas")) return "ambas"
+    if (m.includes("dupla chance")) return "dupla_chance"
+    if (m.includes("vitoria") || m.includes("vitória") || m.includes("empate")) return "resultado"
+    if (m.includes("gol")) return "gols"
+    return "outro"
+  }
 
   for (const match of sorted) {
     const market = String(match.pick || "")
     const league = String(match.league || "")
+    const family = detectFamily(market)
 
     marketCount[market] = marketCount[market] || 0
     leagueCount[league] = leagueCount[league] || 0
+    familyCount[family] = familyCount[family] || 0
 
-    if (marketCount[market] >= 3) continue
-    if (leagueCount[league] >= 5) continue
+    if (marketCount[market] >= MAX_SAME_MARKET_IN_DAILY) continue
+    if (leagueCount[league] >= MAX_SAME_LEAGUE_IN_DAILY) continue
+    if (family === "escanteios" && familyCount[family] >= 4) continue
+    if (family === "gols" && familyCount[family] >= 6) continue
 
     selected.push(match)
     marketCount[market] += 1
     leagueCount[league] += 1
+    familyCount[family] += 1
 
     if (selected.length >= MAX_DAILY_PICKS) break
   }
 
   const rows = selected.map((m, index) => ({
-    rank: index,
+    rank: index + 1,
     match_id: m.id,
     league: m.league,
     home_team: m.home_team,
@@ -1959,7 +2041,7 @@ async function rebuildDailyPicks(matches) {
     market: m.pick,
     probability: round(m.probability),
     kickoff: m.kickoff,
-    is_opportunity: true,
+    is_opportunity: false,
     home_logo: m.home_logo || null,
     away_logo: m.away_logo || null,
     created_at: new Date().toISOString(),
@@ -1979,7 +2061,7 @@ async function rebuildDailyPicks(matches) {
 }
 
 async function run() {
-  console.log("🚀 Scoutly Sync V7 iniciado")
+  console.log("🚀 Scoutly Sync V8 iniciado")
 
   const { start, end } = getSyncWindowRange()
   console.log(`📆 Janela ativa: ${start.toISOString()} -> ${end.toISOString()}`)
@@ -1999,10 +2081,10 @@ async function run() {
 
   console.log(`🏁 Daily picks gerados: ${picksCount}`)
   console.log(`✅ Matches gravados com pipeline completo: ${storedMatches.length}`)
-  console.log("✅ Scoutly Sync V7 concluído")
+  console.log("✅ Scoutly Sync V8 concluído")
 }
 
 run().catch((error) => {
-  console.error("❌ Erro fatal no Scoutly Sync V7:", error)
+  console.error("❌ Erro fatal no Scoutly Sync V8:", error)
   process.exit(1)
 })
