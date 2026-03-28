@@ -265,7 +265,8 @@ function mergeMatchRow(matchRow, analysisMap) {
   )
   const under25Prob = clamp(1 - over25Prob, 0, 1)
   const under35Prob = clamp(
-    toNumber(markets.under35, 0) || clamp(1 - Math.max(over25Prob - 0.18, 0), 0, 1),
+    toNumber(markets.under35, 0) ||
+      clamp(1 - Math.max(over25Prob - 0.18, 0), 0, 1),
     0,
     1
   )
@@ -481,6 +482,17 @@ function pushCandidate(candidates, item) {
   })
 }
 
+function marketFamily(market) {
+  const m = String(market || "").trim().toLowerCase()
+
+  if (!m) return "outro"
+  if (m.includes("escanteio")) return "escanteios"
+  if (m.includes("ambas")) return "btts"
+  if (m.includes("dupla chance") || m.includes("empate") || m.includes("vitória")) return "resultado"
+  if (m.includes("gol")) return "gols"
+  return "outro"
+}
+
 function buildMarketCandidates(row) {
   const candidates = []
 
@@ -677,12 +689,35 @@ function chooseBestAndAlternatives(candidates) {
   const sorted = [...candidates].sort((a, b) => b.score - a.score)
   const best = sorted[0]
 
-  const alternatives = sorted
-    .slice(1)
-    .filter((item, index, arr) => {
-      return arr.findIndex((x) => x.market === item.market) === index
-    })
-    .slice(0, 3)
+  const usedFamilies = new Set()
+  usedFamilies.add(best.family || marketFamily(best.market))
+
+  const alternatives = []
+
+  for (const item of sorted.slice(1)) {
+    if (!item || !item.market) continue
+    if (item.market === best.market) continue
+
+    const family = item.family || marketFamily(item.market)
+    if (usedFamilies.has(family)) continue
+
+    alternatives.push(item)
+    usedFamilies.add(family)
+
+    if (alternatives.length === 2) break
+  }
+
+  if (alternatives.length < 2) {
+    for (const item of sorted.slice(1)) {
+      if (!item || !item.market) continue
+      if (item.market === best.market) continue
+      if (alternatives.find((x) => x.market === item.market)) continue
+
+      alternatives.push(item)
+
+      if (alternatives.length === 2) break
+    }
+  }
 
   return { best, alternatives }
 }
@@ -736,8 +771,8 @@ function buildAnalysisFromRow(row) {
     rhythm,
     insight: buildInsight(row, best, profile),
     best_pick_1: best.market,
-    best_pick_2: alternatives[0]?.market || row.best_pick_2 || null,
-    best_pick_3: alternatives[1]?.market || row.best_pick_3 || null,
+    best_pick_2: alternatives[0]?.market || null,
+    best_pick_3: alternatives[1]?.market || null,
     aggressive_pick: aggressivePick,
   }
 }
@@ -876,7 +911,7 @@ async function rebuildDailyPicks(radar, ticket) {
 }
 
 async function runScoutlyBrain() {
-  console.log("🧠 Scoutly Brain V9 iniciado...")
+  console.log("🧠 Scoutly Brain V10 iniciado...")
 
   const matches = await loadTodaysMatches()
   console.log(`📦 Jogos de hoje carregados para análise: ${matches.length}`)
@@ -930,12 +965,12 @@ async function runScoutlyBrain() {
 
   await rebuildDailyPicks(radar, ticket)
 
-  console.log("✅ Scoutly Brain V9 finalizado com sucesso.")
+  console.log("✅ Scoutly Brain V10 finalizado com sucesso.")
   console.log(`📡 Radar do dia gerado com ${radar.length} jogo(s).`)
   console.log(`🎫 Bilhete do dia definido com ${ticket.length} jogo(s).`)
 }
 
 runScoutlyBrain().catch((error) => {
-  console.error("❌ Erro no Scoutly Brain V9:", error)
+  console.error("❌ Erro no Scoutly Brain V10:", error)
   process.exit(1)
 })
