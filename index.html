@@ -117,7 +117,7 @@
       gap: 8px;
       padding: 9px 13px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255,255,255,0.04);
       border: 1px solid var(--border);
       color: var(--muted);
       font-size: 12px;
@@ -140,7 +140,7 @@
     }
 
     .panel {
-      background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));
+      background: linear-gradient(180deg, rgba(19,33,60,0.95), rgba(12,23,44,0.98));
       border: 1px solid var(--border);
       border-radius: var(--radius-xl);
       box-shadow: var(--shadow);
@@ -319,7 +319,7 @@
 
     .radar-list {
       display: grid;
-      gap: 10px;
+      gap: 12px;
       margin-top: 8px;
       max-height: 720px;
       overflow-y: auto;
@@ -342,8 +342,23 @@
       border-radius: 999px;
     }
 
+    .radar-day-group {
+      display: grid;
+      gap: 10px;
+    }
+
+    .radar-day-label {
+      font-size: 12px;
+      font-weight: 900;
+      color: #dfe9ff;
+      letter-spacing: 0.04em;
+      margin: 4px 2px 0;
+      text-transform: uppercase;
+    }
+
     .radar-time-group {
-      margin-top: 4px;
+      display: grid;
+      gap: 8px;
     }
 
     .radar-time-label {
@@ -352,12 +367,12 @@
       color: var(--amber);
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      margin: 6px 2px 8px;
+      margin: 2px 2px 0;
     }
 
     .radar-item {
       background: rgba(255,255,255,0.045);
-      border: 1px solid rgba(112, 154, 255, 0.14);
+      border: 1px solid rgba(112,154,255,0.14);
       border-radius: var(--radius-lg);
       padding: 13px;
       cursor: pointer;
@@ -413,10 +428,10 @@
     }
 
     .ticket-card {
-      background: linear-gradient(135deg, rgba(18, 36, 66, 0.98), rgba(15, 31, 56, 0.98));
-      border: 1px solid rgba(240, 211, 107, 0.24);
+      background: linear-gradient(135deg, rgba(18,36,66,0.98), rgba(15,31,56,0.98));
+      border: 1px solid rgba(240,211,107,0.24);
       border-radius: var(--radius-xl);
-      box-shadow: 0 24px 50px rgba(0, 0, 0, 0.42);
+      box-shadow: 0 24px 50px rgba(0,0,0,0.42);
       transition: 0.2s ease;
       position: relative;
       overflow: hidden;
@@ -427,7 +442,7 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(circle at top right, rgba(240, 211, 107, 0.10), transparent 30%),
+        radial-gradient(circle at top right, rgba(240,211,107,0.10), transparent 30%),
         linear-gradient(180deg, rgba(255,255,255,0.02), transparent 40%);
       pointer-events: none;
     }
@@ -645,11 +660,11 @@
     }
 
     .competition-card {
-      background: linear-gradient(180deg, rgba(21, 36, 64, 0.98), rgba(11, 24, 45, 0.98));
-      border: 1px solid rgba(112, 154, 255, 0.16);
+      background: linear-gradient(180deg, rgba(21,36,64,0.98), rgba(11,24,45,0.98));
+      border: 1px solid rgba(112,154,255,0.16);
       border-radius: var(--radius-lg);
       padding: 16px;
-      box-shadow: 0 16px 34px rgba(0, 0, 0, 0.30);
+      box-shadow: 0 16px 34px rgba(0,0,0,0.30);
       cursor: pointer;
       transition: 0.2s ease;
       position: relative;
@@ -660,7 +675,7 @@
       content: "";
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at top right, rgba(116, 167, 255, 0.10), transparent 32%);
+      background: radial-gradient(circle at top right, rgba(116,167,255,0.10), transparent 32%);
       pointer-events: none;
     }
 
@@ -720,7 +735,7 @@
       grid-template-columns: 1fr;
       gap: 14px;
       align-items: center;
-      background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));
+      background: linear-gradient(180deg, rgba(19,33,60,0.95), rgba(12,23,44,0.98));
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       padding: 15px;
@@ -770,7 +785,7 @@
       max-width: 1040px;
       max-height: 94vh;
       overflow: auto;
-      background: linear-gradient(180deg, rgba(19, 33, 60, 0.98), rgba(10, 18, 34, 0.98));
+      background: linear-gradient(180deg, rgba(19,33,60,0.98), rgba(10,18,34,0.98));
       border: 1px solid var(--border);
       border-radius: 28px;
       box-shadow: var(--shadow);
@@ -910,8 +925,8 @@
 
     .about-panel {
       margin-top: 26px;
-      background: linear-gradient(180deg, rgba(16, 29, 54, 0.96), rgba(11, 22, 41, 0.98));
-      border: 1px solid rgba(112, 154, 255, 0.14);
+      background: linear-gradient(180deg, rgba(16,29,54,0.96), rgba(11,22,41,0.98));
+      border: 1px solid rgba(112,154,255,0.14);
       border-radius: var(--radius-xl);
       box-shadow: 0 20px 40px rgba(0,0,0,0.32);
       padding: 18px;
@@ -953,7 +968,7 @@
     .empty-state,
     .loading-state,
     .error-state {
-      background: linear-gradient(180deg, rgba(19, 33, 60, 0.95), rgba(12, 23, 44, 0.98));
+      background: linear-gradient(180deg, rgba(19,33,60,0.95), rgba(12,23,44,0.98));
       border: 1px dashed rgba(112,154,255,0.22);
       border-radius: var(--radius-lg);
       padding: 22px;
@@ -968,8 +983,8 @@
       text-align: left;
       font-family: monospace;
       color: #ffd7d7;
-      border-color: rgba(255, 110, 110, 0.22);
-      background: linear-gradient(180deg, rgba(50, 22, 30, 0.95), rgba(32, 14, 20, 0.98));
+      border-color: rgba(255,110,110,0.22);
+      background: linear-gradient(180deg, rgba(50,22,30,0.95), rgba(32,14,20,0.98));
     }
 
     .hidden {
@@ -1077,7 +1092,6 @@
       }
     }
   </style>
-
 </head>
 <body>
   <div class="app-shell">
@@ -1131,7 +1145,7 @@
             <div class="eyebrow">Radar Scoutly</div>
             <h2 class="panel-title">Radar do dia</h2>
             <p class="panel-subtitle">
-              As melhores oportunidades ativas do momento, organizadas por horário para leitura rápida e decisão mais clara.
+              As melhores oportunidades ativas do momento, organizadas por dia e horário para leitura rápida e decisão mais clara.
             </p>
           </div>
 
@@ -1182,10 +1196,10 @@
 
         <div class="about-list">
           <div>• Bilhete Scoutly automático e variável</div>
-          <div>• Radar do dia organizado por horário</div>
+          <div>• Radar do dia organizado por dia e horário</div>
           <div>• Competições organizadas com bandeiras</div>
           <div>• Análise completa do jogo com números projetados</div>
-          <div>• Pick principal + oportunidades alternativas</div>
+          <div>• Pick principal + oportunidades alternativas com mais variedade</div>
         </div>
 
         <div class="footer-note">
@@ -1246,148 +1260,150 @@
 
   <script>
     const supabaseClient = window.supabase.createClient(
-      'https://zngdcatlxlxamceqpxij.supabase.co',
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuZ2RjYXRseGx4YW1jZXFweGlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ0MDUsImV4cCI6MjA4NzkzMDQwNX0.fExn5-TVJKzljnLdg2wqF2I8FjBoNmb1wDmugLUP04M'
+      "https://zngdcatlxlxamceqpxij.supabase.co",
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuZ2RjYXRseGx4YW1jZXFweGlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ0MDUsImV4cCI6MjA4NzkzMDQwNX0.fExn5-TVJKzljnLdg2wqF2I8FjBoNmb1wDmugLUP04M"
     );
 
-   const MATCH_END_GRACE_MINUTES = 115;
-const RADAR_LOOKAHEAD_HOURS = 24;
-const RADAR_MIN_ITEMS = 10;
-const RADAR_MAX_ITEMS = 15;
-const AUTO_UI_REFRESH_MS = 60000;
-const AUTO_DATA_REFRESH_MS = 180000;
-    
+    const MATCH_END_GRACE_MINUTES = 115;
+    const RADAR_LOOKAHEAD_HOURS = 36;
+    const RADAR_MIN_ITEMS = 10;
+    const RADAR_MAX_ITEMS = 15;
+    const TICKET_SIZE = 3;
+    const AUTO_UI_REFRESH_MS = 60000;
+    const AUTO_DATA_REFRESH_MS = 180000;
+
     const state = {
       dailyPicks: [],
       matches: [],
       competitions: [],
       selectedLeague: null,
       currentTicket: [],
-      currentTicketSeed: 0,
       refreshTimer: null,
-      dataRefreshTimer: null
+      dataRefreshTimer: null,
+      lastRadarSnapshot: [],
+      lastOpenedMatchId: null
     };
 
     const TEAM_NAME_MAP = {
-      'South Korea': 'Coreia do Sul',
-      'Korea Republic': 'Coreia do Sul',
-      'Ivory Coast': 'Costa do Marfim',
-      'Faroe Islands': 'Ilhas Faroé',
-      'USA': 'Estados Unidos',
-      'United States': 'Estados Unidos',
-      'Mexico': 'México',
-      'Czech Republic': 'República Tcheca',
-      'Bosnia and Herzegovina': 'Bósnia e Herzegovina',
-      'Saudi Arabia': 'Arábia Saudita',
-      'Turkey': 'Turquia',
-      'Wales': 'País de Gales',
-      'Scotland': 'Escócia',
-      'Netherlands': 'Holanda',
-      'Iran': 'Irã',
-      'Russia': 'Rússia',
-      'Slovakia': 'Eslováquia',
-      'Slovenia': 'Eslovênia',
-      'Croatia': 'Croácia',
-      'Serbia': 'Sérvia',
-      'Sweden': 'Suécia',
-      'Norway': 'Noruega',
-      'Denmark': 'Dinamarca',
-      'Germany': 'Alemanha',
-      'France': 'França',
-      'Spain': 'Espanha',
-      'England': 'Inglaterra',
-      'Portugal': 'Portugal',
-      'Belgium': 'Bélgica',
-      'Switzerland': 'Suíça',
-      'Austria': 'Áustria',
-      'Greece': 'Grécia',
-      'Poland': 'Polônia',
-      'Japan': 'Japão',
-      'China': 'China',
-      'Morocco': 'Marrocos',
-      'Tunisia': 'Tunísia',
-      'Algeria': 'Argélia',
-      'Egypt': 'Egito'
+      "South Korea": "Coreia do Sul",
+      "Korea Republic": "Coreia do Sul",
+      "Ivory Coast": "Costa do Marfim",
+      "Faroe Islands": "Ilhas Faroé",
+      "USA": "Estados Unidos",
+      "United States": "Estados Unidos",
+      "Mexico": "México",
+      "Czech Republic": "República Tcheca",
+      "Bosnia and Herzegovina": "Bósnia e Herzegovina",
+      "Saudi Arabia": "Arábia Saudita",
+      "Turkey": "Turquia",
+      "Wales": "País de Gales",
+      "Scotland": "Escócia",
+      "Netherlands": "Holanda",
+      "Iran": "Irã",
+      "Russia": "Rússia",
+      "Slovakia": "Eslováquia",
+      "Slovenia": "Eslovênia",
+      "Croatia": "Croácia",
+      "Serbia": "Sérvia",
+      "Sweden": "Suécia",
+      "Norway": "Noruega",
+      "Denmark": "Dinamarca",
+      "Germany": "Alemanha",
+      "France": "França",
+      "Spain": "Espanha",
+      "England": "Inglaterra",
+      "Portugal": "Portugal",
+      "Belgium": "Bélgica",
+      "Switzerland": "Suíça",
+      "Austria": "Áustria",
+      "Greece": "Grécia",
+      "Poland": "Polônia",
+      "Japan": "Japão",
+      "China": "China",
+      "Morocco": "Marrocos",
+      "Tunisia": "Tunísia",
+      "Algeria": "Argélia",
+      "Egypt": "Egito"
     };
 
     const leagueMeta = {
-      'FIFA World Cup': { label: 'Copa do Mundo', badge: '🌍', sort: 1 },
-      'FIFA Club World Cup': { label: 'Mundial de Clubes', badge: '🌍', sort: 2 },
-      'UEFA European Championship': { label: 'Eurocopa', badge: '🌍', sort: 3 },
-      'Copa America': { label: 'Copa América', badge: '🌍', sort: 4 },
-      'UEFA Nations League': { label: 'Nations League', badge: '🌍', sort: 5 },
-      'Nations League': { label: 'Nations League', badge: '🌍', sort: 5 },
-      'International Friendlies': { label: 'Amistosos Internacionais', badge: '🌍', sort: 6 },
-      'Amistosos Internacionais': { label: 'Amistosos Internacionais', badge: '🌍', sort: 6 },
-      'Eliminatórias Europeias': { label: 'Eliminatórias Europeias', badge: '🌍', sort: 7 },
-      'Eliminatórias da Euro': { label: 'Eliminatórias da Euro', badge: '🌍', sort: 8 },
-      'Eliminatórias Sul-Americanas': { label: 'Eliminatórias Sul-Americanas', badge: '🌍', sort: 9 },
-      'UEFA Champions League': { label: 'Champions League', badge: '🏆', sort: 10 },
-      'Libertadores': { label: 'Libertadores', badge: '🏆', sort: 11 },
-      'CONMEBOL Libertadores': { label: 'Libertadores', badge: '🏆', sort: 11 },
-      'UEFA Europa League': { label: 'Europa League', badge: '🏆', sort: 12 },
-      'UEFA Europa Conference League': { label: 'Conference League', badge: '🏆', sort: 13 },
-      'UEFA Conference League': { label: 'Conference League', badge: '🏆', sort: 13 },
-      'Sul-Americana': { label: 'Sul-Americana', badge: '🏆', sort: 14 },
-      'CONMEBOL Sudamericana': { label: 'Sul-Americana', badge: '🏆', sort: 14 },
-      'CONCACAF Champions Cup': { label: 'CONCACAF Champions Cup', badge: '🏆', sort: 15 },
-      'Copa do Brasil': { label: 'Copa do Brasil', badge: '🏆', sort: 20 },
-      'Brasileirão Série A': { label: 'Brasileirão Série A', badge: 'BR', sort: 21 },
-      'Brasileirão Série B': { label: 'Brasileirão Série B', badge: 'BR', sort: 22 },
-      'Brasileirão Feminino': { label: 'Brasileirão Feminino', badge: 'BR', sort: 23 },
-      'Copa do Nordeste': { label: 'Copa do Nordeste', badge: 'BR', sort: 24 },
-      'Copa Sul-Sudeste': { label: 'Copa Sul-Sudeste', badge: 'BR', sort: 25 },
-      'Copa Verde': { label: 'Copa Verde', badge: 'BR', sort: 26 },
-      'Liga Argentina': { label: 'Liga Argentina', badge: 'AR', sort: 30 },
-      'Copa Argentina': { label: 'Copa Argentina', badge: 'AR', sort: 31 },
-      'Serie A': { label: 'Serie A', badge: 'IT', sort: 32 },
-      'La Liga': { label: 'La Liga', badge: 'ES', sort: 33 },
-      'Premier League': { label: 'Premier League', badge: 'GB', sort: 34 },
-      'Bundesliga': { label: 'Bundesliga', badge: 'DE', sort: 35 },
-      'Ligue 1': { label: 'Ligue 1', badge: 'FR', sort: 36 },
-      'Eredivisie': { label: 'Eredivisie', badge: 'NL', sort: 37 },
-      'Liga MX': { label: 'Liga MX', badge: 'MX', sort: 38 },
-      'Primeira Liga': { label: 'Primeira Liga', badge: 'PT', sort: 39 },
-      'MLS': { label: 'MLS', badge: 'US', sort: 40 },
-      'Austrian Bundesliga': { label: 'Austrian Bundesliga', badge: 'AT', sort: 41 },
-      'Belgian Pro League': { label: 'Belgian Pro League', badge: 'BE', sort: 42 },
-      'Superliga': { label: 'Superliga', badge: 'DK', sort: 43 },
-      'Super League Greece': { label: 'Super League Greece', badge: 'GR', sort: 44 },
-      'Super Lig': { label: 'Super Lig', badge: 'TR', sort: 45 },
-      'Saudi Pro League': { label: 'Saudi Pro League', badge: 'SA', sort: 46 }
+      "FIFA World Cup": { label: "Copa do Mundo", badge: "🌍", sort: 1 },
+      "FIFA Club World Cup": { label: "Mundial de Clubes", badge: "🌍", sort: 2 },
+      "UEFA European Championship": { label: "Eurocopa", badge: "🌍", sort: 3 },
+      "Copa America": { label: "Copa América", badge: "🌍", sort: 4 },
+      "UEFA Nations League": { label: "Nations League", badge: "🌍", sort: 5 },
+      "Nations League": { label: "Nations League", badge: "🌍", sort: 5 },
+      "International Friendlies": { label: "Amistosos Internacionais", badge: "🌍", sort: 6 },
+      "Amistosos Internacionais": { label: "Amistosos Internacionais", badge: "🌍", sort: 6 },
+      "Eliminatórias Europeias": { label: "Eliminatórias Europeias", badge: "🌍", sort: 7 },
+      "Eliminatórias da Euro": { label: "Eliminatórias da Euro", badge: "🌍", sort: 8 },
+      "Eliminatórias Sul-Americanas": { label: "Eliminatórias Sul-Americanas", badge: "🌍", sort: 9 },
+      "UEFA Champions League": { label: "Champions League", badge: "🏆", sort: 10 },
+      "Libertadores": { label: "Libertadores", badge: "🏆", sort: 11 },
+      "CONMEBOL Libertadores": { label: "Libertadores", badge: "🏆", sort: 11 },
+      "UEFA Europa League": { label: "Europa League", badge: "🏆", sort: 12 },
+      "UEFA Europa Conference League": { label: "Conference League", badge: "🏆", sort: 13 },
+      "UEFA Conference League": { label: "Conference League", badge: "🏆", sort: 13 },
+      "Sul-Americana": { label: "Sul-Americana", badge: "🏆", sort: 14 },
+      "CONMEBOL Sudamericana": { label: "Sul-Americana", badge: "🏆", sort: 14 },
+      "CONCACAF Champions Cup": { label: "CONCACAF Champions Cup", badge: "🏆", sort: 15 },
+      "Copa do Brasil": { label: "Copa do Brasil", badge: "🏆", sort: 20 },
+      "Brasileirão Série A": { label: "Brasileirão Série A", badge: "BR", sort: 21 },
+      "Brasileirão Série B": { label: "Brasileirão Série B", badge: "BR", sort: 22 },
+      "Brasileirão Feminino": { label: "Brasileirão Feminino", badge: "BR", sort: 23 },
+      "Copa do Nordeste": { label: "Copa do Nordeste", badge: "BR", sort: 24 },
+      "Copa Sul-Sudeste": { label: "Copa Sul-Sudeste", badge: "BR", sort: 25 },
+      "Copa Verde": { label: "Copa Verde", badge: "BR", sort: 26 },
+      "Liga Argentina": { label: "Liga Argentina", badge: "AR", sort: 30 },
+      "Copa Argentina": { label: "Copa Argentina", badge: "AR", sort: 31 },
+      "Serie A": { label: "Serie A", badge: "IT", sort: 32 },
+      "La Liga": { label: "La Liga", badge: "ES", sort: 33 },
+      "Premier League": { label: "Premier League", badge: "GB", sort: 34 },
+      "Bundesliga": { label: "Bundesliga", badge: "DE", sort: 35 },
+      "Ligue 1": { label: "Ligue 1", badge: "FR", sort: 36 },
+      "Eredivisie": { label: "Eredivisie", badge: "NL", sort: 37 },
+      "Liga MX": { label: "Liga MX", badge: "MX", sort: 38 },
+      "Primeira Liga": { label: "Primeira Liga", badge: "PT", sort: 39 },
+      "MLS": { label: "MLS", badge: "US", sort: 40 },
+      "Austrian Bundesliga": { label: "Austrian Bundesliga", badge: "AT", sort: 41 },
+      "Belgian Pro League": { label: "Belgian Pro League", badge: "BE", sort: 42 },
+      "Superliga": { label: "Superliga", badge: "DK", sort: 43 },
+      "Super League Greece": { label: "Super League Greece", badge: "GR", sort: 44 },
+      "Super Lig": { label: "Super Lig", badge: "TR", sort: 45 },
+      "Saudi Pro League": { label: "Saudi Pro League", badge: "SA", sort: 46 }
     };
 
     function escapeHtml(value) {
-      return String(value ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
     }
 
     function setStatus(text, ok = true) {
-      const chip = document.getElementById('statusChip');
-      const txt = document.getElementById('statusText');
+      const chip = document.getElementById("statusChip");
+      const txt = document.getElementById("statusText");
       if (!chip || !txt) return;
 
       txt.textContent = text;
       chip.style.borderColor = ok
-        ? 'rgba(0,255,136,0.18)'
-        : 'rgba(255,107,122,0.22)';
+        ? "rgba(0,255,136,0.18)"
+        : "rgba(255,107,122,0.22)";
     }
 
     function normalizeTeamName(name) {
-      const raw = String(name || '').trim();
-      return TEAM_NAME_MAP[raw] || raw || '-';
+      const raw = String(name || "").trim();
+      return TEAM_NAME_MAP[raw] || raw || "-";
     }
 
     function getLeagueDisplay(league) {
-      return leagueMeta[league]?.label || league || '-';
+      return leagueMeta[league]?.label || league || "-";
     }
 
     function getLeagueBadge(league) {
-      return leagueMeta[league]?.badge || 'LG';
+      return leagueMeta[league]?.badge || "LG";
     }
 
     function getLeagueSort(league) {
@@ -1405,9 +1421,9 @@ const AUTO_DATA_REFRESH_MS = 180000;
 
     function maybeJson(value) {
       if (!value) return null;
-      if (typeof value === 'object') return value;
+      if (typeof value === "object") return value;
 
-      if (typeof value === 'string') {
+      if (typeof value === "string") {
         try {
           return JSON.parse(value);
         } catch (_) {
@@ -1418,37 +1434,82 @@ const AUTO_DATA_REFRESH_MS = 180000;
       return null;
     }
 
-    function formatKickoff(value) {
-      if (!value) return 'Horário não disponível';
+    function parseDateSafe(value) {
+      if (!value) return null;
       const d = new Date(value);
-      if (Number.isNaN(d.getTime())) return 'Horário não disponível';
+      if (Number.isNaN(d.getTime())) return null;
+      return d;
+    }
 
-      return d.toLocaleString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
+    function startOfDay(date) {
+      const d = new Date(date);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    }
+
+    function endOfDay(date) {
+      const d = new Date(date);
+      d.setHours(23, 59, 59, 999);
+      return d;
+    }
+
+    function formatKickoff(value) {
+      const d = parseDateSafe(value);
+      if (!d) return "Horário não disponível";
+
+      return d.toLocaleString("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit"
       });
     }
 
     function formatKickoffHour(value) {
-      if (!value) return '--:--';
-      const d = new Date(value);
-      if (Number.isNaN(d.getTime())) return '--:--';
+      const d = parseDateSafe(value);
+      if (!d) return "--:--";
 
-      return d.toLocaleTimeString('pt-BR', {
-        hour: '2-digit',
-        minute: '2-digit'
+      return d.toLocaleTimeString("pt-BR", {
+        hour: "2-digit",
+        minute: "2-digit"
       });
     }
 
-    function formatDecimal(value, digits = 1, empty = '—') {
+    function formatDayKey(value) {
+      const d = parseDateSafe(value);
+      if (!d) return "sem-data";
+
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const day = String(d.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function formatDayLabel(value) {
+      const d = parseDateSafe(value);
+      if (!d) return "Sem data";
+
+      const today = startOfDay(new Date());
+      const compare = startOfDay(d);
+      const diff = Math.round((compare.getTime() - today.getTime()) / 86400000);
+
+      if (diff === 0) return "Hoje";
+      if (diff === 1) return "Amanhã";
+
+      return d.toLocaleDateString("pt-BR", {
+        weekday: "short",
+        day: "2-digit",
+        month: "2-digit"
+      });
+    }
+
+    function formatDecimal(value, digits = 1, empty = "—") {
       const num = toNumber(value, null);
       if (num === null) return empty;
       return num.toFixed(digits);
     }
 
-    function percentText(value, empty = '—') {
+    function percentText(value, empty = "—") {
       const num = toNumber(value, null);
       if (num === null) return empty;
       const normalized = num > 1 ? num : num * 100;
@@ -1457,38 +1518,38 @@ const AUTO_DATA_REFRESH_MS = 180000;
 
     function teamInitials(name) {
       const normalized = normalizeTeamName(name);
-      if (!normalized) return 'TM';
+      if (!normalized) return "TM";
 
       return normalized
         .trim()
         .split(/\s+/)
         .slice(0, 2)
-        .map(word => word[0]?.toUpperCase() || '')
-        .join('') || 'TM';
+        .map(word => word[0]?.toUpperCase() || "")
+        .join("") || "TM";
     }
 
     function teamLogoUrl(match, side) {
-      const keys = side === 'home'
-        ? ['home_logo', 'home_logo_url', 'home_badge', 'home_badge_url']
-        : ['away_logo', 'away_logo_url', 'away_badge', 'away_badge_url'];
+      const keys = side === "home"
+        ? ["home_logo", "home_logo_url", "home_badge", "home_badge_url"]
+        : ["away_logo", "away_logo_url", "away_badge", "away_badge_url"];
 
       for (const key of keys) {
         const value = match?.[key];
-        if (typeof value === 'string' && value.trim()) return value.trim();
+        if (typeof value === "string" && value.trim()) return value.trim();
       }
 
-      return '';
+      return "";
     }
 
     function teamBadge(match, side) {
-      const rawTeamName = side === 'home' ? match?.home_team : match?.away_team;
+      const rawTeamName = side === "home" ? match?.home_team : match?.away_team;
       const teamName = normalizeTeamName(rawTeamName);
       const logo = teamLogoUrl(match, side);
 
       if (logo) {
         return `
           <div class="team-badge">
-            <img src="${escapeHtml(logo)}" alt="${escapeHtml(teamName || 'Time')}" onerror="this.style.display='none'; this.parentNode.textContent='${escapeHtml(teamInitials(teamName))}';" />
+            <img src="${escapeHtml(logo)}" alt="${escapeHtml(teamName || "Time")}" onerror="this.style.display='none'; this.parentNode.textContent='${escapeHtml(teamInitials(teamName))}';" />
           </div>
         `;
       }
@@ -1498,139 +1559,129 @@ const AUTO_DATA_REFRESH_MS = 180000;
 
     function probabilityToTier(prob) {
       const p = Number(prob || 0);
-      if (p >= 0.80) return 'Muito forte';
-      if (p >= 0.70) return 'Boa';
-      if (p >= 0.60) return 'Moderada';
-      return 'Oportunidade extra';
+      if (p >= 0.80) return "Muito forte";
+      if (p >= 0.70) return "Boa";
+      if (p >= 0.60) return "Moderada";
+      return "Oportunidade extra";
     }
 
     function chipClass(tier) {
-      if (tier === 'Muito forte') return 'chip chip-very-strong';
-      if (tier === 'Boa') return 'chip chip-good';
-      if (tier === 'Moderada') return 'chip chip-moderate';
-      return 'chip chip-extra';
+      if (tier === "Muito forte") return "chip chip-very-strong";
+      if (tier === "Boa") return "chip chip-good";
+      if (tier === "Moderada") return "chip chip-moderate";
+      return "chip chip-extra";
     }
 
     function chipMarkup(tier) {
       const emoji =
-        tier === 'Muito forte' ? '🔥' :
-        tier === 'Boa' ? '🟢' :
-        tier === 'Moderada' ? '🟡' :
-        '🔵';
+        tier === "Muito forte" ? "🔥" :
+        tier === "Boa" ? "🟢" :
+        tier === "Moderada" ? "🟡" :
+        "🔵";
 
       return `<span class="${chipClass(tier)}">${emoji} ${escapeHtml(tier)}</span>`;
     }
 
     function labelChipMarkup(label) {
-      if (label === 'Best Pick') {
+      if (label === "Best Pick") {
         return `<span class="chip chip-best">🔥 Best Pick</span>`;
       }
-      if (label === 'Boa opção') {
+      if (label === "Boa opção") {
         return `<span class="chip chip-alt">✅ Boa opção</span>`;
       }
       return `<span class="chip chip-risk">⚠️ Mais arriscada</span>`;
     }
 
     function marketFamily(market) {
-      const m = String(market || '').trim().toLowerCase();
+      const m = String(market || "").trim().toLowerCase();
 
-      if (!m) return 'outro';
-      if (m.includes('escanteio')) return 'escanteios';
-      if (m.includes('ambas')) return 'btts';
-      if (m.includes('dupla chance') || m.includes('empate') || m.includes('vitória')) return 'resultado';
-      if (m.includes('gol')) return 'gols';
-      return 'outro';
+      if (!m) return "outro";
+      if (m.includes("escanteio")) return "escanteios";
+      if (m.includes("ambas")) return "btts";
+      if (
+        m.includes("dupla chance") ||
+        m.includes("empate") ||
+        m.includes("vitória") ||
+        m.includes("vitoria")
+      ) return "resultado";
+      if (m.includes("gol")) return "gols";
+      return "outro";
+    }
+
+    function marketPriority(family) {
+      const order = {
+        gols: 1,
+        btts: 2,
+        resultado: 3,
+        escanteios: 4,
+        outro: 5
+      };
+      return order[family] || 99;
     }
 
     function shouldHideLeague(leagueName) {
-      const name = String(leagueName || '').toLowerCase();
+      const name = String(leagueName || "").toLowerCase();
 
       return (
-        name.includes('u17') ||
-        name.includes('u18') ||
-        name.includes('u19') ||
-        name.includes('u20') ||
-        name.includes('u21') ||
-        name.includes('u23') ||
-        name.includes('under 17') ||
-        name.includes('under 18') ||
-        name.includes('under 19') ||
-        name.includes('under 20') ||
-        name.includes('under 21') ||
-        name.includes('under 23') ||
-        name.includes('sub 17') ||
-        name.includes('sub 18') ||
-        name.includes('sub 19') ||
-        name.includes('sub 20') ||
-        name.includes('sub 21') ||
-        name.includes('sub 23') ||
-        name.includes('reserve') ||
-        name.includes('reserves') ||
-        name.includes('open cup')
+        name.includes("u17") ||
+        name.includes("u18") ||
+        name.includes("u19") ||
+        name.includes("u20") ||
+        name.includes("u21") ||
+        name.includes("u23") ||
+        name.includes("under 17") ||
+        name.includes("under 18") ||
+        name.includes("under 19") ||
+        name.includes("under 20") ||
+        name.includes("under 21") ||
+        name.includes("under 23") ||
+        name.includes("sub 17") ||
+        name.includes("sub 18") ||
+        name.includes("sub 19") ||
+        name.includes("sub 20") ||
+        name.includes("sub 21") ||
+        name.includes("sub 23") ||
+        name.includes("reserve") ||
+        name.includes("reserves") ||
+        name.includes("open cup")
       );
     }
 
-    function isTodayMatch(value) {
-  if (!value) return false;
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return false;
-
-  const now = new Date();
-  const today = new Date(now);
-  today.setHours(0, 0, 0, 0);
-
-  const end = new Date(now);
-  end.setHours(23, 59, 59, 999);
-
-  return d >= today && d <= end;
-}
-
-function isStillRelevantForRadar(value) {
-  if (!value) return false;
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return false;
-
-  const now = new Date();
-  const endWindow = new Date(d.getTime() + MATCH_END_GRACE_MINUTES * 60000);
-  const lookAhead = new Date(now.getTime() + RADAR_LOOKAHEAD_HOURS * 60 * 60 * 1000);
-
-  return endWindow > now && d <= lookAhead;
-}
-
-function isStillRelevantForTicket(value) {
-  return isStillRelevantForRadar(value);
-}
-
-function isMatchVisible(value) {
-  return isStillRelevantForRadar(value);
-}
-
-function getRadarEligibleMatches() {
-  return state.matches.filter(match =>
-    isStillRelevantForRadar(match.kickoff) &&
-    !shouldHideLeague(match.league)
-  );
-}
-
-    function isCompetitionVisible(value) {
-      if (!value) return false;
-
-      const d = new Date(value);
-      if (Number.isNaN(d.getTime())) return false;
+    function isStillRelevantForRadar(value) {
+      const d = parseDateSafe(value);
+      if (!d) return false;
 
       const now = new Date();
-      const start = new Date(now);
-      start.setHours(0, 0, 0, 0);
+      const endWindow = new Date(d.getTime() + MATCH_END_GRACE_MINUTES * 60000);
+      const lookAhead = new Date(now.getTime() + RADAR_LOOKAHEAD_HOURS * 60 * 60 * 1000);
 
-      const end = new Date(now);
-      end.setDate(end.getDate() + 5);
-      end.setHours(23, 59, 59, 999);
+      return endWindow > now && d <= lookAhead;
+    }
+
+    function isStillRelevantForTicket(value) {
+      return isStillRelevantForRadar(value);
+    }
+
+    function isCompetitionVisible(value) {
+      const d = parseDateSafe(value);
+      if (!d) return false;
+
+      const now = new Date();
+      const start = startOfDay(now);
+      const end = endOfDay(new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000));
 
       return d >= start && d <= end;
     }
 
-    function getVisibleMatches() {
-      return getRadarEligibleMatches();
+    function getRadarEligibleMatches() {
+      return state.matches.filter(match =>
+        isStillRelevantForRadar(match.kickoff) &&
+        !shouldHideLeague(match.league)
+      );
+    }
+
+    function getMatchById(id) {
+      return state.matches.find(match => String(match.id) === String(id)) || null;
     }
 
     function getMetrics(match) {
@@ -1726,46 +1777,8 @@ function getRadarEligibleMatches() {
         match.balanced_pick ||
         match.aggressive_pick ||
         match.value_pick ||
-        'Mercado em revisão'
+        "Mercado em revisão"
       );
-    }
-
-    function getSecondaryPicks(match) {
-      const primary = String(getPrimaryPick(match) || '').trim();
-      const primaryLower = primary.toLowerCase();
-      const primaryFamily = marketFamily(primary);
-
-      const preferred = [];
-      const fallback = [];
-      const seen = new Set([primaryLower]);
-
-      const candidates = [
-        match.best_pick_2,
-        match.best_pick_3,
-        match.balanced_pick,
-        match.aggressive_pick,
-        match.value_pick,
-        match.safe_pick
-      ];
-
-      for (const item of candidates) {
-        const clean = String(item || '').trim();
-        if (!clean) continue;
-
-        const key = clean.toLowerCase();
-        if (seen.has(key)) continue;
-        seen.add(key);
-
-        const family = marketFamily(clean);
-
-        if (family !== primaryFamily) {
-          preferred.push(clean);
-        } else {
-          fallback.push(clean);
-        }
-      }
-
-      return [...preferred, ...fallback].slice(0, 2);
     }
 
     function getMatchProbability(match) {
@@ -1787,9 +1800,7 @@ function getRadarEligibleMatches() {
         .filter(v => v !== null)
         .sort((a, b) => b - a)[0];
 
-      if (max1x2 !== undefined) {
-        return clamp(max1x2, 0, 1);
-      }
+      if (max1x2 !== undefined) return clamp(max1x2, 0, 1);
 
       return 0.62;
     }
@@ -1802,19 +1813,19 @@ function getRadarEligibleMatches() {
       const primary = getPrimaryPick(match).toLowerCase();
       const { avgGoals, avgCorners, avgShots } = getMetrics(match);
 
-      if (primary.includes('escanteios')) {
+      if (primary.includes("escanteios")) {
         return `A leitura do Scoutly aponta volume estatístico suficiente para sustentar esse mercado, com cerca de ${formatDecimal(avgCorners, 1)} escanteios projetados para a partida.`;
       }
 
-      if (primary.includes('menos')) {
+      if (primary.includes("menos")) {
         return `O Scoutly enxerga um confronto mais controlado, com menor tendência de explosão ofensiva. A projeção atual gira em torno de ${formatDecimal(avgGoals, 1)} gols para o jogo.`;
       }
 
-      if (primary.includes('mais')) {
+      if (primary.includes("mais")) {
         return `A leitura do Scoutly aponta produção ofensiva suficiente para sustentar esse mercado, com cerca de ${formatDecimal(avgGoals, 1)} gols esperados e ${formatDecimal(avgShots, 0)} finalizações projetadas.`;
       }
 
-      if (primary.includes('dupla chance') || primary.includes('empate')) {
+      if (primary.includes("dupla chance") || primary.includes("empate")) {
         return `O Scoutly vê equilíbrio no confronto, mas com leve vantagem estatística para o lado recomendado. Por isso, a leitura mais segura fica na linha protegida.`;
       }
 
@@ -1822,11 +1833,7 @@ function getRadarEligibleMatches() {
     }
 
     function getInsight(match) {
-      return (
-        match.analysis_text ||
-        match.insight ||
-        buildFallbackInsight(match)
-      );
+      return match.analysis_text || match.insight || buildFallbackInsight(match);
     }
 
     function getStatsForDisplay(match) {
@@ -1840,12 +1847,12 @@ function getRadarEligibleMatches() {
       } = getMetrics(match);
 
       return [
-        { label: 'Gols esperados', value: formatDecimal(avgGoals, 1) },
-        { label: 'Escanteios', value: formatDecimal(avgCorners, 1) },
-        { label: 'Finalizações', value: formatDecimal(avgShots, 0) },
-        { label: 'No gol', value: formatDecimal(avgShotsOnTarget, 0) },
-        { label: 'Cartões', value: formatDecimal(avgCards, 1) },
-        { label: 'Faltas', value: formatDecimal(avgFouls, 1) }
+        { label: "Gols esperados", value: formatDecimal(avgGoals, 1) },
+        { label: "Escanteios", value: formatDecimal(avgCorners, 1) },
+        { label: "Finalizações", value: formatDecimal(avgShots, 0) },
+        { label: "No gol", value: formatDecimal(avgShotsOnTarget, 0) },
+        { label: "Cartões", value: formatDecimal(avgCards, 1) },
+        { label: "Faltas", value: formatDecimal(avgFouls, 1) }
       ];
     }
 
@@ -1855,17 +1862,16 @@ function getRadarEligibleMatches() {
           <div class="stat-label">${escapeHtml(item.label)}</div>
           <div class="stat-value">${escapeHtml(item.value)}</div>
         </div>
-      `).join('');
+      `).join("");
     }
 
     function getContextForDisplay(match) {
       const { homeProb, drawProb, awayProb } = getMetrics(match);
-
       const items = [];
 
-      if (homeProb !== null) items.push({ label: 'Vitória mandante', value: percentText(homeProb) });
-      if (drawProb !== null) items.push({ label: 'Empate', value: percentText(drawProb) });
-      if (awayProb !== null) items.push({ label: 'Vitória visitante', value: percentText(awayProb) });
+      if (homeProb !== null) items.push({ label: "Vitória mandante", value: percentText(homeProb) });
+      if (drawProb !== null) items.push({ label: "Empate", value: percentText(drawProb) });
+      if (awayProb !== null) items.push({ label: "Vitória visitante", value: percentText(awayProb) });
 
       return items;
     }
@@ -1882,11 +1888,94 @@ function getRadarEligibleMatches() {
           <div class="stat-label">${escapeHtml(item.label)}</div>
           <div class="stat-value">${escapeHtml(item.value)}</div>
         </div>
-      `).join('');
+      `).join("");
     }
 
-    function getMatchById(id) {
-      return state.matches.find(match => String(match.id) === String(id)) || null;
+    function getFlag(country) {
+      const flags = {
+        Brazil: "BR",
+        England: "GB",
+        Spain: "ES",
+        Italy: "IT",
+        Germany: "DE",
+        France: "FR",
+        Portugal: "PT",
+        Netherlands: "NL",
+        Belgium: "BE",
+        USA: "US",
+        Argentina: "AR",
+        Mexico: "MX",
+        Turkey: "TR",
+        Greece: "GR",
+        Switzerland: "CH",
+        Denmark: "DK",
+        Austria: "AT",
+        "Saudi Arabia": "SA",
+        KSA: "SA",
+        World: null
+      };
+
+      return flags[country] || null;
+    }
+
+    function getSecondaryPicks(match) {
+      const primary = String(getPrimaryPick(match) || "").trim();
+      const primaryKey = primary.toLowerCase();
+      const primaryFamily = marketFamily(primary);
+
+      const candidates = [
+        match.best_pick_2,
+        match.best_pick_3,
+        match.balanced_pick,
+        match.aggressive_pick,
+        match.value_pick,
+        match.safe_pick
+      ]
+        .map(item => String(item || "").trim())
+        .filter(Boolean);
+
+      const seen = new Set([primaryKey]);
+      const nonRepeatedFamily = [];
+      const repeatedFamily = [];
+
+      for (const item of candidates) {
+        const key = item.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+
+        const family = marketFamily(item);
+
+        if (family !== primaryFamily) {
+          nonRepeatedFamily.push(item);
+        } else {
+          repeatedFamily.push(item);
+        }
+      }
+
+      const ordered = [...nonRepeatedFamily, ...repeatedFamily];
+      const finalMarkets = [];
+      const usedFamilies = new Set();
+
+      for (const item of ordered) {
+        const family = marketFamily(item);
+
+        if (!usedFamilies.has(family)) {
+          finalMarkets.push(item);
+          usedFamilies.add(family);
+        }
+
+        if (finalMarkets.length >= 2) break;
+      }
+
+      if (finalMarkets.length < 2) {
+        for (const item of ordered) {
+          if (finalMarkets.includes(item)) continue;
+          finalMarkets.push(item);
+          if (finalMarkets.length >= 2) break;
+        }
+      }
+
+      return finalMarkets.slice(0, 2);
     }
 
     function getDetectedMarkets(match) {
@@ -1895,19 +1984,19 @@ function getRadarEligibleMatches() {
 
       if (alternatives[0]) {
         items.push({
-          label: 'Boa opção',
+          label: "Boa opção",
           market: alternatives[0],
-          tier: 'Boa',
-          copy: 'Alternativa consistente para quem quiser variar a entrada.'
+          tier: "Boa",
+          copy: "Alternativa consistente para quem quiser variar a entrada."
         });
       }
 
       if (alternatives[1]) {
         items.push({
-          label: 'Mais arriscada',
+          label: "Mais arriscada",
           market: alternatives[1],
-          tier: 'Moderada',
-          copy: 'Linha extra com risco maior, mas ainda dentro da leitura do jogo.'
+          tier: "Moderada",
+          copy: "Linha extra com risco maior, mas ainda dentro da leitura do jogo."
         });
       }
 
@@ -1935,9 +2024,9 @@ function getRadarEligibleMatches() {
         home_logo: match.home_logo || null,
         away_logo: match.away_logo || null,
         tierWeight:
-          tier === 'Muito forte' ? 4 :
-          tier === 'Boa' ? 3 :
-          tier === 'Moderada' ? 2 : 1
+          tier === "Muito forte" ? 4 :
+          tier === "Boa" ? 3 :
+          tier === "Moderada" ? 2 : 1
       };
     }
 
@@ -1960,22 +2049,22 @@ function getRadarEligibleMatches() {
         });
     }
 
-   function buildFallbackTicketPool() {
-  return getRadarEligibleMatches()
-    .filter(match => isStillRelevantForTicket(match.kickoff))
-    .sort((a, b) => {
-      const pDiff = getMatchProbability(b) - getMatchProbability(a);
-      if (Math.abs(pDiff) > 0.0001) return pDiff;
-      return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
-    })
-    .slice(0, 24)
-    .map(match => normalizeTicketPick({
-      match_id: match.id,
-      market: getPrimaryPick(match),
-      probability: getMatchProbability(match)
-    }))
-    .filter(Boolean);
-}
+    function buildFallbackTicketPool() {
+      return getRadarEligibleMatches()
+        .filter(match => isStillRelevantForTicket(match.kickoff))
+        .sort((a, b) => {
+          const pDiff = getMatchProbability(b) - getMatchProbability(a);
+          if (Math.abs(pDiff) > 0.0001) return pDiff;
+          return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
+        })
+        .slice(0, 30)
+        .map(match => normalizeTicketPick({
+          match_id: match.id,
+          market: getPrimaryPick(match),
+          probability: getMatchProbability(match)
+        }))
+        .filter(Boolean);
+    }
 
     function uniqueByMatchAndMarket(items) {
       const seen = new Set();
@@ -1988,59 +2077,219 @@ function getRadarEligibleMatches() {
       });
     }
 
-    function pickOnePerMatch(pool, maxPicks = 3) {
+    function buildRadarSnapshot() {
+      const eligibleMatches = getRadarEligibleMatches();
+      const nowTs = Date.now();
+
+      const rankedFromDaily = state.dailyPicks
+        .map(item => {
+          const match = getMatchById(item.match_id);
+          if (!match) return null;
+          if (!isStillRelevantForRadar(match.kickoff)) return null;
+          if (shouldHideLeague(match.league)) return null;
+
+          return {
+            ...match,
+            home_team: normalizeTeamName(match.home_team),
+            away_team: normalizeTeamName(match.away_team),
+            radar_market: item.market || getPrimaryPick(match),
+            radar_probability: Number(item.probability || getMatchProbability(match)),
+            radar_rank: Number(item.rank || 999),
+            source: "daily"
+          };
+        })
+        .filter(Boolean)
+        .sort((a, b) => {
+          const ta = new Date(a.kickoff).getTime();
+          const tb = new Date(b.kickoff).getTime();
+
+          const aStarted = ta <= nowTs;
+          const bStarted = tb <= nowTs;
+
+          if (aStarted !== bStarted) return aStarted ? -1 : 1;
+          if (a.radar_rank !== b.radar_rank) return a.radar_rank - b.radar_rank;
+          return ta - tb;
+        });
+
+      const fallback = eligibleMatches
+        .filter(match => !rankedFromDaily.some(item => String(item.id) === String(match.id)))
+        .sort((a, b) => {
+          const ta = new Date(a.kickoff).getTime();
+          const tb = new Date(b.kickoff).getTime();
+
+          const aStarted = ta <= nowTs;
+          const bStarted = tb <= nowTs;
+
+          if (aStarted !== bStarted) return aStarted ? -1 : 1;
+
+          const pDiff = getMatchProbability(b) - getMatchProbability(a);
+          if (Math.abs(pDiff) > 0.0001) return pDiff;
+
+          return ta - tb;
+        })
+        .slice(0, 40)
+        .map((match, index) => ({
+          ...match,
+          home_team: normalizeTeamName(match.home_team),
+          away_team: normalizeTeamName(match.away_team),
+          radar_market: getPrimaryPick(match),
+          radar_probability: getMatchProbability(match),
+          radar_rank: rankedFromDaily.length + index + 1,
+          source: "fallback"
+        }));
+
+      let merged = [...rankedFromDaily, ...fallback];
+
+merged = merged
+        .sort((a, b) => {
+          const ta = new Date(a.kickoff).getTime();
+          const tb = new Date(b.kickoff).getTime();
+
+          const aStarted = ta <= nowTs;
+          const bStarted = tb <= nowTs;
+
+          if (aStarted !== bStarted) return aStarted ? -1 : 1;
+          if (ta !== tb) return ta - tb;
+          if (a.radar_rank !== b.radar_rank) return a.radar_rank - b.radar_rank;
+
+          return getMatchProbability(b) - getMatchProbability(a);
+        })
+        .slice(0, RADAR_MAX_ITEMS);
+
+      if (merged.length < RADAR_MIN_ITEMS) {
+        const extra = state.matches
+          .filter(match =>
+            !merged.some(item => String(item.id) === String(match.id)) &&
+            !shouldHideLeague(match.league)
+          )
+          .filter(match => {
+            const d = parseDateSafe(match.kickoff);
+            if (!d) return false;
+
+            const extraLookAhead = new Date(Date.now() + 72 * 60 * 60 * 1000);
+            return d > new Date() && d <= extraLookAhead;
+          })
+          .sort((a, b) => {
+            const pDiff = getMatchProbability(b) - getMatchProbability(a);
+            if (Math.abs(pDiff) > 0.0001) return pDiff;
+            return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
+          })
+          .slice(0, RADAR_MIN_ITEMS - merged.length)
+          .map((match, index) => ({
+            ...match,
+            home_team: normalizeTeamName(match.home_team),
+            away_team: normalizeTeamName(match.away_team),
+            radar_market: getPrimaryPick(match),
+            radar_probability: getMatchProbability(match),
+            radar_rank: merged.length + index + 1,
+            source: "extra"
+          }));
+
+        merged = [...merged, ...extra]
+          .sort((a, b) => {
+            const ta = new Date(a.kickoff).getTime();
+            const tb = new Date(b.kickoff).getTime();
+            return ta - tb;
+          })
+          .slice(0, RADAR_MAX_ITEMS);
+      }
+
+      state.lastRadarSnapshot = merged.map((item, index) => ({
+        ...item,
+        visualRank: index + 1
+      }));
+
+      return state.lastRadarSnapshot;
+    }
+
+    function buildTicketFromRadarSnapshot(radarItems) {
+      const pool = uniqueByMatchAndMarket(
+        radarItems.map(item => normalizeTicketPick({
+          match_id: item.id,
+          market: item.radar_market,
+          probability: item.radar_probability
+        })).filter(Boolean)
+      );
+
       const usedMatches = new Set();
       const usedFamilies = new Set();
-      const result = [];
+      const ticket = [];
 
-      for (const item of pool) {
-        if (usedMatches.has(item.match_id)) continue;
+      const sortedPool = [...pool].sort((a, b) => {
+        const fa = marketPriority(marketFamily(a.market));
+        const fb = marketPriority(marketFamily(b.market));
+        if (fa !== fb) return fa - fb;
 
+        const ta = new Date(a.kickoff).getTime();
+        const tb = new Date(b.kickoff).getTime();
+        if (ta !== tb) return ta - tb;
+
+        return b.probability - a.probability;
+      });
+
+      for (const item of sortedPool) {
         const family = marketFamily(item.market);
-        if (usedFamilies.has(family) && result.length < 2) continue;
+        if (usedMatches.has(item.match_id)) continue;
+        if (usedFamilies.has(family)) continue;
 
-        result.push(item);
+        ticket.push(item);
         usedMatches.add(item.match_id);
         usedFamilies.add(family);
 
-        if (result.length >= maxPicks) break;
+        if (ticket.length >= TICKET_SIZE) break;
       }
 
-      if (result.length < maxPicks) {
-        for (const item of pool) {
+      if (ticket.length < TICKET_SIZE) {
+        for (const item of sortedPool) {
           if (usedMatches.has(item.match_id)) continue;
-
-          result.push(item);
+          ticket.push(item);
           usedMatches.add(item.match_id);
-
-          if (result.length >= maxPicks) break;
+          if (ticket.length >= TICKET_SIZE) break;
         }
       }
 
-      return result;
-    }
-
-    function weightedShuffle(pool, seed = 0) {
-      const arr = [...pool];
-
-      return arr
-        .map(item => ({
-          item,
-          weight: item.tierWeight || 1,
-          rand: Math.random() + seed * 0.0001
-        }))
-        .sort((a, b) => (b.weight + b.rand) - (a.weight + a.rand))
-        .map(x => x.item);
+      return ticket.sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
     }
 
     function generateTicket() {
+      const radarItems = buildRadarSnapshot();
+      const radarTicket = buildTicketFromRadarSnapshot(radarItems);
+
+      if (radarTicket.length) {
+        state.currentTicket = radarTicket;
+        renderTicket();
+        return;
+      }
+
       const poolRaw = buildDailyTicketPool();
       const pool = uniqueByMatchAndMarket(
         poolRaw.length ? poolRaw : buildFallbackTicketPool()
       );
 
-      const shuffled = weightedShuffle(pool, state.currentTicketSeed++);
-      const picks = pickOnePerMatch(shuffled, 3);
+      const usedMatches = new Set();
+      const usedFamilies = new Set();
+      const picks = [];
+
+      for (const item of pool) {
+        const family = marketFamily(item.market);
+        if (usedMatches.has(item.match_id)) continue;
+        if (usedFamilies.has(family)) continue;
+
+        picks.push(item);
+        usedMatches.add(item.match_id);
+        usedFamilies.add(family);
+
+        if (picks.length >= TICKET_SIZE) break;
+      }
+
+      if (picks.length < TICKET_SIZE) {
+        for (const item of pool) {
+          if (usedMatches.has(item.match_id)) continue;
+          picks.push(item);
+          usedMatches.add(item.match_id);
+          if (picks.length >= TICKET_SIZE) break;
+        }
+      }
 
       state.currentTicket = picks;
       renderTicket();
@@ -2050,9 +2299,9 @@ function getRadarEligibleMatches() {
       return `
         <div class="ticket-leg">
           <div class="teams-row compact">
-            ${teamBadge(item, 'home')}
+            ${teamBadge(item, "home")}
             <div class="team-names">${escapeHtml(item.home_team)} x ${escapeHtml(item.away_team)}</div>
-            ${teamBadge(item, 'away')}
+            ${teamBadge(item, "away")}
           </div>
 
           <div class="chip-row">
@@ -2069,7 +2318,7 @@ function getRadarEligibleMatches() {
     }
 
     function renderTicket() {
-      const el = document.getElementById('ticketContainer');
+      const el = document.getElementById("ticketContainer");
       if (!el) return;
 
       if (!state.currentTicket.length) {
@@ -2078,215 +2327,113 @@ function getRadarEligibleMatches() {
       }
 
       const avgProbability =
-        state.currentTicket.reduce((acc, item) => acc + Number(item.probability || 0), 0) / state.currentTicket.length;
+        state.currentTicket.reduce((acc, item) => acc + Number(item.probability || 0), 0) /
+        state.currentTicket.length;
 
       el.innerHTML = `
         <div class="ticket-legs">
-          ${state.currentTicket.map(ticketItemMarkup).join('')}
+          ${state.currentTicket.map(ticketItemMarkup).join("")}
         </div>
 
         <div class="ticket-footer">
           <div class="ticket-confidence">Confiança geral: ${escapeHtml(probabilityToTier(avgProbability))}</div>
-          <div class="ticket-helper">Bilhete automático montado a partir dos jogos ainda ativos do radar.</div>
+          <div class="ticket-helper">Bilhete automático montado com variedade real a partir do radar ativo.</div>
         </div>
       `;
     }
 
-function renderRadar() {
-  const list = document.getElementById('radarList');
-  if (!list) return;
+    function renderRadar() {
+      const list = document.getElementById("radarList");
+      if (!list) return;
 
-  const eligibleMatches = getRadarEligibleMatches();
+      const radarItems = buildRadarSnapshot();
 
-  const rankedFromDaily = state.dailyPicks
-    .map(item => {
-      const match = getMatchById(item.match_id);
-      if (!match) return null;
-      if (!isStillRelevantForRadar(match.kickoff)) return null;
+      if (!radarItems.length) {
+        list.innerHTML = `<div class="empty-state">Nenhuma oportunidade ativa encontrada para agora.</div>`;
+        return;
+      }
 
-      return {
-        ...match,
-        home_team: normalizeTeamName(match.home_team),
-        away_team: normalizeTeamName(match.away_team),
-        radar_market: item.market || getPrimaryPick(match),
-        radar_probability: Number(item.probability || getMatchProbability(match)),
-        radar_rank: Number(item.rank || 999)
-      };
-    })
-    .filter(Boolean)
-    .filter(item => !shouldHideLeague(item.league))
-    .sort((a, b) => {
-      if (a.radar_rank !== b.radar_rank) return a.radar_rank - b.radar_rank;
-      return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
-    });
+      const groupsByDay = new Map();
 
-  const fallback = eligibleMatches
-    .filter(match => !rankedFromDaily.some(item => String(item.id) === String(match.id)))
-    .sort((a, b) => {
-      const aTime = new Date(a.kickoff).getTime();
-      const bTime = new Date(b.kickoff).getTime();
+      radarItems.forEach(item => {
+        const dayKey = formatDayKey(item.kickoff);
+        if (!groupsByDay.has(dayKey)) {
+          groupsByDay.set(dayKey, {
+            label: formatDayLabel(item.kickoff),
+            items: []
+          });
+        }
 
-      const pDiff = getMatchProbability(b) - getMatchProbability(a);
-      if (Math.abs(pDiff) > 0.0001) return pDiff;
+        groupsByDay.get(dayKey).items.push(item);
+      });
 
-      return aTime - bTime;
-    })
-    .slice(0, 30)
-    .map((match, index) => ({
-      ...match,
-      home_team: normalizeTeamName(match.home_team),
-      away_team: normalizeTeamName(match.away_team),
-      radar_market: getPrimaryPick(match),
-      radar_probability: getMatchProbability(match),
-      radar_rank: rankedFromDaily.length + index + 1
-    }));
+      list.innerHTML = Array.from(groupsByDay.entries()).map(([dayKey, dayGroup]) => {
+        const hourGroups = new Map();
 
-  let merged = [...rankedFromDaily, ...fallback];
+        dayGroup.items.forEach(item => {
+          const hourKey = formatKickoffHour(item.kickoff);
+          if (!hourGroups.has(hourKey)) hourGroups.set(hourKey, []);
+          hourGroups.get(hourKey).push(item);
+        });
 
-  merged = merged
-    .sort((a, b) => {
-      const aTime = new Date(a.kickoff).getTime();
-      const bTime = new Date(b.kickoff).getTime();
-
-      const aStarted = aTime <= Date.now();
-      const bStarted = bTime <= Date.now();
-
-      if (aStarted !== bStarted) return aStarted ? -1 : 1;
-
-      if (a.radar_rank !== b.radar_rank) return a.radar_rank - b.radar_rank;
-
-      return aTime - bTime;
-    })
-    .slice(0, RADAR_MAX_ITEMS);
-
-  if (merged.length < RADAR_MIN_ITEMS) {
-    const extra = state.matches
-      .filter(match =>
-        !merged.some(item => String(item.id) === String(match.id)) &&
-        !shouldHideLeague(match.league)
-      )
-      .filter(match => {
-        if (!match.kickoff) return false;
-        const d = new Date(match.kickoff);
-        if (Number.isNaN(d.getTime())) return false;
-
-        const now = new Date();
-        const extraLookAhead = new Date(now.getTime() + 48 * 60 * 60 * 1000);
-
-        return d > now && d <= extraLookAhead;
-      })
-      .sort((a, b) => {
-        const pDiff = getMatchProbability(b) - getMatchProbability(a);
-        if (Math.abs(pDiff) > 0.0001) return pDiff;
-        return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
-      })
-      .slice(0, RADAR_MIN_ITEMS - merged.length)
-      .map((match, index) => ({
-        ...match,
-        home_team: normalizeTeamName(match.home_team),
-        away_team: normalizeTeamName(match.away_team),
-        radar_market: getPrimaryPick(match),
-        radar_probability: getMatchProbability(match),
-        radar_rank: merged.length + index + 1
-      }));
-
-    merged = [...merged, ...extra]
-      .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime())
-      .slice(0, RADAR_MAX_ITEMS);
-  }
-
-  const radarItems = merged;
-
-  if (!radarItems.length) {
-    list.innerHTML = `<div class="empty-state">Nenhuma oportunidade ativa encontrada para agora.</div>`;
-    return;
-  }
-
-  const groups = new Map();
-
-  radarItems.forEach((item, index) => {
-    const hourKey = formatKickoffHour(item.kickoff);
-    if (!groups.has(hourKey)) groups.set(hourKey, []);
-    groups.get(hourKey).push({ ...item, visualRank: index + 1 });
-  });
-
-  list.innerHTML = Array.from(groups.entries()).map(([hour, items]) => `
-    <div class="radar-time-group">
-      <div class="radar-time-label">${escapeHtml(hour)}</div>
-      ${items.map(item => {
-        const tier = probabilityToTier(item.radar_probability);
         return `
-          <div class="radar-item" data-match-id="${escapeHtml(item.id)}">
-            <div class="radar-top">
-              <div class="radar-rank">${item.visualRank}</div>
-              <div class="league-pill">
-                <span>${escapeHtml(getLeagueBadge(item.league))}</span>
-                <span>${escapeHtml(getLeagueDisplay(item.league))}</span>
+          <div class="radar-day-group" data-day="${escapeHtml(dayKey)}">
+            <div class="radar-day-label">${escapeHtml(dayGroup.label)}</div>
+
+            ${Array.from(hourGroups.entries()).map(([hour, items]) => `
+              <div class="radar-time-group">
+                <div class="radar-time-label">${escapeHtml(hour)}</div>
+
+                ${items.map(item => {
+                  const tier = probabilityToTier(item.radar_probability);
+
+                  return `
+                    <div class="radar-item" data-match-id="${escapeHtml(item.id)}">
+                      <div class="radar-top">
+                        <div class="radar-rank">${item.visualRank}</div>
+                        <div class="league-pill">
+                          <span>${escapeHtml(getLeagueBadge(item.league))}</span>
+                          <span>${escapeHtml(getLeagueDisplay(item.league))}</span>
+                        </div>
+                      </div>
+
+                      <div class="teams-row compact">
+                        ${teamBadge(item, "home")}
+                        <div class="team-names">${escapeHtml(item.home_team)} x ${escapeHtml(item.away_team)}</div>
+                        ${teamBadge(item, "away")}
+                      </div>
+
+<div class="chip-row">
+                        ${chipMarkup(tier)}
+                      </div>
+
+                      <div class="radar-market">${escapeHtml(item.radar_market)}</div>
+                      <div class="radar-kickoff">
+                        ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
+                      </div>
+                    </div>
+                  `;
+                }).join("")}
               </div>
-            </div>
-
-            <div class="teams-row compact">
-              ${teamBadge(item, 'home')}
-              <div class="team-names">${escapeHtml(item.home_team)} x ${escapeHtml(item.away_team)}</div>
-              ${teamBadge(item, 'away')}
-            </div>
-
-            <div class="chip-row">
-              ${chipMarkup(tier)}
-            </div>
-
-            <div class="radar-market">${escapeHtml(item.radar_market)}</div>
-            <div class="radar-kickoff">
-              ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
-            </div>
+            `).join("")}
           </div>
         `;
-      }).join('')}
-    </div>
-  `).join('');
+      }).join("");
 
-  list.querySelectorAll('.radar-item').forEach(el => {
-    el.addEventListener('click', () => openAnalysis(el.dataset.matchId));
-  });
-}
-
-    function getFlag(country) {
-      const flags = {
-        Brazil: 'BR',
-        England: 'GB',
-        Spain: 'ES',
-        Italy: 'IT',
-        Germany: 'DE',
-        France: 'FR',
-        Portugal: 'PT',
-        Netherlands: 'NL',
-        Belgium: 'BE',
-        USA: 'US',
-        Argentina: 'AR',
-        Mexico: 'MX',
-        Turkey: 'TR',
-        Greece: 'GR',
-        Switzerland: 'CH',
-        Denmark: 'DK',
-        Austria: 'AT',
-        'Saudi Arabia': 'SA',
-        KSA: 'SA',
-        World: null
-      };
-
-      return flags[country] || null;
+      list.querySelectorAll(".radar-item").forEach(el => {
+        el.addEventListener("click", () => openAnalysis(el.dataset.matchId));
+      });
     }
 
     function buildCompetitions() {
       const map = new Map();
-
       const visibleMatches = state.matches.filter(match =>
         isCompetitionVisible(match.kickoff) &&
         !shouldHideLeague(match.league)
       );
 
       for (const match of visibleMatches) {
-        const league = match.league || '';
+        const league = match.league || "";
         const country = match.country || null;
 
         if (!map.has(league)) {
@@ -2300,6 +2447,7 @@ function renderRadar() {
         }
 
         const item = map.get(league);
+
         if (!item.country && country) item.country = country;
         if (!item.kickoff || new Date(match.kickoff) < new Date(item.kickoff)) {
           item.kickoff = match.kickoff;
@@ -2318,7 +2466,7 @@ function renderRadar() {
 
     function renderCompetitions() {
       buildCompetitions();
-      const grid = document.getElementById('competitionsGrid');
+      const grid = document.getElementById("competitionsGrid");
       if (!grid) return;
 
       if (!state.competitions.length) {
@@ -2329,7 +2477,7 @@ function renderRadar() {
       grid.innerHTML = state.competitions.map(comp => {
         const flagCode = getFlag(comp.country);
         const flagMarkup = flagCode
-          ? `<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="28" alt="${escapeHtml(comp.country || 'flag')}" />`
+          ? `<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="28" alt="${escapeHtml(comp.country || "flag")}" />`
           : `<span>${escapeHtml(getLeagueBadge(comp.league))}</span>`;
 
         return `
@@ -2343,24 +2491,24 @@ function renderRadar() {
             <div class="competition-bottom">Toque para ver os jogos desta competição.</div>
           </div>
         `;
-      }).join('');
+      }).join("");
 
-      grid.onclick = (e) => {
-        const card = e.target.closest('.competition-card');
+      grid.onclick = e => {
+        const card = e.target.closest(".competition-card");
         if (!card) return;
 
-        const league = decodeURIComponent(card.dataset.league || '');
+        const league = decodeURIComponent(card.dataset.league || "");
         if (!league) return;
         openCompetition(league);
       };
 
-      grid.onkeydown = (e) => {
-        if (e.key !== 'Enter' && e.key !== ' ') return;
-        const card = e.target.closest('.competition-card');
+      grid.onkeydown = e => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        const card = e.target.closest(".competition-card");
         if (!card) return;
 
         e.preventDefault();
-        const league = decodeURIComponent(card.dataset.league || '');
+        const league = decodeURIComponent(card.dataset.league || "");
         if (!league) return;
         openCompetition(league);
       };
@@ -2374,13 +2522,13 @@ function renderRadar() {
         .filter(match => isCompetitionVisible(match.kickoff) && !shouldHideLeague(match.league))
         .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
 
-      document.getElementById('competitionsWrap')?.classList.add('hidden');
-      document.getElementById('gamesWrap')?.classList.remove('hidden');
-      document.getElementById('backToCompetitionsBtn')?.classList.remove('hidden');
+      document.getElementById("competitionsWrap")?.classList.add("hidden");
+      document.getElementById("gamesWrap")?.classList.remove("hidden");
+      document.getElementById("backToCompetitionsBtn")?.classList.remove("hidden");
 
-      const selectedTitle = document.getElementById('selectedCompetitionTitle');
-      const selectedCopy = document.getElementById('selectedCompetitionCopy');
-      const gamesGrid = document.getElementById('gamesGrid');
+      const selectedTitle = document.getElementById("selectedCompetitionTitle");
+      const selectedCopy = document.getElementById("selectedCompetitionCopy");
+      const gamesGrid = document.getElementById("gamesGrid");
 
       if (selectedTitle) selectedTitle.textContent = getLeagueDisplay(league);
       if (selectedCopy) {
@@ -2402,9 +2550,9 @@ function renderRadar() {
           <div class="game-card">
             <div class="game-main">
               <div class="teams-row compact">
-                ${teamBadge(match, 'home')}
+                ${teamBadge(match, "home")}
                 <div class="game-match">${escapeHtml(homeTeam)} x ${escapeHtml(awayTeam)}</div>
-                ${teamBadge(match, 'away')}
+                ${teamBadge(match, "away")}
               </div>
 
               <div class="game-meta">
@@ -2424,10 +2572,10 @@ function renderRadar() {
             </div>
           </div>
         `;
-      }).join('');
+      }).join("");
 
-      gamesGrid.onclick = (e) => {
-        const btn = e.target.closest('[data-analyze-id]');
+      gamesGrid.onclick = e => {
+        const btn = e.target.closest("[data-analyze-id]");
         if (!btn) return;
         openAnalysis(btn.dataset.analyzeId);
       };
@@ -2435,9 +2583,9 @@ function renderRadar() {
 
     function backToCompetitions() {
       state.selectedLeague = null;
-      document.getElementById('competitionsWrap')?.classList.remove('hidden');
-      document.getElementById('gamesWrap')?.classList.add('hidden');
-      document.getElementById('backToCompetitionsBtn')?.classList.add('hidden');
+      document.getElementById("competitionsWrap")?.classList.remove("hidden");
+      document.getElementById("gamesWrap")?.classList.add("hidden");
+      document.getElementById("backToCompetitionsBtn")?.classList.add("hidden");
     }
 
     function openAnalysis(matchId) {
@@ -2450,16 +2598,16 @@ function renderRadar() {
       const homeTeam = normalizeTeamName(match.home_team);
       const awayTeam = normalizeTeamName(match.away_team);
 
-      const analysisTitle = document.getElementById('analysisTitle');
-      const analysisSubtitle = document.getElementById('analysisSubtitle');
-      const analysisMatchSmall = document.getElementById('analysisMatchSmall');
-      const analysisTipChip = document.getElementById('analysisTipChip');
-      const analysisBestPick = document.getElementById('analysisBestPick');
-      const analysisInsight = document.getElementById('analysisInsight');
-      const analysisStats = document.getElementById('analysisStats');
-      const analysisContext = document.getElementById('analysisContext');
-      const marketsList = document.getElementById('marketsList');
-      const overlay = document.getElementById('analysisOverlay');
+      const analysisTitle = document.getElementById("analysisTitle");
+      const analysisSubtitle = document.getElementById("analysisSubtitle");
+      const analysisMatchSmall = document.getElementById("analysisMatchSmall");
+      const analysisTipChip = document.getElementById("analysisTipChip");
+      const analysisBestPick = document.getElementById("analysisBestPick");
+      const analysisInsight = document.getElementById("analysisInsight");
+      const analysisStats = document.getElementById("analysisStats");
+      const analysisContext = document.getElementById("analysisContext");
+      const marketsList = document.getElementById("marketsList");
+      const overlay = document.getElementById("analysisOverlay");
 
       if (analysisTitle) {
         analysisTitle.textContent = `${homeTeam} x ${awayTeam}`;
@@ -2472,9 +2620,9 @@ function renderRadar() {
       if (analysisMatchSmall) {
         analysisMatchSmall.innerHTML = `
           <div class="teams-row compact" style="margin-bottom:0;">
-            ${teamBadge(match, 'home')}
+            ${teamBadge(match, "home")}
             <div class="team-names">${escapeHtml(homeTeam)} x ${escapeHtml(awayTeam)}</div>
-            ${teamBadge(match, 'away')}
+            ${teamBadge(match, "away")}
           </div>
         `;
       }
@@ -2482,7 +2630,7 @@ function renderRadar() {
       if (analysisTipChip) {
         analysisTipChip.innerHTML = `
           ${chipMarkup(primaryTier)}
-          ${labelChipMarkup('Best Pick')}
+          ${labelChipMarkup("Best Pick")}
         `;
       }
 
@@ -2502,26 +2650,28 @@ function renderRadar() {
                 <div class="market-line-name">${escapeHtml(item.market)}</div>
                 <div class="market-line-copy">${escapeHtml(item.copy)}</div>
               </div>
-            `).join('')
+            `).join("")
           : `<div class="empty-state">Nenhuma oportunidade alternativa encontrada para este jogo.</div>`;
       }
 
-      if (overlay) overlay.classList.add('open');
+      state.lastOpenedMatchId = match.id;
+
+      if (overlay) overlay.classList.add("open");
     }
 
     function closeAnalysis() {
-      document.getElementById('analysisOverlay')?.classList.remove('open');
+      document.getElementById("analysisOverlay")?.classList.remove("open");
     }
 
     function renderLoadError(errorMap = {}) {
       const parts = Object.entries(errorMap).map(([k, v]) => `${k}: ${v}`);
-      const message = parts.join('\n') || 'Erro desconhecido';
+      const message = parts.join("\n") || "Erro desconhecido";
 
-      setStatus('Erro ao carregar dados do Scoutly.', false);
+      setStatus("Erro ao carregar dados do Scoutly.", false);
 
-      const radarList = document.getElementById('radarList');
-      const competitionsGrid = document.getElementById('competitionsGrid');
-      const ticketContainer = document.getElementById('ticketContainer');
+      const radarList = document.getElementById("radarList");
+      const competitionsGrid = document.getElementById("competitionsGrid");
+      const ticketContainer = document.getElementById("ticketContainer");
 
       if (radarList) radarList.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
       if (competitionsGrid) competitionsGrid.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
@@ -2530,9 +2680,9 @@ function renderRadar() {
 
     async function loadDailyPicks() {
       const { data, error } = await supabaseClient
-        .from('daily_picks')
-        .select('*')
-        .order('rank', { ascending: true });
+        .from("daily_picks")
+        .select("*")
+        .order("rank", { ascending: true });
 
       if (error) throw error;
       state.dailyPicks = data || [];
@@ -2540,20 +2690,20 @@ function renderRadar() {
 
     async function loadMatches() {
       const { data: matchesData, error: matchesError } = await supabaseClient
-        .from('matches')
-        .select('*')
-        .order('priority', { ascending: false })
-        .order('kickoff', { ascending: true });
+        .from("matches")
+        .select("*")
+        .order("priority", { ascending: false })
+        .order("kickoff", { ascending: true });
 
       if (matchesError) throw matchesError;
 
       const { data: analysisData, error: analysisError } = await supabaseClient
-        .from('match_analysis')
-        .select('*');
+        .from("match_analysis")
+        .select("*");
 
       if (analysisError) throw analysisError;
 
-      const analysisMap = new Map(
+const analysisMap = new Map(
         (analysisData || []).map(item => [String(item.match_id), item])
       );
 
@@ -2582,8 +2732,8 @@ function renderRadar() {
         return true;
       });
 
-      console.log('MATCHES CARREGADOS:', state.matches.length);
-      console.log('DAILY PICKS CARREGADOS:', state.dailyPicks.length);
+      console.log("MATCHES CARREGADOS:", state.matches.length);
+      console.log("DAILY PICKS CARREGADOS:", state.dailyPicks.length);
       window.debugMatches = state.matches;
       window.debugDailyPicks = state.dailyPicks;
     }
@@ -2597,33 +2747,28 @@ function renderRadar() {
         openCompetition(state.selectedLeague);
       }
 
-      const openOverlay = document.getElementById('analysisOverlay');
-      if (openOverlay?.classList.contains('open')) {
-        const currentTitle = document.getElementById('analysisTitle')?.textContent || '';
-        const currentMatch = state.matches.find(match => {
-          const title = `${normalizeTeamName(match.home_team)} x ${normalizeTeamName(match.away_team)}`;
-          return title === currentTitle;
-        });
-        if (currentMatch) openAnalysis(currentMatch.id);
+      const openOverlay = document.getElementById("analysisOverlay");
+      if (openOverlay?.classList.contains("open") && state.lastOpenedMatchId) {
+        openAnalysis(state.lastOpenedMatchId);
       }
     }
 
     async function refreshAllData(silent = false) {
       const errors = {};
 
-      if (!silent) setStatus('Atualizando Scoutly...', true);
+      if (!silent) setStatus("Atualizando Scoutly...", true);
 
       try {
         await loadDailyPicks();
       } catch (error) {
-        console.error('daily_picks refresh error:', error);
+        console.error("daily_picks refresh error:", error);
         errors.daily_picks = error.message || JSON.stringify(error);
       }
 
       try {
         await loadMatches();
       } catch (error) {
-        console.error('matches refresh error:', error);
+        console.error("matches refresh error:", error);
         errors.matches = error.message || JSON.stringify(error);
       }
 
@@ -2650,28 +2795,48 @@ function renderRadar() {
       }, AUTO_DATA_REFRESH_MS);
     }
 
+    function bindStaticEvents() {
+      const generateBtn = document.getElementById("generateTicketBtn");
+      if (generateBtn && !generateBtn.dataset.bound) {
+        generateBtn.addEventListener("click", () => {
+          generateTicket();
+        });
+        generateBtn.dataset.bound = "1";
+      }
+
+      const backBtn = document.getElementById("backToCompetitionsBtn");
+      if (backBtn && !backBtn.dataset.bound) {
+        backBtn.addEventListener("click", backToCompetitions);
+        backBtn.dataset.bound = "1";
+      }
+
+      const closeBtn = document.getElementById("closeAnalysisBtn");
+      if (closeBtn && !closeBtn.dataset.bound) {
+        closeBtn.addEventListener("click", closeAnalysis);
+        closeBtn.dataset.bound = "1";
+      }
+
+      const overlay = document.getElementById("analysisOverlay");
+      if (overlay && !overlay.dataset.bound) {
+        overlay.addEventListener("click", e => {
+          if (e.target.id === "analysisOverlay") closeAnalysis();
+        });
+        overlay.dataset.bound = "1";
+      }
+
+      if (!document.body.dataset.scoutlyEscBound) {
+        document.addEventListener("keydown", e => {
+          if (e.key === "Escape") closeAnalysis();
+        });
+        document.body.dataset.scoutlyEscBound = "1";
+      }
+    }
+
     async function initialize() {
+      bindStaticEvents();
+
       const ok = await refreshAllData(false);
       if (!ok) return;
-
-      const generateBtn = document.getElementById('generateTicketBtn');
-      if (generateBtn) {
-        generateBtn.addEventListener('click', () => generateTicket());
-      }
-
-      document.getElementById('backToCompetitionsBtn')?.addEventListener('click', backToCompetitions);
-      document.getElementById('closeAnalysisBtn')?.addEventListener('click', closeAnalysis);
-
-      const overlay = document.getElementById('analysisOverlay');
-      if (overlay) {
-        overlay.addEventListener('click', (e) => {
-          if (e.target.id === 'analysisOverlay') closeAnalysis();
-        });
-      }
-
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') closeAnalysis();
-      });
 
       startAutoRefresh();
     }
