@@ -493,6 +493,25 @@ function marketFamily(market) {
   return "outro"
 }
 
+function marketMacroFromFamily(family, market = "") {
+  const m = String(market || "").toLowerCase()
+
+  if (family === "gols") {
+    if (m.includes("mais de")) return "ofensivo"
+    if (m.includes("menos de")) return "defensivo"
+  }
+
+  if (family === "btts") {
+    if (m.includes("não")) return "defensivo"
+    return "ofensivo"
+  }
+
+  if (family === "escanteios") return "estatistico"
+  if (family === "resultado") return "protecao"
+
+  return "equilibrado"
+}
+
 function buildMarketCandidates(row) {
   const candidates = []
 
@@ -528,7 +547,7 @@ function buildMarketCandidates(row) {
       probability: over25Prob,
       score,
       family: "gols",
-      subfamily: "over",
+      subfamily: "over25",
       macro: "ofensivo",
     })
   }
@@ -544,7 +563,7 @@ function buildMarketCandidates(row) {
       probability: over15Prob,
       score,
       family: "gols",
-      subfamily: "over",
+      subfamily: "over15",
       macro: "ofensivo",
     })
   }
@@ -560,7 +579,7 @@ function buildMarketCandidates(row) {
       probability: bttsProb,
       score,
       family: "btts",
-      subfamily: "yes",
+      subfamily: "btts_yes",
       macro: "ofensivo",
     })
   }
@@ -576,7 +595,7 @@ function buildMarketCandidates(row) {
       probability: under25Prob,
       score,
       family: "gols",
-      subfamily: "under",
+      subfamily: "under25",
       macro: "defensivo",
     })
   }
@@ -592,7 +611,7 @@ function buildMarketCandidates(row) {
       probability: under35Prob,
       score,
       family: "gols",
-      subfamily: "under",
+      subfamily: "under35",
       macro: "defensivo",
     })
   }
@@ -608,14 +627,14 @@ function buildMarketCandidates(row) {
       probability: bttsNoProb,
       score,
       family: "btts",
-      subfamily: "no",
+      subfamily: "btts_no",
       macro: "defensivo",
     })
   }
 
-  if (cornersOver85Prob >= 0.64) {
-    let score = cornersOver85Prob + (avgCorners >= 8.8 ? 0.04 : 0) + (avgShots >= 20 ? 0.02 : 0)
-    if (profile === "estatistico") score += 0.04
+  if (cornersOver85Prob >= 0.66 && avgCorners >= 8.7) {
+    let score = cornersOver85Prob + (avgCorners >= 9.2 ? 0.03 : 0) + (avgShots >= 21 ? 0.02 : 0)
+    if (profile === "estatistico") score += 0.03
     if (profile === "ofensivo") score += 0.01
 
     pushCandidate(candidates, {
@@ -623,24 +642,25 @@ function buildMarketCandidates(row) {
       probability: cornersOver85Prob,
       score,
       family: "escanteios",
-      subfamily: "over",
+      subfamily: "corners_over85",
       macro: "estatistico",
     })
   }
 
   const cornersUnder105Prob = clamp(1 - Math.max(cornersOver85Prob - 0.18, 0), 0, 1)
 
-  if (avgCorners <= 8.6 && cornersUnder105Prob >= 0.67) {
-    let score = cornersUnder105Prob + (avgCorners <= 8.1 ? 0.02 : 0)
-    if (profile === "estatistico") score -= 0.04
-    if (profile === "ofensivo") score -= 0.02
+  if (avgCorners <= 8.1 && cornersUnder105Prob >= 0.74) {
+    let score = cornersUnder105Prob + (avgCorners <= 7.6 ? 0.02 : 0)
+    if (profile === "estatistico") score -= 0.06
+    if (profile === "ofensivo") score -= 0.05
+    if (profile === "defensivo") score -= 0.01
 
     pushCandidate(candidates, {
       market: "Menos de 10.5 escanteios",
       probability: cornersUnder105Prob,
       score,
       family: "escanteios",
-      subfamily: "under",
+      subfamily: "corners_under105",
       macro: "estatistico",
     })
   }
@@ -653,7 +673,7 @@ function buildMarketCandidates(row) {
       market: `Dupla chance ${row.home_team} ou empate`,
       probability: homeOrDraw,
       score,
-      family: "dupla",
+      family: "resultado",
       subfamily: "home_draw",
       macro: "protecao",
     })
@@ -667,17 +687,19 @@ function buildMarketCandidates(row) {
       market: `Dupla chance ${row.away_team} ou empate`,
       probability: awayOrDraw,
       score,
-      family: "dupla",
+      family: "resultado",
       subfamily: "away_draw",
       macro: "protecao",
     })
   }
 
   candidates.forEach((c) => {
-    if (c.macro === "ofensivo") c.score = clamp(c.score + 0.03, 0, 1)
-    if (c.macro === "defensivo" && c.subfamily === "under") c.score = clamp(c.score - 0.03, 0, 1)
+    if (c.market === "Mais de 1.5 gols") c.score = clamp(c.score + 0.02, 0, 1)
+    if (c.market === "Mais de 2.5 gols") c.score = clamp(c.score + 0.01, 0, 1)
+    if (c.market === "Menos de 3.5 gols") c.score = clamp(c.score + 0.01, 0, 1)
     if (c.market === "Ambas não marcam") c.score = clamp(c.score - 0.01, 0, 1)
-    if (c.market === "Menos de 10.5 escanteios") c.score = clamp(c.score - 0.04, 0, 1)
+    if (c.market === "Mais de 8.5 escanteios") c.score = clamp(c.score - 0.01, 0, 1)
+    if (c.market === "Menos de 10.5 escanteios") c.score = clamp(c.score - 0.09, 0, 1)
   })
 
   return candidates.sort((a, b) => b.score - a.score)
@@ -735,10 +757,10 @@ function buildAnalysisFromRow(row) {
   const aggressivePick =
     alternatives.find(
       (x) =>
-        x.subfamily === "over" ||
-        x.market.includes("Ambas marcam") ||
-        x.market.includes("Mais de 2.5 gols") ||
-        x.market.includes("Mais de 8.5 escanteios")
+        x.subfamily === "over25" ||
+        x.subfamily === "btts_yes" ||
+        x.subfamily === "over15" ||
+        x.subfamily === "corners_over85"
     )?.market || row.aggressive_pick || null
 
   return {
@@ -782,25 +804,49 @@ function chooseRadar(analyses) {
 
   const radar = []
   const usedMatchIds = new Set()
-  const usedMarkets = {}
+  const usedExactMarkets = {}
+  const usedFamilies = {}
+  const usedSubfamilies = {}
   const usedMacros = {}
+  const usedLeagues = {}
 
   for (const item of sorted) {
     if (usedMatchIds.has(item.match_id)) continue
 
-    const marketCount = usedMarkets[item.main_pick] || 0
+    const exactMarketCount = usedExactMarkets[item.main_pick] || 0
+    const familyCount = usedFamilies[item.main_family] || 0
+    const subfamilyCount = usedSubfamilies[item.main_subfamily] || 0
     const macroCount = usedMacros[item.main_macro] || 0
+    const leagueCount = usedLeagues[item.league] || 0
 
-    if (marketCount >= 2) continue
-    if (item.main_macro === "defensivo" && macroCount >= 4) continue
+    if (exactMarketCount >= 2) continue
+    if (leagueCount >= 3) continue
+
+    if (item.main_family === "escanteios" && familyCount >= 3) continue
+    if (item.main_family === "gols" && familyCount >= 5) continue
+    if (item.main_family === "btts" && familyCount >= 3) continue
+    if (item.main_family === "resultado" && familyCount >= 3) continue
+
+    if (item.main_subfamily === "corners_under105" && subfamilyCount >= 2) continue
+    if (item.main_subfamily === "over15" && subfamilyCount >= 3) continue
+    if (item.main_subfamily === "over25" && subfamilyCount >= 2) continue
+    if (item.main_subfamily === "under35" && subfamilyCount >= 2) continue
+    if (item.main_subfamily === "under25" && subfamilyCount >= 2) continue
+    if (item.main_subfamily === "btts_yes" && subfamilyCount >= 2) continue
+    if (item.main_subfamily === "btts_no" && subfamilyCount >= 2) continue
+
     if (item.main_macro === "estatistico" && macroCount >= 3) continue
+    if (item.main_macro === "defensivo" && macroCount >= 4) continue
+    if (item.main_macro === "ofensivo" && macroCount >= 5) continue
     if (item.main_macro === "protecao" && macroCount >= 3) continue
-    if (item.main_macro === "ofensivo" && macroCount >= 4) continue
 
     radar.push(item)
     usedMatchIds.add(item.match_id)
-    usedMarkets[item.main_pick] = marketCount + 1
+    usedExactMarkets[item.main_pick] = exactMarketCount + 1
+    usedFamilies[item.main_family] = familyCount + 1
+    usedSubfamilies[item.main_subfamily] = subfamilyCount + 1
     usedMacros[item.main_macro] = macroCount + 1
+    usedLeagues[item.league] = leagueCount + 1
 
     if (radar.length === RADAR_SIZE) break
   }
@@ -808,8 +854,10 @@ function chooseRadar(analyses) {
   if (radar.length < RADAR_SIZE) {
     for (const item of sorted) {
       if (usedMatchIds.has(item.match_id)) continue
+
       radar.push(item)
       usedMatchIds.add(item.match_id)
+
       if (radar.length === RADAR_SIZE) break
     }
   }
@@ -823,16 +871,18 @@ function buildTicketFromRadar(radar) {
   const ticket = []
   const usedMatches = new Set()
   const usedFamilies = new Set()
+  const usedSubfamilies = new Set()
 
   for (const item of ranked) {
     if (usedMatches.has(item.match_id)) continue
 
-    const familyKey = `${item.main_family}:${item.main_subfamily}`
-    if (usedFamilies.has(familyKey) && ticket.length < 2) continue
+    if (usedFamilies.has(item.main_family)) continue
+    if (usedSubfamilies.has(item.main_subfamily)) continue
 
     ticket.push(item)
     usedMatches.add(item.match_id)
-    usedFamilies.add(familyKey)
+    usedFamilies.add(item.main_family)
+    usedSubfamilies.add(item.main_subfamily)
 
     if (ticket.length === TICKET_SIZE) break
   }
@@ -840,8 +890,10 @@ function buildTicketFromRadar(radar) {
   if (ticket.length < TICKET_SIZE) {
     for (const item of ranked) {
       if (usedMatches.has(item.match_id)) continue
+
       ticket.push(item)
       usedMatches.add(item.match_id)
+
       if (ticket.length === TICKET_SIZE) break
     }
   }
@@ -911,7 +963,7 @@ async function rebuildDailyPicks(radar, ticket) {
 }
 
 async function runScoutlyBrain() {
-  console.log("🧠 Scoutly Brain V10 iniciado...")
+  console.log("🧠 Scoutly Brain V11 iniciado...")
 
   const matches = await loadTodaysMatches()
   console.log(`📦 Jogos de hoje carregados para análise: ${matches.length}`)
@@ -940,6 +992,10 @@ async function runScoutlyBrain() {
       buildMatchLabel(item),
       "->",
       item.main_pick,
+      "| family:",
+      item.main_family,
+      "| subfamily:",
+      item.main_subfamily,
       "| macro:",
       item.main_macro,
       "| score:",
@@ -956,6 +1012,10 @@ async function runScoutlyBrain() {
       buildMatchLabel(item),
       "->",
       item.main_pick,
+      "| family:",
+      item.main_family,
+      "| subfamily:",
+      item.main_subfamily,
       "| score:",
       item.main_score,
       "| kickoff:",
@@ -965,12 +1025,12 @@ async function runScoutlyBrain() {
 
   await rebuildDailyPicks(radar, ticket)
 
-  console.log("✅ Scoutly Brain V10 finalizado com sucesso.")
+  console.log("✅ Scoutly Brain V11 finalizado com sucesso.")
   console.log(`📡 Radar do dia gerado com ${radar.length} jogo(s).`)
   console.log(`🎫 Bilhete do dia definido com ${ticket.length} jogo(s).`)
 }
 
 runScoutlyBrain().catch((error) => {
-  console.error("❌ Erro no Scoutly Brain V10:", error)
+  console.error("❌ Erro no Scoutly Brain V11:", error)
   process.exit(1)
 })
