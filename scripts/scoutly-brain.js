@@ -18,6 +18,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
 const TIMEZONE = "America/Sao_Paulo"
 const PAST_GRACE_HOURS = 3
+const LOOKAHEAD_HOURS = 36
 const RADAR_SIZE = 15
 const TICKET_SIZE = 3
 
@@ -346,16 +347,18 @@ function mergeMatchRow(matchRow, analysisMap) {
   }
 }
 
-async function loadTodaysMatches() {
+async function loadActiveMatches() {
   const today = getTodayInTZ()
   const now = new Date()
   const minTime = new Date(now.getTime() - PAST_GRACE_HOURS * 60 * 60 * 1000)
+  const maxTime = new Date(now.getTime() + LOOKAHEAD_HOURS * 60 * 60 * 1000)
 
   const { matches, analysis } = await loadBaseTables()
 
   console.log("DEBUG DATA HOJE:", today)
   console.log("DEBUG TOTAL RAW MATCHES:", matches.length)
   console.log("DEBUG TOTAL ANALYSIS:", analysis.length)
+  console.log("DEBUG JANELA BRAIN:", minTime.toISOString(), "->", maxTime.toISOString())
 
   const analysisMap = new Map(
     analysis.map((row) => [String(row.match_id), row])
@@ -366,12 +369,11 @@ async function loadTodaysMatches() {
   const filtered = merged.filter((row) => {
     const kickoffDate = row.kickoff ? new Date(row.kickoff) : null
     const kickoffValid = kickoffDate && !Number.isNaN(kickoffDate.getTime())
-    const kickoffDay = getKickoffDateOnly(row.kickoff)
 
     return (
       kickoffValid &&
-      kickoffDay === today &&
-      kickoffDate.getTime() >= minTime.getTime()
+      kickoffDate.getTime() >= minTime.getTime() &&
+      kickoffDate.getTime() <= maxTime.getTime()
     )
   })
 
@@ -379,7 +381,7 @@ async function loadTodaysMatches() {
     .filter((row) => row.home_team && row.away_team && row.league)
     .filter((row) => hasMinimumAnalysis(row))
 
-  console.log("DEBUG TOTAL FILTRADOS HOJE:", finalRows.length)
+  console.log("DEBUG TOTAL FILTRADOS JANELA ATIVA:", finalRows.length)
 
   return finalRows
 }
@@ -488,28 +490,9 @@ function marketFamily(market) {
   if (!m) return "outro"
   if (m.includes("escanteio")) return "escanteios"
   if (m.includes("ambas")) return "btts"
-  if (m.includes("dupla chance") || m.includes("empate") || m.includes("vitória")) return "resultado"
+  if (m.includes("dupla chance") || m.includes("empate") || m.includes("vitória") || m.includes("vitoria")) return "resultado"
   if (m.includes("gol")) return "gols"
   return "outro"
-}
-
-function marketMacroFromFamily(family, market = "") {
-  const m = String(market || "").toLowerCase()
-
-  if (family === "gols") {
-    if (m.includes("mais de")) return "ofensivo"
-    if (m.includes("menos de")) return "defensivo"
-  }
-
-  if (family === "btts") {
-    if (m.includes("não")) return "defensivo"
-    return "ofensivo"
-  }
-
-  if (family === "escanteios") return "estatistico"
-  if (family === "resultado") return "protecao"
-
-  return "equilibrado"
 }
 
 function buildMarketCandidates(row) {
@@ -552,7 +535,7 @@ function buildMarketCandidates(row) {
     })
   }
 
-  if (over15Prob >= 0.77) {
+  if (over15Prob >= 0.76) {
     let score = over15Prob + (avgGoals >= 2.3 ? 0.04 : 0) + (avgShots >= 20 ? 0.03 : 0)
     if (profile === "ofensivo") score += 0.03
     if (profile === "defensivo") score -= 0.04
@@ -568,7 +551,7 @@ function buildMarketCandidates(row) {
     })
   }
 
-  if (bttsProb >= 0.64) {
+  if (bttsProb >= 0.63) {
     let score = bttsProb + (avgGoals >= 2.6 ? 0.04 : 0) + (avgShots >= 21 ? 0.03 : 0)
     if (profile === "ofensivo") score += 0.04
     if (profile === "defensivo") score -= 0.08
@@ -584,7 +567,7 @@ function buildMarketCandidates(row) {
     })
   }
 
-  if (under25Prob >= 0.77) {
+  if (under25Prob >= 0.78) {
     let score = under25Prob + (avgGoals <= 2.1 ? 0.02 : 0) + (avgShots <= 17 ? 0.01 : 0)
     if (profile === "defensivo") score += 0.02
     if (profile === "ofensivo") score -= 0.08
@@ -600,7 +583,7 @@ function buildMarketCandidates(row) {
     })
   }
 
-  if (under35Prob >= 0.81) {
+  if (under35Prob >= 0.80) {
     let score = under35Prob + (avgGoals <= 2.6 ? 0.01 : 0) + (avgShots <= 20 ? 0.01 : 0)
     if (profile === "controlado") score += 0.02
     if (profile === "defensivo") score += 0.01
@@ -649,10 +632,10 @@ function buildMarketCandidates(row) {
 
   const cornersUnder105Prob = clamp(1 - Math.max(cornersOver85Prob - 0.18, 0), 0, 1)
 
-  if (avgCorners <= 8.1 && cornersUnder105Prob >= 0.74) {
-    let score = cornersUnder105Prob + (avgCorners <= 7.6 ? 0.02 : 0)
-    if (profile === "estatistico") score -= 0.06
-    if (profile === "ofensivo") score -= 0.05
+  if (avgCorners <= 7.9 && cornersUnder105Prob >= 0.76) {
+    let score = cornersUnder105Prob + (avgCorners <= 7.4 ? 0.02 : 0)
+    if (profile === "estatistico") score -= 0.07
+    if (profile === "ofensivo") score -= 0.06
     if (profile === "defensivo") score -= 0.01
 
     pushCandidate(candidates, {
@@ -699,7 +682,7 @@ function buildMarketCandidates(row) {
     if (c.market === "Menos de 3.5 gols") c.score = clamp(c.score + 0.01, 0, 1)
     if (c.market === "Ambas não marcam") c.score = clamp(c.score - 0.01, 0, 1)
     if (c.market === "Mais de 8.5 escanteios") c.score = clamp(c.score - 0.01, 0, 1)
-    if (c.market === "Menos de 10.5 escanteios") c.score = clamp(c.score - 0.09, 0, 1)
+    if (c.market === "Menos de 10.5 escanteios") c.score = clamp(c.score - 0.10, 0, 1)
   })
 
   return candidates.sort((a, b) => b.score - a.score)
@@ -709,33 +692,48 @@ function chooseBestAndAlternatives(candidates) {
   if (!candidates.length) return { best: null, alternatives: [] }
 
   const sorted = [...candidates].sort((a, b) => b.score - a.score)
-  const best = sorted[0]
+  let best = sorted[0]
 
-  const usedFamilies = new Set()
-  usedFamilies.add(best.family || marketFamily(best.market))
+  const firstStrongNonCorner = sorted.find((item) => {
+    if (!item || !item.market) return false
+    if (item.market === best.market) return false
+    if (item.family === "escanteios") return false
+    return item.score >= best.score - 0.04
+  })
+
+  if (
+    best.subfamily === "corners_under105" &&
+    firstStrongNonCorner
+  ) {
+    best = firstStrongNonCorner
+  }
 
   const alternatives = []
+  const usedMarkets = new Set([best.market])
+  const usedFamilies = new Set([best.family])
 
-  for (const item of sorted.slice(1)) {
+  for (const item of sorted) {
     if (!item || !item.market) continue
-    if (item.market === best.market) continue
+    if (usedMarkets.has(item.market)) continue
 
-    const family = item.family || marketFamily(item.market)
-    if (usedFamilies.has(family)) continue
+    const sameFamily = usedFamilies.has(item.family)
 
-    alternatives.push(item)
-    usedFamilies.add(family)
+    if (!sameFamily) {
+      alternatives.push(item)
+      usedMarkets.add(item.market)
+      usedFamilies.add(item.family)
+    }
 
     if (alternatives.length === 2) break
   }
 
   if (alternatives.length < 2) {
-    for (const item of sorted.slice(1)) {
+    for (const item of sorted) {
       if (!item || !item.market) continue
-      if (item.market === best.market) continue
-      if (alternatives.find((x) => x.market === item.market)) continue
+      if (usedMarkets.has(item.market)) continue
 
       alternatives.push(item)
+      usedMarkets.add(item.market)
 
       if (alternatives.length === 2) break
     }
@@ -830,7 +828,7 @@ function chooseRadar(analyses) {
     if (item.main_subfamily === "corners_under105" && subfamilyCount >= 2) continue
     if (item.main_subfamily === "over15" && subfamilyCount >= 3) continue
     if (item.main_subfamily === "over25" && subfamilyCount >= 2) continue
-    if (item.main_subfamily === "under35" && subfamilyCount >= 2) continue
+    if (item.main_subfamily === "under35" && subfamilyCount >= 3) continue
     if (item.main_subfamily === "under25" && subfamilyCount >= 2) continue
     if (item.main_subfamily === "btts_yes" && subfamilyCount >= 2) continue
     if (item.main_subfamily === "btts_no" && subfamilyCount >= 2) continue
@@ -872,17 +870,24 @@ function buildTicketFromRadar(radar) {
   const usedMatches = new Set()
   const usedFamilies = new Set()
   const usedSubfamilies = new Set()
+  const usedLeagues = new Set()
 
   for (const item of ranked) {
     if (usedMatches.has(item.match_id)) continue
 
-    if (usedFamilies.has(item.main_family)) continue
-    if (usedSubfamilies.has(item.main_subfamily)) continue
+    const familyLocked = usedFamilies.has(item.main_family)
+    const subfamilyLocked = usedSubfamilies.has(item.main_subfamily)
+    const leagueLocked = usedLeagues.has(item.league)
+
+    if (ticket.length < 2 && familyLocked) continue
+    if (ticket.length < 2 && subfamilyLocked) continue
+    if (ticket.length < 2 && leagueLocked) continue
 
     ticket.push(item)
     usedMatches.add(item.match_id)
     usedFamilies.add(item.main_family)
     usedSubfamilies.add(item.main_subfamily)
+    usedLeagues.add(item.league)
 
     if (ticket.length === TICKET_SIZE) break
   }
@@ -963,10 +968,10 @@ async function rebuildDailyPicks(radar, ticket) {
 }
 
 async function runScoutlyBrain() {
-  console.log("🧠 Scoutly Brain V11 iniciado...")
+  console.log("🧠 Scoutly Brain V12 iniciado...")
 
-  const matches = await loadTodaysMatches()
-  console.log(`📦 Jogos de hoje carregados para análise: ${matches.length}`)
+  const matches = await loadActiveMatches()
+  console.log(`📦 Jogos da janela ativa carregados para análise: ${matches.length}`)
 
   const analyses = matches
     .map(buildAnalysisFromRow)
@@ -975,7 +980,7 @@ async function runScoutlyBrain() {
   console.log(`🧪 Análises válidas geradas: ${analyses.length}`)
 
   if (!analyses.length) {
-    console.log("⚠️ Nenhuma análise válida encontrada para hoje.")
+    console.log("⚠️ Nenhuma análise válida encontrada na janela ativa.")
     await supabase.from("daily_picks").delete().neq("id", 0)
     return
   }
@@ -1025,12 +1030,12 @@ async function runScoutlyBrain() {
 
   await rebuildDailyPicks(radar, ticket)
 
-  console.log("✅ Scoutly Brain V11 finalizado com sucesso.")
+  console.log("✅ Scoutly Brain V12 finalizado com sucesso.")
   console.log(`📡 Radar do dia gerado com ${radar.length} jogo(s).`)
   console.log(`🎫 Bilhete do dia definido com ${ticket.length} jogo(s).`)
 }
 
 runScoutlyBrain().catch((error) => {
-  console.error("❌ Erro no Scoutly Brain V11:", error)
+  console.error("❌ Erro no Scoutly Brain V12:", error)
   process.exit(1)
 })
