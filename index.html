@@ -1574,7 +1574,7 @@
 
     function chipMarkup(tier) {
       const emoji =
-        tier === "Forte" ? "🔥" :
+        tier === "Forte" ? "🎯" :
         tier === "Boa" ? "🟢" :
         tier === "Moderada" ? "🟡" :
         "🔵";
@@ -1827,25 +1827,25 @@
     }
 
     function getStatsForDisplay(match) {
-      const {
-        avgGoals,
-        avgCorners,
-        avgShots,
-        avgShotsOnTarget,
-        avgCards,
-        avgFouls
-      } = getMetrics(match);
+  const {
+    avgGoals,
+    avgCorners,
+    avgShots,
+    avgShotsOnTarget,
+    avgCards,
+    avgFouls
+  } = getMetrics(match);
 
-      return [
-        { label: "Gols esperados", value: formatDecimal(avgGoals, 1) },
-        { label: "Escanteios", value: formatDecimal(avgCorners, 1) },
-        { label: "Finalizações", value: formatDecimal(avgShots, 0) },
-        { label: "No gol", value: formatDecimal(avgShotsOnTarget, 0) },
-        { label: "Cartões", value: formatDecimal(avgCards, 1) },
-        { label: "Faltas", value: formatDecimal(avgFouls, 1) }
-      ];
-    }
-
+  return [
+    { label: "Gols esperados", value: formatDecimal(avgGoals, 1) },
+    { label: "Finalizações", value: formatDecimal(avgShots, 0) },
+    { label: "No gol", value: formatDecimal(avgShotsOnTarget, 0) },
+    { label: "Escanteios", value: formatDecimal(avgCorners, 1) },
+    { label: "Cartões", value: formatDecimal(avgCards, 1) },
+    { label: "Faltas", value: formatDecimal(avgFouls, 1) }
+  ];
+}
+    
     function statCardsMarkup(match) {
       return getStatsForDisplay(match).map(item => `
         <div class="stat-item">
@@ -1862,6 +1862,30 @@
       if (homeProb !== null) items.push({ label: "Vitória mandante", value: percentText(homeProb) });
       if (drawProb !== null) items.push({ label: "Empate", value: percentText(drawProb) });
       if (awayProb !== null) items.push({ label: "Vitória visitante", value: percentText(awayProb) });
+     
+      // Força mandante
+if (homeProb !== null) {
+  let strength = homeProb > 0.6 ? "Alta" : homeProb > 0.45 ? "Boa" : "Equilibrada";
+  items.push({ label: "Força mandante", value: strength });
+}
+
+// Força visitante
+if (awayProb !== null) {
+  let strength = awayProb > 0.6 ? "Alta" : awayProb > 0.45 ? "Boa" : "Equilibrada";
+  items.push({ label: "Força visitante", value: strength });
+}
+
+// Perfil do jogo
+if (homeProb !== null && awayProb !== null) {
+  let profile =
+    Math.abs(homeProb - awayProb) > 0.25
+      ? "Desequilíbrio claro"
+      : Math.abs(homeProb - awayProb) > 0.1
+      ? "Leve vantagem"
+      : "Jogo equilibrado";
+
+  items.push({ label: "Perfil do jogo", value: profile });
+}
 
       return items;
     }
@@ -1873,12 +1897,27 @@
         return `<div class="empty-state">Sem contexto adicional relevante para esta partida.</div>`;
       }
 
-      return items.map(item => `
-        <div class="stat-item">
-          <div class="stat-label">${escapeHtml(item.label)}</div>
-          <div class="stat-value">${escapeHtml(item.value)}</div>
-        </div>
-      `).join("");
+     return items.map(item => {
+  let icon = "📌";
+
+  if (item.label.includes("mandante")) icon = "🏠";
+  else if (item.label.includes("visitante")) icon = "✈️";
+  else if (item.label.includes("Empate")) icon = "🤝";
+  else if (item.label.includes("Força")) icon = "🔥";
+  else if (item.label.includes("Perfil")) icon = "⚖️";
+
+  return `
+    <div class="stat-item" style="display:flex; justify-content:space-between; align-items:center;">
+      <div class="stat-label" style="display:flex; gap:6px; align-items:center;">
+        <span>${icon}</span>
+        <span>${escapeHtml(item.label)}</span>
+      </div>
+      <div class="stat-value" style="font-weight:600;">
+        ${escapeHtml(item.value)}
+      </div>
+    </div>
+  `;
+}).join('');
     }
 
     function getFlag(country) {
@@ -2621,12 +2660,12 @@ merged = merged
         `;
       }
 
-      analysisBestPick.innerHTML = `
+   analysisBestPick.innerHTML = `
   <div style="font-weight:600;">${primaryPick}</div>
-  <div style="font-size:12px; opacity:0.8; margin-top:4px;">
-    Entrada principal baseada na melhor leitura estatística do jogo.
+  <div style="font-size:12px; opacity:0.85; margin-top:4px;">
+    Entrada principal com a melhor combinação entre probabilidade, consistência e leitura estatística do jogo.
   </div>
-`;
+
       if (analysisInsight) analysisInsight.textContent = getInsight(match);
       if (analysisStats) analysisStats.innerHTML = statCardsMarkup(match);
       if (analysisContext) analysisContext.innerHTML = contextCardsMarkup(match);
