@@ -1974,7 +1974,6 @@
 
       if (alternatives[0]) {
         items.push({
-          label: "Boa opção",
           market: alternatives[0],
           tier: "Boa",
           copy: "Alternativa consistente para quem quiser variar a entrada."
@@ -1983,7 +1982,6 @@
 
       if (alternatives[1]) {
         items.push({
-          label: "Mais arriscada",
           market: alternatives[1],
           tier: "Moderada",
           copy: "Linha extra com risco maior, mas ainda dentro da leitura do jogo."
@@ -2619,12 +2617,16 @@ merged = merged
 
       if (analysisTipChip) {
         analysisTipChip.innerHTML = `
-          ${chipMarkup(primaryTier)}
-          ${labelChipMarkup("Best Pick")}
+          ${chipMarkup("Forte")}
         `;
       }
 
-      if (analysisBestPick) analysisBestPick.textContent = primaryPick;
+      analysisBestPick.innerHTML = `
+  <div style="font-weight:600;">${primaryPick}</div>
+  <div style="font-size:12px; opacity:0.8; margin-top:4px;">
+    Entrada principal baseada na melhor leitura estatística do jogo.
+  </div>
+`;
       if (analysisInsight) analysisInsight.textContent = getInsight(match);
       if (analysisStats) analysisStats.innerHTML = statCardsMarkup(match);
       if (analysisContext) analysisContext.innerHTML = contextCardsMarkup(match);
@@ -2634,7 +2636,6 @@ merged = merged
           ? detectedMarkets.map(item => `
               <div class="market-line">
                 <div class="chip-row" style="margin-top:0;">
-                  ${labelChipMarkup(item.label)}
                   ${chipMarkup(item.tier)}
                 </div>
                 <div class="market-line-name">${escapeHtml(item.market)}</div>
