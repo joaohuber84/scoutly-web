@@ -19,6 +19,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 const TIMEZONE = "America/Sao_Paulo"
 const PAST_GRACE_HOURS = 3
 const RADAR_SIZE = 15
+const RADAR_HARD_LIMIT = 24
 const TICKET_MIN_SIZE = 2
 const TICKET_MAX_SIZE = 3
 
@@ -68,6 +69,7 @@ function getKickoffMs(kickoff) {
 
 function getDayOffsetFromToday(kickoff) {
   if (!kickoff) return 999
+
   const kickoffDay = getKickoffDateOnly(kickoff)
   if (!kickoffDay) return 999
 
@@ -108,6 +110,7 @@ function compareByRadarPriority(a, b) {
   if (aKickoff !== bKickoff) return aKickoff - bKickoff
 
   if (b.main_score !== a.main_score) return b.main_score - a.main_score
+
   return String(a.league || "").localeCompare(String(b.league || ""))
 }
 
@@ -130,47 +133,13 @@ function safeLeague(row) {
   return row.league || "Liga"
 }
 
-function hasMinimumAnalysis(row) {
-  const values = [
-    row.expected_home_goals,
-    row.expected_away_goals,
-    row.expected_home_shots,
-    row.expected_away_shots,
-    row.expected_home_sot,
-    row.expected_away_sot,
-    row.expected_corners,
-    row.expected_cards,
-    row.prob_over25,
-    row.prob_btts,
-    row.prob_corners,
-    row.prob_shots,
-    row.prob_sot,
-    row.prob_cards,
-  ]
-
-  return values.some((v) => Number.isFinite(Number(v)) && Number(v) > 0)
-}
-
-function getStrengthLabel(score) {
-  if (score >= 0.86) return "Muito forte"
-  if (score >= 0.78) return "Forte"
-  if (score >= 0.70) return "Boa"
-  return "Moderada"
-}
-
-function getRhythmLabel(avgShots) {
-  const shots = toNumber(avgShots)
-  if (shots >= 24) return "Alto"
-  if (shots >= 16) return "Moderado"
-  return "Baixo"
-}
-
 function marketFamily(market) {
   const m = String(market || "").trim().toLowerCase()
 
   if (!m) return "outro"
   if (m.includes("escanteio")) return "escanteios"
   if (m.includes("ambas")) return "btts"
+
   if (
     m.includes("dupla chance") ||
     m.includes("empate") ||
@@ -179,6 +148,7 @@ function marketFamily(market) {
   ) {
     return "resultado"
   }
+
   if (m.includes("gol")) return "gols"
   return "outro"
 }
@@ -200,6 +170,69 @@ function marketMacroFromFamily(family, market = "") {
   if (family === "resultado") return "protecao"
 
   return "equilibrado"
+}
+
+function getStrengthLabel(score) {
+  if (score >= 0.86) return "Muito forte"
+  if (score >= 0.79) return "Forte"
+  if (score >= 0.72) return "Boa"
+  return "Moderada"
+}
+
+function getRhythmLabel(avgShots) {
+  const shots = toNumber(avgShots)
+  if (shots >= 26) return "Alto"
+  if (shots >= 18) return "Moderado"
+  return "Baixo"
+}
+
+function hasMinimumAnalysis(row) {
+  const values = [
+    row.expected_home_goals,
+    row.expected_away_goals,
+    row.expected_home_shots,
+    row.expected_away_shots,
+    row.expected_home_sot,
+    row.expected_away_sot,
+    row.expected_corners,
+    row.expected_cards,
+    row.avg_goals,
+    row.avg_corners,
+    row.avg_shots,
+    row.avg_shots_on_target,
+    row.over15_prob,
+    row.over25_prob,
+    row.under25_prob,
+    row.under35_prob,
+    row.btts_prob,
+    row.home_win_prob,
+    row.draw_prob,
+    row.away_win_prob,
+  ]
+
+  return values.some((v) => Number.isFinite(Number(v)) && Number(v) > 0)
+}
+
+function normalizeRegion(value) {
+  const raw = String(value || "").trim().toLowerCase()
+  if (!raw) return null
+  return raw
+}
+
+function leaguePriorityBoost(league) {
+  const l = String(league || "").toLowerCase()
+
+  if (l.includes("brasileirão série a")) return 0.05
+  if (l.includes("brasileirão série b")) return 0.03
+  if (l.includes("copa do nordeste")) return 0.03
+  if (l.includes("copa verde")) return 0.03
+  if (l.includes("copa sul-sudeste")) return 0.03
+  if (l.includes("brasileirão feminino")) return 0.03
+  if (l.includes("champions")) return 0.04
+  if (l.includes("libertadores")) return 0.04
+  if (l.includes("liga argentina")) return 0.02
+
+  return 0
 }
 
 async function loadBaseTables() {
@@ -228,9 +261,7 @@ async function loadBaseTables() {
     `)
     .order("kickoff", { ascending: true, nullsFirst: false })
 
-  if (matchesError) {
-    throw matchesError
-  }
+  if (matchesError) throw matchesError
 
   const { data: analysis, error: analysisError } = await supabase
     .from("match_analysis")
@@ -259,18 +290,34 @@ async function loadBaseTables() {
       analysis_text
     `)
 
-  if (analysisError) {
-    throw analysisError
-  }
+  if (analysisError) throw analysisError
+
+  const { data: stats, error: statsError } = await supabase
+    .from("match_stats")
+    .select(`
+      match_id,
+      home_shots,
+      home_shots_on_target,
+      home_corners,
+      home_yellow_cards,
+      away_shots,
+      away_shots_on_target,
+      away_corners,
+      away_yellow_cards
+    `)
+
+  if (statsError) throw statsError
 
   return {
     matches: matches || [],
     analysis: analysis || [],
+    stats: stats || [],
   }
 }
 
-function mergeMatchRow(matchRow, analysisMap) {
+function mergeMatchRow(matchRow, analysisMap, statsMap) {
   const analysis = analysisMap.get(String(matchRow.id)) || {}
+  const stats = statsMap.get(String(matchRow.id)) || {}
 
   const metrics = maybeJson(matchRow.metrics) || {}
   const markets = maybeJson(matchRow.markets) || {}
@@ -285,6 +332,15 @@ function mergeMatchRow(matchRow, analysisMap) {
   const expectedCorners = toNumber(analysis.expected_corners, 0)
   const expectedCards = toNumber(analysis.expected_cards, 0)
 
+  const statsHomeShots = toNumber(stats.home_shots, 0)
+  const statsAwayShots = toNumber(stats.away_shots, 0)
+  const statsHomeSOT = toNumber(stats.home_shots_on_target, 0)
+  const statsAwaySOT = toNumber(stats.away_shots_on_target, 0)
+  const statsHomeCorners = toNumber(stats.home_corners, 0)
+  const statsAwayCorners = toNumber(stats.away_corners, 0)
+  const statsHomeCards = toNumber(stats.home_yellow_cards, 0)
+  const statsAwayCards = toNumber(stats.away_yellow_cards, 0)
+
   const avgGoals =
     expectedHomeGoals > 0 || expectedAwayGoals > 0
       ? round1(expectedHomeGoals + expectedAwayGoals)
@@ -293,24 +349,35 @@ function mergeMatchRow(matchRow, analysisMap) {
   const avgShots =
     expectedHomeShots > 0 || expectedAwayShots > 0
       ? Math.round(expectedHomeShots + expectedAwayShots)
-      : Math.round(toNumber(metrics.shots, 0))
+      : statsHomeShots > 0 || statsAwayShots > 0
+        ? Math.round(statsHomeShots + statsAwayShots)
+        : Math.round(toNumber(metrics.shots, 0))
 
   const avgShotsOnTarget =
     expectedHomeSOT > 0 || expectedAwaySOT > 0
       ? Math.round(expectedHomeSOT + expectedAwaySOT)
-      : Math.round(
-          toNumber(metrics.shots_on_target, 0) || toNumber(metrics.sot, 0)
-        )
+      : statsHomeSOT > 0 || statsAwaySOT > 0
+        ? Math.round(statsHomeSOT + statsAwaySOT)
+        : Math.round(
+            toNumber(metrics.shots_on_target, 0) ||
+              toNumber(metrics.sot, 0)
+          )
 
   const avgCorners =
     expectedCorners > 0
       ? round1(expectedCorners)
-      : round1(toNumber(metrics.corners, 0) || toNumber(markets.corners, 0))
+      : statsHomeCorners > 0 || statsAwayCorners > 0
+        ? round1(statsHomeCorners + statsAwayCorners)
+        : round1(
+            toNumber(metrics.corners, 0) || toNumber(markets.corners, 0)
+          )
 
   const avgCards =
     expectedCards > 0
       ? round1(expectedCards)
-      : round1(toNumber(metrics.cards, 0) || toNumber(markets.cards, 0))
+      : statsHomeCards > 0 || statsAwayCards > 0
+        ? round1(statsHomeCards + statsAwayCards)
+        : round1(toNumber(metrics.cards, 0) || toNumber(markets.cards, 0))
 
   const avgFouls = round1(
     toNumber(metrics.fouls, 0) || toNumber(markets.fouls, 0)
@@ -320,21 +387,80 @@ function mergeMatchRow(matchRow, analysisMap) {
   const drawProb = clamp(toNumber(probabilities.draw, 0), 0, 1)
   const awayWinProb = clamp(toNumber(probabilities.away, 0), 0, 1)
 
-  const over15Prob = clamp(toNumber(markets.over15, 0), 0, 1)
+  const over15Prob = clamp(
+    toNumber(markets.over15, 0) ||
+      clamp(
+        avgGoals >= 3.0
+          ? 0.91
+          : avgGoals >= 2.6
+            ? 0.86
+            : avgGoals >= 2.2
+              ? 0.80
+              : avgGoals >= 1.8
+                ? 0.73
+                : 0.62,
+        0,
+        1
+      ),
+    0,
+    1
+  )
+
   const over25Prob = clamp(
-    toNumber(analysis.prob_over25, 0) || toNumber(markets.over25, 0),
+    toNumber(analysis.prob_over25, 0) ||
+      toNumber(markets.over25, 0) ||
+      clamp(
+        avgGoals >= 3.2
+          ? 0.74
+          : avgGoals >= 2.8
+            ? 0.68
+            : avgGoals >= 2.5
+              ? 0.62
+              : avgGoals >= 2.2
+                ? 0.56
+                : 0.44,
+        0,
+        1
+      ),
     0,
     1
   )
+
   const bttsProb = clamp(
-    toNumber(analysis.prob_btts, 0) || toNumber(markets.btts, 0),
+    toNumber(analysis.prob_btts, 0) ||
+      toNumber(markets.btts, 0) ||
+      clamp(
+        avgGoals >= 3.0
+          ? 0.62
+          : avgGoals >= 2.6
+            ? 0.57
+            : avgGoals >= 2.2
+              ? 0.51
+              : 0.42,
+        0,
+        1
+      ),
     0,
     1
   )
+
   const under25Prob = clamp(1 - over25Prob, 0, 1)
+
   const under35Prob = clamp(
     toNumber(markets.under35, 0) ||
-      clamp(1 - Math.max(over25Prob - 0.18, 0), 0, 1),
+      clamp(
+        avgGoals <= 1.8
+          ? 0.88
+          : avgGoals <= 2.2
+            ? 0.84
+            : avgGoals <= 2.6
+              ? 0.79
+              : avgGoals <= 3.0
+                ? 0.72
+                : 0.63,
+        0,
+        1
+      ),
     0,
     1
   )
@@ -367,7 +493,7 @@ function mergeMatchRow(matchRow, analysisMap) {
     kickoff: matchRow.kickoff,
     league: matchRow.league,
     country: matchRow.country,
-    region: matchRow.region,
+    region: normalizeRegion(matchRow.region),
     priority: toNumber(matchRow.priority, 0),
     home_team: matchRow.home_team,
     away_team: matchRow.away_team,
@@ -388,6 +514,15 @@ function mergeMatchRow(matchRow, analysisMap) {
     avg_cards: avgCards,
     avg_fouls: avgFouls,
 
+    home_shots: expectedHomeShots > 0 ? Math.round(expectedHomeShots) : Math.round(statsHomeShots),
+    away_shots: expectedAwayShots > 0 ? Math.round(expectedAwayShots) : Math.round(statsAwayShots),
+    home_sot: expectedHomeSOT > 0 ? Math.round(expectedHomeSOT) : Math.round(statsHomeSOT),
+    away_sot: expectedAwaySOT > 0 ? Math.round(expectedAwaySOT) : Math.round(statsAwaySOT),
+    home_corners: Math.round(statsHomeCorners),
+    away_corners: Math.round(statsAwayCorners),
+    home_cards: Math.round(statsHomeCards),
+    away_cards: Math.round(statsAwayCards),
+
     over15_prob: round2(over15Prob),
     over25_prob: round2(over25Prob),
     under25_prob: round2(under25Prob),
@@ -401,7 +536,12 @@ function mergeMatchRow(matchRow, analysisMap) {
 
     expected_home_goals: round2(expectedHomeGoals),
     expected_away_goals: round2(expectedAwayGoals),
+    expected_home_shots: round2(expectedHomeShots),
+    expected_away_shots: round2(expectedAwayShots),
+    expected_home_sot: round2(expectedHomeSOT),
+    expected_away_sot: round2(expectedAwaySOT),
     expected_corners: round2(expectedCorners),
+    expected_cards: round2(expectedCards),
 
     confidence_score: round2(confidenceScore),
 
@@ -418,17 +558,22 @@ async function loadActiveMatches() {
   const now = new Date()
   const minTime = new Date(now.getTime() - PAST_GRACE_HOURS * 60 * 60 * 1000)
 
-  const { matches, analysis } = await loadBaseTables()
+  const { matches, analysis, stats } = await loadBaseTables()
 
   console.log("DEBUG DATA HOJE:", getTodayInTZ())
   console.log("DEBUG TOTAL RAW MATCHES:", matches.length)
   console.log("DEBUG TOTAL ANALYSIS:", analysis.length)
+  console.log("DEBUG TOTAL STATS:", stats.length)
 
   const analysisMap = new Map(
     analysis.map((row) => [String(row.match_id), row])
   )
 
-  const merged = matches.map((row) => mergeMatchRow(row, analysisMap))
+  const statsMap = new Map(
+    stats.map((row) => [String(row.match_id), row])
+  )
+
+  const merged = matches.map((row) => mergeMatchRow(row, analysisMap, statsMap))
 
   const filtered = merged.filter((row) => {
     const kickoffDate = row.kickoff ? new Date(row.kickoff) : null
@@ -454,17 +599,13 @@ function getGameProfile(row) {
   const avgGoals = toNumber(row.avg_goals)
   const avgShots = toNumber(row.avg_shots)
   const avgCorners = toNumber(row.avg_corners)
-
-  const over25Prob = toNumber(row.over25_prob)
+  const bttsProb = toNumber(row.btts_prob)
   const under25Prob = toNumber(row.under25_prob)
   const under35Prob = toNumber(row.under35_prob)
-  const bttsProb = toNumber(row.btts_prob)
-  const bttsNoProb = clamp(1 - bttsProb, 0, 1)
 
   if (
     avgGoals >= 2.8 ||
-    over25Prob >= 0.67 ||
-    (avgShots >= 24 && bttsProb >= 0.62)
+    (avgShots >= 24 && bttsProb >= 0.58)
   ) {
     return "ofensivo"
   }
@@ -472,17 +613,16 @@ function getGameProfile(row) {
   if (
     avgGoals <= 2.1 &&
     under25Prob >= 0.72 &&
-    bttsNoProb >= 0.70 &&
     avgShots <= 18
   ) {
     return "defensivo"
   }
 
-  if (avgCorners >= 9.1 && avgShots >= 21 && avgGoals >= 2.2) {
+  if (avgCorners >= 9.1 && avgShots >= 21) {
     return "estatistico"
   }
 
-  if (under35Prob >= 0.79 && avgGoals <= 2.5 && avgShots <= 20) {
+  if (under35Prob >= 0.79 && avgGoals <= 2.6 && avgShots <= 20) {
     return "controlado"
   }
 
@@ -497,43 +637,44 @@ function buildInsight(row, bestPick, profile) {
   const avgGoals = round1(row.avg_goals)
   const avgCorners = round1(row.avg_corners)
   const avgShots = Math.round(toNumber(row.avg_shots))
+  const avgSot = Math.round(toNumber(row.avg_shots_on_target))
   const rhythm = getRhythmLabel(avgShots).toLowerCase()
 
   const market = String(bestPick.market || "").trim().toLowerCase()
 
   if (market.includes("mais de 2.5 gols")) {
-    return `A leitura Scoutly projeta um jogo mais aberto, com potencial real para 3 ou mais gols. A média esperada está em ${avgGoals} gols, com ritmo ofensivo ${rhythm}, reforçando essa linha como uma leitura forte da partida.`
+    return `A leitura Scoutly projeta um jogo mais aberto, com potencial real para 3 ou mais gols. A média esperada está em ${avgGoals} gols, com ${avgShots} finalizações totais e ritmo ofensivo ${rhythm}, reforçando essa linha como uma leitura forte da partida.`
   }
 
   if (market.includes("mais de 1.5 gols")) {
-    return `A leitura Scoutly projeta um confronto com boa chance de pelo menos 2 gols. A média esperada está em ${avgGoals} gols, com ritmo ofensivo ${rhythm} e cenário favorável para essa linha.`
+    return `A leitura Scoutly projeta um confronto com boa chance de pelo menos 2 gols. A média esperada está em ${avgGoals} gols, com ${avgShots} finalizações e ${avgSot} chutes no alvo projetados, sustentando essa linha.`
   }
 
   if (market.includes("menos de 2.5 gols")) {
-    return `A leitura Scoutly indica um jogo travado, com baixa projeção ofensiva e controle no placar. A expectativa está em ${avgGoals} gols, com ritmo ${rhythm}, sustentando a linha de menos de 2.5 gols.`
+    return `A leitura Scoutly indica um jogo travado, com baixa projeção ofensiva e controle maior no placar. A expectativa está em ${avgGoals} gols, com ritmo ${rhythm}, favorecendo a linha de menos de 2.5 gols.`
   }
 
   if (market.includes("menos de 3.5 gols")) {
-    return `A leitura Scoutly indica um jogo controlado, sem expectativa de explosão ofensiva. A projeção está em ${avgGoals} gols, com ritmo ${rhythm}, tornando a linha de menos de 3.5 gols uma opção consistente.`
+    return `A leitura Scoutly indica um confronto controlado, sem expectativa de explosão ofensiva. A projeção está em ${avgGoals} gols, com ${avgShots} finalizações totais, tornando a linha de menos de 3.5 gols uma opção consistente.`
   }
 
   if (market.includes("ambas não marcam") || market.includes("ambas nao marcam")) {
-    return `A leitura Scoutly vê um confronto com baixa tendência de gols dos dois lados. A projeção ofensiva é moderada, e o cenário sugere maior chance de uma das equipes passar em branco.`
+    return `A leitura Scoutly vê um confronto com baixa tendência de gols dos dois lados. A projeção ofensiva é moderada, o ritmo é ${rhythm} e o cenário sugere maior chance de uma das equipes passar em branco.`
   }
 
   if (market.includes("ambas marcam")) {
-    return `A leitura Scoutly identifica espaço para gols dos dois lados. A expectativa ofensiva, o ritmo ${rhythm} e o equilíbrio do confronto criam um cenário interessante para ambas marcam.`
+    return `A leitura Scoutly identifica espaço para produção ofensiva dos dois lados. A expectativa de ${avgGoals} gols, o ritmo ${rhythm} e o volume total de finalizações favorecem o mercado de ambas marcam.`
   }
 
   if (market.includes("escanteios")) {
-    return `A leitura Scoutly projeta cerca de ${avgCorners} escanteios, com ritmo ${rhythm} e volume ofensivo suficiente para transformar esse mercado em uma oportunidade estatística relevante.`
+    return `A leitura Scoutly projeta cerca de ${avgCorners} escanteios, com ${avgShots} finalizações totais e ritmo ${rhythm}, transformando esse mercado em uma oportunidade estatística relevante.`
   }
 
   if (market.includes("dupla chance")) {
-    return `A leitura Scoutly aponta vantagem competitiva para um dos lados, mas com proteção ao empate. O equilíbrio da partida ainda pede segurança, e por isso a dupla chance aparece como uma leitura sólida.`
+    return `A leitura Scoutly aponta vantagem competitiva para um dos lados, mas com proteção ao empate. O equilíbrio geral da partida ainda pede segurança, e por isso a dupla chance aparece como leitura sólida.`
   }
 
-  return `A leitura Scoutly classifica este confronto como ${profile}, combinando projeção de ${avgGoals} gols, ${avgCorners} escanteios e ritmo ${rhythm} para destacar essa oportunidade.`
+  return `A leitura Scoutly classifica este confronto como ${profile}, combinando projeção de ${avgGoals} gols, ${avgCorners} escanteios, ${avgShots} finalizações e ritmo ${rhythm} para destacar essa oportunidade.`
 }
 
 function pushCandidate(candidates, item) {
@@ -611,45 +752,15 @@ function buildCornerCandidates(row, profile) {
   }
 
   if (avgCorners <= 6.1) {
-    add(
-      "Menos de 9.5 escanteios",
-      0.82,
-      0.73 + (profile === "estatistico" ? -0.04 : 0),
-      "corners_under95"
-    )
-    add(
-      "Menos de 10.5 escanteios",
-      0.86,
-      0.74,
-      "corners_under105"
-    )
+    add("Menos de 9.5 escanteios", 0.82, 0.73 + (profile === "estatistico" ? -0.04 : 0), "corners_under95")
+    add("Menos de 10.5 escanteios", 0.86, 0.74, "corners_under105")
   } else if (avgCorners <= 6.9) {
-    add(
-      "Menos de 10.5 escanteios",
-      0.81,
-      0.74 + (profile === "estatistico" ? -0.03 : 0),
-      "corners_under105"
-    )
-    add(
-      "Menos de 11.5 escanteios",
-      0.86,
-      0.73,
-      "corners_under115"
-    )
+    add("Menos de 10.5 escanteios", 0.81, 0.74 + (profile === "estatistico" ? -0.03 : 0), "corners_under105")
+    add("Menos de 11.5 escanteios", 0.86, 0.73, "corners_under115")
   } else if (avgCorners <= 7.7) {
-    add(
-      "Menos de 11.5 escanteios",
-      0.79,
-      0.72 + (profile === "estatistico" ? -0.02 : 0),
-      "corners_under115"
-    )
+    add("Menos de 11.5 escanteios", 0.79, 0.72 + (profile === "estatistico" ? -0.02 : 0), "corners_under115")
   } else if (avgCorners <= 8.3 && avgShots <= 20) {
-    add(
-      "Menos de 12.5 escanteios",
-      0.75,
-      0.69,
-      "corners_under125"
-    )
+    add("Menos de 12.5 escanteios", 0.75, 0.69, "corners_under125")
   }
 
   candidates.forEach((c) => {
@@ -826,6 +937,8 @@ function buildMarketCandidates(row, options = {}) {
     if (c.market === "Mais de 2.5 gols") c.score = clamp(c.score + 0.01, 0, 1)
     if (c.market === "Menos de 3.5 gols") c.score = clamp(c.score + 0.01, 0, 1)
     if (c.market === "Ambas não marcam") c.score = clamp(c.score - 0.01, 0, 1)
+
+    c.score = clamp(c.score + leaguePriorityBoost(row.league), 0, 1)
   })
 
   const minProbability = relaxed ? 0.54 : 0.60
@@ -845,15 +958,18 @@ function chooseBestAndAlternatives(candidates, row) {
   const alternatives = []
   const usedMarkets = new Set([best.market])
   const usedFamilies = new Set([best.family])
+  const usedMacros = new Set([best.macro])
 
   for (const item of sorted.slice(1)) {
     if (!item || !item.market) continue
     if (usedMarkets.has(item.market)) continue
     if (usedFamilies.has(item.family)) continue
+    if (usedMacros.has(item.macro)) continue
 
     alternatives.push(item)
     usedMarkets.add(item.market)
     usedFamilies.add(item.family)
+    usedMacros.add(item.macro)
 
     if (alternatives.length === 2) break
   }
@@ -862,9 +978,12 @@ function chooseBestAndAlternatives(candidates, row) {
     for (const item of sorted.slice(1)) {
       if (!item || !item.market) continue
       if (usedMarkets.has(item.market)) continue
+      if (usedFamilies.has(item.family)) continue
 
       alternatives.push(item)
       usedMarkets.add(item.market)
+      usedFamilies.add(item.family)
+      usedMacros.add(item.macro)
 
       if (alternatives.length === 2) break
     }
@@ -876,9 +995,12 @@ function chooseBestAndAlternatives(candidates, row) {
     for (const item of relaxed) {
       if (!item || !item.market) continue
       if (usedMarkets.has(item.market)) continue
+      if (usedFamilies.has(item.family)) continue
 
       alternatives.push(item)
       usedMarkets.add(item.market)
+      usedFamilies.add(item.family)
+      usedMacros.add(item.macro)
 
       if (alternatives.length === 2) break
     }
@@ -911,20 +1033,53 @@ function buildAnalysisFromRow(row) {
     home_team: row.home_team,
     away_team: row.away_team,
     league: safeLeague(row),
+    country: row.country || null,
+    region: row.region || null,
     kickoff: row.kickoff,
     home_logo: row.home_logo,
     away_logo: row.away_logo,
+
     avg_goals: round1(row.avg_goals),
     avg_corners: round1(row.avg_corners),
     avg_shots: Math.round(toNumber(row.avg_shots)),
     avg_shots_on_target: Math.round(toNumber(row.avg_shots_on_target)),
     avg_cards: round1(row.avg_cards),
     avg_fouls: round1(row.avg_fouls),
+
+    home_shots: Math.round(toNumber(row.home_shots)),
+    away_shots: Math.round(toNumber(row.away_shots)),
+    home_sot: Math.round(toNumber(row.home_sot)),
+    away_sot: Math.round(toNumber(row.away_sot)),
+    home_corners: Math.round(toNumber(row.home_corners)),
+    away_corners: Math.round(toNumber(row.away_corners)),
+    home_cards: Math.round(toNumber(row.home_cards)),
+    away_cards: Math.round(toNumber(row.away_cards)),
+
     home_strength: round1(row.home_strength),
     away_strength: round1(row.away_strength),
+
     home_win_prob: round2(row.home_win_prob),
     draw_prob: round2(row.draw_prob),
     away_win_prob: round2(row.away_win_prob),
+
+    over15_prob: round2(row.over15_prob),
+    over25_prob: round2(row.over25_prob),
+    under25_prob: round2(row.under25_prob),
+    under35_prob: round2(row.under35_prob),
+    btts_prob: round2(row.btts_prob),
+    corners_over85_prob: round2(row.corners_over85_prob),
+
+    expected_home_goals: round2(row.expected_home_goals),
+    expected_away_goals: round2(row.expected_away_goals),
+    expected_home_shots: round2(row.expected_home_shots),
+    expected_away_shots: round2(row.expected_away_shots),
+    expected_home_sot: round2(row.expected_home_sot),
+    expected_away_sot: round2(row.expected_away_sot),
+    expected_corners: round2(row.expected_corners),
+    expected_cards: round2(row.expected_cards),
+
+    confidence_score: round2(row.confidence_score),
+
     game_profile: profile,
     main_pick: best.market,
     main_probability: best.probability,
@@ -934,7 +1089,9 @@ function buildAnalysisFromRow(row) {
     main_macro: best.macro,
     strength: getStrengthLabel(best.score),
     rhythm,
+
     insight: buildInsight(row, best, profile),
+
     best_pick_1: best.market,
     best_pick_2: alternatives[0]?.market || null,
     best_pick_3: alternatives[1]?.market || null,
@@ -945,18 +1102,26 @@ function buildAnalysisFromRow(row) {
 
 function chooseRadar(analyses) {
   const today = []
+  const tomorrow = []
   const future = []
 
   for (const item of analyses) {
     const dayOffset = getDayOffsetFromToday(item.kickoff)
-    if (dayOffset <= 0) today.push(item)
-    else future.push(item)
+
+    if (dayOffset <= 0) {
+      today.push(item)
+    } else if (dayOffset === 1) {
+      tomorrow.push(item)
+    } else {
+      future.push(item)
+    }
   }
 
   const todaySorted = [...today].sort(compareByScoreThenKickoff)
+  const tomorrowSorted = [...tomorrow].sort(compareByScoreThenKickoff)
   const futureSorted = [...future].sort(compareByScoreThenKickoff)
 
-  const radarPool = [...todaySorted, ...futureSorted]
+  const radarPool = [...todaySorted, ...tomorrowSorted, ...futureSorted]
 
   const radar = []
   const usedMatchIds = new Set()
@@ -976,7 +1141,7 @@ function chooseRadar(analyses) {
     const leagueCount = usedLeagues[item.league] || 0
 
     if (exactMarketCount >= 2) continue
-    if (leagueCount >= 3) continue
+    if (leagueCount >= 4) continue
 
     if (item.main_family === "escanteios" && familyCount >= 4) continue
     if (item.main_family === "gols" && familyCount >= 5) continue
@@ -1027,11 +1192,12 @@ function chooseRadar(analyses) {
     usedMacros[item.main_macro] = macroCount + 1
     usedLeagues[item.league] = leagueCount + 1
 
-    if (radar.length === RADAR_SIZE) break
+    if (radar.length === RADAR_HARD_LIMIT) break
   }
 
   if (radar.length < RADAR_SIZE) {
     const backup = [...analyses].sort(compareByScoreThenKickoff)
+
     for (const item of backup) {
       if (usedMatchIds.has(item.match_id)) continue
 
@@ -1055,7 +1221,6 @@ function buildTicketFromRadar(radar) {
   })
 
   const ranked = [...todayFirst]
-
   const uniqueMatches = []
   const usedMatches = new Set()
 
@@ -1166,7 +1331,7 @@ async function rebuildDailyPicks(radar, ticket) {
 }
 
 async function runScoutlyBrain() {
-  console.log("🧠 Scoutly Brain V15 iniciado...")
+  console.log("🧠 Scoutly Brain V16 iniciado...")
 
   const matches = await loadActiveMatches()
   console.log(`📦 Jogos ativos carregados para análise: ${matches.length}`)
@@ -1232,12 +1397,12 @@ async function runScoutlyBrain() {
 
   await rebuildDailyPicks(radar, ticket)
 
-  console.log("✅ Scoutly Brain V15 finalizado com sucesso.")
-  console.log(`📡 Radar do dia gerado com ${radar.length} jogo(s).`)
-  console.log(`🎫 Bilhete do dia definido com ${ticket.length} jogo(s).`)
+  console.log("✅ Scoutly Brain V16 finalizado com sucesso.")
+  console.log(`📡 Radar gerado com ${radar.length} jogo(s).`)
+  console.log(`🎫 Bilhete gerado com ${ticket.length} jogo(s).`)
 }
 
 runScoutlyBrain().catch((error) => {
-  console.error("❌ Erro no Scoutly Brain V15:", error)
+  console.error("❌ Erro no Scoutly Brain V16:", error)
   process.exit(1)
 })
