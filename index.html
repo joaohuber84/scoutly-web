@@ -1207,6 +1207,33 @@ function ticketItemMarkup(item) {
       });
     }
 
+function getFlag(country) {
+  const flags = {
+    Brazil: "BR",
+    England: "GB",
+    Spain: "ES",
+    Italy: "IT",
+    Germany: "DE",
+    France: "FR",
+    Portugal: "PT",
+    Netherlands: "NL",
+    Belgium: "BE",
+    USA: "US",
+    Argentina: "AR",
+    Mexico: "MX",
+    Turkey: "TR",
+    Greece: "GR",
+    Switzerland: "CH",
+    Denmark: "DK",
+    Austria: "AT",
+    "Saudi Arabia": "SA",
+    KSA: "SA",
+    World: null
+  };
+
+  return flags[country] || null;
+}
+  
     function renderCompetitions() {
       buildCompetitions();
 
