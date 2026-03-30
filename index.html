@@ -843,6 +843,36 @@
       letter-spacing: -0.03em;
     }
 
+    .stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.stat-row .label {
+  text-align: center;
+  flex: 1;
+  color: #9ab0d3;
+  font-size: 13px;
+}
+
+.stat-row .value {
+  width: 60px;
+  text-align: center;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.stat-row .home {
+  text-align: left;
+}
+
+.stat-row .away {
+  text-align: right;
+}
+    
     .analysis-highlight {
       border: 1px solid rgba(0,255,136,0.16);
       background: linear-gradient(135deg, rgba(0,255,136,0.10), rgba(105,167,255,0.08));
@@ -1247,35 +1277,35 @@
 
   <div class="stats-grid" id="comparativoJogo">
     
-    <div class="stat-row">
-      <span id="home_goals"></span>
-      <span class="label">Gols esperados</span>
-      <span id="away_goals"></span>
-    </div>
+  <div class="stat-row">
+  <span class="value home" id="home_goals"></span>
+  <span class="label">Gols esperados</span>
+  <span class="value away" id="away_goals"></span>
+</div>
 
-    <div class="stat-row">
-      <span id="home_shots"></span>
-      <span class="label">Finalizações</span>
-      <span id="away_shots"></span>
-    </div>
+<div class="stat-row">
+  <span class="value home" id="home_shots"></span>
+  <span class="label">Finalizações</span>
+  <span class="value away" id="away_shots"></span>
+</div>
 
-    <div class="stat-row">
-      <span id="home_sot"></span>
-      <span class="label">No gol</span>
-      <span id="away_sot"></span>
-    </div>
+<div class="stat-row">
+  <span class="value home" id="home_sot"></span>
+  <span class="label">No gol</span>
+  <span class="value away" id="away_sot"></span>
+</div>
 
-    <div class="stat-row">
-      <span id="home_corners"></span>
-      <span class="label">Escanteios</span>
-      <span id="away_corners"></span>
-    </div>
+<div class="stat-row">
+  <span class="value home" id="home_corners"></span>
+  <span class="label">Escanteios</span>
+  <span class="value away" id="away_corners"></span>
+</div>
 
-    <div class="stat-row">
-      <span id="home_cards"></span>
-      <span class="label">Cartões</span>
-      <span id="away_cards"></span>
-    </div>
+<div class="stat-row">
+  <span class="value home" id="home_cards"></span>
+  <span class="label">Cartões</span>
+  <span class="value away" id="away_cards"></span>
+</div> 
 
   </div>
 </div>
