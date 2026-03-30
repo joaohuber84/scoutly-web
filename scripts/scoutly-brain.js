@@ -140,15 +140,12 @@ function hasMinimumAnalysis(row) {
     row.expected_away_sot,
     row.expected_corners,
     row.expected_cards,
-    row.prob_over25,
-    row.prob_btts,
-    row.prob_corners,
-    row.prob_shots,
-    row.prob_sot,
-    row.prob_cards,
+    row.over25_prob,
+    row.btts_prob,
+    row.corners_over85_prob,
   ]
 
-  return values.some((v) => Number.isFinite(Number(v)) && Number(v) > 0)
+  return values.some((v) => v !== null && Number(v) > 0)
 }
 
 function getStrengthLabel(score) {
