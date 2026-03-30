@@ -2686,31 +2686,84 @@ merged = merged
       const homeTeam = normalizeTeamName(match.home_team);
       const awayTeam = normalizeTeamName(match.away_team);
 
-      const analysisTitle = document.getElementById("analysisTitle");
-      const analysisSubtitle = document.getElementById("analysisSubtitle");
-      const analysisMatchSmall = document.getElementById("analysisMatchSmall");
-      const analysisTipChip = document.getElementById("analysisTipChip");
-      const analysisBestPick = document.getElementById("analysisBestPick");
-      const analysisInsight = document.getElementById("analysisInsight");
-      const analysisStats = document.getElementById("analysisStats");
-      const analysisContext = document.getElementById("analysisContext");
-      const marketsList = document.getElementById("marketsList");
-      const overlay = document.getElementById("analysisOverlay");
+// === COMPARATIVO DO JOGO (SEGURO) ===
 
-document.getElementById("home_goals").innerText = match?.expected_home_goals != null ? Number(match.expected_home_goals).toFixed(2) : "-";
-document.getElementById("away_goals").innerText = match?.expected_away_goals != null ? Number(match.expected_away_goals).toFixed(2) : "-";
+// GOLS
+const elHomeGoals = document.getElementById("home_goals");
+if (elHomeGoals) {
+  elHomeGoals.innerText =
+    match?.expected_home_goals != null
+      ? Number(match.expected_home_goals).toFixed(2)
+      : "-";
+}
 
-document.getElementById("home_shots").innerText = match?.expected_home_shots != null ? Number(match.expected_home_shots).toFixed(0) : "-";
-document.getElementById("away_shots").innerText = match?.expected_away_shots != null ? Number(match.expected_away_shots).toFixed(0) : "-";
+const elAwayGoals = document.getElementById("away_goals");
+if (elAwayGoals) {
+  elAwayGoals.innerText =
+    match?.expected_away_goals != null
+      ? Number(match.expected_away_goals).toFixed(2)
+      : "-";
+}
 
-document.getElementById("home_sot").innerText = match?.expected_home_sot != null ? Number(match.expected_home_sot).toFixed(0) : "-";
-document.getElementById("away_sot").innerText = match?.expected_away_sot != null ? Number(match.expected_away_sot).toFixed(0) : "-";
+// FINALIZAÇÕES
+const elHomeShots = document.getElementById("home_shots");
+if (elHomeShots) {
+  elHomeShots.innerText =
+    match?.expected_home_shots != null
+      ? Number(match.expected_home_shots).toFixed(0)
+      : "-";
+}
 
-document.getElementById("home_corners").innerText = stats?.home_corners ?? "-";
-document.getElementById("away_corners").innerText = stats?.away_corners ?? "-";
+const elAwayShots = document.getElementById("away_shots");
+if (elAwayShots) {
+  elAwayShots.innerText =
+    match?.expected_away_shots != null
+      ? Number(match.expected_away_shots).toFixed(0)
+      : "-";
+}
 
-document.getElementById("home_cards").innerText = stats?.home_yellow_cards ?? "-";
-document.getElementById("away_cards").innerText = stats?.away_yellow_cards ?? "-";
+// CHUTES NO GOL
+const elHomeSot = document.getElementById("home_sot");
+if (elHomeSot) {
+  elHomeSot.innerText =
+    match?.expected_home_sot != null
+      ? Number(match.expected_home_sot).toFixed(0)
+      : "-";
+}
+
+const elAwaySot = document.getElementById("away_sot");
+if (elAwaySot) {
+  elAwaySot.innerText =
+    match?.expected_away_sot != null
+      ? Number(match.expected_away_sot).toFixed(0)
+      : "-";
+}
+
+// ESCANTEIOS (vem do stats!)
+const elHomeCorners = document.getElementById("home_corners");
+if (elHomeCorners) {
+  elHomeCorners.innerText =
+    stats?.home_corners != null ? stats.home_corners : "-";
+}
+
+const elAwayCorners = document.getElementById("away_corners");
+if (elAwayCorners) {
+  elAwayCorners.innerText =
+    stats?.away_corners != null ? stats.away_corners : "-";
+}
+
+// CARTÕES (vem do stats!)
+const elHomeCards = document.getElementById("home_cards");
+if (elHomeCards) {
+  elHomeCards.innerText =
+    stats?.home_yellow_cards != null ? stats.home_yellow_cards : "-";
+}
+
+const elAwayCards = document.getElementById("away_cards");
+if (elAwayCards) {
+  elAwayCards.innerText =
+    stats?.away_yellow_cards != null ? stats.away_yellow_cards : "-";
+}
       
       if (analysisTitle) {
         analysisTitle.textContent = `${homeTeam} x ${awayTeam}`;
