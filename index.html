@@ -2686,6 +2686,24 @@ merged = merged
       const homeTeam = normalizeTeamName(match.home_team);
       const awayTeam = normalizeTeamName(match.away_team);
 
+      const analysisTitle = document.getElementById("analysisTitle");
+const analysisSubtitle = document.getElementById("analysisSubtitle");
+const analysisMatchSmall = document.getElementById("analysisMatchSmall");
+const analysisTipChip = document.getElementById("analysisTipChip");
+const analysisBestPick = document.getElementById("analysisBestPick");
+const analysisInsight = document.getElementById("analysisInsight");
+const analysisStats = document.getElementById("analysisStats");
+const analysisContext = document.getElementById("analysisContext");
+const marketsList = document.getElementById("marketsList");
+const overlay = document.getElementById("analysisOverlay");
+
+const stats = {
+  home_corners: match?.home_corners ?? null,
+  away_corners: match?.away_corners ?? null,
+  home_yellow_cards: match?.home_yellow_cards ?? null,
+  away_yellow_cards: match?.away_yellow_cards ?? null
+};
+
 // === COMPARATIVO DO JOGO (SEGURO) ===
 
 // GOLS
