@@ -1242,12 +1242,43 @@
                 <div id="analysisStats" class="stats-grid"></div>
               </div>
 
-              <div class="box">
-                <h3 class="box-title">Contexto do Scoutly</h3>
-                <div id="analysisContext" class="stats-grid"></div>
-              </div>
-            </div>
-          </div>
+             <div class="box">
+  <h3 class="box-title">📊 Comparativo do jogo</h3>
+
+  <div class="stats-grid" id="comparativoJogo">
+    
+    <div class="stat-row">
+      <span id="home_goals"></span>
+      <span class="label">Gols esperados</span>
+      <span id="away_goals"></span>
+    </div>
+
+    <div class="stat-row">
+      <span id="home_shots"></span>
+      <span class="label">Finalizações</span>
+      <span id="away_shots"></span>
+    </div>
+
+    <div class="stat-row">
+      <span id="home_sot"></span>
+      <span class="label">No gol</span>
+      <span id="away_sot"></span>
+    </div>
+
+    <div class="stat-row">
+      <span id="home_corners"></span>
+      <span class="label">Escanteios</span>
+      <span id="away_corners"></span>
+    </div>
+
+    <div class="stat-row">
+      <span id="home_cards"></span>
+      <span class="label">Cartões</span>
+      <span id="away_cards"></span>
+    </div>
+
+  </div>
+</div>
 
           <div class="box">
             <h3 class="box-title">Oportunidades alternativas</h3>
@@ -2636,6 +2667,21 @@ merged = merged
       const marketsList = document.getElementById("marketsList");
       const overlay = document.getElementById("analysisOverlay");
 
+document.getElementById("home_goals").innerText = match?.expected_home_goals != null ? Number(match.expected_home_goals).toFixed(2) : "-";
+document.getElementById("away_goals").innerText = match?.expected_away_goals != null ? Number(match.expected_away_goals).toFixed(2) : "-";
+
+document.getElementById("home_shots").innerText = match?.expected_home_shots != null ? Number(match.expected_home_shots).toFixed(0) : "-";
+document.getElementById("away_shots").innerText = match?.expected_away_shots != null ? Number(match.expected_away_shots).toFixed(0) : "-";
+
+document.getElementById("home_sot").innerText = match?.expected_home_sot != null ? Number(match.expected_home_sot).toFixed(0) : "-";
+document.getElementById("away_sot").innerText = match?.expected_away_sot != null ? Number(match.expected_away_sot).toFixed(0) : "-";
+
+document.getElementById("home_corners").innerText = match?.home_corners != null ? match.home_corners : "-";
+document.getElementById("away_corners").innerText = match?.away_corners != null ? match.away_corners : "-";
+
+document.getElementById("home_cards").innerText = match?.home_yellow_cards != null ? match.home_yellow_cards : "-";
+document.getElementById("away_cards").innerText = match?.away_yellow_cards != null ? match.away_yellow_cards : "-";
+      
       if (analysisTitle) {
         analysisTitle.textContent = `${homeTeam} x ${awayTeam}`;
       }
