@@ -1329,7 +1329,7 @@
     );
 
     const MATCH_END_GRACE_MINUTES = 115;
-    const RADAR_LOOKAHEAD_HOURS = 36;
+    const RADAR_LOOKAHEAD_HOURS = 120;
     const RADAR_MIN_ITEMS = 10;
     const RADAR_MAX_ITEMS = 15;
     const TICKET_SIZE = 3;
@@ -1722,7 +1722,7 @@
 
       const now = new Date();
       const start = startOfDay(now);
-      const end = endOfDay(new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000));
+      const end = endOfDay(new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000));
 
       return d >= start && d <= end;
     }
