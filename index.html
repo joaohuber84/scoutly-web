@@ -1566,7 +1566,7 @@
     }
 
     function chipClass(tier) {
-      if (tier === "Muito forte") return "chip chip-very-strong";
+      if (tier === "Forte") return "chip chip-very-strong";
       if (tier === "Boa") return "chip chip-good";
       if (tier === "Moderada") return "chip chip-moderate";
       return "chip chip-extra";
@@ -1574,22 +1574,12 @@
 
     function chipMarkup(tier) {
       const emoji =
-        tier === "Muito forte" ? "🔥" :
+        tier === "Forte" ? "🔥" :
         tier === "Boa" ? "🟢" :
         tier === "Moderada" ? "🟡" :
         "🔵";
 
       return `<span class="${chipClass(tier)}">${emoji} ${escapeHtml(tier)}</span>`;
-    }
-
-    function labelChipMarkup(label) {
-      if (label === "Best Pick") {
-        return `<span class="chip chip-best">🔥 Best Pick</span>`;
-      }
-      if (label === "Boa opção") {
-        return `<span class="chip chip-alt">✅ Boa opção</span>`;
-      }
-      return `<span class="chip chip-risk">⚠️ Mais arriscada</span>`;
     }
 
     function marketFamily(market) {
