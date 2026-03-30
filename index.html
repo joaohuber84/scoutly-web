@@ -1907,12 +1907,12 @@ if (homeProb !== null && awayProb !== null) {
   else if (item.label.includes("Perfil")) icon = "⚖️";
 
   return `
-    <div class="stat-item" style="display:flex; justify-content:space-between; align-items:center;">
+    <div class="stat-item">
       <div class="stat-label" style="display:flex; gap:6px; align-items:center;">
         <span>${icon}</span>
         <span>${escapeHtml(item.label)}</span>
       </div>
-      <div class="stat-value" style="font-weight:600;">
+      <div class="stat-value">
         ${escapeHtml(item.value)}
       </div>
     </div>
