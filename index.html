@@ -825,7 +825,7 @@
 
     .analysis-main-grid {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 2fr 1fr;
       gap: 16px;
       margin-top: 18px;
     }
@@ -1290,65 +1290,34 @@
           <div id="analysisTipChip" class="chip-row"></div>
           <div class="analysis-market" id="analysisBestPick">-</div>
         </div>
+        
+<div class="analysis-main-grid">
 
-        <div class="analysis-main-grid">
-          <div>
-            <div class="box">
-              <h3 class="box-title">Leitura do Scoutly</h3>
-              <div id="analysisInsight" style="color:#dbe6fb;line-height:1.65;font-size:14px;">
-                Nenhuma leitura disponível para esta partida.
-              </div>
-            </div>
+  <div class="left-side">
 
-            <div class="analysis-section-grid">
-              <div class="box">
-                <h3 class="box-title">Números projetados do jogo</h3>
-                <div id="analysisStats" class="stats-grid"></div>
-              </div>
+    <div class="box">
+      <h3 class="box-title">Leitura do Scoutly</h3>
+      <!-- conteúdo -->
+    </div>
 
-             <div class="box" style="display:none;">
-  <h3 class="box-title">📊 Comparativo do jogo</h3>
-
-  <div class="stats-grid" id="comparativoJogo">
-    
-  <div class="stat-row">
-  <span class="value home" id="home_goals"></span>
-  <span class="label">Gols esperados</span>
-  <span class="value away" id="away_goals"></span>
-</div>
-
-<div class="stat-row">
-  <span class="value home" id="home_shots"></span>
-  <span class="label">Finalizações</span>
-  <span class="value away" id="away_shots"></span>
-</div>
-
-<div class="stat-row">
-  <span class="value home" id="home_sot"></span>
-  <span class="label">Chutes no gol</span>
-  <span class="value away" id="away_sot"></span>
-</div>
-
-<div class="stat-row">
-  <span class="value home" id="home_corners"></span>
-  <span class="label">Escanteios</span>
-  <span class="value away" id="away_corners"></span>
-</div>
-
-<div class="stat-row">
-  <span class="value home" id="home_cards"></span>
-  <span class="label">Cartões</span>
-  <span class="value away" id="away_cards"></span>
-</div> 
+    <div class="box">
+      <h3 class="box-title">Números projetados do jogo</h3>
+      <!-- conteúdo -->
+    </div>
 
   </div>
-</div>
 
-          <div class="box">
-            <h3 class="box-title">Oportunidades alternativas</h3>
-            <div id="marketsList" class="markets-list"></div>
-          </div>
-        </div>
+  <div class="right-side">
+
+    <div class="box">
+      <h3 class="box-title">Oportunidades alternativas</h3>
+      <!-- conteúdo -->
+    </div>
+
+  </div>
+
+</div>
+       </div>
       </div>
     </div>
   </div>
