@@ -2660,11 +2660,12 @@ merged = merged
         `;
       }
 
-   analysisBestPick.innerHTML = `
-  <div style="font-weight:600;">${primaryPick}</div>
+  analysisBestPick.innerHTML = `
+  <div style="font-weight:600;">${escapeHtml(primaryPick)}</div>
   <div style="font-size:12px; opacity:0.85; margin-top:4px;">
     Entrada principal com a melhor combinação entre probabilidade, consistência e leitura estatística do jogo.
   </div>
+`;
 
       if (analysisInsight) analysisInsight.textContent = getInsight(match);
       if (analysisStats) analysisStats.innerHTML = statCardsMarkup(match);
