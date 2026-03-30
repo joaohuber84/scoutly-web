@@ -2707,6 +2707,11 @@ const stats = {
   away_yellow_cards: match?.away_yellow_cards ?? null
 };
 
+   const totals = {
+  corners: (stats.home_corners || 0) + (stats.away_corners || 0),
+  cards: (stats.home_yellow_cards || 0) + (stats.away_yellow_cards || 0)
+};   
+      
 // === COMPARATIVO DO JOGO (SEGURO) ===
 
 // GOLS
