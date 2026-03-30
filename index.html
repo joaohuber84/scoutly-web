@@ -859,12 +859,16 @@
 }
 
 .stat-row .value {
-  width: 60px;
+  width: 80px;
   text-align: center;
   font-weight: 600;
   font-size: 14px;
 }
 
+.stat-row {
+  gap: 10px;
+}
+    
 .stat-row .home {
   text-align: left;
 }
@@ -2757,30 +2761,38 @@ if (elAwaySot) {
       : "-";
 }
 
-// ESCANTEIOS (vem do stats!)
+// ESCANTEIOS (dividido)
 const elHomeCorners = document.getElementById("home_corners");
 if (elHomeCorners) {
   elHomeCorners.innerText =
-    stats?.home_corners != null ? stats.home_corners : "-";
+    match?.expected_corners != null
+      ? (match.expected_corners / 2).toFixed(1)
+      : "-";
 }
 
 const elAwayCorners = document.getElementById("away_corners");
 if (elAwayCorners) {
   elAwayCorners.innerText =
-    stats?.away_corners != null ? stats.away_corners : "-";
+    match?.expected_corners != null
+      ? (match.expected_corners / 2).toFixed(1)
+      : "-";
 }
 
-// CARTÕES (vem do stats!)
+// CARTÕES (dividido)
 const elHomeCards = document.getElementById("home_cards");
 if (elHomeCards) {
   elHomeCards.innerText =
-    stats?.home_yellow_cards != null ? stats.home_yellow_cards : "-";
+    match?.expected_cards != null
+      ? (match.expected_cards / 2).toFixed(1)
+      : "-";
 }
 
 const elAwayCards = document.getElementById("away_cards");
 if (elAwayCards) {
   elAwayCards.innerText =
-    stats?.away_yellow_cards != null ? stats.away_yellow_cards : "-";
+    match?.expected_cards != null
+      ? (match.expected_cards / 2).toFixed(1)
+      : "-";
 }
       
       if (analysisTitle) {
