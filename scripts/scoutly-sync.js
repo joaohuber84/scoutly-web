@@ -39,7 +39,7 @@ const TIMEZONE = "America/Sao_Paulo"
  * - reduzir repetição exagerada de picks iguais
  * - manter estabilidade
  */
-const WINDOW_HOURS = 120
+const WINDOW_HOURS = 168 // 7 dias
 const REQUEST_DELAY_MS = 350
 
 /**
@@ -104,47 +104,47 @@ const TARGET_COMPETITIONS = [
     priority: 91,
   },
   {
-    mode: "search",
-    search: "Copa do Nordeste",
-    display: "Copa do Nordeste",
-    region: "brazil",
-    priority: 90,
-  },
-  {
-    mode: "search",
-    search: "Copa Verde",
-    display: "Copa Verde",
-    region: "brazil",
-    priority: 82,
-  },
-  {
-    mode: "search",
-    search: "Copa Sul-Sudeste",
-    display: "Copa Sul-Sudeste",
-    region: "brazil",
-    priority: 80,
-  },
-  {
-    mode: "search",
-    search: "Brasileiro Women",
-    display: "Brasileirão Feminino",
-    region: "brazil",
-    priority: 84,
-  },
-  {
-    mode: "search",
-    search: "Brazil Women",
-    display: "Brasileirão Feminino",
-    region: "brazil",
-    priority: 84,
-  },
-  {
-    mode: "search",
-    search: "Serie A Women Brazil",
-    display: "Brasileirão Feminino",
-    region: "brazil",
-    priority: 84,
-  },
+  mode: "country",
+  country: "Brazil",
+  type: "cup",
+  names: ["Copa do Nordeste"],
+  display: "Copa do Nordeste",
+  region: "brazil",
+  priority: 90,
+},
+{
+  mode: "country",
+  country: "Brazil",
+  type: "cup",
+  names: ["Copa Verde"],
+  display: "Copa Verde",
+  region: "brazil",
+  priority: 82,
+},
+{
+  mode: "country",
+  country: "Brazil",
+  type: "cup",
+  names: ["Copa Sul-Sudeste", "Copa Sul Sudeste"],
+  display: "Copa Sul-Sudeste",
+  region: "brazil",
+  priority: 80,
+},
+{
+  mode: "country",
+  country: "Brazil",
+  type: "league",
+  names: [
+    "Brasileiro Women",
+    "Serie A Women",
+    "Brazilian Women's Championship",
+    "Campeonato Brasileiro Feminino",
+    "Brasileirão Feminino"
+  ],
+  display: "Brasileirão Feminino",
+  region: "brazil",
+  priority: 84,
+},
 
   // ===== ARGENTINA =====
   {
@@ -736,7 +736,9 @@ async function resolveCountryCompetitions(target) {
       if (hasForbiddenMarker(rawName)) return false
 
       const rawKey = normalizeText(rawName)
-      return Array.from(normalizedNames).some((n) => rawKey === n)
+     return Array.from(normalizedNames).some((n) => {
+  return rawKey === n || rawKey.includes(n) || n.includes(rawKey)
+})
     })
     .map((item) => {
       const currentSeason = item?.seasons?.find((s) => s.current) || item?.seasons?.[0]
@@ -2065,6 +2067,17 @@ async function run() {
 
   const competitions = await resolveTargetCompetitions()
   console.log(`🏆 Competições resolvidas: ${competitions.length}`)
+
+  console.log(
+  "🏆 LISTA RESOLVIDA:",
+  competitions.map(c => ({
+    leagueId: c.leagueId,
+    season: c.season,
+    country: c.country,
+    rawName: c.rawName,
+    display: c.display
+  }))
+)
 
   const fixtureLists = []
   for (const comp of competitions) {
