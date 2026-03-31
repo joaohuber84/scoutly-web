@@ -26,18 +26,13 @@ const API = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
 
 /**
- * SYNC V10
- * Baseado no V8 funcional, com correções seguras.
- *
- * Objetivo:
- * - manter janela prática de 5 dias
- * - popular matches corretamente
- * - popular match_stats corretamente
- * - popular match_analysis somente com colunas reais
- * - evitar jogos sem base mínima
- * - evitar excesso inútil de requests
- * - reduzir repetição exagerada de picks iguais
- * - manter estabilidade
+ * SYNC V11
+ * Base sólida preservada, com ajustes cirúrgicos:
+ * - janela de 7 dias
+ * - competições BR regionais/feminino por search
+ * - menor repetição de mercados, especialmente escanteios
+ * - radar mais balanceado por região
+ * - filtro para evitar Serie A Women misturada com Serie A masculina
  */
 const WINDOW_HOURS = 168 // 7 dias
 const REQUEST_DELAY_MS = 350
@@ -61,6 +56,8 @@ const MIN_REQUIRED_STATS_MATCHES = 2
 const MAX_DAILY_PICKS = 20
 const MAX_SAME_MARKET_IN_DAILY = 2
 const MAX_SAME_LEAGUE_IN_DAILY = 4
+const MAX_INTERNATIONAL_IN_DAILY = 8
+const MAX_BRAZIL_IN_DAILY = 6
 
 /**
  * CACHE
@@ -103,48 +100,50 @@ const TARGET_COMPETITIONS = [
     region: "brazil",
     priority: 91,
   },
+
+  // Copas BR e feminino via search para melhorar resolução real na API
   {
-  mode: "country",
-  country: "Brazil",
-  type: "cup",
-  names: ["Copa do Nordeste"],
-  display: "Copa do Nordeste",
-  region: "brazil",
-  priority: 90,
-},
-{
-  mode: "country",
-  country: "Brazil",
-  type: "cup",
-  names: ["Copa Verde"],
-  display: "Copa Verde",
-  region: "brazil",
-  priority: 82,
-},
-{
-  mode: "country",
-  country: "Brazil",
-  type: "cup",
-  names: ["Copa Sul-Sudeste", "Copa Sul Sudeste"],
-  display: "Copa Sul-Sudeste",
-  region: "brazil",
-  priority: 80,
-},
-{
-  mode: "country",
-  country: "Brazil",
-  type: "league",
-  names: [
-    "Brasileiro Women",
-    "Serie A Women",
-    "Brazilian Women's Championship",
-    "Campeonato Brasileiro Feminino",
-    "Brasileirão Feminino"
-  ],
-  display: "Brasileirão Feminino",
-  region: "brazil",
-  priority: 84,
-},
+    mode: "search",
+    search: "Copa do Nordeste",
+    display: "Copa do Nordeste",
+    region: "brazil",
+    priority: 90,
+  },
+  {
+    mode: "search",
+    search: "Copa Verde",
+    display: "Copa Verde",
+    region: "brazil",
+    priority: 82,
+  },
+  {
+    mode: "search",
+    search: "Copa Sul-Sudeste",
+    display: "Copa Sul-Sudeste",
+    region: "brazil",
+    priority: 80,
+  },
+  {
+    mode: "search",
+    search: "Brasileiro Women",
+    display: "Brasileirão Feminino",
+    region: "brazil",
+    priority: 84,
+  },
+  {
+    mode: "search",
+    search: "Brazil Women",
+    display: "Brasileirão Feminino",
+    region: "brazil",
+    priority: 84,
+  },
+  {
+    mode: "search",
+    search: "Serie A Women Brazil",
+    display: "Brasileirão Feminino",
+    region: "brazil",
+    priority: 84,
+  },
 
   // ===== ARGENTINA =====
   {
@@ -735,10 +734,14 @@ async function resolveCountryCompetitions(target) {
       if (target.type && leagueType !== target.type) return false
       if (hasForbiddenMarker(rawName)) return false
 
+      // Evita Serie A Women entrar junto com a Serie A masculina
+      if (target.country === "Italy" && normalizeText(rawName).includes("women")) return false
+
       const rawKey = normalizeText(rawName)
-     return Array.from(normalizedNames).some((n) => {
-  return rawKey === n || rawKey.includes(n) || n.includes(rawKey)
-})
+
+      return Array.from(normalizedNames).some((n) => {
+        return rawKey === n || rawKey.includes(n) || n.includes(rawKey)
+      })
     })
     .map((item) => {
       const currentSeason = item?.seasons?.find((s) => s.current) || item?.seasons?.[0]
@@ -1362,6 +1365,7 @@ function buildCandidateMarkets(payload) {
   const candidates = []
 
   function add(market, probability, family) {
+    if (!market) return
     candidates.push({
       market,
       probability: round(probability),
@@ -1407,11 +1411,10 @@ function buildCandidateMarkets(payload) {
   if (probabilities.btts >= 0.63) add("Ambas marcam", probabilities.btts, "ambas")
   if (bttsNo >= 0.72) add("Ambas não marcam", bttsNo, "ambas")
 
-  if (bestCornersOverLine && bestCornersOverProb >= 0.67) {
+  // Escolhe apenas UM lado de escanteios para evitar duplicidade
+  if (bestCornersOverProb >= bestCornersUnderProb && bestCornersOverProb >= 0.67) {
     add(bestCornersOverLine, bestCornersOverProb, "escanteios")
-  }
-
-  if (bestCornersUnderLine && bestCornersUnderProb >= 0.74) {
+  } else if (bestCornersUnderProb >= 0.74) {
     add(bestCornersUnderLine, bestCornersUnderProb, "escanteios")
   }
 
@@ -1448,19 +1451,23 @@ function chooseMainPick(candidates) {
 }
 
 function chooseExtraPicks(candidates, mainPick) {
-  const filtered = candidates.filter((item) => item.market !== mainPick.market)
+  const filtered = candidates.filter((item) => {
+    if (item.market === mainPick.market) return false
+    if (item.family === mainPick.family) return false
+    return true
+  })
 
-  const uniqueFamilies = []
+  const picked = []
   const usedFamilies = new Set([mainPick.family])
 
   for (const item of filtered) {
     if (usedFamilies.has(item.family)) continue
-    uniqueFamilies.push(item)
+    picked.push(item)
     usedFamilies.add(item.family)
-    if (uniqueFamilies.length === 3) break
+    if (picked.length === 2) break
   }
 
-  return uniqueFamilies
+  return picked
 }
 
 function normalizeLeagueByTeams(comp, fixture) {
@@ -1998,6 +2005,7 @@ async function rebuildDailyPicks(matches) {
   const marketCount = {}
   const leagueCount = {}
   const familyCount = {}
+  const regionCount = {}
 
   function detectFamily(market = "") {
     const m = normalizeText(market)
@@ -2013,20 +2021,26 @@ async function rebuildDailyPicks(matches) {
     const market = String(match.pick || "")
     const league = String(match.league || "")
     const family = detectFamily(market)
+    const region = String(match.region || "general")
 
     marketCount[market] = marketCount[market] || 0
     leagueCount[league] = leagueCount[league] || 0
     familyCount[family] = familyCount[family] || 0
+    regionCount[region] = regionCount[region] || 0
 
     if (marketCount[market] >= MAX_SAME_MARKET_IN_DAILY) continue
     if (leagueCount[league] >= MAX_SAME_LEAGUE_IN_DAILY) continue
     if (family === "escanteios" && familyCount[family] >= 4) continue
     if (family === "gols" && familyCount[family] >= 6) continue
 
+    if (region === "international" && regionCount[region] >= MAX_INTERNATIONAL_IN_DAILY) continue
+    if (region === "brazil" && regionCount[region] >= MAX_BRAZIL_IN_DAILY) continue
+
     selected.push(match)
     marketCount[market] += 1
     leagueCount[league] += 1
     familyCount[family] += 1
+    regionCount[region] += 1
 
     if (selected.length >= MAX_DAILY_PICKS) break
   }
@@ -2060,7 +2074,7 @@ async function rebuildDailyPicks(matches) {
 }
 
 async function run() {
-  console.log("🚀 Scoutly Sync V10 iniciado")
+  console.log("🚀 Scoutly Sync V11 iniciado")
 
   const { start, end } = getSyncWindowRange()
   console.log(`📆 Janela ativa: ${start.toISOString()} -> ${end.toISOString()}`)
@@ -2069,15 +2083,26 @@ async function run() {
   console.log(`🏆 Competições resolvidas: ${competitions.length}`)
 
   console.log(
-  "🏆 LISTA RESOLVIDA:",
-  competitions.map(c => ({
-    leagueId: c.leagueId,
-    season: c.season,
-    country: c.country,
-    rawName: c.rawName,
-    display: c.display
-  }))
-)
+    "🏆 LISTA RESOLVIDA:",
+    competitions.map((c) => ({
+      leagueId: c.leagueId,
+      season: c.season,
+      country: c.country,
+      rawName: c.rawName,
+      display: c.display,
+    }))
+  )
+
+  console.log(
+    "🎯 BRASIL FILTER:",
+    competitions.filter((c) =>
+      (c.country || "").toLowerCase().includes("brazil") ||
+      (c.display || "").toLowerCase().includes("brasile") ||
+      (c.display || "").toLowerCase().includes("nordeste") ||
+      (c.display || "").toLowerCase().includes("verde") ||
+      (c.display || "").toLowerCase().includes("sul-sudeste")
+    )
+  )
 
   const fixtureLists = []
   for (const comp of competitions) {
@@ -2091,10 +2116,11 @@ async function run() {
 
   console.log(`🏁 Daily picks gerados: ${picksCount}`)
   console.log(`✅ Matches gravados com pipeline completo: ${storedMatches.length}`)
-  console.log("✅ Scoutly Sync V10 concluído")
+  console.log("✅ Scoutly Sync V11 concluído")
 }
 
 run().catch((error) => {
-  console.error("❌ Erro fatal no Scoutly Sync V10:", error)
+  console.error("❌ Erro fatal no Scoutly Sync V11:", error)
   process.exit(1)
 })
+
