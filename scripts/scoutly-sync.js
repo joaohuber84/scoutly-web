@@ -1284,10 +1284,9 @@ function buildExpectedMetrics(homeProfile, awayProfile) {
   )
 
   const expectedCorners = clamp(
-    round(
       homeProfile.avgCorners * 0.52 +
       awayProfile.avgCorners * 0.48 +
-      (expectedHomeShots + expectedAwayShots) * 0.045
+      (expectedHomeShots + expectedAwayShots) * 0.055
     ),
     4.5,
     13.2
@@ -2141,10 +2140,8 @@ async function buildAndStoreMatches(fixtureLists) {
             (x) =>
               x.market === "Mais de 2.5 gols" ||
               x.market === "Ambas marcam" ||
-              x.market.includes("Mais de 9.5 escanteios") ||
-              x.market.includes("Mais de 8.5 escanteios") ||
-              x.market.includes("Mais de 7.5 escanteios") ||
-              x.market.includes("Mais de 6.5 escanteios")
+              (x.market.includes("escanteios") &&
+              x.market.includes("Mais"))
           )?.market || null,
         analysis_text: insight,
       })
