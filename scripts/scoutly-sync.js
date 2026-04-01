@@ -26,15 +26,13 @@ const API = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
 
 /**
- * SYNC V12
- * Base sólida preservada + ajustes cirúrgicos reais:
- * - janela de 7 dias
- * - reforço no diagnóstico de competições BR regionais/feminino
- * - menos repetição e menos inversão lógica no mercado de escanteios
- * - calibração melhor de over/under corners
- * - filtro mais inteligente para seleções / amistosos internacionais
- * - radar mais balanceado por região
- * - proteção contra Serie A Women misturada com Serie A masculina
+ * SYNC V12.1
+ * Base do V11 preservada + melhorias cirúrgicas do V12
+ * - mantém schema atual do banco
+ * - melhora leitura de escanteios
+ * - evita inversão lógica entre pick principal e alternativa
+ * - freio extra para seleções / amistosos internacionais
+ * - aliases extras para competições BR regionais e feminino
  */
 const WINDOW_HOURS = 168 // 7 dias
 const REQUEST_DELAY_MS = 350
@@ -64,7 +62,6 @@ const MAX_BRAZIL_IN_DAILY = 6
 /**
  * SELEÇÕES / CONTEXTO ESPECIAL
  */
-const NATIONAL_TEAM_SEARCH_VARIANCE = 0.72
 const NATIONAL_TEAM_DOUBLE_CHANCE_CAP = 0.82
 const NATIONAL_TEAM_WIN_CAP = 0.74
 const STRONG_MISMATCH_DOUBLE_CHANCE_BLOCK = 0.18
@@ -110,8 +107,6 @@ const TARGET_COMPETITIONS = [
     region: "brazil",
     priority: 91,
   },
-
-  // Copas BR e feminino via search com aliases extras
   {
     mode: "search",
     search: "Copa do Nordeste",
@@ -799,10 +794,7 @@ function isExactBrazilRegionalMatch(targetDisplay, country, rawName) {
   }
 
   if (targetDisplay === "Copa Sul-Sudeste") {
-    return (
-      norm.includes("brazil") &&
-      (norm.includes("sul-sudeste") || norm.includes("sul sudeste"))
-    )
+    return norm.includes("brazil") && (norm.includes("sul-sudeste") || norm.includes("sul sudeste"))
   }
 
   return true
@@ -826,7 +818,6 @@ async function resolveCountryCompetitions(target) {
       if (target.type && leagueType !== target.type) return false
       if (hasForbiddenMarker(rawName)) return false
 
-      // Evita Serie A Women entrar junto com a Serie A masculina da Itália
       if (target.country === "Italy" && normalizeText(rawName).includes("women")) return false
 
       const rawKey = normalizeText(rawName)
@@ -1482,7 +1473,7 @@ function buildCornerCandidates(metrics) {
 
   const c = safeNumber(metrics.expectedCorners, 0)
 
-  // OVER corners — abrir mais espaço para linhas baixas e naturais
+  // OVER corners: mais natural, com espaço para linhas baixas úteis
   if (c >= 6.9) {
     add("Mais de 6.5 escanteios", clamp((c - 5.8) / 2.0, 0.58, 0.91))
   }
@@ -1496,7 +1487,7 @@ function buildCornerCandidates(metrics) {
     add("Mais de 9.5 escanteios", clamp((c - 8.1) / 2.4, 0.52, 0.84))
   }
 
-  // UNDER corners — subir a régua para reduzir excesso de under 10.5
+  // UNDER corners: subir régua para reduzir excesso de 10.5
   if (c <= 8.2) {
     add("Menos de 11.5 escanteios", clamp((12.2 - c) / 3.4, 0.61, 0.90))
   }
@@ -1528,15 +1519,9 @@ function buildCandidateMarkets(payload) {
   let drawProb = safeNumber(probabilities.draw, 0)
   let awayProb = safeNumber(probabilities.away, 0)
 
-  // Freio adicional para seleções / amistosos internacionais
   if (isNationalTeamsGame) {
-    const avgEdge = Math.abs(homeProb - awayProb)
-
-    if (avgEdge < NATIONAL_TEAM_SEARCH_VARIANCE) {
-      homeProb = clamp(homeProb, 0.08, NATIONAL_TEAM_WIN_CAP)
-      awayProb = clamp(awayProb, 0.08, NATIONAL_TEAM_WIN_CAP)
-      drawProb = clamp(drawProb * 1.04, 0.08, 0.44)
-    }
+    homeProb = Math.min(homeProb, NATIONAL_TEAM_WIN_CAP)
+    awayProb = Math.min(awayProb, NATIONAL_TEAM_WIN_CAP)
   }
 
   const homeOrDraw = clamp(homeProb + drawProb, 0, 1)
@@ -1554,7 +1539,6 @@ function buildCandidateMarkets(payload) {
   const cornerCandidates = buildCornerCandidates(metrics)
   cornerCandidates.forEach((item) => candidates.push(item))
 
-  // Evitar dupla chance absurda em jogo onde um lado está claramente acima
   const mismatch = Math.abs(homeProb - awayProb)
 
   if (homeProb >= 0.62) {
@@ -1640,12 +1624,10 @@ function chooseExtraPicks(candidates, mainPick) {
         continue
       }
 
-      // Permite repetir escanteios só se a ordem de risco for lógica
-      // UNDER: principal 11.5 -> extra 10.5 / 9.5 OK
-      // OVER: principal 6.5 -> extra 7.5 / 8.5 OK
-      // Inverso é proibido
+      // ordem lógica:
+      // under: 11.5 -> 10.5 -> 9.5
+      // over: 6.5 -> 7.5 -> 8.5 -> 9.5
       if (direction !== mainCornerDirection) continue
-
       if (direction === "under" && line >= mainCornerLine) continue
       if (direction === "over" && line <= mainCornerLine) continue
     }
@@ -1775,250 +1757,537 @@ function isInternationalNationalTeamsFixture(fixture, comp) {
   return true
 }
 
-function shouldIncludeInDailyRadar(entry) {
-  const score = safeNumber(entry?.confidence, 0)
-  const profile = entry?.game_profile || ""
-  const region = entry?.region || "general"
+function hasMinimumMatchData(homeContext, awayContext) {
+  const homeOk = isUsableTeamProfile(
+    buildSideProfile(homeContext, "home"),
+    homeContext.general
+  )
 
-  // Score mínimo base
-  if (score < 0.64) return false
+  const awayOk = isUsableTeamProfile(
+    buildSideProfile(awayContext, "away"),
+    awayContext.general
+  )
 
-  // Filtro adicional por perfil de jogo
-  if (profile === "defensivo" && score < 0.70) return false
-  if (profile === "equilibrado" && score < 0.66) return false
-
-  // Internacional mais exigente (amistosos principalmente)
-  if (region === "international" && score < 0.67) return false
-
-  return true
+  return homeOk && awayOk
 }
 
-function applyDailyRadarLimits(entries) {
-  const sorted = [...entries].sort((a, b) => {
-    if (b.confidence !== a.confidence) {
-      return b.confidence - a.confidence
-    }
-    return (b.priority || 0) - (a.priority || 0)
-  })
+async function clearFutureWindow() {
+  const now = new Date().toISOString()
+  const { start, end } = getSyncWindowRange()
+  const startIso = start.toISOString()
+  const endIso = end.toISOString()
 
-  const result = []
-  const byLeague = new Map()
-  const byMarket = new Map()
-  let internationalCount = 0
-  let brazilCount = 0
+  const { error: dailyError } = await supabase
+    .from("daily_picks")
+    .delete()
+    .neq("id", 0)
 
-  for (const item of sorted) {
-    if (result.length >= MAX_DAILY_PICKS) break
-
-    const leagueKey = normalizeText(item.league)
-    const marketKey = normalizeText(item.main_pick)
-    const region = item.region || "general"
-
-    const leagueCount = byLeague.get(leagueKey) || 0
-    const marketCount = byMarket.get(marketKey) || 0
-
-    if (leagueCount >= MAX_SAME_LEAGUE_IN_DAILY) continue
-    if (marketCount >= MAX_SAME_MARKET_IN_DAILY) continue
-
-    if (region === "international") {
-      if (internationalCount >= MAX_INTERNATIONAL_IN_DAILY) continue
-    }
-
-    if (region === "brazil") {
-      if (brazilCount >= MAX_BRAZIL_IN_DAILY) continue
-    }
-
-    result.push(item)
-
-    byLeague.set(leagueKey, leagueCount + 1)
-    byMarket.set(marketKey, marketCount + 1)
-
-    if (region === "international") internationalCount++
-    if (region === "brazil") brazilCount++
+  if (dailyError) {
+    throw new Error(`Supabase delete daily_picks: ${dailyError.message}`)
   }
 
-  return result
+  const { data: oldRows, error: oldError } = await supabase
+    .from("matches")
+    .select("id")
+    .lte("kickoff", now)
+
+  if (oldError) {
+    throw new Error(`Supabase select old matches: ${oldError.message}`)
+  }
+
+  const oldIds = (oldRows || []).map((x) => x.id)
+
+  if (oldIds.length) {
+    const { error: statsOldError } = await supabase
+      .from("match_stats")
+      .delete()
+      .in("match_id", oldIds)
+
+    if (statsOldError) {
+      console.log("Aviso ao limpar match_stats antigo:", statsOldError.message)
+    }
+
+    const { error: analysisOldError } = await supabase
+      .from("match_analysis")
+      .delete()
+      .in("match_id", oldIds)
+
+    if (analysisOldError) {
+      console.log("Aviso ao limpar match_analysis antigo:", analysisOldError.message)
+    }
+
+    const { error: deleteOldError } = await supabase
+      .from("matches")
+      .delete()
+      .in("id", oldIds)
+
+    if (deleteOldError) {
+      throw new Error(`Supabase delete old matches: ${deleteOldError.message}`)
+    }
+  }
+
+  const { data: futureRows, error: futureError } = await supabase
+    .from("matches")
+    .select("id")
+    .gte("kickoff", startIso)
+    .lte("kickoff", endIso)
+
+  if (futureError) {
+    throw new Error(`Supabase select future matches: ${futureError.message}`)
+  }
+
+  const futureIds = (futureRows || []).map((x) => x.id)
+
+  if (futureIds.length) {
+    const { error: statsFutureError } = await supabase
+      .from("match_stats")
+      .delete()
+      .in("match_id", futureIds)
+
+    if (statsFutureError) {
+      console.log("Aviso ao limpar match_stats futuro:", statsFutureError.message)
+    }
+
+    const { error: analysisFutureError } = await supabase
+      .from("match_analysis")
+      .delete()
+      .in("match_id", futureIds)
+
+    if (analysisFutureError) {
+      console.log("Aviso ao limpar match_analysis futuro:", analysisFutureError.message)
+    }
+
+    const { error: deleteFutureError } = await supabase
+      .from("matches")
+      .delete()
+      .in("id", futureIds)
+
+    if (deleteFutureError) {
+      throw new Error(`Supabase delete future matches: ${deleteFutureError.message}`)
+    }
+  }
+
+  return oldIds.length + futureIds.length
 }
 
-async function processFixture(fixture) {
-  const comp = fixture.__comp
-
-  // Proteção final contra lixo de amistoso de clube
-  if (!isInternationalNationalTeamsFixture(fixture, comp)) {
-    return null
-  }
-
-  const fixtureId = fixture.fixture.id
-  const date = fixture.fixture.date
-  const homeTeam = fixture.teams.home.name
-  const awayTeam = fixture.teams.away.name
-  const homeId = fixture.teams.home.id
-  const awayId = fixture.teams.away.id
-
-  const { leagueDisplay, country } = normalizeLeagueByTeams(comp, fixture)
-
-  const homeContext = await buildTeamContext(homeId)
-  const awayContext = await buildTeamContext(awayId)
-
-  const homeProfile = buildSideProfile(homeContext, "home")
-  const awayProfile = buildSideProfile(awayContext, "away")
-
-  const homeGeneral = homeContext.general
-  const awayGeneral = awayContext.general
-
-  if (
-    !isUsableTeamProfile(homeProfile, homeGeneral) ||
-    !isUsableTeamProfile(awayProfile, awayGeneral)
-  ) {
-    return null
-  }
-
-  const metrics = buildExpectedMetrics(homeProfile, awayProfile)
-  const probabilities = buildProbabilities(metrics)
-  const markets = buildMarkets(metrics, probabilities)
-  const metricsOut = buildMetrics(metrics)
-
-  const isNationalTeamsGame = isLikelyNationalTeamMatch(fixture, comp)
-
-  const candidates = buildCandidateMarkets({
-    homeTeam,
-    awayTeam,
-    metrics,
-    probabilities,
-    isNationalTeamsGame,
-  })
-
-  const mainPick = chooseMainPick(candidates)
-  const extras = chooseExtraPicks(candidates, mainPick)
-
-  const gameProfile = buildGameProfile(metrics, probabilities)
-  const insight = buildInsight(mainPick.market, metrics, gameProfile)
-
-  return {
-    fixture_id: fixtureId,
-    date,
-    league: leagueDisplay,
-    country,
-    region: comp.region,
-    priority: comp.priority,
-    home_team: homeTeam,
-    away_team: awayTeam,
-    probabilities,
-    markets,
-    metrics: metricsOut,
-    main_pick: mainPick.market,
-    confidence: mainPick.score,
-    extra_picks: extras.map((e) => e.market),
-    game_profile: gameProfile,
-    insight,
-  }
-}
-
-async function upsertMatches(rows) {
-  if (!rows.length) return
-
-  const payload = rows.map((row) => ({
-    fixture_id: row.fixture_id,
-    date: row.date,
-    league: row.league,
-    country: row.country,
-    region: row.region,
-    priority: row.priority,
-    home_team: row.home_team,
-    away_team: row.away_team,
-    probabilities: row.probabilities,
-    markets: row.markets,
-    metrics: row.metrics,
-    main_pick: row.main_pick,
-    confidence: row.confidence,
-    extra_picks: row.extra_picks,
-    game_profile: row.game_profile,
-    insight: row.insight,
+async function upsertMatch(match) {
+  const payload = {
+    id: match.id,
+    kickoff: match.kickoff,
+    league: match.league,
+    country: match.country || null,
+    region: match.region || null,
+    priority: match.priority || null,
+    home_team: match.home_team || null,
+    away_team: match.away_team || null,
+    home_logo: match.home_logo || null,
+    away_logo: match.away_logo || null,
+    probabilities: match.probabilities || null,
+    markets: match.markets || null,
+    metrics: match.metrics || null,
+    pick: match.pick || null,
+    probability: match.probability || null,
+    insight: match.insight || null,
     updated_at: new Date().toISOString(),
-  }))
+  }
 
   const { error } = await supabase
     .from("matches")
-    .upsert(payload, { onConflict: "fixture_id" })
+    .upsert(payload, { onConflict: "id" })
 
-  if (error) {
-    console.error("Erro ao upsert matches:", error.message)
-    throw error
-  }
+  if (error) throw error
 }
 
-async function upsertDailyPicks(rows) {
-  const filtered = rows.filter((row) => shouldIncludeInDailyRadar(row))
-  const limited = applyDailyRadarLimits(filtered)
-
-  if (!limited.length) return
-
-  const payload = limited.map((row) => ({
-    fixture_id: row.fixture_id,
-    date: row.date,
-    league: row.league,
-    home_team: row.home_team,
-    away_team: row.away_team,
-    main_pick: row.main_pick,
-    confidence: row.confidence,
-    extra_picks: row.extra_picks,
-    region: row.region,
-    priority: row.priority,
-    game_profile: row.game_profile,
-    insight: row.insight,
-    updated_at: new Date().toISOString(),
-  }))
+async function upsertMatchStats(row) {
+  const payload = {
+    match_id: row.match_id,
+    home_shots: row.home_shots,
+    home_shots_on_target: row.home_shots_on_target,
+    home_corners: row.home_corners,
+    home_yellow_cards: row.home_yellow_cards,
+    away_shots: row.away_shots,
+    away_shots_on_target: row.away_shots_on_target,
+    away_corners: row.away_corners,
+    away_yellow_cards: row.away_yellow_cards,
+    created_at: new Date().toISOString(),
+  }
 
   const { error } = await supabase
-    .from("daily_picks")
-    .upsert(payload, { onConflict: "fixture_id" })
+    .from("match_stats")
+    .upsert(payload, { onConflict: "match_id" })
 
-  if (error) {
-    console.error("Erro ao upsert daily_picks:", error.message)
-    throw error
-  }
+  if (error) throw error
 }
 
-async function runSync() {
-  console.log("🔄 Sync V12 iniciado...")
-
-  const competitions = await resolveTargetCompetitions()
-  console.log(`📊 Competições resolvidas: ${competitions.length}`)
-
-  let fixtures = []
-
-  for (const comp of competitions) {
-    const list = await fetchFixturesForCompetition(comp)
-    fixtures.push(...list)
+async function upsertMatchAnalysis(row) {
+  const payload = {
+    match_id: row.match_id,
+    home_strength: row.home_strength,
+    away_strength: row.away_strength,
+    expected_home_goals: row.expected_home_goals,
+    expected_away_goals: row.expected_away_goals,
+    expected_home_shots: row.expected_home_shots,
+    expected_away_shots: row.expected_away_shots,
+    expected_home_sot: row.expected_home_sot,
+    expected_away_sot: row.expected_away_sot,
+    expected_corners: row.expected_corners,
+    expected_cards: row.expected_cards,
+    prob_over25: row.prob_over25,
+    prob_btts: row.prob_btts,
+    prob_corners: row.prob_corners,
+    prob_shots: row.prob_shots,
+    prob_sot: row.prob_sot,
+    prob_cards: row.prob_cards,
+    best_pick_1: row.best_pick_1,
+    best_pick_2: row.best_pick_2,
+    best_pick_3: row.best_pick_3,
+    aggressive_pick: row.aggressive_pick,
+    analysis_text: row.analysis_text,
+    created_at: new Date().toISOString(),
   }
 
-  fixtures = uniqBy(fixtures, (f) => f.fixture.id)
+  const { error } = await supabase
+    .from("match_analysis")
+    .upsert(payload, { onConflict: "match_id" })
 
-  console.log(`⚽ Jogos encontrados na janela: ${fixtures.length}`)
+  if (error) throw error
+}
 
-  const results = []
+async function buildAndStoreMatches(fixtureLists) {
+  const { start, end } = getSyncWindowRange()
 
-  for (const fixture of fixtures) {
+  const allFixtures = uniqBy(
+    fixtureLists
+      .flat()
+      .filter((fixture) => {
+        const kickoff = fixture?.fixture?.date
+        if (!kickoff) return false
+
+        const dt = new Date(kickoff)
+        if (Number.isNaN(dt.getTime())) return false
+
+        return dt >= start && dt <= end
+      }),
+    (x) => x?.fixture?.id
+  )
+
+  console.log(`📅 Fixtures na janela ativa: ${allFixtures.length}`)
+
+  const cleared = await clearFutureWindow()
+  console.log(`🧹 Limpeza prévia concluída: ${cleared}`)
+
+  const stored = []
+
+  for (const fixture of allFixtures) {
     try {
-      const row = await processFixture(fixture)
-      if (row) results.push(row)
-    } catch (err) {
+      const comp = fixture.__comp
+      if (!comp) continue
+
+      if (!isInternationalNationalTeamsFixture(fixture, comp)) {
+        console.log(
+          `⛔ Ignorado amistoso de clube em internacional: ${fixture?.teams?.home?.name} x ${fixture?.teams?.away?.name}`
+        )
+        continue
+      }
+
+      const homeTeamId = fixture?.teams?.home?.id
+      const awayTeamId = fixture?.teams?.away?.id
+      if (!homeTeamId || !awayTeamId) continue
+
+      const homeContext = await buildTeamContext(homeTeamId)
+      const awayContext = await buildTeamContext(awayTeamId)
+
+      if (!hasMinimumMatchData(homeContext, awayContext)) {
+        console.log(
+          `⚠️ Ignorado por falta de dados mínimos: ${fixture?.teams?.home?.name} x ${fixture?.teams?.away?.name}`
+        )
+        continue
+      }
+
+      const homeProfile = buildSideProfile(homeContext, "home")
+      const awayProfile = buildSideProfile(awayContext, "away")
+
+      const metricsExp = buildExpectedMetrics(homeProfile, awayProfile)
+      const probabilities = buildProbabilities(metricsExp)
+      const markets = buildMarkets(metricsExp, probabilities)
+      const metrics = buildMetrics(metricsExp)
+
+      const hasUsableMetrics =
+        metrics.goals > 0 &&
+        metrics.corners > 0 &&
+        metrics.shots > 0 &&
+        metrics.shots_on_target > 0
+
+      if (!hasUsableMetrics) {
+        console.log(
+          `⚠️ Ignorado por métricas zeradas: ${fixture?.teams?.home?.name} x ${fixture?.teams?.away?.name}`
+        )
+        continue
+      }
+
+      const isNationalTeamsGame = isLikelyNationalTeamMatch(fixture, comp)
+
+      const candidates = buildCandidateMarkets({
+        homeTeam: fixture?.teams?.home?.name || "Mandante",
+        awayTeam: fixture?.teams?.away?.name || "Visitante",
+        metrics: metricsExp,
+        probabilities,
+        isNationalTeamsGame,
+      })
+
+      if (!candidates.length) {
+        console.log(
+          `⚠️ Ignorado por falta de mercados coerentes: ${fixture?.teams?.home?.name} x ${fixture?.teams?.away?.name}`
+        )
+        continue
+      }
+
+      const mainPick = chooseMainPick(candidates)
+      const extraPicks = chooseExtraPicks(candidates, mainPick)
+      const pick2 = extraPicks[0]?.market || null
+      const pick3 = extraPicks[1]?.market || null
+
+      const { leagueDisplay, country } = normalizeLeagueByTeams(comp, fixture)
+      const gameProfile = buildGameProfile(metricsExp, probabilities)
+      const insight = buildInsight(mainPick.market, metricsExp, gameProfile)
+
+      const matchPayload = {
+        id: fixture?.fixture?.id,
+        kickoff: fixture?.fixture?.date || null,
+        league: leagueDisplay,
+        country,
+        region: comp.region,
+        priority: comp.priority || 70,
+        home_team: fixture?.teams?.home?.name || null,
+        away_team: fixture?.teams?.away?.name || null,
+        home_logo: fixture?.teams?.home?.logo || null,
+        away_logo: fixture?.teams?.away?.logo || null,
+        probabilities: {
+          home: probabilities.home,
+          draw: probabilities.draw,
+          away: probabilities.away,
+        },
+        markets,
+        metrics,
+        pick: mainPick.market,
+        probability: mainPick.probability,
+        insight,
+      }
+
+      await upsertMatch(matchPayload)
+
+      await upsertMatchStats({
+        match_id: matchPayload.id,
+        home_shots: Math.round(metricsExp.expectedHomeShots),
+        home_shots_on_target: Math.round(metricsExp.expectedHomeSOT),
+        home_corners: Math.max(1, Math.round(homeProfile.avgCorners)),
+        home_yellow_cards: Math.max(0, Math.round(homeProfile.avgCards)),
+        away_shots: Math.round(metricsExp.expectedAwayShots),
+        away_shots_on_target: Math.round(metricsExp.expectedAwaySOT),
+        away_corners: Math.max(1, Math.round(awayProfile.avgCorners)),
+        away_yellow_cards: Math.max(0, Math.round(awayProfile.avgCards)),
+      })
+
+      await upsertMatchAnalysis({
+        match_id: matchPayload.id,
+        home_strength: round(
+          homeProfile.avgGoalsFor * 1.4 +
+            homeProfile.avgShotsOnTarget * 0.55 +
+            homeProfile.avgCorners * 0.25
+        ),
+        away_strength: round(
+          awayProfile.avgGoalsFor * 1.35 +
+            awayProfile.avgShotsOnTarget * 0.52 +
+            awayProfile.avgCorners * 0.23
+        ),
+        expected_home_goals: round(metricsExp.expectedHomeGoals),
+        expected_away_goals: round(metricsExp.expectedAwayGoals),
+        expected_home_shots: round(metricsExp.expectedHomeShots),
+        expected_away_shots: round(metricsExp.expectedAwayShots),
+        expected_home_sot: round(metricsExp.expectedHomeSOT),
+        expected_away_sot: round(metricsExp.expectedAwaySOT),
+        expected_corners: round(metricsExp.expectedCorners),
+        expected_cards: round(metricsExp.expectedCards),
+        prob_over25: round(probabilities.over25),
+        prob_btts: round(probabilities.btts),
+        prob_corners: round(probabilities.corners),
+        prob_shots: round(probabilities.shots),
+        prob_sot: round(probabilities.sot),
+        prob_cards: round(probabilities.cards),
+        best_pick_1: mainPick.market,
+        best_pick_2: pick2,
+        best_pick_3: pick3,
+        aggressive_pick:
+          candidates.find(
+            (x) =>
+              x.market === "Mais de 2.5 gols" ||
+              x.market === "Ambas marcam" ||
+              x.market.includes("Mais de 9.5 escanteios") ||
+              x.market.includes("Mais de 8.5 escanteios") ||
+              x.market.includes("Mais de 7.5 escanteios") ||
+              x.market.includes("Mais de 6.5 escanteios")
+          )?.market || null,
+        analysis_text: insight,
+      })
+
+      stored.push({
+        ...matchPayload,
+        game_profile: gameProfile,
+      })
+
+      console.log(
+        `✅ ${matchPayload.league} | ${matchPayload.home_team} x ${matchPayload.away_team} | ${mainPick.market}`
+      )
+    } catch (error) {
       console.error(
-        `Erro processando fixture ${fixture?.fixture?.id}:`,
-        err.message
+        `❌ Falha processando fixture ${fixture?.fixture?.id}:`,
+        error.message
       )
     }
   }
 
-  console.log(`🧠 Jogos analisados com sucesso: ${results.length}`)
-
-  await upsertMatches(results)
-  await upsertDailyPicks(results)
-
-  console.log("✅ Sync V12 finalizado.")
+  return stored
 }
 
-runSync().catch((err) => {
-  console.error("❌ Falha geral no Sync:", err)
+async function rebuildDailyPicks(matches) {
+  if (!matches.length) return 0
+
+  const sorted = [...matches]
+    .filter((m) => m.id && m.pick && m.metrics && m.metrics.goals > 0)
+    .sort((a, b) => {
+      const pa = safeNumber(a.probability, 0)
+      const pb = safeNumber(b.probability, 0)
+
+      if (pb !== pa) return pb - pa
+      return safeNumber(b.priority, 0) - safeNumber(a.priority, 0)
+    })
+
+  const selected = []
+  const marketCount = {}
+  const leagueCount = {}
+  const familyCount = {}
+  const regionCount = {}
+
+  function detectFamily(market = "") {
+    const m = normalizeText(market)
+    if (m.includes("escanteio")) return "escanteios"
+    if (m.includes("ambas")) return "ambas"
+    if (m.includes("dupla chance")) return "dupla_chance"
+    if (m.includes("vitoria") || m.includes("vitória") || m.includes("empate")) return "resultado"
+    if (m.includes("gol")) return "gols"
+    return "outro"
+  }
+
+  for (const match of sorted) {
+    const market = String(match.pick || "")
+    const league = String(match.league || "")
+    const family = detectFamily(market)
+    const region = String(match.region || "general")
+    const gameProfile = String(match.game_profile || "")
+
+    marketCount[market] = marketCount[market] || 0
+    leagueCount[league] = leagueCount[league] || 0
+    familyCount[family] = familyCount[family] || 0
+    regionCount[region] = regionCount[region] || 0
+
+    // filtro leve de qualidade para o radar
+    if (safeNumber(match.probability, 0) < 0.64) continue
+    if (gameProfile === "defensivo" && safeNumber(match.probability, 0) < 0.70) continue
+    if (gameProfile === "equilibrado" && safeNumber(match.probability, 0) < 0.66) continue
+    if (region === "international" && safeNumber(match.probability, 0) < 0.67) continue
+
+    if (marketCount[market] >= MAX_SAME_MARKET_IN_DAILY) continue
+    if (leagueCount[league] >= MAX_SAME_LEAGUE_IN_DAILY) continue
+    if (family === "escanteios" && familyCount[family] >= 4) continue
+    if (family === "gols" && familyCount[family] >= 6) continue
+
+    if (region === "international" && regionCount[region] >= MAX_INTERNATIONAL_IN_DAILY) continue
+    if (region === "brazil" && regionCount[region] >= MAX_BRAZIL_IN_DAILY) continue
+
+    selected.push(match)
+    marketCount[market] += 1
+    leagueCount[league] += 1
+    familyCount[family] += 1
+    regionCount[region] += 1
+
+    if (selected.length >= MAX_DAILY_PICKS) break
+  }
+
+  const rows = selected.map((m, index) => ({
+    rank: index + 1,
+    match_id: m.id,
+    league: m.league,
+    home_team: m.home_team,
+    away_team: m.away_team,
+    market: m.pick,
+    probability: round(m.probability),
+    kickoff: m.kickoff,
+    is_opportunity: false,
+    home_logo: m.home_logo || null,
+    away_logo: m.away_logo || null,
+    created_at: new Date().toISOString(),
+  }))
+
+  if (!rows.length) return 0
+
+  const { error } = await supabase
+    .from("daily_picks")
+    .insert(rows)
+
+  if (error) {
+    throw new Error(`Supabase daily_picks: ${error.message}`)
+  }
+
+  return rows.length
+}
+
+async function run() {
+  console.log("🚀 Scoutly Sync V12.1 iniciado")
+
+  const { start, end } = getSyncWindowRange()
+  console.log(`📆 Janela ativa: ${start.toISOString()} -> ${end.toISOString()}`)
+
+  const competitions = await resolveTargetCompetitions()
+  console.log(`🏆 Competições resolvidas: ${competitions.length}`)
+
+  console.log(
+    "🏆 LISTA RESOLVIDA:",
+    competitions.map((c) => ({
+      leagueId: c.leagueId,
+      season: c.season,
+      country: c.country,
+      rawName: c.rawName,
+      display: c.display,
+    }))
+  )
+
+  console.log(
+    "🎯 BRASIL FILTER:",
+    competitions.filter((c) =>
+      (c.country || "").toLowerCase().includes("brazil") ||
+      (c.display || "").toLowerCase().includes("brasile") ||
+      (c.display || "").toLowerCase().includes("nordeste") ||
+      (c.display || "").toLowerCase().includes("verde") ||
+      (c.display || "").toLowerCase().includes("sul-sudeste")
+    )
+  )
+
+  const fixtureLists = []
+  for (const comp of competitions) {
+    const list = await fetchFixturesForCompetition(comp)
+    fixtureLists.push(list)
+    console.log(`📌 ${comp.display}: ${list.length} fixture(s)`)
+  }
+
+  const storedMatches = await buildAndStoreMatches(fixtureLists)
+  const picksCount = await rebuildDailyPicks(storedMatches)
+
+  console.log(`🏁 Daily picks gerados: ${picksCount}`)
+  console.log(`✅ Matches gravados com pipeline completo: ${storedMatches.length}`)
+  console.log("✅ Scoutly Sync V12.1 concluído")
+}
+
+run().catch((error) => {
+  console.error("❌ Erro fatal no Scoutly Sync V12.1:", error)
   process.exit(1)
 })
