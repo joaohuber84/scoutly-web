@@ -1843,7 +1843,7 @@ function getPrimaryPick(match) {
     }
 
     function getMatchTier(match) {
-      return match.strength || probabilityToTier(getMatchProbability(match));
+      return probabilityToTier(getMatchProbability(match));
     }
 
     function buildFallbackInsight(match) {
@@ -2095,9 +2095,9 @@ function getPrimaryPick(match) {
         home_logo: match.home_logo || null,
         away_logo: match.away_logo || null,
         tierWeight:
-          tier === "Muito forte" ? 4 :
-          tier === "Boa" ? 3 :
-          tier === "Moderada" ? 2 : 1
+          tier === "Forte" ? 3 :
+          tier === "Boa" ? 2 :
+          tier === "Moderada" ? 1 : 0
       };
     }
 
