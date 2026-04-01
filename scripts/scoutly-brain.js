@@ -149,7 +149,6 @@ function hasMinimumAnalysis(row) {
 }
 
 function getStrengthLabel(score) {
-  if (score >= 0.86) return "Muito forte"
   if (score >= 0.78) return "Forte"
   if (score >= 0.70) return "Boa"
   return "Moderada"
@@ -256,9 +255,7 @@ async function loadBaseTables() {
       analysis_text
     `)
 
-  if (analysisError) {
-    throw analysisError
-  }
+  if (analysisError) throw analysisError
 
   return {
     matches: matches || [],
@@ -337,15 +334,13 @@ function mergeMatchRow(matchRow, analysisMap) {
   )
 
   const cornersOver85Prob = clamp(
-    avgCorners >= 10.8
-      ? 0.88
-      : avgCorners >= 9.8
-        ? 0.80
-        : avgCorners >= 9.0
-          ? 0.73
-          : avgCorners >= 8.2
-            ? 0.66
-            : toNumber(analysis.prob_corners, 0),
+    avgCorners >= 8.8
+      ? 0.84
+      : avgCorners >= 7.8
+        ? 0.76
+        : avgCorners >= 6.8
+          ? 0.67
+          : toNumber(analysis.prob_corners, 0),
     0,
     1
   )
@@ -559,93 +554,59 @@ function buildCornerCandidates(row, profile) {
     })
   }
 
-  if (avgCorners >= 10.8) {
-    add(
-      "Mais de 9.5 escanteios",
-      0.82,
-      0.80 + (avgShots >= 22 ? 0.02 : 0) + (profile === "estatistico" ? 0.02 : 0),
-      "corners_over95"
-    )
-    add(
-      "Mais de 8.5 escanteios",
-      0.87,
-      0.79 + (avgGoals >= 2.4 ? 0.01 : 0),
-      "corners_over85"
-    )
-  } else if (avgCorners >= 9.7) {
-    add(
-      "Mais de 8.5 escanteios",
-      0.80,
-      0.77 + (avgShots >= 21 ? 0.02 : 0),
-      "corners_over85"
-    )
-    add(
-      "Mais de 7.5 escanteios",
-      0.86,
-      0.75 + (profile === "estatistico" ? 0.02 : 0),
-      "corners_over75"
-    )
-  } else if (avgCorners >= 8.8) {
-    add(
-      "Mais de 7.5 escanteios",
-      0.78,
-      0.74 + (avgShots >= 20 ? 0.02 : 0),
-      "corners_over75"
-    )
+  // OVER mais saudável: 6.5 / 7.5 / 8.5
+  if (avgCorners >= 6.5) {
     add(
       "Mais de 6.5 escanteios",
-      0.84,
-      0.72 + (avgGoals >= 2.2 ? 0.01 : 0),
-      "corners_over65"
-    )
-  } else if (avgCorners >= 7.8) {
-    add(
-      "Mais de 6.5 escanteios",
-      0.76,
-      0.71 + (avgShots >= 18 ? 0.02 : 0),
+      clamp(0.60 + (avgCorners - 6.5) * 0.05 + (avgShots >= 18 ? 0.02 : 0), 0.60, 0.92),
+      clamp(0.69 + (avgCorners - 6.5) * 0.04 + (profile === "estatistico" ? 0.02 : 0), 0.60, 0.90),
       "corners_over65"
     )
   }
 
-  if (avgCorners <= 6.1) {
+  if (avgCorners >= 7.4) {
     add(
-      "Menos de 9.5 escanteios",
-      0.82,
-      0.73 + (profile === "estatistico" ? -0.04 : 0),
-      "corners_under95"
+      "Mais de 7.5 escanteios",
+      clamp(0.58 + (avgCorners - 7.4) * 0.05 + (avgShots >= 20 ? 0.02 : 0), 0.58, 0.89),
+      clamp(0.68 + (avgCorners - 7.4) * 0.04 + (avgGoals >= 2.2 ? 0.01 : 0), 0.58, 0.87),
+      "corners_over75"
     )
+  }
+
+  if (avgCorners >= 8.6) {
     add(
-      "Menos de 10.5 escanteios",
-      0.86,
-      0.74,
-      "corners_under105"
+      "Mais de 8.5 escanteios",
+      clamp(0.55 + (avgCorners - 8.6) * 0.05 + (avgShots >= 21 ? 0.02 : 0), 0.55, 0.85),
+      clamp(0.66 + (avgCorners - 8.6) * 0.04 + (profile === "estatistico" ? 0.01 : 0), 0.55, 0.84),
+      "corners_over85"
     )
-  } else if (avgCorners <= 6.9) {
-    add(
-      "Menos de 10.5 escanteios",
-      0.81,
-      0.74 + (profile === "estatistico" ? -0.03 : 0),
-      "corners_under105"
-    )
-    add(
-      "Menos de 11.5 escanteios",
-      0.86,
-      0.73,
-      "corners_under115"
-    )
-  } else if (avgCorners <= 7.7) {
-    add(
-      "Menos de 11.5 escanteios",
-      0.79,
-      0.72 + (profile === "estatistico" ? -0.02 : 0),
-      "corners_under115"
-    )
-  } else if (avgCorners <= 8.3 && avgShots <= 20) {
+  }
+
+  // UNDER mais saudável: 12.5 / 11.5 / 10.5
+  if (avgCorners <= 9.0) {
     add(
       "Menos de 12.5 escanteios",
-      0.75,
-      0.69,
+      clamp(0.63 + (9.0 - avgCorners) * 0.04, 0.63, 0.91),
+      clamp(0.71 + (9.0 - avgCorners) * 0.03 + (profile === "controlado" ? 0.02 : 0), 0.63, 0.89),
       "corners_under125"
+    )
+  }
+
+  if (avgCorners <= 8.2) {
+    add(
+      "Menos de 11.5 escanteios",
+      clamp(0.60 + (8.2 - avgCorners) * 0.04, 0.60, 0.88),
+      clamp(0.70 + (8.2 - avgCorners) * 0.03 + (avgShots <= 19 ? 0.01 : 0), 0.60, 0.86),
+      "corners_under115"
+    )
+  }
+
+  if (avgCorners <= 7.2) {
+    add(
+      "Menos de 10.5 escanteios",
+      clamp(0.56 + (7.2 - avgCorners) * 0.04, 0.56, 0.84),
+      clamp(0.67 + (7.2 - avgCorners) * 0.03 + (profile === "defensivo" ? 0.01 : 0), 0.56, 0.82),
+      "corners_under105"
     )
   }
 
@@ -669,7 +630,6 @@ function buildMarketCandidates(row, options = {}) {
   const candidates = []
 
   const avgGoals = toNumber(row.avg_goals)
-  const avgCorners = toNumber(row.avg_corners)
   const avgShots = toNumber(row.avg_shots)
 
   const over15Prob = toNumber(row.over15_prob)
@@ -982,7 +942,6 @@ function chooseRadar(analyses) {
 
     if (
       [
-        "corners_under95",
         "corners_under105",
         "corners_under115",
         "corners_under125",
@@ -997,7 +956,6 @@ function chooseRadar(analyses) {
         "corners_over65",
         "corners_over75",
         "corners_over85",
-        "corners_over95",
       ].includes(item.main_subfamily) &&
       subfamilyCount >= 2
     ) {
