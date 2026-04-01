@@ -1645,6 +1645,22 @@ function chipMarkup(tier) {
       return "outro";
     }
 
+function detectCornerDirection(market = "") {
+  const m = String(market || "").toLowerCase();
+
+  if (!m.includes("escanteio")) return null;
+  if (m.includes("mais de")) return "over";
+  if (m.includes("menos de")) return "under";
+
+  return null;
+}
+
+function extractCornerLine(market = "") {
+  const m = String(market || "").replace(",", ".");
+  const match = m.match(/(\d+(\.\d+)?)/);
+  return match ? Number(match[1]) : null;
+}
+    
     function marketPriority(family) {
       const order = {
         gols: 1,
@@ -2006,7 +2022,7 @@ function getPrimaryPick(match) {
   const primaryLine =
     primaryFamily === "escanteios" ? extractCornerLine(primary) : null;
 
-  const candidates = [
+const candidates = [
     match.best_pick_2,
     match.best_pick_3,
     match.balanced_pick,
@@ -2015,7 +2031,23 @@ function getPrimaryPick(match) {
     match.safe_pick
   ]
     .map(item => String(item || "").trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    .filter(item => {
+      const family = marketFamily(item);
+
+      if (family !== "escanteios") return true;
+
+      const direction = detectCornerDirection(item);
+      const line = extractCornerLine(item);
+
+      if (!direction || line == null) return false;
+
+      // trava linhas antigas/arriscadas
+      if (direction === "over" && line >= 9.5) return false;
+      if (direction === "under" && line <= 9.5) return false;
+
+      return true;
+    });
 
   const seen = new Set([primaryKey]);
   const nonRepeatedFamily = [];
