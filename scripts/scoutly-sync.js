@@ -1426,10 +1426,10 @@ function lineScore(prob, family, market) {
   if (market === "Mais de 2.5 gols") score += 0.02
   if (market === "Menos de 3.5 gols") score += 0.03
   if (market === "Menos de 2.5 gols") score += 0.01
-  if (family === "dupla_chance") score += 0.02
-  if (family === "escanteios") score += 0.012
+  if (family === "dupla_chance") score += 0.015
+  if (family === "escanteios") score += 0.006
   if (market === "Empate") score -= 0.10
-  if (score > 0.92) score -= 0.03
+  if (score > 0.90) score -= 0.04
 
   return round(score)
 }
@@ -1473,29 +1473,36 @@ function buildCornerCandidates(metrics) {
 
   const c = safeNumber(metrics.expectedCorners, 0)
 
-  // OVER corners: mais natural, com espaço para linhas baixas úteis
-  if (c >= 6.9) {
-    add("Mais de 6.5 escanteios", clamp((c - 5.8) / 2.0, 0.58, 0.91))
-  }
-  if (c >= 7.7) {
-    add("Mais de 7.5 escanteios", clamp((c - 6.5) / 2.1, 0.56, 0.89))
-  }
-  if (c >= 8.7) {
-    add("Mais de 8.5 escanteios", clamp((c - 7.2) / 2.2, 0.54, 0.87))
-  }
-  if (c >= 9.9) {
-    add("Mais de 9.5 escanteios", clamp((c - 8.1) / 2.4, 0.52, 0.84))
+  // =========================
+  // OVER CORNERS
+  // =========================
+  // foco em linhas mais saudáveis: 6.5 / 7.5 / 8.5
+  if (c >= 6.5) {
+    add("Mais de 6.5 escanteios", clamp((c - 5.5) / 2.0, 0.60, 0.92))
   }
 
-  // UNDER corners: subir régua para reduzir excesso de 10.5
+  if (c >= 7.4) {
+    add("Mais de 7.5 escanteios", clamp((c - 6.2) / 2.1, 0.58, 0.89))
+  }
+
+  if (c >= 8.6) {
+    add("Mais de 8.5 escanteios", clamp((c - 7.1) / 2.3, 0.55, 0.85))
+  }
+
+  // =========================
+  // UNDER CORNERS
+  // =========================
+  // foco em linhas mais seguras: 12.5 / 11.5 / 10.5
+  if (c <= 9.0) {
+    add("Menos de 12.5 escanteios", clamp((13.2 - c) / 3.8, 0.63, 0.91))
+  }
+
   if (c <= 8.2) {
-    add("Menos de 11.5 escanteios", clamp((12.2 - c) / 3.4, 0.61, 0.90))
+    add("Menos de 11.5 escanteios", clamp((12.0 - c) / 3.3, 0.60, 0.88))
   }
-  if (c <= 7.4) {
-    add("Menos de 10.5 escanteios", clamp((11.0 - c) / 3.0, 0.59, 0.87))
-  }
-  if (c <= 6.5) {
-    add("Menos de 9.5 escanteios", clamp((10.0 - c) / 2.9, 0.57, 0.84))
+
+  if (c <= 7.2) {
+    add("Menos de 10.5 escanteios", clamp((10.8 - c) / 3.0, 0.56, 0.84))
   }
 
   return candidates.sort((a, b) => b.score - a.score)
@@ -1625,8 +1632,8 @@ function chooseExtraPicks(candidates, mainPick) {
       }
 
       // ordem lógica:
-      // under: 11.5 -> 10.5 -> 9.5
-      // over: 6.5 -> 7.5 -> 8.5 -> 9.5
+      // under: 12.5 -> 11.5 -> 10.5
+      // over: 6.5 -> 7.5 -> 8.5 
       if (direction !== mainCornerDirection) continue
       if (direction === "under" && line >= mainCornerLine) continue
       if (direction === "over" && line <= mainCornerLine) continue
@@ -1725,10 +1732,18 @@ function buildInsight(mainPick, metrics, profile) {
     return `O modelo identifica um cenário mais controlado, com boa sustentação estatística para até 3 gols no jogo.`
   }
 
-  if (normalizeText(mainPick).includes("escanteios")) {
-    return `A leitura Scoutly projeta cerca de ${corners} escanteios, com volume ofensivo suficiente para transformar esse mercado em uma oportunidade estatística relevante.`
+if (normalizeText(mainPick).includes("escanteios")) {
+  if (normalizeText(mainPick).includes("mais de")) {
+    return `A leitura Scoutly projeta cerca de ${corners} escanteios, com contexto de jogo favorável para uma linha de cantos mais alta sem forçar uma projeção exagerada.`
   }
 
+  if (normalizeText(mainPick).includes("menos de")) {
+    return `A leitura Scoutly projeta cerca de ${corners} escanteios, indicando um cenário mais controlado para o mercado de cantos, sem necessidade de esticar demais a linha.`
+  }
+
+  return `A leitura Scoutly projeta cerca de ${corners} escanteios, com suporte estatístico suficiente para transformar esse mercado em uma oportunidade relevante.`
+}
+  
   if (normalizeText(mainPick).includes("dupla chance")) {
     return `A leitura Scoutly aponta vantagem competitiva para um dos lados, mas com proteção ao empate. O equilíbrio da partida ainda pede segurança, e por isso a dupla chance aparece como leitura mais sólida.`
   }
