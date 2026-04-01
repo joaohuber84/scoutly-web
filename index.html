@@ -1604,30 +1604,30 @@
       return `<div class="team-badge">${escapeHtml(teamInitials(teamName))}</div>`;
     }
 
-    function probabilityToTier(prob) {
-      const p = Number(prob || 0);
-      if (p >= 0.80) return "Muito forte";
-      if (p >= 0.70) return "Boa";
-      if (p >= 0.60) return "Moderada";
-      return "Oportunidade extra";
-    }
+ function probabilityToTier(prob) {
+  const p = Number(prob || 0);
+  if (p >= 0.74) return "Forte";
+  if (p >= 0.66) return "Boa";
+  if (p >= 0.58) return "Moderada";
+  return "Oportunidade extra";
+}
 
-    function chipClass(tier) {
-      if (tier === "Forte") return "chip chip-very-strong";
-      if (tier === "Boa") return "chip chip-good";
-      if (tier === "Moderada") return "chip chip-moderate";
-      return "chip chip-extra";
-    }
+function chipClass(tier) {
+  if (tier === "Forte") return "chip chip-best";
+  if (tier === "Boa") return "chip chip-good";
+  if (tier === "Moderada") return "chip chip-moderate";
+  return "chip chip-extra";
+}
 
-    function chipMarkup(tier) {
-      const emoji =
-        tier === "Forte" ? "🎯" :
-        tier === "Boa" ? "🟢" :
-        tier === "Moderada" ? "🟡" :
-        "🔵";
+function chipMarkup(tier) {
+  const emoji =
+    tier === "Forte" ? "🎯" :
+    tier === "Boa" ? "🟢" :
+    tier === "Moderada" ? "🟡" :
+    "🔵";
 
-      return `<span class="${chipClass(tier)}">${emoji} ${escapeHtml(tier)}</span>`;
-    }
+  return `<span class="${chipClass(tier)}">${emoji} ${escapeHtml(tier)}</span>`;
+}  
 
     function marketFamily(market) {
       const m = String(market || "").trim().toLowerCase();
@@ -1989,65 +1989,67 @@ function getPrimaryPick(match) {
       return flags[country] || null;
     }
 
-    function getSecondaryPicks(match) {
-      const primary = String(getPrimaryPick(match) || "").trim();
-      const primaryKey = primary.toLowerCase();
-      const primaryFamily = marketFamily(primary);
+ function getSecondaryPicks(match) {
+  const primary = String(getPrimaryPick(match) || "").trim();
+  const primaryKey = primary.toLowerCase();
+  const primaryFamily = marketFamily(primary);
 
-      const candidates = [
-        match.best_pick_2,
-        match.best_pick_3,
-        match.balanced_pick,
-        match.aggressive_pick,
-        match.value_pick,
-        match.safe_pick
-      ]
-        .map(item => String(item || "").trim())
-        .filter(Boolean);
+  const primaryDirection =
+    primaryFamily === "escanteios" ? detectCornerDirection(primary) : null;
+  const primaryLine =
+    primaryFamily === "escanteios" ? extractCornerLine(primary) : null;
 
-      const seen = new Set([primaryKey]);
-      const nonRepeatedFamily = [];
-      const repeatedFamily = [];
+  const candidates = [
+    match.best_pick_2,
+    match.best_pick_3,
+    match.balanced_pick,
+    match.aggressive_pick,
+    match.value_pick,
+    match.safe_pick
+  ]
+    .map(item => String(item || "").trim())
+    .filter(Boolean);
 
-      for (const item of candidates) {
-        const key = item.toLowerCase();
-        if (seen.has(key)) continue;
-        seen.add(key);
+  const seen = new Set([primaryKey]);
+  const nonRepeatedFamily = [];
+  const repeatedFamily = [];
 
-        const family = marketFamily(item);
+  for (const item of candidates) {
+    const key = item.toLowerCase();
+    if (seen.has(key)) continue;
 
-        if (family !== primaryFamily) {
-          nonRepeatedFamily.push(item);
-        } else {
-          repeatedFamily.push(item);
-        }
+    const family = marketFamily(item);
+
+    // proteção extra para escanteios
+    if (family === "escanteios" && primaryFamily === "escanteios") {
+      const direction = detectCornerDirection(item);
+      const line = extractCornerLine(item);
+
+      if (!direction || line == null || !primaryDirection || primaryLine == null) {
+        continue;
       }
 
-      const ordered = [...nonRepeatedFamily, ...repeatedFamily];
-      const finalMarkets = [];
-      const usedFamilies = new Set();
+      // só aceita mesma direção do principal
+      if (direction !== primaryDirection) continue;
 
-      for (const item of ordered) {
-        const family = marketFamily(item);
-
-        if (!usedFamilies.has(family)) {
-          finalMarkets.push(item);
-          usedFamilies.add(family);
-        }
-
-        if (finalMarkets.length >= 2) break;
-      }
-
-      if (finalMarkets.length < 2) {
-        for (const item of ordered) {
-          if (finalMarkets.includes(item)) continue;
-          finalMarkets.push(item);
-          if (finalMarkets.length >= 2) break;
-        }
-      }
-
-      return finalMarkets.slice(0, 2);
+      // ordem lógica:
+      // under: 12.5 -> 11.5 -> 10.5
+      // over: 6.5 -> 7.5 -> 8.5
+      if (direction === "under" && line >= primaryLine) continue;
+      if (direction === "over" && line <= primaryLine) continue;
     }
+
+    seen.add(key);
+
+    if (family !== primaryFamily) {
+      nonRepeatedFamily.push(item);
+    } else {
+      repeatedFamily.push(item);
+    }
+  }
+
+  return [...nonRepeatedFamily, ...repeatedFamily].slice(0, 2);
+}  
 
     function getDetectedMarkets(match) {
       const alternatives = getSecondaryPicks(match);
@@ -2686,6 +2688,7 @@ function openCompetition(league) {
       if (!match) return;
 
       const primaryPick = getPrimaryPick(match);
+      const primaryTier = getMatchTier(match);
       const detectedMarkets = getDetectedMarkets(match);
       const homeTeam = normalizeTeamName(match.home_team);
       const awayTeam = normalizeTeamName(match.away_team);
@@ -2720,7 +2723,7 @@ function openCompetition(league) {
 
       if (analysisTipChip) {
         analysisTipChip.innerHTML = `
-          ${chipMarkup("Forte")}
+          ${chipMarkup(primaryTier)}
         `;
       }
 
