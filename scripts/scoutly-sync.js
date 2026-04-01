@@ -1286,8 +1286,7 @@ function buildExpectedMetrics(homeProfile, awayProfile) {
   const expectedCorners = clamp(
       homeProfile.avgCorners * 0.52 +
       awayProfile.avgCorners * 0.48 +
-      (expectedHomeShots + expectedAwayShots) * 0.055
-    ),
+      (expectedHomeShots + expectedAwayShots) * 0.055,
     4.5,
     13.2
   )
