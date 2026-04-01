@@ -1717,10 +1717,17 @@ function chipMarkup(tier) {
       );
     }
 
-    function getMatchById(id) {
-      return state.matches.find(match => String(match.id) === String(id)) || null;
-    }
+function getMatchById(id) {
+  const target = String(id)
 
+  return state.matches.find((match) => {
+    return (
+      String(match.id) === target ||
+      String(match.fixture_id) === target ||
+      String(match.match_id) === target
+    )
+  }) || null
+}
     function getMetrics(match) {
       const metrics = maybeJson(match.metrics) || {};
       const markets = maybeJson(match.markets) || {};
