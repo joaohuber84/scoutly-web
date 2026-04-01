@@ -864,17 +864,21 @@ async function resolveSearchCompetition(target) {
         if (!normalizeText(country).includes("saudi")) return null
       }
 
-      if (target.display === "Brasileirão Feminino") {
-        const ok =
-          normalizeText(country) === "brazil" &&
-          (
-            haystack.includes("women") ||
-            haystack.includes("feminino") ||
-            haystack.includes("feminina")
-          )
+    if (target.display === "Brasileirão Feminino") {
+  const isBrazil = normalizeText(country) === "brazil"
 
-        if (!ok) return null
-      }
+  const isFemaleLeague =
+    haystack.includes("women") ||
+    haystack.includes("feminino") ||
+    haystack.includes("feminina") ||
+    haystack.includes("female") ||
+    haystack.includes("fem")
+
+  if (!isBrazil) return null
+
+  // 🔥 NÃO bloqueia se não tiver keyword feminina
+  // apenas prioriza depois
+}
 
       if (!isExactBrazilRegionalMatch(target.display, country, rawName)) {
         return null
