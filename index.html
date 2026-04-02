@@ -271,6 +271,48 @@
       border-color: rgba(240,211,107,0.14);
     }
 
+    .chip-family-goals {
+      background: rgba(0,255,136,0.12);
+      color: #d9fff0;
+      border-color: rgba(0,255,136,0.14);
+    }
+
+    .chip-family-btts {
+      background: rgba(46,220,146,0.12);
+      color: #defff2;
+      border-color: rgba(46,220,146,0.14);
+    }
+
+    .chip-family-corners {
+      background: rgba(116,167,255,0.12);
+      color: #deebff;
+      border-color: rgba(116,167,255,0.14);
+    }
+
+    .chip-family-shots {
+      background: rgba(154, 112, 255, 0.14);
+      color: #efe5ff;
+      border-color: rgba(154, 112, 255, 0.18);
+    }
+
+    .chip-family-sot {
+      background: rgba(83, 208, 255, 0.14);
+      color: #e1f8ff;
+      border-color: rgba(83, 208, 255, 0.18);
+    }
+
+    .chip-family-cards {
+      background: rgba(240, 211, 107, 0.12);
+      color: #fff4cf;
+      border-color: rgba(240, 211, 107, 0.16);
+    }
+
+    .chip-family-result {
+      background: rgba(255,255,255,0.08);
+      color: #edf3ff;
+      border-color: rgba(255,255,255,0.12);
+    }
+
     .teams-row {
       display: flex;
       align-items: center;
@@ -789,7 +831,7 @@
 
     .analysis-card {
       width: 100%;
-      max-width: 1040px;
+      max-width: 1120px;
       max-height: 94vh;
       overflow: auto;
       background: linear-gradient(180deg, rgba(19,33,60,0.98), rgba(10,18,34,0.98));
@@ -1153,7 +1195,7 @@
             <div class="ticket-eyebrow">Bilhete do dia</div>
             <h2 class="ticket-title">Bilhete Scoutly</h2>
             <p class="ticket-subtitle">
-              Combinação automática das melhores oportunidades do momento, montada com base em probabilidade, consistência e variedade do radar.
+              Combinação automática das melhores oportunidades do momento, montada com base em probabilidade, consistência, cenário e variedade do radar.
             </p>
           </div>
 
@@ -1219,7 +1261,7 @@
         <h3 class="about-title">Sobre o Scoutly</h3>
         <p class="about-copy">
           O Scoutly é um radar inteligente que analisa dados reais de partidas para identificar oportunidades em apostas de futebol.
-          Nosso sistema cruza estatísticas como gols, escanteios, finalizações e equilíbrio dos confrontos para destacar mercados com maior probabilidade estatística.
+          Nosso sistema cruza estatísticas como gols, escanteios, finalizações, chutes no gol, cartões e equilíbrio dos confrontos para destacar mercados com maior coerência estatística.
         </p>
 
         <div class="about-list">
@@ -1227,7 +1269,7 @@
           <div>• Radar do dia organizado por dia e horário</div>
           <div>• Competições organizadas com bandeiras</div>
           <div>• Análise completa do jogo com números projetados</div>
-          <div>• Pick principal + oportunidades alternativas com mais variedade</div>
+          <div>• Pick principal + oportunidades alternativas com mais variedade real</div>
         </div>
 
         <div class="footer-note">
@@ -1262,9 +1304,14 @@
               <div id="analysisInsight" style="color:#dbe6fb;line-height:1.65;font-size:14px;"></div>
             </div>
 
-            <div class="box">
+            <div class="box" style="margin-top:16px;">
               <h3 class="box-title">Números projetados do jogo</h3>
               <div id="analysisStats" class="stats-grid"></div>
+            </div>
+
+            <div class="box" style="margin-top:16px;">
+              <h3 class="box-title">Contexto probabilístico</h3>
+              <div id="analysisContext" class="stats-grid"></div>
             </div>
           </div>
 
@@ -1604,36 +1651,39 @@
       return `<div class="team-badge">${escapeHtml(teamInitials(teamName))}</div>`;
     }
 
- function probabilityToTier(prob) {
-  const p = Number(prob || 0);
-  if (p >= 0.74) return "Forte";
-  if (p >= 0.66) return "Boa";
-  if (p >= 0.58) return "Moderada";
-  return "Oportunidade extra";
-}
+    function probabilityToTier(prob) {
+      const p = Number(prob || 0);
+      if (p >= 0.74) return "Forte";
+      if (p >= 0.66) return "Boa";
+      if (p >= 0.58) return "Moderada";
+      return "Oportunidade extra";
+    }
 
-function chipClass(tier) {
-  if (tier === "Forte") return "chip chip-best";
-  if (tier === "Boa") return "chip chip-good";
-  if (tier === "Moderada") return "chip chip-moderate";
-  return "chip chip-extra";
-}
+    function chipClass(tier) {
+      if (tier === "Forte") return "chip chip-best";
+      if (tier === "Boa") return "chip chip-good";
+      if (tier === "Moderada") return "chip chip-moderate";
+      return "chip chip-extra";
+    }
 
-function chipMarkup(tier) {
-  const emoji =
-    tier === "Forte" ? "🎯" :
-    tier === "Boa" ? "🟢" :
-    tier === "Moderada" ? "🟡" :
-    "🔵";
+    function chipMarkup(tier) {
+      const emoji =
+        tier === "Forte" ? "🎯" :
+        tier === "Boa" ? "🟢" :
+        tier === "Moderada" ? "🟡" :
+        "🔵";
 
-  return `<span class="${chipClass(tier)}">${emoji} ${escapeHtml(tier)}</span>`;
-}  
+      return `<span class="${chipClass(tier)}">${emoji} ${escapeHtml(tier)}</span>`;
+    }
 
     function marketFamily(market) {
       const m = String(market || "").trim().toLowerCase();
 
       if (!m) return "outro";
       if (m.includes("escanteio")) return "escanteios";
+      if (m.includes("finalizações") || m.includes("finalizacoes")) return "shots";
+      if (m.includes("no gol")) return "sot";
+      if (m.includes("cart")) return "cards";
       if (m.includes("ambas")) return "btts";
       if (
         m.includes("dupla chance") ||
@@ -1645,29 +1695,57 @@ function chipMarkup(tier) {
       return "outro";
     }
 
-function detectCornerDirection(market = "") {
-  const m = String(market || "").toLowerCase();
+    function marketFamilyLabel(family) {
+      const labels = {
+        gols: "Gols",
+        btts: "BTTS",
+        escanteios: "Escanteios",
+        shots: "Finalizações",
+        sot: "No gol",
+        cards: "Cartões",
+        resultado: "Resultado",
+        outro: "Mercado"
+      };
+      return labels[family] || "Mercado";
+    }
 
-  if (!m.includes("escanteio")) return null;
-  if (m.includes("mais de")) return "over";
-  if (m.includes("menos de")) return "under";
+    function marketFamilyChip(family) {
+      const label = marketFamilyLabel(family);
 
-  return null;
-}
+      if (family === "gols") return `<span class="chip chip-family-goals">⚽ ${escapeHtml(label)}</span>`;
+      if (family === "btts") return `<span class="chip chip-family-btts">🤝 ${escapeHtml(label)}</span>`;
+      if (family === "escanteios") return `<span class="chip chip-family-corners">🚩 ${escapeHtml(label)}</span>`;
+      if (family === "shots") return `<span class="chip chip-family-shots">🎯 ${escapeHtml(label)}</span>`;
+      if (family === "sot") return `<span class="chip chip-family-sot">🥅 ${escapeHtml(label)}</span>`;
+      if (family === "cards") return `<span class="chip chip-family-cards">🟨 ${escapeHtml(label)}</span>`;
+      if (family === "resultado") return `<span class="chip chip-family-result">🛡️ ${escapeHtml(label)}</span>`;
 
-function extractCornerLine(market = "") {
-  const m = String(market || "").replace(",", ".");
-  const match = m.match(/(\d+(\.\d+)?)/);
-  return match ? Number(match[1]) : null;
-}
-    
+      return `<span class="chip chip-alt">${escapeHtml(label)}</span>`;
+    }
+
+    function detectDirection(market = "") {
+      const m = String(market || "").toLowerCase();
+      if (m.includes("mais de")) return "over";
+      if (m.includes("menos de")) return "under";
+      return null;
+    }
+
+    function extractLine(market = "") {
+      const m = String(market || "").replace(",", ".");
+      const match = m.match(/(\d+(\.\d+)?)/);
+      return match ? Number(match[1]) : null;
+    }
+
     function marketPriority(family) {
       const order = {
         gols: 1,
         btts: 2,
-        resultado: 3,
-        escanteios: 4,
-        outro: 5
+        shots: 3,
+        sot: 4,
+        cards: 5,
+        resultado: 6,
+        escanteios: 7,
+        outro: 8
       };
       return order[family] || 99;
     }
@@ -1700,7 +1778,7 @@ function extractCornerLine(market = "") {
       );
     }
 
-    function isStillRelevantForRadar(value) {
+function isStillRelevantForRadar(value) {
       const d = parseDateSafe(value);
       if (!d) return false;
 
@@ -1733,17 +1811,18 @@ function extractCornerLine(market = "") {
       );
     }
 
-function getMatchById(id) {
-  const target = String(id)
+    function getMatchById(id) {
+      const target = String(id);
 
-  return state.matches.find((match) => {
-    return (
-      String(match.id) === target ||
-      String(match.fixture_id) === target ||
-      String(match.match_id) === target
-    )
-  }) || null
-}
+      return state.matches.find((match) => {
+        return (
+          String(match.id) === target ||
+          String(match.fixture_id) === target ||
+          String(match.match_id) === target
+        );
+      }) || null;
+    }
+
     function getMetrics(match) {
       const metrics = maybeJson(match.metrics) || {};
       const markets = maybeJson(match.markets) || {};
@@ -1809,9 +1888,53 @@ function getMatchById(id) {
         toNumber(match.confidence_score, null) ??
         toNumber(match.probability, null);
 
-      const homeProb = toNumber(probabilities.home, null);
-      const drawProb = toNumber(probabilities.draw, null);
-      const awayProb = toNumber(probabilities.away, null);
+      const homeProb =
+        toNumber(match.home_win_prob, null) ??
+        toNumber(probabilities.home, null);
+
+      const drawProb =
+        toNumber(match.draw_prob, null) ??
+        toNumber(probabilities.draw, null);
+
+      const awayProb =
+        toNumber(match.away_win_prob, null) ??
+        toNumber(probabilities.away, null);
+
+      const over15Prob =
+        toNumber(match.over15_prob, null) ??
+        toNumber(markets.over15, null);
+
+      const over25Prob =
+        toNumber(match.over25_prob, null) ??
+        toNumber(markets.over25, null);
+
+      const bttsProb =
+        toNumber(match.btts_prob, null) ??
+        toNumber(markets.btts, null);
+
+      const under25Prob =
+        toNumber(match.under25_prob, null) ??
+        (over25Prob !== null ? clamp(1 - over25Prob, 0, 1) : null);
+
+      const under35Prob =
+        toNumber(match.under35_prob, null) ??
+        toNumber(markets.under35, null);
+
+      const probCorners =
+        toNumber(match.prob_corners, null) ??
+        toNumber(markets.corners, null);
+
+      const probShots =
+        toNumber(match.prob_shots, null) ??
+        toNumber(markets.shots, null);
+
+      const probSot =
+        toNumber(match.prob_sot, null) ??
+        toNumber(markets.shots_on_target, null);
+
+      const probCards =
+        toNumber(match.prob_cards, null) ??
+        toNumber(markets.cards, null);
 
       return {
         avgGoals,
@@ -1825,13 +1948,23 @@ function getMatchById(id) {
         awayStrength,
         homeProb,
         drawProb,
-        awayProb
+        awayProb,
+        over15Prob,
+        over25Prob,
+        under25Prob,
+        under35Prob,
+        bttsProb,
+        probCorners,
+        probShots,
+        probSot,
+        probCards
       };
     }
 
-function getPrimaryPick(match) {
+    function getPrimaryPick(match) {
       return (
         match.best_pick_1 ||
+        match.best_pick ||
         match.pick ||
         match.safe_pick ||
         match.balanced_pick ||
@@ -1871,10 +2004,28 @@ function getPrimaryPick(match) {
 
     function buildFallbackInsight(match) {
       const primary = getPrimaryPick(match).toLowerCase();
-      const { avgGoals, avgCorners, avgShots } = getMetrics(match);
+      const {
+        avgGoals,
+        avgCorners,
+        avgShots,
+        avgShotsOnTarget,
+        avgCards
+      } = getMetrics(match);
 
       if (primary.includes("escanteios")) {
         return `A leitura do Scoutly aponta volume estatístico suficiente para sustentar esse mercado, com cerca de ${formatDecimal(avgCorners, 1)} escanteios projetados para a partida.`;
+      }
+
+      if (primary.includes("finalizações") && !primary.includes("no gol")) {
+        return `A leitura do Scoutly aponta cerca de ${formatDecimal(avgShots, 0)} finalizações projetadas, sustentando um cenário de volume ofensivo consistente para esse mercado.`;
+      }
+
+      if (primary.includes("no gol")) {
+        return `A leitura do Scoutly aponta cerca de ${formatDecimal(avgShotsOnTarget, 0)} finalizações no gol, sustentando um cenário ofensivo com precisão suficiente para esse mercado.`;
+      }
+
+      if (primary.includes("cart")) {
+        return `A leitura do Scoutly projeta cerca de ${formatDecimal(avgCards, 1)} cartões, sugerindo um confronto com nível de contato suficiente para esse tipo de entrada.`;
       }
 
       if (primary.includes("menos")) {
@@ -1926,35 +2077,36 @@ function getPrimaryPick(match) {
     }
 
     function getContextForDisplay(match) {
-      const { homeProb, drawProb, awayProb } = getMetrics(match);
+      const {
+        homeProb,
+        drawProb,
+        awayProb,
+        over25Prob,
+        under25Prob,
+        under35Prob,
+        bttsProb,
+        probCorners,
+        probShots,
+        probSot,
+        probCards
+      } = getMetrics(match);
+
       const items = [];
 
       if (homeProb !== null) items.push({ label: "Vitória mandante", value: percentText(homeProb) });
       if (drawProb !== null) items.push({ label: "Empate", value: percentText(drawProb) });
       if (awayProb !== null) items.push({ label: "Vitória visitante", value: percentText(awayProb) });
 
-      if (homeProb !== null) {
-        const strength = homeProb > 0.6 ? "Alta" : homeProb > 0.45 ? "Boa" : "Equilibrada";
-        items.push({ label: "Força mandante", value: strength });
-      }
+      if (over25Prob !== null) items.push({ label: "Over 2.5", value: percentText(over25Prob) });
+      if (under25Prob !== null) items.push({ label: "Under 2.5", value: percentText(under25Prob) });
+      if (under35Prob !== null) items.push({ label: "Under 3.5", value: percentText(under35Prob) });
+      if (bttsProb !== null) items.push({ label: "BTTS", value: percentText(bttsProb) });
+      if (probCorners !== null) items.push({ label: "Escanteios", value: percentText(probCorners) });
+      if (probShots !== null) items.push({ label: "Finalizações", value: percentText(probShots) });
+      if (probSot !== null) items.push({ label: "No gol", value: percentText(probSot) });
+      if (probCards !== null) items.push({ label: "Cartões", value: percentText(probCards) });
 
-      if (awayProb !== null) {
-        const strength = awayProb > 0.6 ? "Alta" : awayProb > 0.45 ? "Boa" : "Equilibrada";
-        items.push({ label: "Força visitante", value: strength });
-      }
-
-      if (homeProb !== null && awayProb !== null) {
-        const profile =
-          Math.abs(homeProb - awayProb) > 0.25
-            ? "Desequilíbrio claro"
-            : Math.abs(homeProb - awayProb) > 0.1
-            ? "Leve vantagem"
-            : "Jogo equilibrado";
-
-        items.push({ label: "Perfil do jogo", value: profile });
-      }
-
-      return items;
+      return items.slice(0, 8);
     }
 
     function contextCardsMarkup(match) {
@@ -1970,8 +2122,13 @@ function getPrimaryPick(match) {
         if (item.label.includes("mandante")) icon = "🏠";
         else if (item.label.includes("visitante")) icon = "✈️";
         else if (item.label.includes("Empate")) icon = "🤝";
-        else if (item.label.includes("Força")) icon = "🔥";
-        else if (item.label.includes("Perfil")) icon = "⚖️";
+        else if (item.label.includes("Over")) icon = "⚽";
+        else if (item.label.includes("Under")) icon = "🧱";
+        else if (item.label.includes("BTTS")) icon = "🔁";
+        else if (item.label.includes("Escanteios")) icon = "🚩";
+        else if (item.label.includes("Finalizações")) icon = "🎯";
+        else if (item.label.includes("No gol")) icon = "🥅";
+        else if (item.label.includes("Cartões")) icon = "🟨";
 
         return `
           <div class="stat-item">
@@ -2012,101 +2169,119 @@ function getPrimaryPick(match) {
       return flags[country] || null;
     }
 
- function getSecondaryPicks(match) {
-  const primary = String(getPrimaryPick(match) || "").trim();
-  const primaryKey = primary.toLowerCase();
-  const primaryFamily = marketFamily(primary);
+    function buildAlternativeCopy(match, market) {
+      const family = marketFamily(market);
+      const {
+        avgGoals,
+        avgCorners,
+        avgShots,
+        avgShotsOnTarget,
+        avgCards
+      } = getMetrics(match);
 
-  const primaryDirection =
-    primaryFamily === "escanteios" ? detectCornerDirection(primary) : null;
-  const primaryLine =
-    primaryFamily === "escanteios" ? extractCornerLine(primary) : null;
-
-const candidates = [
-    match.best_pick_2,
-    match.best_pick_3,
-    match.balanced_pick,
-    match.aggressive_pick,
-    match.value_pick,
-    match.safe_pick
-  ]
-    .map(item => String(item || "").trim())
-    .filter(Boolean)
-    .filter(item => {
-      const family = marketFamily(item);
-
-      if (family !== "escanteios") return true;
-
-      const direction = detectCornerDirection(item);
-      const line = extractCornerLine(item);
-
-      if (!direction || line == null) return false;
-
-      // trava linhas antigas/arriscadas
-      if (direction === "over" && line >= 9.5) return false;
-      if (direction === "under" && line <= 9.5) return false;
-
-      return true;
-    });
-
-  const seen = new Set([primaryKey]);
-  const nonRepeatedFamily = [];
-  const repeatedFamily = [];
-
-  for (const item of candidates) {
-    const key = item.toLowerCase();
-    if (seen.has(key)) continue;
-
-    const family = marketFamily(item);
-
-    // proteção extra para escanteios
-    if (family === "escanteios" && primaryFamily === "escanteios") {
-      const direction = detectCornerDirection(item);
-      const line = extractCornerLine(item);
-
-      if (!direction || line == null || !primaryDirection || primaryLine == null) {
-        continue;
+      if (family === "shots") {
+        return `Linha apoiada por cerca de ${formatDecimal(avgShots, 0)} finalizações projetadas para a partida.`;
       }
 
-      // só aceita mesma direção do principal
-      if (direction !== primaryDirection) continue;
+      if (family === "sot") {
+        return `Linha apoiada por cerca de ${formatDecimal(avgShotsOnTarget, 0)} finalizações no gol projetadas.`;
+      }
 
-      // ordem lógica:
-      // under: 12.5 -> 11.5 -> 10.5
-      // over: 6.5 -> 7.5 -> 8.5
-      if (direction === "under" && line >= primaryLine) continue;
-      if (direction === "over" && line <= primaryLine) continue;
+      if (family === "cards") {
+        return `Linha apoiada por cerca de ${formatDecimal(avgCards, 1)} cartões projetados no confronto.`;
+      }
+
+      if (family === "escanteios") {
+        return `Linha apoiada por cerca de ${formatDecimal(avgCorners, 1)} escanteios projetados para o jogo.`;
+      }
+
+      if (family === "gols" || family === "btts") {
+        return `Linha sustentada por uma projeção de ${formatDecimal(avgGoals, 1)} gols para a partida.`;
+      }
+
+      if (family === "resultado") {
+        return `Opção mais conservadora para quem quer proteção extra dentro da leitura do jogo.`;
+      }
+
+      return `Alternativa consistente para quem quiser variar a entrada sem sair da leitura central da partida.`;
     }
 
-    seen.add(key);
+    function getSecondaryPicks(match) {
+      const primary = String(getPrimaryPick(match) || "").trim();
+      const primaryKey = primary.toLowerCase();
+      const primaryFamily = marketFamily(primary);
 
-    if (family !== primaryFamily) {
-      nonRepeatedFamily.push(item);
-    } else {
-      repeatedFamily.push(item);
+      const primaryDirection = detectDirection(primary);
+      const primaryLine = extractLine(primary);
+
+      const candidates = [
+        match.best_pick_2,
+        match.best_pick_3,
+        match.balanced_pick,
+        match.aggressive_pick,
+        match.value_pick,
+        match.safe_pick
+      ]
+        .map(item => String(item || "").trim())
+        .filter(Boolean);
+
+      const seen = new Set([primaryKey]);
+      const nonRepeatedFamily = [];
+      const repeatedFamily = [];
+
+      for (const item of candidates) {
+        const key = item.toLowerCase();
+        if (seen.has(key)) continue;
+
+        const family = marketFamily(item);
+
+        if (["escanteios", "shots", "sot", "cards"].includes(family) && family === primaryFamily) {
+          const direction = detectDirection(item);
+          const line = extractLine(item);
+
+          if (!direction || line == null || !primaryDirection || primaryLine == null) {
+            continue;
+          }
+
+          if (direction !== primaryDirection) continue;
+
+          if (direction === "under" && line >= primaryLine) continue;
+          if (direction === "over" && line <= primaryLine) continue;
+        }
+
+        seen.add(key);
+
+        if (family !== primaryFamily) {
+          nonRepeatedFamily.push(item);
+        } else {
+          repeatedFamily.push(item);
+        }
+      }
+
+      return [...nonRepeatedFamily, ...repeatedFamily].slice(0, 2);
     }
-  }
-
-  return [...nonRepeatedFamily, ...repeatedFamily].slice(0, 2);
-}  
 
     function getDetectedMarkets(match) {
       const alternatives = getSecondaryPicks(match);
       const items = [];
 
       if (alternatives[0]) {
+        const family = marketFamily(alternatives[0]);
         items.push({
           market: alternatives[0],
           tier: "Boa",
-          copy: "Alternativa consistente para quem quiser variar a entrada."
+          family,
+          copy: buildAlternativeCopy(match, alternatives[0])
         });
       }
 
       if (alternatives[1]) {
+        const family = marketFamily(alternatives[1]);
         items.push({
           market: alternatives[1],
           tier: "Moderada",
-          copy: "Linha extra com risco maior, mas ainda dentro da leitura do jogo."
+          family,
+          copy: buildAlternativeCopy(match, alternatives[1])
         });
       }
 
@@ -2131,6 +2306,7 @@ const candidates = [
         market: rawPick.market || getPrimaryPick(match),
         probability,
         tier,
+        family: marketFamily(rawPick.market || getPrimaryPick(match)),
         home_logo: match.home_logo || null,
         away_logo: match.away_logo || null,
         tierWeight:
@@ -2205,6 +2381,7 @@ const candidates = [
             radar_market: item.market || getPrimaryPick(match),
             radar_probability: Number(item.probability || getMatchProbability(match)),
             radar_rank: Number(item.rank || 999),
+            radar_family: marketFamily(item.market || getPrimaryPick(match)),
             source: "daily"
           };
         })
@@ -2245,6 +2422,7 @@ const candidates = [
           radar_market: getPrimaryPick(match),
           radar_probability: getMatchProbability(match),
           radar_rank: rankedFromDaily.length + index + 1,
+          radar_family: marketFamily(getPrimaryPick(match)),
           source: "fallback"
         }));
 
@@ -2292,6 +2470,7 @@ const candidates = [
             radar_market: getPrimaryPick(match),
             radar_probability: getMatchProbability(match),
             radar_rank: merged.length + index + 1,
+            radar_family: marketFamily(getPrimaryPick(match)),
             source: "extra"
           }));
 
@@ -2330,8 +2509,8 @@ const candidates = [
       const ticket = [];
 
       const sortedPool = [...pool].sort((a, b) => {
-        const fa = marketPriority(marketFamily(a.market));
-        const fb = marketPriority(marketFamily(b.market));
+        const fa = marketPriority(a.family);
+        const fb = marketPriority(b.family);
         if (fa !== fb) return fa - fb;
 
         const ta = new Date(a.kickoff).getTime();
@@ -2347,13 +2526,12 @@ const candidates = [
       const rotatedPool = [...sortedPool.slice(offset), ...sortedPool.slice(0, offset)];
 
       for (const item of rotatedPool) {
-        const family = marketFamily(item.market);
         if (usedMatches.has(item.match_id)) continue;
-        if (usedFamilies.has(family)) continue;
+        if (usedFamilies.has(item.family)) continue;
 
         ticket.push(item);
         usedMatches.add(item.match_id);
-        usedFamilies.add(family);
+        usedFamilies.add(item.family);
 
         if (ticket.length >= TICKET_SIZE) break;
       }
@@ -2405,13 +2583,12 @@ const candidates = [
       const rotatedPool = [...pool.slice(offset), ...pool.slice(0, offset)];
 
       for (const item of rotatedPool) {
-        const family = marketFamily(item.market);
         if (usedMatches.has(item.match_id)) continue;
-        if (usedFamilies.has(family)) continue;
+        if (usedFamilies.has(item.family)) continue;
 
         picks.push(item);
         usedMatches.add(item.match_id);
-        usedFamilies.add(family);
+        usedFamilies.add(item.family);
 
         if (picks.length >= TICKET_SIZE) break;
       }
@@ -2440,6 +2617,7 @@ const candidates = [
 
           <div class="chip-row">
             ${chipMarkup(item.tier)}
+            ${marketFamilyChip(item.family)}
           </div>
 
           <div class="ticket-market">${escapeHtml(item.market)}</div>
@@ -2520,6 +2698,7 @@ const candidates = [
 
                 ${items.map(item => {
                   const tier = probabilityToTier(item.radar_probability);
+                  const family = marketFamily(item.radar_market);
 
                   return `
                     <div class="radar-item" data-match-id="${escapeHtml(item.id)}">
@@ -2539,6 +2718,7 @@ const candidates = [
 
                       <div class="chip-row">
                         ${chipMarkup(tier)}
+                        ${marketFamilyChip(family)}
                       </div>
 
                       <div class="radar-market">${escapeHtml(item.radar_market)}</div>
@@ -2559,432 +2739,215 @@ const candidates = [
       });
     }
 
-    function buildCompetitions() {
-      const map = new Map();
-      const visibleMatches = state.matches.filter(match =>
+function openAnalysis(matchId) {
+      const match = getMatchById(matchId);
+      if (!match) return;
+
+      const modal = document.getElementById("analysisModal");
+      const body = document.getElementById("analysisBody");
+
+      if (!modal || !body) return;
+
+      const primary = getPrimaryPick(match);
+      const probability = getMatchProbability(match);
+      const tier = probabilityToTier(probability);
+      const alternatives = getDetectedMarkets(match);
+
+      body.innerHTML = `
+        <div class="analysis-header">
+          <div class="analysis-teams">
+            ${escapeHtml(match.home_team)} x ${escapeHtml(match.away_team)}
+          </div>
+          <div class="analysis-meta">
+            ${escapeHtml(getLeagueDisplay(match.league))} • ${escapeHtml(formatKickoff(match.kickoff))}
+          </div>
+        </div>
+
+        <div class="analysis-main-pick">
+          <div class="chip-row">
+            ${chipMarkup(tier)}
+            ${marketFamilyChip(marketFamily(primary))}
+          </div>
+          <div class="analysis-market">${escapeHtml(primary)}</div>
+        </div>
+
+        <div class="analysis-section">
+          <div class="analysis-section-title">📊 Números do jogo</div>
+          <div class="stats-grid">
+            ${statCardsMarkup(match)}
+          </div>
+        </div>
+
+        <div class="analysis-section">
+          <div class="analysis-section-title">🧠 Leitura do Scoutly</div>
+          <div class="analysis-text">
+            ${escapeHtml(getInsight(match))}
+          </div>
+        </div>
+
+        <div class="analysis-section">
+          <div class="analysis-section-title">📌 Contexto</div>
+          <div class="stats-grid">
+            ${contextCardsMarkup(match)}
+          </div>
+        </div>
+
+        ${
+          alternatives.length
+            ? `
+        <div class="analysis-section">
+          <div class="analysis-section-title">🔁 Outras oportunidades</div>
+          <div class="alternatives">
+            ${alternatives.map(item => `
+              <div class="alternative-item">
+                <div class="chip-row">
+                  ${chipMarkup(item.tier)}
+                  ${marketFamilyChip(item.family)}
+                </div>
+                <div class="alternative-market">${escapeHtml(item.market)}</div>
+                <div class="alternative-copy">${escapeHtml(item.copy)}</div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+        `
+            : ""
+        }
+      `;
+
+      modal.classList.add("open");
+    }
+
+    function closeAnalysis() {
+      const modal = document.getElementById("analysisModal");
+      if (modal) modal.classList.remove("open");
+    }
+
+    function renderCompetitions() {
+      const container = document.getElementById("competitionsContainer");
+      if (!container) return;
+
+      const matches = state.matches.filter(match =>
         isCompetitionVisible(match.kickoff) &&
         !shouldHideLeague(match.league)
       );
 
-      for (const match of visibleMatches) {
-        const league = match.league || "";
-        const country = match.country || null;
+      if (!matches.length) {
+        container.innerHTML = `<div class="empty-state">Nenhum jogo disponível nos próximos dias.</div>`;
+        return;
+      }
 
-        if (!map.has(league)) {
-          map.set(league, {
-            league,
-            country,
-            count: 0,
-            matches: [],
-            kickoff: match.kickoff
+      const leagues = new Map();
+
+      matches.forEach(match => {
+        const key = `${match.country || "World"}::${match.league || "Outros"}`;
+
+        if (!leagues.has(key)) {
+          leagues.set(key, {
+            league: match.league,
+            country: match.country,
+            matches: []
           });
         }
 
-        const item = map.get(league);
+        leagues.get(key).matches.push(match);
+      });
 
-        if (!item.country && country) item.country = country;
-        if (!item.kickoff || new Date(match.kickoff) < new Date(item.kickoff)) {
-          item.kickoff = match.kickoff;
+      container.innerHTML = Array.from(leagues.values()).map(group => `
+        <div class="competition-group">
+          <div class="competition-header">
+            <span>${escapeHtml(getLeagueBadge(group.league))}</span>
+            <span>${escapeHtml(getLeagueDisplay(group.league))}</span>
+          </div>
+
+          <div class="competition-list">
+            ${group.matches
+              .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff))
+              .map(match => {
+                const primary = getPrimaryPick(match);
+                const probability = getMatchProbability(match);
+                const tier = probabilityToTier(probability);
+                const family = marketFamily(primary);
+
+                return `
+                  <div class="competition-item" data-match-id="${escapeHtml(match.id)}">
+                    <div class="teams-row compact">
+                      ${teamBadge(match, "home")}
+                      <div class="team-names">${escapeHtml(match.home_team)} x ${escapeHtml(match.away_team)}</div>
+                      ${teamBadge(match, "away")}
+                    </div>
+
+                    <div class="chip-row">
+                      ${chipMarkup(tier)}
+                      ${marketFamilyChip(family)}
+                    </div>
+
+                    <div class="competition-market">${escapeHtml(primary)}</div>
+
+                    <div class="competition-kickoff">
+                      ${escapeHtml(formatKickoff(match.kickoff))}
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+          </div>
+        </div>
+      `).join("");
+
+      container.querySelectorAll(".competition-item").forEach(el => {
+        el.addEventListener("click", () => openAnalysis(el.dataset.matchId));
+      });
+    }
+
+    function bindEvents() {
+      const refreshBtn = document.getElementById("refreshBtn");
+      const regenerateBtn = document.getElementById("regenerateTicket");
+
+      if (refreshBtn) {
+        refreshBtn.addEventListener("click", () => fetchAll());
+      }
+
+      if (regenerateBtn) {
+        regenerateBtn.addEventListener("click", () => generateTicket(true));
+      }
+
+      document.addEventListener("click", (e) => {
+        if (e.target.classList.contains("modal-overlay")) {
+          closeAnalysis();
         }
-
-        item.count += 1;
-        item.matches.push(match);
-      }
-
-      state.competitions = Array.from(map.values()).sort((a, b) => {
-        const sortDiff = getLeagueSort(a.league) - getLeagueSort(b.league);
-        if (sortDiff !== 0) return sortDiff;
-        return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
       });
     }
 
-    function renderCompetitions() {
-      buildCompetitions();
-      const grid = document.getElementById("competitionsGrid");
-      if (!grid) return;
-
-      if (!state.competitions.length) {
-        grid.innerHTML = `<div class="empty-state">Nenhuma competição encontrada para os próximos jogos.</div>`;
-        return;
-      }
-
-      grid.innerHTML = state.competitions.map(comp => {
-        const flagCode = getFlag(comp.country);
-        const flagMarkup = flagCode
-          ? `<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="28" alt="${escapeHtml(comp.country || "flag")}" />`
-          : `<span>${escapeHtml(getLeagueBadge(comp.league))}</span>`;
-
-        return `
-          <div class="competition-card" data-league="${encodeURIComponent(comp.league)}" role="button" tabindex="0">
-            <div class="competition-top">
-              <div class="competition-flag">${flagMarkup}</div>
-              <div class="competition-count">${comp.count} jogo(s)</div>
-            </div>
-
-            <div class="competition-name">${escapeHtml(getLeagueDisplay(comp.league))}</div>
-            <div class="competition-bottom">Toque para ver os jogos desta competição.</div>
-          </div>
-        `;
-      }).join("");
-
-      grid.onclick = e => {
-        const card = e.target.closest(".competition-card");
-        if (!card) return;
-
-        const league = decodeURIComponent(card.dataset.league || "");
-        if (!league) return;
-        openCompetition(league);
-      };
-
-      grid.onkeydown = e => {
-        if (e.key !== "Enter" && e.key !== " ") return;
-        const card = e.target.closest(".competition-card");
-        if (!card) return;
-
-        e.preventDefault();
-        const league = decodeURIComponent(card.dataset.league || "");
-        if (!league) return;
-        openCompetition(league);
-      };
-    }
-
-function openCompetition(league) {
-      state.selectedLeague = league;
-
-      const competition = state.competitions.find(c => c.league === league);
-      const matches = (competition?.matches || [])
-        .filter(match => isCompetitionVisible(match.kickoff) && !shouldHideLeague(match.league))
-        .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
-
-      document.getElementById("competitionsWrap")?.classList.add("hidden");
-      document.getElementById("gamesWrap")?.classList.remove("hidden");
-      document.getElementById("backToCompetitionsBtn")?.classList.remove("hidden");
-
-      const selectedTitle = document.getElementById("selectedCompetitionTitle");
-      const selectedCopy = document.getElementById("selectedCompetitionCopy");
-      const gamesGrid = document.getElementById("gamesGrid");
-
-      if (selectedTitle) selectedTitle.textContent = getLeagueDisplay(league);
-      if (selectedCopy) {
-        selectedCopy.textContent = `${matches.length} jogo(s) entre hoje e os próximos 7 dias nesta competição.`;
-      }
-
-      if (!gamesGrid) return;
-
-      if (!matches.length) {
-        gamesGrid.innerHTML = `<div class="empty-state">Nenhum jogo encontrado.</div>`;
-        return;
-      }
-
-      gamesGrid.innerHTML = matches.map(match => {
-        const homeTeam = normalizeTeamName(match.home_team);
-        const awayTeam = normalizeTeamName(match.away_team);
-
-        return `
-          <div class="game-card">
-            <div class="game-main">
-              <div class="teams-row compact">
-                ${teamBadge(match, "home")}
-                <div class="game-match">${escapeHtml(homeTeam)} x ${escapeHtml(awayTeam)}</div>
-                ${teamBadge(match, "away")}
-              </div>
-
-              <div class="game-meta">
-                <span>${escapeHtml(getLeagueBadge(match.league))} ${escapeHtml(getLeagueDisplay(match.league))}</span>
-                <span>${escapeHtml(formatKickoff(match.kickoff))}</span>
-              </div>
-
-              <div class="ticket-helper" style="margin-top:8px;">
-                Mercado principal: ${escapeHtml(getPrimaryPick(match))}
-              </div>
-            </div>
-
-            <div>
-              <button class="primary-button" data-analyze-id="${escapeHtml(match.id)}">
-                Ver análise →
-              </button>
-            </div>
-          </div>
-        `;
-      }).join("");
-
-      gamesGrid.onclick = e => {
-        const btn = e.target.closest("[data-analyze-id]");
-        if (!btn) return;
-        openAnalysis(btn.dataset.analyzeId);
-      };
-    }
-
-    function backToCompetitions() {
-      state.selectedLeague = null;
-      document.getElementById("competitionsWrap")?.classList.remove("hidden");
-      document.getElementById("gamesWrap")?.classList.add("hidden");
-      document.getElementById("backToCompetitionsBtn")?.classList.add("hidden");
-    }
-
-    function openAnalysis(matchId) {
-      const match = getMatchById(matchId);
-      if (!match) return;
-
-      const primaryPick = getPrimaryPick(match);
-      const primaryTier = getMatchTier(match);
-      const detectedMarkets = getDetectedMarkets(match);
-      const homeTeam = normalizeTeamName(match.home_team);
-      const awayTeam = normalizeTeamName(match.away_team);
-
-      const analysisTitle = document.getElementById("analysisTitle");
-      const analysisSubtitle = document.getElementById("analysisSubtitle");
-      const analysisMatchSmall = document.getElementById("analysisMatchSmall");
-      const analysisTipChip = document.getElementById("analysisTipChip");
-      const analysisBestPick = document.getElementById("analysisBestPick");
-      const analysisInsight = document.getElementById("analysisInsight");
-      const analysisStats = document.getElementById("analysisStats");
-      const marketsList = document.getElementById("marketsList");
-      const overlay = document.getElementById("analysisOverlay");
-
-      if (analysisTitle) {
-        analysisTitle.textContent = `${homeTeam} x ${awayTeam}`;
-      }
-
-      if (analysisSubtitle) {
-        analysisSubtitle.textContent = `${getLeagueBadge(match.league)} ${getLeagueDisplay(match.league)} • ${formatKickoff(match.kickoff)}`;
-      }
-
-      if (analysisMatchSmall) {
-        analysisMatchSmall.innerHTML = `
-          <div class="teams-row compact" style="margin-bottom:0;">
-            ${teamBadge(match, "home")}
-            <div class="team-names">${escapeHtml(homeTeam)} x ${escapeHtml(awayTeam)}</div>
-            ${teamBadge(match, "away")}
-          </div>
-        `;
-      }
-
-      if (analysisTipChip) {
-        analysisTipChip.innerHTML = `
-          ${chipMarkup(primaryTier)}
-        `;
-      }
-
-      if (analysisBestPick) {
-        analysisBestPick.innerHTML = `
-          <div style="font-weight:600;">${escapeHtml(primaryPick)}</div>
-          <div style="font-size:12px; opacity:0.85; margin-top:4px; line-height:1.45;">
-            Entrada principal com a melhor combinação entre probabilidade, consistência e leitura estatística do jogo.
-          </div>
-        `;
-      }
-
-      if (analysisInsight) {
-        analysisInsight.textContent = getInsight(match);
-      }
-
-      if (analysisStats) {
-        analysisStats.innerHTML = statCardsMarkup(match);
-      }
-
-      if (marketsList) {
-        marketsList.innerHTML = detectedMarkets.length
-          ? detectedMarkets.map(item => `
-              <div class="market-line">
-                <div class="chip-row" style="margin-top:0;">
-                  ${chipMarkup(item.tier)}
-                </div>
-                <div class="market-line-name">${escapeHtml(item.market)}</div>
-                <div class="market-line-copy">${escapeHtml(item.copy)}</div>
-              </div>
-            `).join("")
-          : `<div class="empty-state">Nenhuma oportunidade alternativa encontrada para este jogo.</div>`;
-      }
-
-      state.lastOpenedMatchId = match.id;
-
-      if (overlay) overlay.classList.add("open");
-    }
-
-    function closeAnalysis() {
-      document.getElementById("analysisOverlay")?.classList.remove("open");
-    }
-
-    function renderLoadError(errorMap = {}) {
-      const parts = Object.entries(errorMap).map(([k, v]) => `${k}: ${v}`);
-      const message = parts.join("\n") || "Erro desconhecido";
-
-      setStatus("Erro ao carregar dados do Scoutly.", false);
-
-      const radarList = document.getElementById("radarList");
-      const competitionsGrid = document.getElementById("competitionsGrid");
-      const ticketContainer = document.getElementById("ticketContainer");
-
-      if (radarList) radarList.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
-      if (competitionsGrid) competitionsGrid.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
-      if (ticketContainer) ticketContainer.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
-    }
-
-    async function loadDailyPicks() {
-      const { data, error } = await supabaseClient
-        .from("daily_picks")
-        .select("*")
-        .order("rank", { ascending: true });
-
-      if (error) throw error;
-      state.dailyPicks = data || [];
-    }
-
-    async function loadMatches() {
-      const { data: matchesData, error: matchesError } = await supabaseClient
-        .from("matches")
-        .select("*")
-        .order("priority", { ascending: false })
-        .order("kickoff", { ascending: true });
-
-      if (matchesError) throw matchesError;
-
-      const { data: analysisData, error: analysisError } = await supabaseClient
-        .from("match_analysis")
-        .select("*");
-
-      if (analysisError) throw analysisError;
-
-      const analysisMap = new Map(
-        (analysisData || []).map(item => [String(item.match_id), item])
-      );
-
-      state.matches = (matchesData || []).map(match => {
-        const analysis = analysisMap.get(String(match.id)) || {};
-
-        return {
-          ...match,
-          ...analysis,
-          id: match.id,
-          home_team: normalizeTeamName(match.home_team),
-          away_team: normalizeTeamName(match.away_team),
-          league: match.league,
-          country: match.country,
-          kickoff: match.kickoff,
-          home_logo: match.home_logo,
-          away_logo: match.away_logo,
-          probabilities: match.probabilities,
-          metrics: match.metrics,
-          markets: match.markets
-        };
-      }).filter(match => {
-        if (!match.home_team || !match.away_team) return false;
-        if (!match.league) return false;
-        if (shouldHideLeague(match.league)) return false;
-        return true;
-      });
-
-      console.log("MATCHES CARREGADOS:", state.matches.length);
-      console.log("DAILY PICKS CARREGADOS:", state.dailyPicks.length);
-      window.debugMatches = state.matches;
-      window.debugDailyPicks = state.dailyPicks;
-    }
-
-    function refreshUIOnly() {
-      renderRadar();
-      renderCompetitions();
-      generateTicket(false);
-
-      if (state.selectedLeague) {
-        openCompetition(state.selectedLeague);
-      }
-
-      const openOverlay = document.getElementById("analysisOverlay");
-      if (openOverlay?.classList.contains("open") && state.lastOpenedMatchId) {
-        openAnalysis(state.lastOpenedMatchId);
-      }
-    }
-
-    async function refreshAllData(silent = false) {
-      const errors = {};
-
-      if (!silent) setStatus("Atualizando Scoutly...", true);
-
+    async function fetchAll() {
       try {
-        await loadDailyPicks();
-      } catch (error) {
-        console.error("daily_picks refresh error:", error);
-        errors.daily_picks = error.message || JSON.stringify(error);
-      }
+        const [matchesRes, picksRes] = await Promise.all([
+          supabase.from("matches").select("*"),
+          supabase.from("daily_picks").select("*")
+        ]);
 
-      try {
-        await loadMatches();
-      } catch (error) {
-        console.error("matches refresh error:", error);
-        errors.matches = error.message || JSON.stringify(error);
-      }
+        state.matches = (matchesRes.data || []).map(m => ({
+          ...m,
+          id: m.id || m.fixture_id,
+          kickoff: m.date || m.kickoff
+        }));
 
-      if (Object.keys(errors).length) {
-        renderLoadError(errors);
-        return false;
-      }
+        state.dailyPicks = picksRes.data || [];
 
-      refreshUIOnly();
-      setStatus(`Conexão OK · Matches carregados: ${state.matches.length}`, true);
-      return true;
-    }
+        renderRadar();
+        generateTicket();
+        renderCompetitions();
 
-    function startAutoRefresh() {
-      if (state.refreshTimer) clearInterval(state.refreshTimer);
-      if (state.dataRefreshTimer) clearInterval(state.dataRefreshTimer);
-
-      state.refreshTimer = setInterval(() => {
-        refreshUIOnly();
-      }, AUTO_UI_REFRESH_MS);
-
-      state.dataRefreshTimer = setInterval(() => {
-        refreshAllData(true);
-      }, AUTO_DATA_REFRESH_MS);
-    }
-
-    function bindStaticEvents() {
-      const generateBtn = document.getElementById("generateTicketBtn");
-      if (generateBtn && !generateBtn.dataset.bound) {
-        generateBtn.addEventListener("click", () => {
-          generateTicket(true);
-        });
-        generateBtn.dataset.bound = "1";
-      }
-
-      const backBtn = document.getElementById("backToCompetitionsBtn");
-      if (backBtn && !backBtn.dataset.bound) {
-        backBtn.addEventListener("click", backToCompetitions);
-        backBtn.dataset.bound = "1";
-      }
-
-      const closeBtn = document.getElementById("closeAnalysisBtn");
-      if (closeBtn && !closeBtn.dataset.bound) {
-        closeBtn.addEventListener("click", closeAnalysis);
-        closeBtn.dataset.bound = "1";
-      }
-
-      const overlay = document.getElementById("analysisOverlay");
-      if (overlay && !overlay.dataset.bound) {
-        overlay.addEventListener("click", e => {
-          if (e.target.id === "analysisOverlay") closeAnalysis();
-        });
-        overlay.dataset.bound = "1";
-      }
-
-      if (!document.body.dataset.scoutlyEscBound) {
-        document.addEventListener("keydown", e => {
-          if (e.key === "Escape") closeAnalysis();
-        });
-        document.body.dataset.scoutlyEscBound = "1";
+      } catch (err) {
+        console.error("Erro ao buscar dados:", err.message);
       }
     }
 
-    async function initialize() {
-      bindStaticEvents();
-
-      const ok = await refreshAllData(false);
-      if (!ok) return;
-
-      startAutoRefresh();
+    function init() {
+      bindEvents();
+      fetchAll();
     }
 
-    initialize();
+    document.addEventListener("DOMContentLoaded", init);
   </script>
 </body>
 </html>
