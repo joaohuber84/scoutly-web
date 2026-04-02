@@ -2057,6 +2057,42 @@ function getTodayDate() {
   return `${year}-${month}-${day}`
 }
 
+function isValidFixture(fixture) {
+  if (!fixture) return false
+
+  const fixtureId = fixture?.fixture?.id
+  const fixtureDate = fixture?.fixture?.date
+  const statusShort = String(fixture?.fixture?.status?.short || "").toUpperCase()
+
+  const homeId = fixture?.teams?.home?.id
+  const awayId = fixture?.teams?.away?.id
+  const homeName = String(fixture?.teams?.home?.name || "").trim()
+  const awayName = String(fixture?.teams?.away?.name || "").trim()
+
+  const leagueName = String(fixture?.league?.name || "").trim()
+
+  if (!fixtureId) return false
+  if (!fixtureDate) return false
+  if (!homeId || !awayId) return false
+  if (!homeName || !awayName) return false
+  if (!leagueName) return false
+
+  if (homeId === awayId) return false
+  if (homeName.toLowerCase() === awayName.toLowerCase()) return false
+
+  if (hasForbiddenMarker(homeName)) return false
+  if (hasForbiddenMarker(awayName)) return false
+  if (hasForbiddenMarker(leagueName)) return false
+  if (normalizeText(leagueName).includes("open cup")) return false
+
+  // ignora jogos já encerrados/cancelados
+  if (["FT", "AET", "PEN", "CANC", "PST", "ABD", "AWD", "WO"].includes(statusShort)) {
+    return false
+  }
+
+  return true
+}
+
 async function runSync() {
   console.log("🚀 Scoutly Sync iniciado...")
 
