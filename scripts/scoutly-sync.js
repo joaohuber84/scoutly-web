@@ -890,6 +890,12 @@ async function resolveTargetCompetitions() {
   return uniqBy(resolved, (x) => `${x.leagueId}:${x.season}`)
 }
 
+function isCompletedFixture(fixture) {
+  const short = String(fixture?.fixture?.status?.short || "").toUpperCase()
+
+  return ["FT", "AET", "PEN"].includes(short)
+}
+
 async function fetchRecentFinishedFixtures(teamId, limit = MAX_RECENT_FIXTURES_FETCH) {
   const cacheKey = `${teamId}:${limit}`
 
