@@ -2921,8 +2921,8 @@ function openAnalysis(matchId) {
     async function fetchAll() {
       try {
         const [matchesRes, picksRes] = await Promise.all([
-          supabase.from("matches").select("*"),
-          supabase.from("daily_picks").select("*")
+          supabaseClient.from("matches").select("*"),
+          supabaseClient.from("daily_picks").select("*")
         ]);
 
         state.matches = (matchesRes.data || []).map(m => ({
