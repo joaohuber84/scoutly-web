@@ -1778,7 +1778,7 @@
       );
     }
 
-function isStillRelevantForRadar(value) {
+    function isStillRelevantForRadar(value) {
       const d = parseDateSafe(value);
       if (!d) return false;
 
@@ -1905,11 +1905,11 @@ function isStillRelevantForRadar(value) {
         toNumber(markets.over15, null);
 
       const over25Prob =
-        toNumber(match.over25_prob, null) ??
+        toNumber(match.prob_over25, null) ??
         toNumber(markets.over25, null);
 
       const bttsProb =
-        toNumber(match.btts_prob, null) ??
+        toNumber(match.prob_btts, null) ??
         toNumber(markets.btts, null);
 
       const under25Prob =
@@ -2244,7 +2244,6 @@ function isStillRelevantForRadar(value) {
           }
 
           if (direction !== primaryDirection) continue;
-
           if (direction === "under" && line >= primaryLine) continue;
           if (direction === "over" && line <= primaryLine) continue;
         }
@@ -2303,10 +2302,10 @@ function isStillRelevantForRadar(value) {
         league: match.league,
         country: match.country,
         kickoff: match.kickoff,
-        market: rawPick.market || getPrimaryPick(match),
+        market: getPrimaryPick(match) || rawPick.market,
         probability,
         tier,
-        family: marketFamily(rawPick.market || getPrimaryPick(match)),
+        family: marketFamily(getPrimaryPick(match) || rawPick.market),
         home_logo: match.home_logo || null,
         away_logo: match.away_logo || null,
         tierWeight:
@@ -2323,11 +2322,11 @@ function isStillRelevantForRadar(value) {
         .filter(Boolean)
         .sort((a, b) => {
           const aRank = state.dailyPicks.find(
-            x => String(x.match_id) === String(a.match_id) && x.market === a.market
+            x => String(x.match_id) === String(a.match_id)
           )?.rank ?? 999;
 
           const bRank = state.dailyPicks.find(
-            x => String(x.match_id) === String(b.match_id) && x.market === b.market
+            x => String(x.match_id) === String(b.match_id)
           )?.rank ?? 999;
 
           if (aRank !== bRank) return aRank - bRank;
@@ -2378,10 +2377,10 @@ function isStillRelevantForRadar(value) {
             ...match,
             home_team: normalizeTeamName(match.home_team),
             away_team: normalizeTeamName(match.away_team),
-            radar_market: item.market || getPrimaryPick(match),
+            radar_market: getPrimaryPick(match) || item.market,
             radar_probability: Number(item.probability || getMatchProbability(match)),
             radar_rank: Number(item.rank || 999),
-            radar_family: marketFamily(item.market || getPrimaryPick(match)),
+            radar_family: marketFamily(getPrimaryPick(match) || item.market),
             source: "daily"
           };
         })
@@ -2739,434 +2738,434 @@ function isStillRelevantForRadar(value) {
       });
     }
 
-function openAnalysis(matchId) {
-  const match = getMatchById(matchId);
-  if (!match) return;
+    function openAnalysis(matchId) {
+      const match = getMatchById(matchId);
+      if (!match) return;
 
-  const primaryPick = getPrimaryPick(match);
-  const primaryTier = getMatchTier(match);
-  const detectedMarkets = getDetectedMarkets(match);
-  const homeTeam = normalizeTeamName(match.home_team);
-  const awayTeam = normalizeTeamName(match.away_team);
+      const primaryPick = getPrimaryPick(match);
+      const primaryTier = getMatchTier(match);
+      const detectedMarkets = getDetectedMarkets(match);
+      const homeTeam = normalizeTeamName(match.home_team);
+      const awayTeam = normalizeTeamName(match.away_team);
 
-  const analysisTitle = document.getElementById("analysisTitle");
-  const analysisSubtitle = document.getElementById("analysisSubtitle");
-  const analysisMatchSmall = document.getElementById("analysisMatchSmall");
-  const analysisTipChip = document.getElementById("analysisTipChip");
-  const analysisBestPick = document.getElementById("analysisBestPick");
-  const analysisInsight = document.getElementById("analysisInsight");
-  const analysisStats = document.getElementById("analysisStats");
-  const analysisContext = document.getElementById("analysisContext");
-  const marketsList = document.getElementById("marketsList");
-  const overlay = document.getElementById("analysisOverlay");
+      const analysisTitle = document.getElementById("analysisTitle");
+      const analysisSubtitle = document.getElementById("analysisSubtitle");
+      const analysisMatchSmall = document.getElementById("analysisMatchSmall");
+      const analysisTipChip = document.getElementById("analysisTipChip");
+      const analysisBestPick = document.getElementById("analysisBestPick");
+      const analysisInsight = document.getElementById("analysisInsight");
+      const analysisStats = document.getElementById("analysisStats");
+      const analysisContext = document.getElementById("analysisContext");
+      const marketsList = document.getElementById("marketsList");
+      const overlay = document.getElementById("analysisOverlay");
 
-  if (analysisTitle) {
-    analysisTitle.textContent = `${homeTeam} x ${awayTeam}`;
-  }
+      if (analysisTitle) {
+        analysisTitle.textContent = `${homeTeam} x ${awayTeam}`;
+      }
 
-  if (analysisSubtitle) {
-    analysisSubtitle.textContent = `${getLeagueBadge(match.league)} ${getLeagueDisplay(match.league)} • ${formatKickoff(match.kickoff)}`;
-  }
+      if (analysisSubtitle) {
+        analysisSubtitle.textContent = `${getLeagueBadge(match.league)} ${getLeagueDisplay(match.league)} • ${formatKickoff(match.kickoff)}`;
+      }
 
-  if (analysisMatchSmall) {
-    analysisMatchSmall.innerHTML = `
-      <div class="teams-row compact" style="margin-bottom:0;">
-        ${teamBadge(match, "home")}
-        <div class="team-names">${escapeHtml(homeTeam)} x ${escapeHtml(awayTeam)}</div>
-        ${teamBadge(match, "away")}
-      </div>
-    `;
-  }
-
-  if (analysisTipChip) {
-    analysisTipChip.innerHTML = `
-      ${chipMarkup(primaryTier)}
-      ${marketFamilyChip(marketFamily(primaryPick))}
-    `;
-  }
-
-  if (analysisBestPick) {
-    analysisBestPick.innerHTML = `
-      <div style="font-weight:600;">${escapeHtml(primaryPick)}</div>
-      <div style="font-size:12px; opacity:0.85; margin-top:4px; line-height:1.45;">
-        Entrada principal com a melhor combinação entre probabilidade, consistência e leitura estatística do jogo.
-      </div>
-    `;
-  }
-
-  if (analysisInsight) {
-    analysisInsight.textContent = getInsight(match);
-  }
-
-  if (analysisStats) {
-    analysisStats.innerHTML = statCardsMarkup(match);
-  }
-
-  if (analysisContext) {
-    analysisContext.innerHTML = contextCardsMarkup(match);
-  }
-
-  if (marketsList) {
-    marketsList.innerHTML = detectedMarkets.length
-      ? detectedMarkets.map(item => `
-          <div class="market-line">
-            <div class="chip-row" style="margin-top:0;">
-              ${chipMarkup(item.tier)}
-              ${marketFamilyChip(item.family)}
-            </div>
-            <div class="market-line-name">${escapeHtml(item.market)}</div>
-            <div class="market-line-copy">${escapeHtml(item.copy)}</div>
+      if (analysisMatchSmall) {
+        analysisMatchSmall.innerHTML = `
+          <div class="teams-row compact" style="margin-bottom:0;">
+            ${teamBadge(match, "home")}
+            <div class="team-names">${escapeHtml(homeTeam)} x ${escapeHtml(awayTeam)}</div>
+            ${teamBadge(match, "away")}
           </div>
-        `).join("")
-      : `<div class="empty-state">Nenhuma oportunidade alternativa encontrada para este jogo.</div>`;
-  }
+        `;
+      }
 
-  state.lastOpenedMatchId = match.id;
+      if (analysisTipChip) {
+        analysisTipChip.innerHTML = `
+          ${chipMarkup(primaryTier)}
+          ${marketFamilyChip(marketFamily(primaryPick))}
+        `;
+      }
 
-  if (overlay) overlay.classList.add("open");
-}
+      if (analysisBestPick) {
+        analysisBestPick.innerHTML = `
+          <div style="font-weight:600;">${escapeHtml(primaryPick)}</div>
+          <div style="font-size:12px; opacity:0.85; margin-top:4px; line-height:1.45;">
+            Entrada principal com a melhor combinação entre probabilidade, consistência e leitura estatística do jogo.
+          </div>
+        `;
+      }
 
-function closeAnalysis() {
-  document.getElementById("analysisOverlay")?.classList.remove("open");
-}
+      if (analysisInsight) {
+        analysisInsight.textContent = getInsight(match);
+      }
 
-function buildCompetitions() {
-  const map = new Map();
-  const visibleMatches = state.matches.filter(match =>
-    isCompetitionVisible(match.kickoff) &&
-    !shouldHideLeague(match.league)
-  );
+      if (analysisStats) {
+        analysisStats.innerHTML = statCardsMarkup(match);
+      }
 
-  for (const match of visibleMatches) {
-    const league = match.league || "";
-    const country = match.country || null;
+      if (analysisContext) {
+        analysisContext.innerHTML = contextCardsMarkup(match);
+      }
 
-    if (!map.has(league)) {
-      map.set(league, {
-        league,
-        country,
-        count: 0,
-        matches: [],
-        kickoff: match.kickoff
+      if (marketsList) {
+        marketsList.innerHTML = detectedMarkets.length
+          ? detectedMarkets.map(item => `
+              <div class="market-line">
+                <div class="chip-row" style="margin-top:0;">
+                  ${chipMarkup(item.tier)}
+                  ${marketFamilyChip(item.family)}
+                </div>
+                <div class="market-line-name">${escapeHtml(item.market)}</div>
+                <div class="market-line-copy">${escapeHtml(item.copy)}</div>
+              </div>
+            `).join("")
+          : `<div class="empty-state">Nenhuma oportunidade alternativa encontrada para este jogo.</div>`;
+      }
+
+      state.lastOpenedMatchId = match.id;
+
+      if (overlay) overlay.classList.add("open");
+    }
+
+    function closeAnalysis() {
+      document.getElementById("analysisOverlay")?.classList.remove("open");
+    }
+
+    function buildCompetitions() {
+      const map = new Map();
+      const visibleMatches = state.matches.filter(match =>
+        isCompetitionVisible(match.kickoff) &&
+        !shouldHideLeague(match.league)
+      );
+
+      for (const match of visibleMatches) {
+        const league = match.league || "";
+        const country = match.country || null;
+
+        if (!map.has(league)) {
+          map.set(league, {
+            league,
+            country,
+            count: 0,
+            matches: [],
+            kickoff: match.kickoff
+          });
+        }
+
+        const item = map.get(league);
+
+        if (!item.country && country) item.country = country;
+        if (!item.kickoff || new Date(match.kickoff) < new Date(item.kickoff)) {
+          item.kickoff = match.kickoff;
+        }
+
+        item.count += 1;
+        item.matches.push(match);
+      }
+
+      state.competitions = Array.from(map.values()).sort((a, b) => {
+        const sortDiff = getLeagueSort(a.league) - getLeagueSort(b.league);
+        if (sortDiff !== 0) return sortDiff;
+        return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
       });
     }
 
-    const item = map.get(league);
+    function renderCompetitions() {
+      buildCompetitions();
+      const grid = document.getElementById("competitionsGrid");
+      if (!grid) return;
 
-    if (!item.country && country) item.country = country;
-    if (!item.kickoff || new Date(match.kickoff) < new Date(item.kickoff)) {
-      item.kickoff = match.kickoff;
+      if (!state.competitions.length) {
+        grid.innerHTML = `<div class="empty-state">Nenhuma competição encontrada para os próximos jogos.</div>`;
+        return;
+      }
+
+      grid.innerHTML = state.competitions.map(comp => {
+        const flagCode = getFlag(comp.country);
+        const flagMarkup = flagCode
+          ? `<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="28" alt="${escapeHtml(comp.country || "flag")}" />`
+          : `<span>${escapeHtml(getLeagueBadge(comp.league))}</span>`;
+
+        return `
+          <div class="competition-card" data-league="${encodeURIComponent(comp.league)}" role="button" tabindex="0">
+            <div class="competition-top">
+              <div class="competition-flag">${flagMarkup}</div>
+              <div class="competition-count">${comp.count} jogo(s)</div>
+            </div>
+
+            <div class="competition-name">${escapeHtml(getLeagueDisplay(comp.league))}</div>
+            <div class="competition-bottom">Toque para ver os jogos desta competição.</div>
+          </div>
+        `;
+      }).join("");
+
+      grid.onclick = e => {
+        const card = e.target.closest(".competition-card");
+        if (!card) return;
+
+        const league = decodeURIComponent(card.dataset.league || "");
+        if (!league) return;
+        openCompetition(league);
+      };
+
+      grid.onkeydown = e => {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        const card = e.target.closest(".competition-card");
+        if (!card) return;
+
+        e.preventDefault();
+        const league = decodeURIComponent(card.dataset.league || "");
+        if (!league) return;
+        openCompetition(league);
+      };
     }
 
-    item.count += 1;
-    item.matches.push(match);
-  }
+    function openCompetition(league) {
+      state.selectedLeague = league;
 
-  state.competitions = Array.from(map.values()).sort((a, b) => {
-    const sortDiff = getLeagueSort(a.league) - getLeagueSort(b.league);
-    if (sortDiff !== 0) return sortDiff;
-    return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
-  });
-}
+      const competition = state.competitions.find(c => c.league === league);
+      const matches = (competition?.matches || [])
+        .filter(match => isCompetitionVisible(match.kickoff) && !shouldHideLeague(match.league))
+        .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
 
-function renderCompetitions() {
-  buildCompetitions();
-  const grid = document.getElementById("competitionsGrid");
-  if (!grid) return;
+      document.getElementById("competitionsWrap")?.classList.add("hidden");
+      document.getElementById("gamesWrap")?.classList.remove("hidden");
+      document.getElementById("backToCompetitionsBtn")?.classList.remove("hidden");
 
-  if (!state.competitions.length) {
-    grid.innerHTML = `<div class="empty-state">Nenhuma competição encontrada para os próximos jogos.</div>`;
-    return;
-  }
+      const selectedTitle = document.getElementById("selectedCompetitionTitle");
+      const selectedCopy = document.getElementById("selectedCompetitionCopy");
+      const gamesGrid = document.getElementById("gamesGrid");
 
-  grid.innerHTML = state.competitions.map(comp => {
-    const flagCode = getFlag(comp.country);
-    const flagMarkup = flagCode
-      ? `<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="28" alt="${escapeHtml(comp.country || "flag")}" />`
-      : `<span>${escapeHtml(getLeagueBadge(comp.league))}</span>`;
+      if (selectedTitle) selectedTitle.textContent = getLeagueDisplay(league);
+      if (selectedCopy) {
+        selectedCopy.textContent = `${matches.length} jogo(s) entre hoje e os próximos 7 dias nesta competição.`;
+      }
 
-    return `
-      <div class="competition-card" data-league="${encodeURIComponent(comp.league)}" role="button" tabindex="0">
-        <div class="competition-top">
-          <div class="competition-flag">${flagMarkup}</div>
-          <div class="competition-count">${comp.count} jogo(s)</div>
-        </div>
+      if (!gamesGrid) return;
 
-        <div class="competition-name">${escapeHtml(getLeagueDisplay(comp.league))}</div>
-        <div class="competition-bottom">Toque para ver os jogos desta competição.</div>
-      </div>
-    `;
-  }).join("");
+      if (!matches.length) {
+        gamesGrid.innerHTML = `<div class="empty-state">Nenhum jogo encontrado.</div>`;
+        return;
+      }
 
-  grid.onclick = e => {
-    const card = e.target.closest(".competition-card");
-    if (!card) return;
+      gamesGrid.innerHTML = matches.map(match => {
+        const homeTeam = normalizeTeamName(match.home_team);
+        const awayTeam = normalizeTeamName(match.away_team);
 
-    const league = decodeURIComponent(card.dataset.league || "");
-    if (!league) return;
-    openCompetition(league);
-  };
+        return `
+          <div class="game-card">
+            <div class="game-main">
+              <div class="teams-row compact">
+                ${teamBadge(match, "home")}
+                <div class="game-match">${escapeHtml(homeTeam)} x ${escapeHtml(awayTeam)}</div>
+                ${teamBadge(match, "away")}
+              </div>
 
-  grid.onkeydown = e => {
-    if (e.key !== "Enter" && e.key !== " ") return;
-    const card = e.target.closest(".competition-card");
-    if (!card) return;
+              <div class="game-meta">
+                <span>${escapeHtml(getLeagueBadge(match.league))} ${escapeHtml(getLeagueDisplay(match.league))}</span>
+                <span>${escapeHtml(formatKickoff(match.kickoff))}</span>
+              </div>
 
-    e.preventDefault();
-    const league = decodeURIComponent(card.dataset.league || "");
-    if (!league) return;
-    openCompetition(league);
-  };
-}
+              <div class="ticket-helper" style="margin-top:8px;">
+                Mercado principal: ${escapeHtml(getPrimaryPick(match))}
+              </div>
+            </div>
 
-function openCompetition(league) {
-  state.selectedLeague = league;
-
-  const competition = state.competitions.find(c => c.league === league);
-  const matches = (competition?.matches || [])
-    .filter(match => isCompetitionVisible(match.kickoff) && !shouldHideLeague(match.league))
-    .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
-
-  document.getElementById("competitionsWrap")?.classList.add("hidden");
-  document.getElementById("gamesWrap")?.classList.remove("hidden");
-  document.getElementById("backToCompetitionsBtn")?.classList.remove("hidden");
-
-  const selectedTitle = document.getElementById("selectedCompetitionTitle");
-  const selectedCopy = document.getElementById("selectedCompetitionCopy");
-  const gamesGrid = document.getElementById("gamesGrid");
-
-  if (selectedTitle) selectedTitle.textContent = getLeagueDisplay(league);
-  if (selectedCopy) {
-    selectedCopy.textContent = `${matches.length} jogo(s) entre hoje e os próximos 7 dias nesta competição.`;
-  }
-
-  if (!gamesGrid) return;
-
-  if (!matches.length) {
-    gamesGrid.innerHTML = `<div class="empty-state">Nenhum jogo encontrado.</div>`;
-    return;
-  }
-
-  gamesGrid.innerHTML = matches.map(match => {
-    const homeTeam = normalizeTeamName(match.home_team);
-    const awayTeam = normalizeTeamName(match.away_team);
-
-    return `
-      <div class="game-card">
-        <div class="game-main">
-          <div class="teams-row compact">
-            ${teamBadge(match, "home")}
-            <div class="game-match">${escapeHtml(homeTeam)} x ${escapeHtml(awayTeam)}</div>
-            ${teamBadge(match, "away")}
+            <div>
+              <button class="primary-button" data-analyze-id="${escapeHtml(match.id)}">
+                Ver análise →
+              </button>
+            </div>
           </div>
+        `;
+      }).join("");
 
-          <div class="game-meta">
-            <span>${escapeHtml(getLeagueBadge(match.league))} ${escapeHtml(getLeagueDisplay(match.league))}</span>
-            <span>${escapeHtml(formatKickoff(match.kickoff))}</span>
-          </div>
+      gamesGrid.onclick = e => {
+        const btn = e.target.closest("[data-analyze-id]");
+        if (!btn) return;
+        openAnalysis(btn.dataset.analyzeId);
+      };
+    }
 
-          <div class="ticket-helper" style="margin-top:8px;">
-            Mercado principal: ${escapeHtml(getPrimaryPick(match))}
-          </div>
-        </div>
+    function backToCompetitions() {
+      state.selectedLeague = null;
+      document.getElementById("competitionsWrap")?.classList.remove("hidden");
+      document.getElementById("gamesWrap")?.classList.add("hidden");
+      document.getElementById("backToCompetitionsBtn")?.classList.add("hidden");
+    }
 
-        <div>
-          <button class="primary-button" data-analyze-id="${escapeHtml(match.id)}">
-            Ver análise →
-          </button>
-        </div>
-      </div>
-    `;
-  }).join("");
+    function renderLoadError(errorMap = {}) {
+      const parts = Object.entries(errorMap).map(([k, v]) => `${k}: ${v}`);
+      const message = parts.join("\n") || "Erro desconhecido";
 
-  gamesGrid.onclick = e => {
-    const btn = e.target.closest("[data-analyze-id]");
-    if (!btn) return;
-    openAnalysis(btn.dataset.analyzeId);
-  };
-}
+      setStatus("Erro ao carregar dados do Scoutly.", false);
 
-function backToCompetitions() {
-  state.selectedLeague = null;
-  document.getElementById("competitionsWrap")?.classList.remove("hidden");
-  document.getElementById("gamesWrap")?.classList.add("hidden");
-  document.getElementById("backToCompetitionsBtn")?.classList.add("hidden");
-}
+      const radarList = document.getElementById("radarList");
+      const competitionsGrid = document.getElementById("competitionsGrid");
+      const ticketContainer = document.getElementById("ticketContainer");
 
-function renderLoadError(errorMap = {}) {
-  const parts = Object.entries(errorMap).map(([k, v]) => `${k}: ${v}`);
-  const message = parts.join("\n") || "Erro desconhecido";
+      if (radarList) radarList.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
+      if (competitionsGrid) competitionsGrid.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
+      if (ticketContainer) ticketContainer.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
+    }
 
-  setStatus("Erro ao carregar dados do Scoutly.", false);
+    async function loadDailyPicks() {
+      const { data, error } = await supabaseClient
+        .from("daily_picks")
+        .select("*")
+        .order("rank", { ascending: true });
 
-  const radarList = document.getElementById("radarList");
-  const competitionsGrid = document.getElementById("competitionsGrid");
-  const ticketContainer = document.getElementById("ticketContainer");
+      if (error) throw error;
+      state.dailyPicks = data || [];
+    }
 
-  if (radarList) radarList.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
-  if (competitionsGrid) competitionsGrid.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
-  if (ticketContainer) ticketContainer.innerHTML = `<div class="error-state">${escapeHtml(message)}</div>`;
-}
+    async function loadMatches() {
+      const { data: matchesData, error: matchesError } = await supabaseClient
+        .from("matches")
+        .select("*")
+        .order("priority", { ascending: false })
+        .order("kickoff", { ascending: true });
 
-async function loadDailyPicks() {
-  const { data, error } = await supabaseClient
-    .from("daily_picks")
-    .select("*")
-    .order("rank", { ascending: true });
+      if (matchesError) throw matchesError;
 
-  if (error) throw error;
-  state.dailyPicks = data || [];
-}
+      const { data: analysisData, error: analysisError } = await supabaseClient
+        .from("match_analysis")
+        .select("*");
 
-async function loadMatches() {
-  const { data: matchesData, error: matchesError } = await supabaseClient
-    .from("matches")
-    .select("*")
-    .order("priority", { ascending: false })
-    .order("kickoff", { ascending: true });
+      if (analysisError) throw analysisError;
 
-  if (matchesError) throw matchesError;
+      const analysisMap = new Map(
+        (analysisData || []).map(item => [String(item.match_id), item])
+      );
 
-  const { data: analysisData, error: analysisError } = await supabaseClient
-    .from("match_analysis")
-    .select("*");
+      state.matches = (matchesData || []).map(match => {
+        const analysis = analysisMap.get(String(match.id)) || {};
 
-  if (analysisError) throw analysisError;
+        return {
+          ...match,
+          ...analysis,
+          id: match.id,
+          home_team: normalizeTeamName(match.home_team),
+          away_team: normalizeTeamName(match.away_team),
+          league: match.league,
+          country: match.country,
+          kickoff: match.kickoff || match.date,
+          home_logo: match.home_logo,
+          away_logo: match.away_logo,
+          probabilities: match.probabilities,
+          metrics: match.metrics,
+          markets: match.markets
+        };
+      }).filter(match => {
+        if (!match.home_team || !match.away_team) return false;
+        if (!match.league) return false;
+        if (shouldHideLeague(match.league)) return false;
+        return true;
+      });
+    }
 
-  const analysisMap = new Map(
-    (analysisData || []).map(item => [String(item.match_id), item])
-  );
+    function refreshUIOnly() {
+      renderRadar();
+      renderCompetitions();
+      generateTicket(false);
 
-  state.matches = (matchesData || []).map(match => {
-    const analysis = analysisMap.get(String(match.id)) || {};
+      if (state.selectedLeague) {
+        openCompetition(state.selectedLeague);
+      }
 
-    return {
-      ...match,
-      ...analysis,
-      id: match.id,
-      home_team: normalizeTeamName(match.home_team),
-      away_team: normalizeTeamName(match.away_team),
-      league: match.league,
-      country: match.country,
-      kickoff: match.kickoff || match.date,
-      home_logo: match.home_logo,
-      away_logo: match.away_logo,
-      probabilities: match.probabilities,
-      metrics: match.metrics,
-      markets: match.markets
-    };
-  }).filter(match => {
-    if (!match.home_team || !match.away_team) return false;
-    if (!match.league) return false;
-    if (shouldHideLeague(match.league)) return false;
-    return true;
-  });
-}
+      const openOverlay = document.getElementById("analysisOverlay");
+      if (openOverlay?.classList.contains("open") && state.lastOpenedMatchId) {
+        openAnalysis(state.lastOpenedMatchId);
+      }
+    }
 
-function refreshUIOnly() {
-  renderRadar();
-  renderCompetitions();
-  generateTicket(false);
+    async function refreshAllData(silent = false) {
+      const errors = {};
 
-  if (state.selectedLeague) {
-    openCompetition(state.selectedLeague);
-  }
+      if (!silent) setStatus("Atualizando Scoutly...", true);
 
-  const openOverlay = document.getElementById("analysisOverlay");
-  if (openOverlay?.classList.contains("open") && state.lastOpenedMatchId) {
-    openAnalysis(state.lastOpenedMatchId);
-  }
-}
+      try {
+        await loadDailyPicks();
+      } catch (error) {
+        console.error("daily_picks refresh error:", error);
+        errors.daily_picks = error.message || JSON.stringify(error);
+      }
 
-async function refreshAllData(silent = false) {
-  const errors = {};
+      try {
+        await loadMatches();
+      } catch (error) {
+        console.error("matches refresh error:", error);
+        errors.matches = error.message || JSON.stringify(error);
+      }
 
-  if (!silent) setStatus("Atualizando Scoutly...", true);
+      if (Object.keys(errors).length) {
+        renderLoadError(errors);
+        return false;
+      }
 
-  try {
-    await loadDailyPicks();
-  } catch (error) {
-    console.error("daily_picks refresh error:", error);
-    errors.daily_picks = error.message || JSON.stringify(error);
-  }
+      refreshUIOnly();
+      setStatus(`Conexão OK · Matches carregados: ${state.matches.length}`, true);
+      return true;
+    }
 
-  try {
-    await loadMatches();
-  } catch (error) {
-    console.error("matches refresh error:", error);
-    errors.matches = error.message || JSON.stringify(error);
-  }
+    function startAutoRefresh() {
+      if (state.refreshTimer) clearInterval(state.refreshTimer);
+      if (state.dataRefreshTimer) clearInterval(state.dataRefreshTimer);
 
-  if (Object.keys(errors).length) {
-    renderLoadError(errors);
-    return false;
-  }
+      state.refreshTimer = setInterval(() => {
+        refreshUIOnly();
+      }, AUTO_UI_REFRESH_MS);
 
-  refreshUIOnly();
-  setStatus(`Conexão OK · Matches carregados: ${state.matches.length}`, true);
-  return true;
-}
+      state.dataRefreshTimer = setInterval(() => {
+        refreshAllData(true);
+      }, AUTO_DATA_REFRESH_MS);
+    }
 
-function startAutoRefresh() {
-  if (state.refreshTimer) clearInterval(state.refreshTimer);
-  if (state.dataRefreshTimer) clearInterval(state.dataRefreshTimer);
+    function bindStaticEvents() {
+      const generateBtn = document.getElementById("generateTicketBtn");
+      if (generateBtn && !generateBtn.dataset.bound) {
+        generateBtn.addEventListener("click", () => {
+          generateTicket(true);
+        });
+        generateBtn.dataset.bound = "1";
+      }
 
-  state.refreshTimer = setInterval(() => {
-    refreshUIOnly();
-  }, AUTO_UI_REFRESH_MS);
+      const backBtn = document.getElementById("backToCompetitionsBtn");
+      if (backBtn && !backBtn.dataset.bound) {
+        backBtn.addEventListener("click", backToCompetitions);
+        backBtn.dataset.bound = "1";
+      }
 
-  state.dataRefreshTimer = setInterval(() => {
-    refreshAllData(true);
-  }, AUTO_DATA_REFRESH_MS);
-}
+      const closeBtn = document.getElementById("closeAnalysisBtn");
+      if (closeBtn && !closeBtn.dataset.bound) {
+        closeBtn.addEventListener("click", closeAnalysis);
+        closeBtn.dataset.bound = "1";
+      }
 
-function bindStaticEvents() {
-  const generateBtn = document.getElementById("generateTicketBtn");
-  if (generateBtn && !generateBtn.dataset.bound) {
-    generateBtn.addEventListener("click", () => {
-      generateTicket(true);
-    });
-    generateBtn.dataset.bound = "1";
-  }
+      const overlay = document.getElementById("analysisOverlay");
+      if (overlay && !overlay.dataset.bound) {
+        overlay.addEventListener("click", e => {
+          if (e.target.id === "analysisOverlay") closeAnalysis();
+        });
+        overlay.dataset.bound = "1";
+      }
 
-  const backBtn = document.getElementById("backToCompetitionsBtn");
-  if (backBtn && !backBtn.dataset.bound) {
-    backBtn.addEventListener("click", backToCompetitions);
-    backBtn.dataset.bound = "1";
-  }
+      if (!document.body.dataset.scoutlyEscBound) {
+        document.addEventListener("keydown", e => {
+          if (e.key === "Escape") closeAnalysis();
+        });
+        document.body.dataset.scoutlyEscBound = "1";
+      }
+    }
 
-  const closeBtn = document.getElementById("closeAnalysisBtn");
-  if (closeBtn && !closeBtn.dataset.bound) {
-    closeBtn.addEventListener("click", closeAnalysis);
-    closeBtn.dataset.bound = "1";
-  }
+    async function initialize() {
+      bindStaticEvents();
 
-  const overlay = document.getElementById("analysisOverlay");
-  if (overlay && !overlay.dataset.bound) {
-    overlay.addEventListener("click", e => {
-      if (e.target.id === "analysisOverlay") closeAnalysis();
-    });
-    overlay.dataset.bound = "1";
-  }
+      const ok = await refreshAllData(false);
+      if (!ok) return;
 
-  if (!document.body.dataset.scoutlyEscBound) {
-    document.addEventListener("keydown", e => {
-      if (e.key === "Escape") closeAnalysis();
-    });
-    document.body.dataset.scoutlyEscBound = "1";
-  }
-}
+      startAutoRefresh();
+    }
 
-async function initialize() {
-  bindStaticEvents();
-
-  const ok = await refreshAllData(false);
-  if (!ok) return;
-
-  startAutoRefresh();
-}
-
-document.addEventListener("DOMContentLoaded", initialize);
+    document.addEventListener("DOMContentLoaded", initialize);
   </script>
 </body>
 </html>
