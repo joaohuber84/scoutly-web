@@ -2093,6 +2093,67 @@ function isValidFixture(fixture) {
   return true
 }
 
+function resolveCompetition(fixture) {
+  if (!fixture) return null
+
+  const leagueId = fixture?.league?.id || null
+  const rawLeagueName = String(fixture?.league?.name || "").trim()
+  const country = String(fixture?.league?.country || "").trim() || null
+
+  if (!rawLeagueName) return null
+
+  const normalizedDisplay = normalizeCompetitionName(
+    country,
+    rawLeagueName,
+    rawLeagueName
+  )
+
+  const normLeague = normalizeText(rawLeagueName)
+  const normCountry = normalizeText(country)
+
+  let region = "general"
+
+  if (
+    normCountry === "brazil" ||
+    normLeague.includes("brasileir") ||
+    normLeague.includes("copa do brasil") ||
+    normLeague.includes("nordeste") ||
+    normLeague.includes("verde") ||
+    normLeague.includes("sul-americana") ||
+    normLeague.includes("sudamericana") ||
+    normLeague.includes("libertadores")
+  ) {
+    region = "brazil"
+  } else if (
+    normCountry === "usa" ||
+    normCountry === "mexico" ||
+    normLeague.includes("mls") ||
+    normLeague.includes("liga mx") ||
+    normLeague.includes("concacaf")
+  ) {
+    region = "america"
+  } else if (
+    normCountry === "world" ||
+    normLeague.includes("friendlies") ||
+    normLeague.includes("nations league") ||
+    normLeague.includes("qualification") ||
+    normLeague.includes("euro") ||
+    normLeague.includes("copa america") ||
+    normLeague.includes("world cup")
+  ) {
+    region = "international"
+  }
+
+  return {
+    leagueId,
+    country,
+    rawName: rawLeagueName,
+    display: normalizedDisplay,
+    region,
+    priority: 70,
+  }
+}
+
 async function runSync() {
   console.log("🚀 Scoutly Sync iniciado...")
 
