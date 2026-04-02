@@ -892,8 +892,20 @@ async function resolveTargetCompetitions() {
 
 function isCompletedFixture(fixture) {
   const short = String(fixture?.fixture?.status?.short || "").toUpperCase()
-
   return ["FT", "AET", "PEN"].includes(short)
+}
+
+async function getFixtureStatistics(fixtureId) {
+  try {
+    const res = await apiRequest("fixtures/statistics", {
+      fixture: fixtureId
+    })
+
+    return res?.response || []
+  } catch (err) {
+    console.error("Erro ao buscar estatísticas do fixture", fixtureId, err.message)
+    return []
+  }
 }
 
 async function fetchRecentFinishedFixtures(teamId, limit = MAX_RECENT_FIXTURES_FETCH) {
