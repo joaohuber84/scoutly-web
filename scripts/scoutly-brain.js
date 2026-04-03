@@ -44,13 +44,13 @@ const FAMILY_SCORE_WEIGHT = {
 // LINHAS DINÂMICAS DISPONÍVEIS
 // evita engessamento
 // ======================================
-const CORNER_OVER_LINES = [5.5, 6.5, 7.5, 8.5, 9.5]
-const CORNER_UNDER_LINES = [10.5, 11.5, 12.5, 13.5]
+const CORNER_OVER_LINES = [6.5, 7.5, 8.5]
+const CORNER_UNDER_LINES = [11.5, 12.5, 13.5]
 
 const CARDS_OVER_LINES = [1.5, 2.5, 3.5, 4.5, 5.5]
 
-const SHOTS_OVER_LINES = [15.5, 17.5, 19.5, 21.5, 23.5]
-const SOT_OVER_LINES = [4.5, 5.5, 6.5, 7.5, 8.5]
+const SHOTS_OVER_LINES = [19.5, 21.5, 23.5, 25,5]
+const SOT_OVER_LINES = [5.5, 6.5, 7.5, 8.5]
 
 // ======================================
 // HELPERS
@@ -1222,8 +1222,8 @@ function buildMarketCandidates(row, options = {}) {
     if (item.family === "cards") score += 0.015
 
     // shots / sot sempre abaixo dos carros-chefe
-    if (item.family === "shots") score -= 0.06
-    if (item.family === "sot") score -= 0.045
+    if (item.family === "shots") score -= 0.035
+    if (item.family === "sot") score -= 0.025
 
     // ajustes por perfil
     if (profile === "ofensivo" && item.macro === "ofensivo") score += 0.02
@@ -1238,8 +1238,8 @@ function buildMarketCandidates(row, options = {}) {
     }
   })
 
-  const minProbability = relaxed ? 0.53 : 0.58
-  const minScore = relaxed ? 0.54 : 0.60
+  const minProbability = relaxed ? 0.52 : 0.56
+  const minScore = relaxed ? 0.53 : 0.58
 
   return candidates
     .filter((c) => c.probability >= minProbability && c.score >= minScore)
