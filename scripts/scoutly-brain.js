@@ -35,8 +35,8 @@ const FAMILY_SCORE_WEIGHT = {
   escanteios: 0.97,
   cards: 0.95,
   btts: 0.92,
-  sot: 0.88,
-  shots: 0.80,
+  sot: 0.91,
+  shots: 0.85,
   outro: 0.70,
 }
 
@@ -916,23 +916,23 @@ function buildShotsCandidates(row, profile) {
 
   const adjustedShots =
     avgShots +
-    (avgGoals >= 2.5 ? 0.6 : 0) +
-    (profile === "volume" ? 0.5 : 0)
+    (avgGoals >= 2.3 ? 0.8 : 0) +
+    (profile === "volume" ? 0.4 : 0)
 
-  if (adjustedShots >= 16.2) {
+  if (adjustedShots >= 15.8) {
     const line = pickDynamicOverLine(adjustedShots, SHOTS_OVER_LINES)
 
     if (line !== null) {
       const probability = clamp(
-        0.57 + (adjustedShots - line) * 0.085,
-        0.54,
-        0.84
+        0.60 + (adjustedShots - line) * 0.09,
+        0.56,
+        0.86
       )
 
       const score = clamp(
-        0.59 + (adjustedShots - line) * 0.065,
-        0.54,
-        0.80
+        0.64 + (adjustedShots - line) * 0.08,
+        0.58,
+        0.86
       )
 
       add(
@@ -970,23 +970,23 @@ function buildSOTCandidates(row, profile) {
 
   const adjustedSOT =
     avgSOT +
-    (avgGoals >= 2.6 ? 0.25 : 0) +
-    (profile === "precisao" ? 0.25 : 0)
+    (avgGoals >= 2.3 ? 0.4 : 0) +
+    (profile === "precisao" ? 0.4 : 0)
 
-  if (adjustedSOT >= 4.6) {
+  if (adjustedSOT >= 4.4) {
     const line = pickDynamicOverLine(adjustedSOT, SOT_OVER_LINES)
 
     if (line !== null) {
       const probability = clamp(
-        0.57 + (adjustedSOT - line) * 0.08,
-        0.54,
-        0.83
+        0.59 + (adjustedSOT - line) * 0.8,
+        0.55,
+        0.84
       )
 
       const score = clamp(
-        0.58 + (adjustedSOT - line) * 0.065,
-        0.53,
-        0.79
+        0.62 + (adjustedSOT - line) * 0.075,
+        0.56,
+        0.83
       )
 
       add(
@@ -1289,17 +1289,40 @@ function chooseBestAndAlternatives(candidates, row) {
     }
   }
 
-  if (alternatives.length < 2 && row) {
-    const relaxedCandidates = buildMarketCandidates(row, { relaxed: true })
+ if (alternatives.length < 2 && row) {
+    const relaxed = buildMarketCandidates(row, { relaxed: true })
 
-    for (const item of relaxedCandidates) {
-      if (!item?.market) continue
+    for (const item of relaxed) {
+      if (!item || !item.market) continue
       if (usedMarkets.has(item.market)) continue
 
       alternatives.push(item)
       usedMarkets.add(item.market)
 
-      if (alternatives.length >= 2) break
+      if (alternatives.length === 2) break
+    }
+  }
+
+  const hasShotsAlt = alternatives.some(
+    (item) => item.family === "shots" || item.family === "sot"
+  )
+
+  if (!hasShotsAlt) {
+    const shotsCandidate = sorted.find(
+      (item) =>
+        item &&
+        item.market &&
+        !usedMarkets.has(item.market) &&
+        (item.family === "shots" || item.family === "sot")
+    )
+
+    if (shotsCandidate) {
+      if (alternatives.length >= 2) {
+        alternatives[alternatives.length - 1] = shotsCandidate
+      } else {
+        alternatives.push(shotsCandidate)
+      }
+      usedMarkets.add(shotsCandidate.market)
     }
   }
 
