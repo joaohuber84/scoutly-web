@@ -1313,7 +1313,8 @@ function chooseBestAndAlternatives(candidates, row) {
         item &&
         item.market &&
         !usedMarkets.has(item.market) &&
-        (item.family === "shots" || item.family === "sot")
+        (item.family === "shots" || item.family === "sot") &&
+      item.score >= 0.72
     )
 
     if (shotsCandidate) {
