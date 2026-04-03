@@ -35,8 +35,8 @@ const FAMILY_SCORE_WEIGHT = {
   escanteios: 0.97,
   cards: 0.95,
   btts: 0.92,
-  sot: 0.84,
-  shots: 0.74,
+  sot: 0.88,
+  shots: 0.80,
   outro: 0.70,
 }
 
@@ -919,20 +919,20 @@ function buildShotsCandidates(row, profile) {
     (avgGoals >= 2.5 ? 0.6 : 0) +
     (profile === "volume" ? 0.5 : 0)
 
-  if (adjustedShots >= 16) {
+  if (adjustedShots >= 16.2) {
     const line = pickDynamicOverLine(adjustedShots, SHOTS_OVER_LINES)
 
     if (line !== null) {
       const probability = clamp(
-        0.56 + (adjustedShots - line) * 0.08,
+        0.57 + (adjustedShots - line) * 0.085,
         0.54,
-        0.82
+        0.84
       )
 
       const score = clamp(
-        0.58 + (adjustedShots - line) * 0.06,
+        0.59 + (adjustedShots - line) * 0.065,
         0.54,
-        0.78
+        0.80
       )
 
       add(
@@ -973,20 +973,20 @@ function buildSOTCandidates(row, profile) {
     (avgGoals >= 2.6 ? 0.25 : 0) +
     (profile === "precisao" ? 0.25 : 0)
 
-  if (adjustedSOT >= 5.2) {
+  if (adjustedSOT >= 4.6) {
     const line = pickDynamicOverLine(adjustedSOT, SOT_OVER_LINES)
 
     if (line !== null) {
       const probability = clamp(
-        0.56 + (adjustedSOT - line) * 0.07,
+        0.57 + (adjustedSOT - line) * 0.08,
         0.54,
-        0.80
+        0.83
       )
 
       const score = clamp(
-        0.57 + (adjustedSOT - line) * 0.06,
-        0.54,
-        0.77
+        0.58 + (adjustedSOT - line) * 0.065,
+        0.53,
+        0.79
       )
 
       add(
