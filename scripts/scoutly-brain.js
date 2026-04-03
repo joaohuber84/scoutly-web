@@ -22,27 +22,39 @@ const RADAR_SIZE = 15
 const TICKET_MIN_SIZE = 2
 const TICKET_MAX_SIZE = 3
 
-// ===============================
-// HIERARQUIA DE FORÇA DOS MERCADOS
-// ===============================
-// ideia central:
+// ======================================
+// PESO DAS FAMÍLIAS DE MERCADO
 // gols / resultado / escanteios / cartões = mais fortes
+// btts = forte, mas abaixo dos acima
 // sot = intermediário
 // shots = mais fraco
+// ======================================
 const FAMILY_SCORE_WEIGHT = {
   gols: 1.0,
   resultado: 0.98,
   escanteios: 0.97,
   cards: 0.95,
-  btts: 0.93,
-  sot: 0.86,
-  shots: 0.76,
+  btts: 0.92,
+  sot: 0.84,
+  shots: 0.74,
   outro: 0.70,
 }
 
-// ===============================
+// ======================================
+// LINHAS DINÂMICAS DISPONÍVEIS
+// evita engessamento
+// ======================================
+const CORNER_OVER_LINES = [5.5, 6.5, 7.5, 8.5, 9.5]
+const CORNER_UNDER_LINES = [10.5, 11.5, 12.5, 13.5]
+
+const CARDS_OVER_LINES = [1.5, 2.5, 3.5, 4.5, 5.5]
+
+const SHOTS_OVER_LINES = [15.5, 17.5, 19.5, 21.5, 23.5]
+const SOT_OVER_LINES = [4.5, 5.5, 6.5, 7.5, 8.5]
+
+// ======================================
 // HELPERS
-// ===============================
+// ======================================
 
 function toNumber(value, fallback = 0) {
   const n = Number(value)
@@ -185,9 +197,9 @@ function getRhythmLabel(avgShots) {
   return "Baixo"
 }
 
-// ===============================
+// ======================================
 // CLASSIFICAÇÃO DE MERCADO
-// ===============================
+// ======================================
 
 function marketFamily(market) {
   const m = String(market || "").trim().toLowerCase()
@@ -234,9 +246,36 @@ function marketMacroFromFamily(family, market = "") {
   return "equilibrado"
 }
 
-// ===============================
+// ======================================
+// SELEÇÃO DINÂMICA DE LINHAS
+// ======================================
+
+function pickDynamicOverLine(value, lines) {
+  if (!lines.length) return null
+
+  const eligible = lines.filter((line) => value >= line + 0.25)
+  if (!eligible.length) return lines[0]
+
+  return eligible[eligible.length - 1]
+}
+
+function pickDynamicUnderLine(value, lines) {
+  if (!lines.length) return null
+
+  const eligible = lines.filter((line) => value <= line - 0.25)
+  if (!eligible.length) return lines[lines.length - 1]
+
+  return eligible[0]
+}
+
+function buildSubfamily(prefix, side, line) {
+  const clean = String(line).replace(".5", "5").replace(".", "")
+  return `${prefix}_${side}${clean}`
+}
+
+// ======================================
 // LOAD BASE TABLES
-// ===============================
+// ======================================
 
 async function loadBaseTables() {
   const { data: matches, error: matchesError } = await supabase
@@ -303,9 +342,9 @@ async function loadBaseTables() {
   }
 }
 
-// ===============================
+// ======================================
 // MERGE MATCH + ANALYSIS
-// ===============================
+// ======================================
 
 function mergeMatchRow(matchRow, analysisMap) {
   const analysis = analysisMap.get(String(matchRow.id)) || {}
@@ -506,6 +545,10 @@ async function loadActiveMatches() {
   return finalRows.sort(compareByKickoff)
 }
 
+// ======================================
+// PERFIL DO JOGO
+// ======================================
+
 function getGameProfile(row) {
   if (row.game_profile && String(row.game_profile).trim()) {
     return String(row.game_profile).trim()
@@ -578,9 +621,9 @@ function getGameProfile(row) {
   return "equilibrado"
 }
 
-// ===============================
+// ======================================
 // INSIGHT
-// ===============================
+// ======================================
 
 function buildInsight(row, bestPick, profile) {
   const avgGoals = round1(row.avg_goals)
@@ -643,6 +686,10 @@ function buildInsight(row, bestPick, profile) {
   return `A leitura Scoutly classifica este confronto como ${profile}, combinando projeção de ${avgGoals} gols, ${avgCorners} escanteios, ${avgShots} finalizações e ${avgSOT} no gol para destacar essa oportunidade.`
 }
 
+// ======================================
+// PUSH PADRONIZADO
+// ======================================
+
 function pushCandidate(candidates, item) {
   const family = item.family || marketFamily(item.market)
   const familyWeight = FAMILY_SCORE_WEIGHT[family] || 0.7
@@ -656,9 +703,10 @@ function pushCandidate(candidates, item) {
   })
 }
 
-// ===============================
+// ======================================
 // CANTOS
-// ===============================
+// menos engessado
+// ======================================
 
 function buildCornerCandidates(row, profile) {
   const candidates = []
@@ -679,74 +727,106 @@ function buildCornerCandidates(row, profile) {
     })
   }
 
-  if (avgCorners >= 6.3) {
-    add(
-      "Mais de 6.5 escanteios",
-      clamp(0.61 + (avgCorners - 6.3) * 0.055 + (avgShots >= 18 ? 0.02 : 0), 0.61, 0.93),
-      clamp(0.70 + (avgCorners - 6.3) * 0.038 + (profile === "estatistico" ? 0.03 : 0), 0.61, 0.90),
-      "corners_over65"
-    )
+  // OVER CORNERS
+  const boostedOverCorners =
+    avgCorners +
+    (avgShots >= 20 ? 0.35 : 0) +
+    (avgShots >= 23 ? 0.25 : 0) +
+    (avgSOT >= 7 ? 0.20 : 0) +
+    (avgGoals >= 2.6 ? 0.15 : 0) +
+    (profile === "estatistico" ? 0.20 : 0) +
+    (profile === "volume" ? 0.18 : 0) +
+    (profile === "precisao" ? 0.10 : 0)
+
+  if (boostedOverCorners >= 6.0) {
+    const line = pickDynamicOverLine(boostedOverCorners, CORNER_OVER_LINES)
+
+    if (line !== null) {
+      const probability = clamp(
+        0.60 +
+          (boostedOverCorners - line) * 0.11 +
+          (avgShots >= 21 ? 0.02 : 0),
+        0.60,
+        0.91
+      )
+
+      const score = clamp(
+        0.68 +
+          (boostedOverCorners - line) * 0.09 +
+          (profile === "estatistico" ? 0.03 : 0) +
+          (avgSOT >= 7 ? 0.02 : 0),
+        0.60,
+        0.90
+      )
+
+      add(
+        `Mais de ${line} escanteios`,
+        probability,
+        score,
+        buildSubfamily("corners", "over", line)
+      )
+    }
   }
 
-  if (avgCorners >= 7.0) {
-    add(
-      "Mais de 7.5 escanteios",
-      clamp(0.59 + (avgCorners - 7.0) * 0.055 + (avgShots >= 20 ? 0.02 : 0), 0.59, 0.90),
-      clamp(0.68 + (avgCorners - 7.0) * 0.036 + (avgGoals >= 2.2 ? 0.01 : 0), 0.59, 0.88),
-      "corners_over75"
-    )
-  }
+  // UNDER CORNERS
+  const controlledCorners =
+    avgCorners -
+    (avgShots <= 18 ? 0.30 : 0) -
+    (avgShots <= 16 ? 0.20 : 0) -
+    (avgGoals <= 2.1 ? 0.15 : 0) -
+    (profile === "defensivo" ? 0.18 : 0) -
+    (profile === "controlado" ? 0.20 : 0)
 
-  if (avgCorners >= 8.1) {
-    add(
-      "Mais de 8.5 escanteios",
-      clamp(0.56 + (avgCorners - 8.1) * 0.05 + (avgShots >= 21 ? 0.02 : 0), 0.56, 0.86),
-      clamp(0.65 + (avgCorners - 8.1) * 0.034 + (profile === "estatistico" ? 0.01 : 0), 0.56, 0.84),
-      "corners_over85"
-    )
-  }
+  if (controlledCorners <= 10.6) {
+    const referenceUnder = controlledCorners + 4.0
+    const line = pickDynamicUnderLine(referenceUnder, CORNER_UNDER_LINES)
 
-  if (avgCorners <= 9.0) {
-    add(
-      "Menos de 12.5 escanteios",
-      clamp(0.63 + (9.0 - avgCorners) * 0.04, 0.63, 0.91),
-      clamp(0.69 + (9.0 - avgCorners) * 0.026 + (profile === "controlado" ? 0.02 : 0), 0.63, 0.87),
-      "corners_under125"
-    )
-  }
+    if (line !== null) {
+      const probability = clamp(
+        0.61 +
+          (line - referenceUnder) * 0.07 +
+          (avgShots <= 18 ? 0.02 : 0),
+        0.58,
+        0.89
+      )
 
-  if (avgCorners <= 8.1) {
-    add(
-      "Menos de 11.5 escanteios",
-      clamp(0.60 + (8.1 - avgCorners) * 0.038, 0.60, 0.88),
-      clamp(0.66 + (8.1 - avgCorners) * 0.024 + (avgShots <= 19 ? 0.01 : 0), 0.60, 0.85),
-      "corners_under115"
-    )
+      const score = clamp(
+        0.66 +
+          (line - referenceUnder) * 0.06 +
+          (profile === "controlado" ? 0.03 : 0) +
+          (profile === "defensivo" ? 0.02 : 0),
+        0.58,
+        0.87
+      )
+
+      add(
+        `Menos de ${line} escanteios`,
+        probability,
+        score,
+        buildSubfamily("corners", "under", line)
+      )
+    }
   }
 
   candidates.forEach((c) => {
-    if (c.subfamily.includes("under") && avgShots >= 23) {
+    if (String(c.subfamily).includes("under") && avgShots >= 23) {
       c.score = clamp(c.score - 0.05, 0, 1)
       c.probability = clamp(c.probability - 0.04, 0, 1)
     }
 
-    if (c.subfamily.includes("over") && avgShots <= 17) {
+    if (String(c.subfamily).includes("over") && avgShots <= 17) {
       c.score = clamp(c.score - 0.04, 0, 1)
       c.probability = clamp(c.probability - 0.03, 0, 1)
     }
 
-    if ((profile === "volume" || profile === "precisao") && c.subfamily.includes("over")) {
-      if (avgSOT >= 7 && avgShots >= 21) {
-        c.score = clamp(c.score + 0.04, 0, 1)
-        c.probability = clamp(c.probability + 0.02, 0, 1)
-      }
-    }
-
-    if (profile === "ofensivo" && c.subfamily.includes("over") && avgGoals >= 2.8) {
+    if (profile === "ofensivo" && String(c.subfamily).includes("over") && avgGoals >= 2.8) {
       c.score = clamp(c.score + 0.02, 0, 1)
     }
 
-    if ((profile === "defensivo" || profile === "controlado") && c.subfamily.includes("under")) {
+    if (
+      (profile === "defensivo" || profile === "controlado") &&
+      String(c.subfamily).includes("under")
+    ) {
       c.score = clamp(c.score + 0.02, 0, 1)
     }
   })
@@ -754,221 +834,300 @@ function buildCornerCandidates(row, profile) {
   return candidates
 }
 
-// ===============================
-// FINALIZAÇÕES TOTAIS
-// SOMENTE OVER
-// ===============================
-
-function buildShotsCandidates(row, profile) {
-  const candidates = []
-
-  const avgShots = toNumber(row.avg_shots)
-  const avgGoals = toNumber(row.avg_goals)
-  const probShots = toNumber(row.prob_shots)
-
-  function add(market, probability, score, subfamily, macro = "volume") {
-    pushCandidate(candidates, {
-      market,
-      probability,
-      score,
-      family: "shots",
-      subfamily,
-      macro,
-    })
-  }
-
-  if (avgShots >= 18.8) {
-    add(
-      "Mais de 17.5 finalizações totais",
-      clamp(Math.max(probShots, 0.60) + (avgShots - 18.8) * 0.018, 0.60, 0.88),
-      clamp(0.63 + (avgShots - 18.8) * 0.018 + (profile === "volume" ? 0.02 : 0), 0.60, 0.82),
-      "shots_over175"
-    )
-  }
-
-  if (avgShots >= 20.4) {
-    add(
-      "Mais de 19.5 finalizações totais",
-      clamp(Math.max(probShots - 0.01, 0.57) + (avgShots - 20.4) * 0.018, 0.57, 0.85),
-      clamp(0.60 + (avgShots - 20.4) * 0.018 + (avgGoals >= 2.2 ? 0.01 : 0), 0.57, 0.79),
-      "shots_over195"
-    )
-  }
-
-  if (avgShots >= 22.5) {
-    add(
-      "Mais de 21.5 finalizações totais",
-      clamp(Math.max(probShots - 0.03, 0.54) + (avgShots - 22.5) * 0.018, 0.54, 0.81),
-      clamp(0.57 + (avgShots - 22.5) * 0.018 + (profile === "ofensivo" ? 0.01 : 0), 0.54, 0.76),
-      "shots_over215"
-    )
-  }
-
-  candidates.forEach((c) => {
-    if (avgGoals <= 1.9) {
-      c.score = clamp(c.score - 0.05, 0, 1)
-      c.probability = clamp(c.probability - 0.04, 0, 1)
-    }
-
-    if (profile === "defensivo" || profile === "controlado") {
-      c.score = clamp(c.score - 0.04, 0, 1)
-    }
-
-    if (profile === "volume") {
-      c.score = clamp(c.score + 0.02, 0, 1)
-    }
-  })
-
-  return candidates
-}
-
-// ===============================
-// FINALIZAÇÕES NO GOL
-// SOMENTE OVER
-// ===============================
-
-function buildSOTCandidates(row, profile) {
-  const candidates = []
-
-  const avgSOT = toNumber(row.avg_shots_on_target)
-  const avgGoals = toNumber(row.avg_goals)
-  const probSot = toNumber(row.prob_sot)
-
-  function add(market, probability, score, subfamily, macro = "precisao") {
-    pushCandidate(candidates, {
-      market,
-      probability,
-      score,
-      family: "sot",
-      subfamily,
-      macro,
-    })
-  }
-
-  if (avgSOT >= 5.8) {
-    add(
-      "Mais de 5.5 finalizações no gol",
-      clamp(Math.max(probSot, 0.61) + (avgSOT - 5.8) * 0.028, 0.61, 0.90),
-      clamp(0.64 + (avgSOT - 5.8) * 0.024 + (profile === "precisao" ? 0.02 : 0), 0.61, 0.83),
-      "sot_over55"
-    )
-  }
-
-  if (avgSOT >= 6.8) {
-    add(
-      "Mais de 6.5 finalizações no gol",
-      clamp(Math.max(probSot - 0.01, 0.58) + (avgSOT - 6.8) * 0.028, 0.58, 0.87),
-      clamp(0.61 + (avgSOT - 6.8) * 0.024 + (avgGoals >= 2.2 ? 0.01 : 0), 0.58, 0.80),
-      "sot_over65"
-    )
-  }
-
-  if (avgSOT >= 7.8) {
-    add(
-      "Mais de 7.5 finalizações no gol",
-      clamp(Math.max(probSot - 0.03, 0.55) + (avgSOT - 7.8) * 0.028, 0.55, 0.83),
-      clamp(0.58 + (avgSOT - 7.8) * 0.024 + (profile === "ofensivo" ? 0.01 : 0), 0.55, 0.77),
-      "sot_over75"
-    )
-  }
-
-  candidates.forEach((c) => {
-    if (avgGoals <= 1.9) {
-      c.score = clamp(c.score - 0.05, 0, 1)
-      c.probability = clamp(c.probability - 0.04, 0, 1)
-    }
-
-    if (profile === "defensivo" || profile === "controlado") {
-      c.score = clamp(c.score - 0.04, 0, 1)
-    }
-
-    if (profile === "precisao") {
-      c.score = clamp(c.score + 0.02, 0, 1)
-    }
-  })
-
-  return candidates
-}
-
-// ===============================
-// CARTÕES
-// SOMENTE OVER
-// ===============================
+// ======================================
+// CARTÕES (APENAS OVER, MAIS NATURAL)
+// ======================================
 
 function buildCardsCandidates(row, profile) {
   const candidates = []
 
   const avgCards = toNumber(row.avg_cards)
-  const probCards = toNumber(row.prob_cards)
+  const avgGoals = toNumber(row.avg_goals)
+  const avgShots = toNumber(row.avg_shots)
 
-  function add(market, probability, score, subfamily, macro = "disciplina") {
+  function add(market, probability, score, subfamily) {
     pushCandidate(candidates, {
       market,
       probability,
       score,
       family: "cards",
       subfamily,
-      macro,
+      macro: "disciplina",
     })
   }
 
-  if (avgCards >= 2.8) {
-    add(
-      "Mais de 2.5 cartões",
-      clamp(Math.max(probCards, 0.60) + (avgCards - 2.8) * 0.03, 0.60, 0.91),
-      clamp(0.69 + (avgCards - 2.8) * 0.027 + (profile === "disciplinar" ? 0.03 : 0), 0.60, 0.90),
-      "cards_over25"
-    )
-  }
+  const adjustedCards =
+    avgCards +
+    (avgGoals <= 2.4 ? 0.25 : 0) +
+    (avgGoals <= 2.0 ? 0.20 : 0) +
+    (profile === "disciplinar" ? 0.30 : 0) +
+    (profile === "defensivo" ? 0.15 : 0)
 
-  if (avgCards >= 3.6) {
-    add(
-      "Mais de 3.5 cartões",
-      clamp(Math.max(probCards - 0.01, 0.58) + (avgCards - 3.6) * 0.03, 0.58, 0.88),
-      clamp(0.66 + (avgCards - 3.6) * 0.026 + (profile === "disciplinar" ? 0.02 : 0), 0.58, 0.87),
-      "cards_over35"
-    )
-  }
+  if (adjustedCards >= 1.8) {
+    const line = pickDynamicOverLine(adjustedCards, CARDS_OVER_LINES)
 
-  if (avgCards >= 4.5) {
-    add(
-      "Mais de 4.5 cartões",
-      clamp(Math.max(probCards - 0.03, 0.55) + (avgCards - 4.5) * 0.028, 0.55, 0.84),
-      clamp(0.62 + (avgCards - 4.5) * 0.024 + (profile === "disciplinar" ? 0.02 : 0), 0.55, 0.83),
-      "cards_over45"
-    )
-  }
+    if (line !== null) {
+      const probability = clamp(
+        0.60 + (adjustedCards - line) * 0.12,
+        0.58,
+        0.90
+      )
 
-  candidates.forEach((c) => {
-    if (profile === "disciplinar") {
-      c.score = clamp(c.score + 0.03, 0, 1)
+      const score = clamp(
+        0.66 +
+          (adjustedCards - line) * 0.10 +
+          (profile === "disciplinar" ? 0.03 : 0),
+        0.60,
+        0.88
+      )
+
+      add(
+        `Mais de ${line} cartões`,
+        probability,
+        score,
+        buildSubfamily("cards", "over", line)
+      )
     }
-
-    if (profile === "ofensivo" && avgCards < 3.0) {
-      c.score = clamp(c.score - 0.02, 0, 1)
-    }
-  })
+  }
 
   return candidates
 }
 
-// ===============================
-// GERAÇÃO PRINCIPAL DE MERCADOS
-// ===============================
+// ======================================
+// FINALIZAÇÕES TOTAIS (MAIS FRACO)
+// ======================================
 
-function buildMarketCandidates(row, options = {}) {
-  const relaxed = options.relaxed === true
+function buildShotsCandidates(row, profile) {
+  const candidates = []
+
+  const avgShots = toNumber(row.avg_shots)
+  const avgGoals = toNumber(row.avg_goals)
+
+  function add(market, probability, score, subfamily) {
+    pushCandidate(candidates, {
+      market,
+      probability,
+      score,
+      family: "shots",
+      subfamily,
+      macro: "volume",
+    })
+  }
+
+  const adjustedShots =
+    avgShots +
+    (avgGoals >= 2.5 ? 0.6 : 0) +
+    (profile === "volume" ? 0.5 : 0)
+
+  if (adjustedShots >= 17) {
+    const line = pickDynamicOverLine(adjustedShots, SHOTS_OVER_LINES)
+
+    if (line !== null) {
+      const probability = clamp(
+        0.58 + (adjustedShots - line) * 0.09,
+        0.55,
+        0.85
+      )
+
+      const score = clamp(
+        0.60 + (adjustedShots - line) * 0.07,
+        0.55,
+        0.82
+      )
+
+      add(
+        `Mais de ${line} finalizações`,
+        probability,
+        score,
+        buildSubfamily("shots", "over", line)
+      )
+    }
+  }
+
+  return candidates
+}
+
+// ======================================
+// FINALIZAÇÕES NO GOL (MAIS FRACO AINDA)
+// ======================================
+
+function buildSOTCandidates(row, profile) {
+  const candidates = []
+
+  const avgSOT = toNumber(row.avg_shots_on_target)
+  const avgGoals = toNumber(row.avg_goals)
+
+  function add(market, probability, score, subfamily) {
+    pushCandidate(candidates, {
+      market,
+      probability,
+      score,
+      family: "sot",
+      subfamily,
+      macro: "precisao",
+    })
+  }
+
+  const adjustedSOT =
+    avgSOT +
+    (avgGoals >= 2.6 ? 0.4 : 0) +
+    (profile === "precisao" ? 0.4 : 0)
+
+  if (adjustedSOT >= 4.8) {
+    const line = pickDynamicOverLine(adjustedSOT, SOT_OVER_LINES)
+
+    if (line !== null) {
+      const probability = clamp(
+        0.57 + (adjustedSOT - line) * 0.08,
+        0.54,
+        0.83
+      )
+
+      const score = clamp(
+        0.59 + (adjustedSOT - line) * 0.07,
+        0.54,
+        0.80
+      )
+
+      add(
+        `Mais de ${line} finalizações no gol`,
+        probability,
+        score,
+        buildSubfamily("sot", "over", line)
+      )
+    }
+  }
+
+  return candidates
+}
+
+// ======================================
+// GOLS (CARRO-CHEFE)
+// ======================================
+
+function buildGoalsCandidates(row, profile) {
   const candidates = []
 
   const avgGoals = toNumber(row.avg_goals)
-  const avgShots = toNumber(row.avg_shots)
+  const over25 = toNumber(row.over25_prob)
+  const under25 = toNumber(row.under25_prob)
 
-  const over15Prob = toNumber(row.over15_prob)
-  const over25Prob = toNumber(row.over25_prob)
-  const under25Prob = toNumber(row.under25_prob)
-  const under35Prob = toNumber(row.under35_prob)
-  const bttsProb = toNumber(row.btts_prob)
-  const bttsNoProb = clamp(1 - bttsProb, 0, 1)
+  function add(market, probability, score, subfamily, macro) {
+    pushCandidate(candidates, {
+      market,
+      probability,
+      score,
+      family: "gols",
+      subfamily,
+      macro,
+    })
+  }
+
+  // OVER 1.5
+  if (avgGoals >= 1.6) {
+    const prob = clamp(over25 + 0.18, 0.62, 0.92)
+
+    add(
+      "Mais de 1.5 gols",
+      prob,
+      prob,
+      "gols_over15",
+      "ofensivo"
+    )
+  }
+
+  // OVER 2.5
+  if (avgGoals >= 2.2) {
+    const prob = clamp(over25, 0.60, 0.90)
+
+    add(
+      "Mais de 2.5 gols",
+      prob,
+      prob,
+      "gols_over25",
+      "ofensivo"
+    )
+  }
+
+  // UNDER 2.5
+  if (avgGoals <= 2.4) {
+    const prob = clamp(under25, 0.60, 0.90)
+
+    add(
+      "Menos de 2.5 gols",
+      prob,
+      prob,
+      "gols_under25",
+      "defensivo"
+    )
+  }
+
+  // UNDER 3.5
+  if (avgGoals <= 3.0) {
+    const prob = clamp(row.under35_prob, 0.62, 0.92)
+
+    add(
+      "Menos de 3.5 gols",
+      prob,
+      prob,
+      "gols_under35",
+      "defensivo"
+    )
+  }
+
+  return candidates
+}
+
+// ======================================
+// BTTS
+// ======================================
+
+function buildBTTS(row, profile) {
+  const candidates = []
+
+  const btts = toNumber(row.btts_prob)
+  const avgGoals = toNumber(row.avg_goals)
+
+  function add(market, probability, score, subfamily, macro) {
+    pushCandidate(candidates, {
+      market,
+      probability,
+      score,
+      family: "btts",
+      subfamily,
+      macro,
+    })
+  }
+
+  if (btts >= 0.58 && avgGoals >= 2.2) {
+    add(
+      "Ambas marcam",
+      btts,
+      btts,
+      "btts_yes",
+      "ofensivo"
+    )
+  }
+
+  if (btts <= 0.45 && avgGoals <= 2.4) {
+    add(
+      "Ambas não marcam",
+      1 - btts,
+      1 - btts,
+      "btts_no",
+      "defensivo"
+    )
+  }
+
+  return candidates
+}
+
+// ======================================
+// RESULTADO / DUPLA CHANCE
+// ======================================
+
+function buildResultCandidates(row, profile) {
+  const candidates = []
 
   const homeWin = toNumber(row.home_win_prob)
   const draw = toNumber(row.draw_prob)
@@ -977,181 +1136,127 @@ function buildMarketCandidates(row, options = {}) {
   const homeOrDraw = clamp(homeWin + draw, 0, 1)
   const awayOrDraw = clamp(awayWin + draw, 0, 1)
 
+  const diff = Math.abs(homeWin - awayWin)
+
+  function add(market, probability, score, subfamily) {
+    pushCandidate(candidates, {
+      market,
+      probability,
+      score,
+      family: "resultado",
+      subfamily,
+      macro: "protecao",
+    })
+  }
+
+  if (homeWin >= awayWin && homeOrDraw >= 0.68) {
+    const probability = clamp(
+      homeOrDraw + (diff >= 0.10 ? 0.02 : 0),
+      0.68,
+      0.92
+    )
+
+    const score = clamp(
+      probability + (profile === "equilibrado" ? 0.02 : 0),
+      0.66,
+      0.90
+    )
+
+    add(
+      `Dupla chance ${row.home_team} ou empate`,
+      probability,
+      score,
+      "resultado_home_draw"
+    )
+  }
+
+  if (awayWin > homeWin && awayOrDraw >= 0.68) {
+    const probability = clamp(
+      awayOrDraw + (diff >= 0.10 ? 0.02 : 0),
+      0.68,
+      0.92
+    )
+
+    const score = clamp(
+      probability + (profile === "equilibrado" ? 0.02 : 0),
+      0.66,
+      0.90
+    )
+
+    add(
+      `Dupla chance ${row.away_team} ou empate`,
+      probability,
+      score,
+      "resultado_away_draw"
+    )
+  }
+
+  return candidates
+}
+
+// ======================================
+// MOTOR PRINCIPAL DE MERCADOS
+// ======================================
+
+function buildMarketCandidates(row, options = {}) {
+  const relaxed = options.relaxed === true
   const profile = getGameProfile(row)
 
-  function minProb(v) {
-    return relaxed ? v - 0.05 : v
-  }
+  let candidates = []
 
-  if (over25Prob >= minProb(0.65)) {
-    let score = over25Prob + (avgGoals >= 2.7 ? 0.05 : 0) + (avgShots >= 22 ? 0.04 : 0)
-    if (profile === "ofensivo") score += 0.05
-    if (profile === "precisao") score += 0.02
-    if (profile === "defensivo") score -= 0.08
-    if (profile === "controlado") score -= 0.03
+  candidates.push(...buildGoalsCandidates(row, profile))
+  candidates.push(...buildBTTS(row, profile))
+  candidates.push(...buildResultCandidates(row, profile))
+  candidates.push(...buildCornerCandidates(row, profile))
+  candidates.push(...buildCardsCandidates(row, profile))
+  candidates.push(...buildShotsCandidates(row, profile))
+  candidates.push(...buildSOTCandidates(row, profile))
 
-    pushCandidate(candidates, {
-      market: "Mais de 2.5 gols",
-      probability: over25Prob,
-      score,
-      family: "gols",
-      subfamily: "over25",
-      macro: "ofensivo",
-    })
-  }
+  candidates = candidates.map((item) => {
+    let score = toNumber(item.score)
 
-  if (over15Prob >= minProb(0.77)) {
-    let score = over15Prob + (avgGoals >= 2.3 ? 0.04 : 0) + (avgShots >= 20 ? 0.03 : 0)
-    if (profile === "ofensivo") score += 0.03
-    if (profile === "precisao") score += 0.02
-    if (profile === "defensivo") score -= 0.04
-    if (profile === "controlado") score -= 0.02
+    // reforço extra da hierarquia
+    if (item.family === "gols") score += 0.03
+    if (item.family === "resultado") score += 0.025
+    if (item.family === "escanteios") score += 0.02
+    if (item.family === "cards") score += 0.015
 
-    pushCandidate(candidates, {
-      market: "Mais de 1.5 gols",
-      probability: over15Prob,
-      score,
-      family: "gols",
-      subfamily: "over15",
-      macro: "ofensivo",
-    })
-  }
+    // shots / sot sempre abaixo dos carros-chefe
+    if (item.family === "shots") score -= 0.06
+    if (item.family === "sot") score -= 0.045
 
-  if (bttsProb >= minProb(0.64)) {
-    let score = bttsProb + (avgGoals >= 2.6 ? 0.04 : 0) + (avgShots >= 21 ? 0.03 : 0)
-    if (profile === "ofensivo") score += 0.04
-    if (profile === "precisao") score += 0.02
-    if (profile === "defensivo") score -= 0.08
-    if (profile === "controlado") score -= 0.03
+    // ajustes por perfil
+    if (profile === "ofensivo" && item.macro === "ofensivo") score += 0.02
+    if (profile === "defensivo" && item.macro === "defensivo") score += 0.02
+    if (profile === "estatistico" && item.family === "escanteios") score += 0.02
+    if (profile === "disciplinar" && item.family === "cards") score += 0.02
+    if (profile === "equilibrado" && item.family === "resultado") score += 0.015
 
-    pushCandidate(candidates, {
-      market: "Ambas marcam",
-      probability: bttsProb,
-      score,
-      family: "btts",
-      subfamily: "btts_yes",
-      macro: "ofensivo",
-    })
-  }
-
-  if (under25Prob >= minProb(0.77)) {
-    let score = under25Prob + (avgGoals <= 2.1 ? 0.02 : 0) + (avgShots <= 17 ? 0.01 : 0)
-    if (profile === "defensivo") score += 0.02
-    if (profile === "controlado") score += 0.01
-    if (profile === "ofensivo") score -= 0.08
-
-    pushCandidate(candidates, {
-      market: "Menos de 2.5 gols",
-      probability: under25Prob,
-      score,
-      family: "gols",
-      subfamily: "under25",
-      macro: "defensivo",
-    })
-  }
-
-  if (under35Prob >= minProb(0.81)) {
-    let score = under35Prob + (avgGoals <= 2.6 ? 0.01 : 0) + (avgShots <= 20 ? 0.01 : 0)
-    if (profile === "controlado") score += 0.02
-    if (profile === "defensivo") score += 0.01
-    if (profile === "ofensivo") score -= 0.06
-
-    pushCandidate(candidates, {
-      market: "Menos de 3.5 gols",
-      probability: under35Prob,
-      score,
-      family: "gols",
-      subfamily: "under35",
-      macro: "defensivo",
-    })
-  }
-
-  if (bttsNoProb >= minProb(0.73)) {
-    let score = bttsNoProb + (avgGoals <= 2.2 ? 0.01 : 0) + (avgShots <= 18 ? 0.01 : 0)
-    if (profile === "defensivo") score += 0.02
-    if (profile === "controlado") score += 0.01
-    if (profile === "ofensivo") score -= 0.09
-
-    pushCandidate(candidates, {
-      market: "Ambas não marcam",
-      probability: bttsNoProb,
-      score,
-      family: "btts",
-      subfamily: "btts_no",
-      macro: "defensivo",
-    })
-  }
-
-  buildCardsCandidates(row, profile).forEach((item) => candidates.push(item))
-  buildCornerCandidates(row, profile).forEach((item) => candidates.push(item))
-  buildShotsCandidates(row, profile).forEach((item) => candidates.push(item))
-  buildSOTCandidates(row, profile).forEach((item) => candidates.push(item))
-
-  if (homeOrDraw >= minProb(0.73) && homeWin >= awayWin) {
-    let score = homeOrDraw + (homeWin > awayWin ? 0.02 : 0)
-    if (homeWin >= 0.50) score += 0.02
-
-    pushCandidate(candidates, {
-      market: `Dupla chance ${row.home_team} ou empate`,
-      probability: homeOrDraw,
-      score,
-      family: "resultado",
-      subfamily: "home_draw",
-      macro: "protecao",
-    })
-  }
-
-  if (awayOrDraw >= minProb(0.73) && awayWin > homeWin) {
-    let score = awayOrDraw + (awayWin > homeWin ? 0.02 : 0)
-    if (awayWin >= 0.50) score += 0.02
-
-    pushCandidate(candidates, {
-      market: `Dupla chance ${row.away_team} ou empate`,
-      probability: awayOrDraw,
-      score,
-      family: "resultado",
-      subfamily: "away_draw",
-      macro: "protecao",
-    })
-  }
-
-  candidates.forEach((c) => {
-    if (c.market === "Mais de 1.5 gols") c.score = clamp(c.score + 0.02, 0, 1)
-    if (c.market === "Mais de 2.5 gols") c.score = clamp(c.score + 0.01, 0, 1)
-    if (c.market === "Menos de 3.5 gols") c.score = clamp(c.score + 0.01, 0, 1)
-    if (c.market === "Ambas não marcam") c.score = clamp(c.score - 0.01, 0, 1)
-
-    if (c.family === "escanteios" && (profile === "volume" || profile === "precisao")) {
-      if (String(c.subfamily || "").includes("over")) {
-        c.score = clamp(c.score + 0.02, 0, 1)
-      } else {
-        c.score = clamp(c.score - 0.02, 0, 1)
-      }
-    }
-
-    if (c.family === "cards" && profile === "disciplinar") {
-      c.score = clamp(c.score + 0.03, 0, 1)
-    }
-
-    if (c.family === "resultado" && profile === "equilibrado") {
-      c.score = clamp(c.score + 0.01, 0, 1)
+    return {
+      ...item,
+      score: clamp(score, 0, 1),
     }
   })
 
-  const minProbability = relaxed ? 0.54 : 0.60
-  const minScore = relaxed ? 0.56 : 0.60
+  const minProbability = relaxed ? 0.53 : 0.58
+  const minScore = relaxed ? 0.54 : 0.60
 
   return candidates
     .filter((c) => c.probability >= minProbability && c.score >= minScore)
     .sort((a, b) => b.score - a.score)
 }
 
-// ===============================
-// ESCOLHA PRINCIPAL + ALTERNATIVAS
-// ===============================
+// ======================================
+// ESCOLHA DA PICK PRINCIPAL + ALTERNATIVAS
+// ======================================
 
 function chooseBestAndAlternatives(candidates, row) {
-  if (!candidates.length) return { best: null, alternatives: [] }
+  if (!candidates.length) {
+    return {
+      best: null,
+      alternatives: [],
+    }
+  }
 
   const sorted = [...candidates].sort((a, b) => b.score - a.score)
   const best = sorted[0]
@@ -1161,7 +1266,7 @@ function chooseBestAndAlternatives(candidates, row) {
   const usedFamilies = new Set([best.family])
 
   for (const item of sorted.slice(1)) {
-    if (!item || !item.market) continue
+    if (!item?.market) continue
     if (usedMarkets.has(item.market)) continue
     if (usedFamilies.has(item.family)) continue
 
@@ -1169,41 +1274,41 @@ function chooseBestAndAlternatives(candidates, row) {
     usedMarkets.add(item.market)
     usedFamilies.add(item.family)
 
-    if (alternatives.length === 2) break
+    if (alternatives.length >= 2) break
   }
 
   if (alternatives.length < 2) {
     for (const item of sorted.slice(1)) {
-      if (!item || !item.market) continue
+      if (!item?.market) continue
       if (usedMarkets.has(item.market)) continue
 
       alternatives.push(item)
       usedMarkets.add(item.market)
 
-      if (alternatives.length === 2) break
+      if (alternatives.length >= 2) break
     }
   }
 
   if (alternatives.length < 2 && row) {
-    const relaxed = buildMarketCandidates(row, { relaxed: true })
+    const relaxedCandidates = buildMarketCandidates(row, { relaxed: true })
 
-    for (const item of relaxed) {
-      if (!item || !item.market) continue
+    for (const item of relaxedCandidates) {
+      if (!item?.market) continue
       if (usedMarkets.has(item.market)) continue
 
       alternatives.push(item)
       usedMarkets.add(item.market)
 
-      if (alternatives.length === 2) break
+      if (alternatives.length >= 2) break
     }
   }
 
   return { best, alternatives }
 }
 
-// ===============================
-// BUILD ANALYSIS
-// ===============================
+// ======================================
+// BUILD DA ANÁLISE FINAL DO JOGO
+// ======================================
 
 function buildAnalysisFromRow(row) {
   const candidates = buildMarketCandidates(row)
@@ -1213,18 +1318,11 @@ function buildAnalysisFromRow(row) {
   const { best, alternatives } = chooseBestAndAlternatives(candidates, row)
   if (!best) return null
 
-  const rhythm = getRhythmLabel(row.avg_shots)
-
   const aggressivePick =
-    alternatives.find(
-      (x) =>
-        x.subfamily === "over25" ||
-        x.subfamily === "btts_yes" ||
-        x.subfamily === "over15" ||
-        String(x.subfamily || "").includes("corners_over") ||
-        String(x.subfamily || "").includes("cards_over") ||
-        String(x.subfamily || "").includes("shots_over") ||
-        String(x.subfamily || "").includes("sot_over")
+    alternatives.find((x) =>
+      String(x.subfamily || "").includes("gols_over") ||
+      String(x.subfamily || "").includes("corners_over") ||
+      String(x.subfamily || "").includes("cards_over")
     )?.market || row.aggressive_pick || null
 
   return {
@@ -1235,17 +1333,21 @@ function buildAnalysisFromRow(row) {
     kickoff: row.kickoff,
     home_logo: row.home_logo,
     away_logo: row.away_logo,
+
     avg_goals: round1(row.avg_goals),
     avg_corners: round1(row.avg_corners),
     avg_shots: Math.round(toNumber(row.avg_shots)),
     avg_shots_on_target: Math.round(toNumber(row.avg_shots_on_target)),
     avg_cards: round1(row.avg_cards),
     avg_fouls: round1(row.avg_fouls),
+
     home_strength: round1(row.home_strength),
     away_strength: round1(row.away_strength),
+
     home_win_prob: round2(row.home_win_prob),
     draw_prob: round2(row.draw_prob),
     away_win_prob: round2(row.away_win_prob),
+
     over25_prob: round2(row.over25_prob),
     under25_prob: round2(row.under25_prob),
     under35_prob: round2(row.under35_prob),
@@ -1254,27 +1356,33 @@ function buildAnalysisFromRow(row) {
     prob_shots: round2(row.prob_shots),
     prob_sot: round2(row.prob_sot),
     prob_cards: round2(row.prob_cards),
+
     game_profile: profile,
+
     main_pick: best.market,
-    main_probability: best.probability,
-    main_score: best.score,
+    main_probability: round2(best.probability),
+    main_score: round2(best.score),
     main_family: best.family,
     main_subfamily: best.subfamily,
     main_macro: best.macro,
+
     strength: getStrengthLabel(best.score),
-    rhythm,
+    rhythm: getRhythmLabel(row.avg_shots),
+
     insight: buildInsight(row, best, profile),
+
     best_pick_1: best.market,
     best_pick_2: alternatives[0]?.market || null,
     best_pick_3: alternatives[1]?.market || null,
     aggressive_pick: aggressivePick,
+
     alternatives_count: alternatives.filter(Boolean).length,
   }
 }
 
-// ===============================
+// ======================================
 // RADAR
-// ===============================
+// ======================================
 
 function chooseRadar(analyses) {
   const today = []
@@ -1294,8 +1402,6 @@ function chooseRadar(analyses) {
   const usedMatchIds = new Set()
   const usedExactMarkets = {}
   const usedFamilies = {}
-  const usedSubfamilies = {}
-  const usedMacros = {}
   const usedLeagues = {}
 
   for (const item of radarPool) {
@@ -1303,8 +1409,6 @@ function chooseRadar(analyses) {
 
     const exactMarketCount = usedExactMarkets[item.main_pick] || 0
     const familyCount = usedFamilies[item.main_family] || 0
-    const subfamilyCount = usedSubfamilies[item.main_subfamily] || 0
-    const macroCount = usedMacros[item.main_macro] || 0
     const leagueCount = usedLeagues[item.league] || 0
 
     if (exactMarketCount >= 2) continue
@@ -1318,32 +1422,10 @@ function chooseRadar(analyses) {
     if (item.main_family === "shots" && familyCount >= 2) continue
     if (item.main_family === "sot" && familyCount >= 2) continue
 
-    if (String(item.main_subfamily || "").includes("shots_") && subfamilyCount >= 1) continue
-    if (String(item.main_subfamily || "").includes("sot_") && subfamilyCount >= 1) continue
-    if (String(item.main_subfamily || "").includes("cards_") && subfamilyCount >= 2) continue
-    if (String(item.main_subfamily || "").includes("corners_") && subfamilyCount >= 2) continue
-
-    if (item.main_subfamily === "over15" && subfamilyCount >= 3) continue
-    if (item.main_subfamily === "over25" && subfamilyCount >= 2) continue
-    if (item.main_subfamily === "under35" && subfamilyCount >= 2) continue
-    if (item.main_subfamily === "under25" && subfamilyCount >= 2) continue
-    if (item.main_subfamily === "btts_yes" && subfamilyCount >= 2) continue
-    if (item.main_subfamily === "btts_no" && subfamilyCount >= 2) continue
-
-    if (item.main_macro === "ofensivo" && macroCount >= 4) continue
-    if (item.main_macro === "defensivo" && macroCount >= 4) continue
-    if (item.main_macro === "estatistico" && macroCount >= 3) continue
-    if (item.main_macro === "protecao" && macroCount >= 3) continue
-    if (item.main_macro === "disciplina" && macroCount >= 3) continue
-    if (item.main_macro === "volume" && macroCount >= 2) continue
-    if (item.main_macro === "precisao" && macroCount >= 2) continue
-
     radar.push(item)
     usedMatchIds.add(item.match_id)
     usedExactMarkets[item.main_pick] = exactMarketCount + 1
     usedFamilies[item.main_family] = familyCount + 1
-    usedSubfamilies[item.main_subfamily] = subfamilyCount + 1
-    usedMacros[item.main_macro] = macroCount + 1
     usedLeagues[item.league] = leagueCount + 1
 
     if (radar.length === RADAR_SIZE) break
@@ -1354,10 +1436,8 @@ function chooseRadar(analyses) {
 
     for (const item of backup) {
       if (usedMatchIds.has(item.match_id)) continue
-
       radar.push(item)
       usedMatchIds.add(item.match_id)
-
       if (radar.length === RADAR_SIZE) break
     }
   }
@@ -1365,20 +1445,18 @@ function chooseRadar(analyses) {
   return radar.sort(compareByRadarPriority)
 }
 
-// ===============================
-// TICKET
-// ===============================
+// ======================================
+// BILHETE
+// ======================================
 
 function buildTicketFromRadar(radar) {
-  const todayFirst = [...radar].sort((a, b) => {
+  const ranked = [...radar].sort((a, b) => {
     const aDay = getDayOffsetFromToday(a.kickoff)
     const bDay = getDayOffsetFromToday(b.kickoff)
 
     if (aDay !== bDay) return aDay - bDay
     return compareByScoreThenKickoff(a, b)
   })
-
-  const ranked = [...todayFirst]
 
   const uniqueMatches = []
   const usedMatches = new Set()
@@ -1395,17 +1473,14 @@ function buildTicketFromRadar(radar) {
   const ticket = []
   const usedTicketMatches = new Set()
   const usedFamilies = new Set()
-  const usedSubfamilies = new Set()
 
   for (const item of ranked) {
     if (usedTicketMatches.has(item.match_id)) continue
     if (usedFamilies.has(item.main_family)) continue
-    if (usedSubfamilies.has(item.main_subfamily)) continue
 
     ticket.push(item)
     usedTicketMatches.add(item.match_id)
     usedFamilies.add(item.main_family)
-    usedSubfamilies.add(item.main_subfamily)
 
     if (ticket.length === desiredSize) break
   }
@@ -1424,9 +1499,9 @@ function buildTicketFromRadar(radar) {
   return ticket.sort(compareByRadarPriority)
 }
 
-// ===============================
+// ======================================
 // UPDATE MATCH_ANALYSIS
-// ===============================
+// ======================================
 
 async function updateMatchAnalysisFromBrain(analyses) {
   for (const item of analyses) {
@@ -1450,9 +1525,9 @@ async function updateMatchAnalysisFromBrain(analyses) {
   }
 }
 
-// ===============================
+// ======================================
 // REBUILD DAILY PICKS
-// ===============================
+// ======================================
 
 async function rebuildDailyPicks(radar, ticket) {
   const { error: deleteError } = await supabase
@@ -1497,12 +1572,12 @@ async function rebuildDailyPicks(radar, ticket) {
   if (insertError) throw insertError
 }
 
-// ===============================
-// RUN
-// ===============================
+// ======================================
+// RUNNER FINAL
+// ======================================
 
 async function runScoutlyBrain() {
-  console.log("🧠 Scoutly Brain FINAL iniciado...")
+  console.log("🧠 Scoutly Brain FINAL V2 iniciado...")
 
   const matches = await loadActiveMatches()
   console.log(`📦 Jogos ativos carregados para análise: ${matches.length}`)
@@ -1568,12 +1643,12 @@ async function runScoutlyBrain() {
 
   await rebuildDailyPicks(radar, ticket)
 
-  console.log("✅ Scoutly Brain FINAL finalizado com sucesso.")
+  console.log("✅ Scoutly Brain FINAL V2 finalizado com sucesso.")
   console.log(`📡 Radar do dia gerado com ${radar.length} jogo(s).`)
   console.log(`🎫 Bilhete do dia definido com ${ticket.length} jogo(s).`)
 }
 
 runScoutlyBrain().catch((error) => {
-  console.error("❌ Erro no Scoutly Brain FINAL:", error)
+  console.error("❌ Erro no Scoutly Brain FINAL V2:", error)
   process.exit(1)
 })
