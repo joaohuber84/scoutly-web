@@ -49,7 +49,7 @@ const CORNER_UNDER_LINES = [11.5, 12.5, 13.5]
 
 const CARDS_OVER_LINES = [1.5, 2.5, 3.5, 4.5, 5.5]
 
-const SHOTS_OVER_LINES = [19.5, 21.5, 23.5, 25,5]
+const SHOTS_OVER_LINES = [17.5, 19.5, 21.5, 23.5, 25.5]
 const SOT_OVER_LINES = [5.5, 6.5, 7.5, 8.5]
 
 // ======================================
@@ -919,20 +919,20 @@ function buildShotsCandidates(row, profile) {
     (avgGoals >= 2.5 ? 0.6 : 0) +
     (profile === "volume" ? 0.5 : 0)
 
-  if (adjustedShots >= 17) {
+  if (adjustedShots >= 16) {
     const line = pickDynamicOverLine(adjustedShots, SHOTS_OVER_LINES)
 
     if (line !== null) {
       const probability = clamp(
-        0.58 + (adjustedShots - line) * 0.09,
-        0.55,
-        0.85
+        0.56 + (adjustedShots - line) * 0.08,
+        0.54,
+        0.82
       )
 
       const score = clamp(
-        0.60 + (adjustedShots - line) * 0.07,
-        0.55,
-        0.82
+        0.58 + (adjustedShots - line) * 0.06,
+        0.54,
+        0.78
       )
 
       add(
@@ -970,23 +970,23 @@ function buildSOTCandidates(row, profile) {
 
   const adjustedSOT =
     avgSOT +
-    (avgGoals >= 2.6 ? 0.4 : 0) +
-    (profile === "precisao" ? 0.4 : 0)
+    (avgGoals >= 2.6 ? 0.25 : 0) +
+    (profile === "precisao" ? 0.25 : 0)
 
-  if (adjustedSOT >= 4.8) {
+  if (adjustedSOT >= 5.2) {
     const line = pickDynamicOverLine(adjustedSOT, SOT_OVER_LINES)
 
     if (line !== null) {
       const probability = clamp(
-        0.57 + (adjustedSOT - line) * 0.08,
+        0.56 + (adjustedSOT - line) * 0.07,
         0.54,
-        0.83
+        0.80
       )
 
       const score = clamp(
-        0.59 + (adjustedSOT - line) * 0.07,
+        0.57 + (adjustedSOT - line) * 0.06,
         0.54,
-        0.80
+        0.77
       )
 
       add(
