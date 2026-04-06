@@ -1161,6 +1161,26 @@
         grid-template-columns: repeat(4, minmax(0, 1fr));
       }
     }
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo img {
+  height: 34px;
+  width: auto;
+  filter: drop-shadow(0 0 6px rgba(0, 255, 120, 0.35));
+}
+
+.logo span {
+  font-size: 18px;
+  font-weight: 800;
+  color: #eef4ff;
+  letter-spacing: 0.5px;
+}
+    
   </style>
 </head>
 <body>
@@ -1168,20 +1188,11 @@
     <div class="container">
       <div class="topbar">
         <div class="brand">
-          <img
-            id="brandLogo"
-            class="brand-logo"
-            src="logo-scoutly.jpg"
-            alt="Scoutly"
-            onload="this.style.display='block';document.getElementById('brandFallback').style.display='none';"
-            onerror="this.style.display='none';document.getElementById('brandFallback').style.display='grid';"
-          />
-          <div id="brandFallback" class="brand-fallback">S</div>
-          <div>
-            <h1 class="brand-title">SCOUTLY</h1>
-            <p class="brand-subtitle">Radar inteligente de oportunidades em futebol</p>
-          </div>
-        </div>
+         <div class="logo">
+ 
+           <img src="logo-icon.png" alt="Scoutly">
+  <span>Scoutly</span>
+</div>
 
         <div class="status-chip" id="statusChip">
           <span class="status-dot"></span>
