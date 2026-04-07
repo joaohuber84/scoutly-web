@@ -1169,7 +1169,7 @@
 }
 
 .logo img {
-  height: 120px;
+  height: 140px;
   width: auto;
   display: block;
   filter: drop-shadow(0 0 18px rgba(0, 255, 120, 0.8));
@@ -1182,13 +1182,13 @@
 }
 
 .logo-text span {
-  font-size: 28px;
+  font-size: 30px;
   font-weight: 900;
   color: #ffffff;
 }
 
 .logo-text small {
-  font-size: 13px;
+  font-size: 14px;
   color: #9ab0d3;
   opacity: 0.9;
 }
@@ -1205,7 +1205,37 @@
   align-items: center;
   justify-content: space-between;
 }
-    
+
+    @media (max-width: 768px) {
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .brand {
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo img {
+    height: 80px;
+  }
+
+  .logo-text span {
+    font-size: 22px;
+  }
+
+  .logo-text small {
+    font-size: 12px;
+  }
+
+  .status-chip {
+    align-self: flex-start;
+  }
+}
+
   </style>
 </head>
 <body>
