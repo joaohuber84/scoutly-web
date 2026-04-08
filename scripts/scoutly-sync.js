@@ -26,12 +26,12 @@ const API = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
 
 /**
- * SCOUTLY SYNC V13.1 CONSOLIDADO
- * - base estrutural segura do V12.1
+ * SCOUTLY SYNC V13.2 CONSOLIDADO
  * - mantém schema atual do banco
- * - melhora leitura de shots / SOT / cards
- * - reduz dependência excessiva de corners
- * - mantém compatibilidade com Brain e Index
+ * - preserva a estrutura do V13.1
+ * - salva TODOS os jogos válidos da janela em matches
+ * - só grava stats/análise quando houver base suficiente
+ * - daily_picks continua usando apenas jogos analisados
  */
 
 const WINDOW_HOURS = 168
@@ -2140,16 +2140,49 @@ async function buildAndStoreMatches(fixtureLists) {
         continue
       }
 
+      const { leagueDisplay, country } = normalizeLeagueByTeams(comp, fixture)
+
+      const baseMatchPayload = {
+        id: fixture?.fixture?.id,
+        kickoff: fixture?.fixture?.date || null,
+        league: leagueDisplay,
+        country,
+        region: comp.region,
+        priority: comp.priority || 70,
+        home_team: fixture?.teams?.home?.name || null,
+        away_team: fixture?.teams?.away?.name || null,
+        home_logo: fixture?.teams?.home?.logo || null,
+        away_logo: fixture?.teams?.away?.logo || null,
+        probabilities: null,
+        markets: null,
+        metrics: null,
+        pick: null,
+        probability: null,
+        insight: null,
+      }
+
+      await upsertMatch(baseMatchPayload)
+
+      let hasAnalysis = false
+
       const homeTeamId = fixture?.teams?.home?.id
       const awayTeamId = fixture?.teams?.away?.id
-      if (!homeTeamId || !awayTeamId) continue
+
+      if (!homeTeamId || !awayTeamId) {
+        stored.push(baseMatchPayload)
+        console.log(
+          `🟡 Jogo salvo sem análise (time_id ausente): ${baseMatchPayload.league} | ${baseMatchPayload.home_team} x ${baseMatchPayload.away_team}`
+        )
+        continue
+      }
 
       const homeContext = await buildTeamContext(homeTeamId)
       const awayContext = await buildTeamContext(awayTeamId)
 
       if (!hasMinimumMatchData(homeContext, awayContext)) {
+        stored.push(baseMatchPayload)
         console.log(
-          `⚠️ Ignorado por falta de dados mínimos: ${fixture?.teams?.home?.name} x ${fixture?.teams?.away?.name}`
+          `🟡 Jogo salvo sem análise (dados mínimos insuficientes): ${baseMatchPayload.league} | ${baseMatchPayload.home_team} x ${baseMatchPayload.away_team}`
         )
         continue
       }
@@ -2169,8 +2202,9 @@ async function buildAndStoreMatches(fixtureLists) {
         metrics.shots_on_target > 0
 
       if (!hasUsableMetrics) {
+        stored.push(baseMatchPayload)
         console.log(
-          `⚠️ Ignorado por métricas zeradas: ${fixture?.teams?.home?.name} x ${fixture?.teams?.away?.name}`
+          `🟡 Jogo salvo sem análise (métricas insuficientes): ${baseMatchPayload.league} | ${baseMatchPayload.home_team} x ${baseMatchPayload.away_team}`
         )
         continue
       }
@@ -2186,8 +2220,9 @@ async function buildAndStoreMatches(fixtureLists) {
       })
 
       if (!candidates.length) {
+        stored.push(baseMatchPayload)
         console.log(
-          `⚠️ Ignorado por falta de mercados coerentes: ${fixture?.teams?.home?.name} x ${fixture?.teams?.away?.name}`
+          `🟡 Jogo salvo sem análise (sem mercados coerentes): ${baseMatchPayload.league} | ${baseMatchPayload.home_team} x ${baseMatchPayload.away_team}`
         )
         continue
       }
@@ -2196,22 +2231,11 @@ async function buildAndStoreMatches(fixtureLists) {
       const extraPicks = chooseExtraPicks(candidates, mainPick)
       const pick2 = extraPicks[0]?.market || null
       const pick3 = extraPicks[1]?.market || null
-
-      const { leagueDisplay, country } = normalizeLeagueByTeams(comp, fixture)
       const gameProfile = buildGameProfile(metricsExp, probabilities)
       const insight = buildInsight(mainPick.market, metricsExp, gameProfile)
 
-      const matchPayload = {
-        id: fixture?.fixture?.id,
-        kickoff: fixture?.fixture?.date || null,
-        league: leagueDisplay,
-        country,
-        region: comp.region,
-        priority: comp.priority || 70,
-        home_team: fixture?.teams?.home?.name || null,
-        away_team: fixture?.teams?.away?.name || null,
-        home_logo: fixture?.teams?.home?.logo || null,
-        away_logo: fixture?.teams?.away?.logo || null,
+      const analyzedMatchPayload = {
+        ...baseMatchPayload,
         probabilities: {
           home: probabilities.home,
           draw: probabilities.draw,
@@ -2224,10 +2248,10 @@ async function buildAndStoreMatches(fixtureLists) {
         insight,
       }
 
-      await upsertMatch(matchPayload)
+      await upsertMatch(analyzedMatchPayload)
 
       await upsertMatchStats({
-        match_id: matchPayload.id,
+        match_id: analyzedMatchPayload.id,
         home_shots: Math.round(metricsExp.expectedHomeShots),
         home_shots_on_target: Math.round(metricsExp.expectedHomeSOT),
         home_corners: Math.max(1, Math.round(homeProfile.avgCorners)),
@@ -2239,7 +2263,7 @@ async function buildAndStoreMatches(fixtureLists) {
       })
 
       await upsertMatchAnalysis({
-        match_id: matchPayload.id,
+        match_id: analyzedMatchPayload.id,
         home_strength: round(
           homeProfile.avgGoalsFor * 1.4 +
             homeProfile.avgShotsOnTarget * 0.55 +
@@ -2279,14 +2303,20 @@ async function buildAndStoreMatches(fixtureLists) {
         analysis_text: insight,
       })
 
+      hasAnalysis = true
+
       stored.push({
-        ...matchPayload,
+        ...analyzedMatchPayload,
         game_profile: gameProfile,
       })
 
       console.log(
-        `✅ ${matchPayload.league} | ${matchPayload.home_team} x ${matchPayload.away_team} | ${mainPick.market}`
+        `✅ ${analyzedMatchPayload.league} | ${analyzedMatchPayload.home_team} x ${analyzedMatchPayload.away_team} | ${mainPick.market}`
       )
+
+      if (!hasAnalysis) {
+        stored.push(baseMatchPayload)
+      }
     } catch (error) {
       console.error(
         `❌ Falha processando fixture ${fixture?.fixture?.id}:`,
@@ -2302,7 +2332,7 @@ async function rebuildDailyPicks(matches) {
   if (!matches.length) return 0
 
   const sorted = [...matches]
-    .filter((m) => m.id && m.pick && m.metrics && m.metrics.goals > 0)
+    .filter((m) => m.id && m.pick && m.metrics && safeNumber(m.metrics.goals, 0) > 0)
     .sort((a, b) => {
       const pa = safeNumber(a.probability, 0)
       const pb = safeNumber(b.probability, 0)
@@ -2397,7 +2427,7 @@ async function rebuildDailyPicks(matches) {
 }
 
 async function run() {
-  console.log("🚀 Scoutly Sync V13.1 Consolidado iniciado")
+  console.log("🚀 Scoutly Sync V13.2 Consolidado iniciado")
 
   const { start, end } = getSyncWindowRange()
   console.log(`📆 Janela ativa: ${start.toISOString()} -> ${end.toISOString()}`)
@@ -2416,11 +2446,11 @@ async function run() {
   const picksCount = await rebuildDailyPicks(storedMatches)
 
   console.log(`🏁 Daily picks gerados: ${picksCount}`)
-  console.log(`✅ Matches gravados com pipeline completo: ${storedMatches.length}`)
-  console.log("✅ Scoutly Sync V13.1 Consolidado concluído")
+  console.log(`✅ Matches gravados na janela: ${storedMatches.length}`)
+  console.log("✅ Scoutly Sync V13.2 Consolidado concluído")
 }
 
 run().catch((error) => {
-  console.error("❌ Erro fatal no Scoutly Sync V13.1 Consolidado:", error)
+  console.error("❌ Erro fatal no Scoutly Sync V13.2 Consolidado:", error)
   process.exit(1)
 })
