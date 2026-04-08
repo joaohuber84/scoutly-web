@@ -89,76 +89,6 @@ const TARGET_COMPETITIONS = [
     region: "brazil",
     priority: 91,
   },
-  {
-    mode: "search",
-    search: "Copa do Nordeste",
-    display: "Copa do Nordeste",
-    region: "brazil",
-    priority: 90,
-  },
-  {
-    mode: "search",
-    search: "Nordeste",
-    display: "Copa do Nordeste",
-    region: "brazil",
-    priority: 90,
-  },
-  {
-    mode: "search",
-    search: "Copa Verde",
-    display: "Copa Verde",
-    region: "brazil",
-    priority: 82,
-  },
-  {
-    mode: "search",
-    search: "Verde",
-    display: "Copa Verde",
-    region: "brazil",
-    priority: 82,
-  },
-  {
-    mode: "search",
-    search: "Copa Sul-Sudeste",
-    display: "Copa Sul-Sudeste",
-    region: "brazil",
-    priority: 80,
-  },
-  {
-    mode: "search",
-    search: "Copa Sul Sudeste",
-    display: "Copa Sul-Sudeste",
-    region: "brazil",
-    priority: 80,
-  },
-  {
-    mode: "search",
-    search: "Brasileiro Women",
-    display: "Brasileirão Feminino",
-    region: "brazil",
-    priority: 84,
-  },
-  {
-    mode: "search",
-    search: "Brazil Women",
-    display: "Brasileirão Feminino",
-    region: "brazil",
-    priority: 84,
-  },
-  {
-    mode: "search",
-    search: "Serie A Women Brazil",
-    display: "Brasileirão Feminino",
-    region: "brazil",
-    priority: 84,
-  },
-  {
-    mode: "search",
-    search: "Campeonato Brasileiro Feminino",
-    display: "Brasileirão Feminino",
-    region: "brazil",
-    priority: 84,
-  },
 
   // ===== ARGENTINA =====
   {
@@ -169,15 +99,6 @@ const TARGET_COMPETITIONS = [
     display: "Liga Argentina",
     region: "general",
     priority: 84,
-  },
-  {
-    mode: "country",
-    country: "Argentina",
-    type: "cup",
-    names: ["Copa Argentina"],
-    display: "Copa Argentina",
-    region: "general",
-    priority: 78,
   },
 
   // ===== EUROPA =====
@@ -336,7 +257,7 @@ const TARGET_COMPETITIONS = [
   },
   {
     mode: "search",
-    search: "Saudi Pro League",
+    search: "Saudi",
     display: "Saudi Pro League",
     region: "general",
     priority: 85,
@@ -837,22 +758,20 @@ async function resolveSearchCompetition(target) {
       const country = item?.country?.name || null
       const rawName = String(item?.league?.name || "").trim()
       const haystack = normalizeText(`${country || ""} ${rawName}`)
-
+      const countryLower = String(country || "").toLowerCase()
+      
       if (hasForbiddenMarker(rawName)) return null
       if (haystack.includes("open cup")) return null
 
       if (target.display === "Saudi Pro League") {
-        if (!normalizeText(country).includes("saudi")) return null
-      }
-
-      if (target.display === "Brasileirão Feminino") {
-        const isBrazil = normalizeText(country) === "brazil"
-        if (!isBrazil) return null
-      }
-
+        if (!haystack.includes("saudi") && !contryLower.includes("saudi")) {
+       return null
+    }
+         }
+      
       if (!isExactBrazilRegionalMatch(target.display, country, rawName)) {
-        return null
-      }
+  return null
+}
 
       if (target.display === "Amistosos Internacionais") {
         if (!haystack.includes("friend")) return null
