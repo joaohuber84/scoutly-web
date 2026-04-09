@@ -781,7 +781,6 @@ async function resolveSearchCompetition(target) {
 
   if (!isSaudi || !isProLeague) return null
 }  
-         }
       
       if (!isExactBrazilRegionalMatch(target.display, country, rawName)) {
   return null
