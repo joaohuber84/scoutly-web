@@ -2060,8 +2060,21 @@ async function buildAndStoreMatches(fixtureLists) {
 
   const stored = []
 
-  for (const fixture of allFixtures) {
-    try {
+ for (const fixture of allFixtures) {
+  if (
+    fixture?.teams?.home?.name?.toLowerCase().includes("fluminense") ||
+    fixture?.teams?.away?.name?.toLowerCase().includes("fluminense")
+  ) {
+    console.log("FLU DEBUG:", {
+      fixtureId: fixture?.fixture?.id,
+      league: fixture?.league?.name,
+      home: fixture?.teams?.home?.name,
+      away: fixture?.teams?.away?.name,
+      date: fixture?.fixture?.date
+    })
+  }
+
+  try {
       const comp = fixture.__comp
       if (!comp) continue
 
