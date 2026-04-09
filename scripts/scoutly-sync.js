@@ -306,12 +306,19 @@ const TARGET_COMPETITIONS = [
     priority: 93,
   },
   {
-    mode: "search",
-    search: "UEFA Conference League",
-    display: "UEFA Conference League",
-    region: "general",
-    priority: 88,
-  },
+  mode: "search",
+  search: "UEFA Europa Conference League",
+  display: "UEFA Conference League",
+  region: "general",
+  priority: 88,
+},
+{
+  mode: "search",
+  search: "Conference League",
+  display: "UEFA Conference League",
+  region: "general",
+  priority: 88,
+},
 
   // ===== CONMEBOL =====
   {
@@ -763,10 +770,17 @@ async function resolveSearchCompetition(target) {
       if (hasForbiddenMarker(rawName)) return null
       if (haystack.includes("open cup")) return null
 
-      if (target.display === "Saudi Pro League") {
-        if (!haystack.includes("saudi") && !contryLower.includes("saudi")) {
-       return null
-    }
+     if (target.display === "Saudi Pro League") {
+  const rawLower = normalizeText(rawName)
+
+  const isSaudi = countryLower.includes("saudi")
+  const isProLeague =
+    rawLower === "pro league" ||
+    rawLower.includes("saudi pro league") ||
+    rawLower.includes("spl")
+
+  if (!isSaudi || !isProLeague) return null
+}  
          }
       
       if (!isExactBrazilRegionalMatch(target.display, country, rawName)) {
