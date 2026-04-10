@@ -35,13 +35,16 @@
       --ticket-line: rgba(126, 90, 17, 0.18);
       --ticket-chip: rgba(255,255,255,0.56);
 
-      --radar-card: rgba(13, 28, 53, 0.98);
-      --radar-card-2: rgba(17, 36, 68, 0.98);
-      --radar-border: rgba(94, 140, 255, 0.18);
-      --radar-soft: rgba(120, 170, 255, 0.08);
+      --radar-card: rgba(11, 26, 48, 0.98);
+      --radar-card-2: rgba(16, 34, 62, 0.98);
+      --radar-border: rgba(92, 136, 255, 0.18);
+      --radar-soft: rgba(116,167,255,0.10);
+      --radar-rank-bg: rgba(78, 127, 255, 0.18);
+      --radar-rank-border: rgba(116,167,255,0.24);
+      --radar-rank-text: #dce7ff;
 
-      --competition-card: rgba(18, 34, 60, 0.98);
-      --competition-card-2: rgba(11, 24, 45, 0.98);
+      --competition-card: rgba(16, 31, 56, 0.98);
+      --competition-card-2: rgba(10, 22, 41, 0.98);
       --competition-border: rgba(112,154,255,0.16);
       --competition-glow: rgba(116,167,255,0.12);
     }
@@ -443,16 +446,18 @@
     }
 
     .radar-item {
-      background:
-        linear-gradient(180deg, var(--radar-card-2), var(--radar-card));
+      background: linear-gradient(180deg, var(--radar-card-2), var(--radar-card));
       border: 1px solid var(--radar-border);
       border-radius: var(--radius-lg);
       padding: 13px;
       cursor: pointer;
-      transition: 0.2s ease;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
       box-shadow: 0 14px 28px rgba(0,0,0,0.22);
       position: relative;
       overflow: hidden;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+      will-change: auto;
     }
 
     .radar-item::before {
@@ -470,8 +475,12 @@
     .game-card:hover,
     .ticket-card:hover,
     .ticket-leg:hover {
-      transform: translateY(-2px);
-      border-color: rgba(105,167,255,0.30);
+      transform: none;
+    }
+
+    .radar-item:hover {
+      border-color: rgba(130,170,255,0.30);
+      box-shadow: 0 16px 30px rgba(0,0,0,0.24);
     }
 
     .radar-top {
@@ -490,9 +499,9 @@
       display: grid;
       place-items: center;
       border-radius: 11px;
-      background: rgba(0,255,136,0.10);
-      border: 1px solid rgba(0,255,136,0.14);
-      color: var(--green);
+      background: var(--radar-rank-bg);
+      border: 1px solid var(--radar-rank-border);
+      color: var(--radar-rank-text);
       font-weight: 900;
       font-size: 13px;
       flex-shrink: 0;
@@ -518,16 +527,16 @@
       z-index: 1;
     }
 
-    /* ===== BILHETE ===== */
-
     .ticket-card {
       background: linear-gradient(180deg, var(--ticket-paper-1) 0%, var(--ticket-paper-2) 100%);
       border: 1px solid rgba(126, 90, 17, 0.20);
       border-radius: 28px;
       box-shadow: 0 24px 50px rgba(0,0,0,0.26);
-      transition: 0.2s ease;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
       position: relative;
       overflow: hidden;
+      transform: translateZ(0);
+      backface-visibility: hidden;
     }
 
     .ticket-card::before {
@@ -601,10 +610,19 @@
       border: 1px solid rgba(126, 90, 17, 0.14);
       border-radius: 18px;
       padding: 15px 16px 14px 14px;
-      transition: 0.2s ease;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.45),
         0 8px 18px rgba(0,0,0,0.05);
+      transform: translateZ(0);
+      backface-visibility: hidden;
+    }
+
+    .ticket-leg:hover {
+      border-color: rgba(126, 90, 17, 0.20);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.45),
+        0 10px 20px rgba(0,0,0,0.06);
     }
 
     .ticket-leg + .ticket-leg::before {
@@ -724,10 +742,11 @@
       border-radius: 14px;
       font-weight: 800;
       font-size: 13px;
-      transition: 0.2s ease;
+      transition: filter 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      transform: translateZ(0);
     }
 
     .ticket-button {
@@ -741,7 +760,6 @@
     .ticket-button:hover,
     .ghost-button:hover,
     .primary-button:hover {
-      transform: translateY(-1px);
       filter: brightness(1.03);
     }
 
@@ -801,9 +819,11 @@
       padding: 16px;
       box-shadow: 0 16px 34px rgba(0,0,0,0.30);
       cursor: pointer;
-      transition: 0.2s ease;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
       position: relative;
       overflow: hidden;
+      transform: translateZ(0);
+      backface-visibility: hidden;
     }
 
     .competition-card::before {
@@ -813,6 +833,11 @@
       background:
         radial-gradient(circle at top right, var(--competition-glow), transparent 32%);
       pointer-events: none;
+    }
+
+    .competition-card:hover {
+      border-color: rgba(130,170,255,0.24);
+      box-shadow: 0 18px 36px rgba(0,0,0,0.32);
     }
 
     .competition-top {
@@ -882,7 +907,14 @@
       border-radius: var(--radius-lg);
       padding: 15px;
       box-shadow: var(--shadow);
-      transition: 0.2s ease;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+    }
+
+    .game-card:hover {
+      border-color: rgba(130,170,255,0.24);
+      box-shadow: 0 18px 38px rgba(0,0,0,0.30);
     }
 
     .game-main {
@@ -907,11 +939,11 @@
 
     .game-pick-preview {
       margin-top: 8px;
-      color: #dfe8ff;
+      color: #e6eeff;
       font-size: 12px;
       line-height: 1.45;
       font-weight: 700;
-      opacity: 0.95;
+      opacity: 0.96;
     }
 
     .analysis-overlay {
@@ -1034,13 +1066,15 @@
       box-shadow:
         inset 0 1px 0 rgba(255,255,255,0.03),
         0 6px 18px rgba(0,0,0,0.25);
-      transition: all 0.2s ease;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease;
       min-width: 0;
     }
 
     .stat-item:hover {
-      transform: translateY(-2px);
       border-color: rgba(0,255,150,0.35);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.03),
+        0 8px 20px rgba(0,0,0,0.26);
     }
 
     .stat-label {
@@ -1591,6 +1625,7 @@
       "UEFA Europa Conference League": "UEFA Conference League",
       "Europa Conference League": "UEFA Conference League",
       "Conference League": "UEFA Conference League",
+
       "Saudi Pro League": "Saudi Pro League",
       "Saudi Professional League": "Saudi Pro League",
       "Saudi League": "Saudi Pro League",
@@ -1599,15 +1634,34 @@
       "Liga Saudita": "Saudi Pro League",
       "Liga Profissional Saudita": "Saudi Pro League",
       "Professional League": "Saudi Pro League",
+
       "Bundesliga": "Bundesliga",
-      "2. Bundesliga": "2. Bundesliga",
-      "Bundesliga 2": "2. Bundesliga",
       "German Bundesliga": "Bundesliga",
       "Germany Bundesliga": "Bundesliga",
+      "1. Bundesliga": "Bundesliga",
+
+      "2. Bundesliga": "2. Bundesliga",
+      "Bundesliga 2": "2. Bundesliga",
       "German 2. Bundesliga": "2. Bundesliga",
+      "Germany 2. Bundesliga": "2. Bundesliga",
+      "2nd Bundesliga": "2. Bundesliga",
+
+      "Belgian Pro League": "Belgian Pro League",
+      "Belgium Pro League": "Belgian Pro League",
+      "Jupiler Pro League": "Belgian Pro League",
+      "First Division A": "Belgian Pro League",
+      "Belgian First Division A": "Belgian Pro League",
+
+      "Challenger Pro League": "Challenger Pro League",
+      "Belgian Challenger Pro League": "Challenger Pro League",
+      "First Division B": "Challenger Pro League",
+      "Belgian First Division B": "Challenger Pro League",
+      "Belgian Second Division": "Challenger Pro League",
+
       "CONMEBOL Libertadores": "CONMEBOL Libertadores",
       "Copa Libertadores": "CONMEBOL Libertadores",
       "Libertadores": "CONMEBOL Libertadores",
+
       "CONMEBOL Sudamericana": "CONMEBOL Sudamericana",
       "Sudamericana": "CONMEBOL Sudamericana",
       "Sul-Americana": "CONMEBOL Sudamericana"
@@ -1651,14 +1705,15 @@
       "Primeira Liga": { label: "Primeira Liga", badge: "PT", sort: 40 },
       "MLS": { label: "MLS", badge: "US", sort: 41 },
       "Austrian Bundesliga": { label: "Austrian Bundesliga", badge: "AT", sort: 42 },
-      "Belgian Pro League": { label: "Belgian Pro League", badge: "BE", sort: 43 },
-      "Superliga": { label: "Superliga", badge: "DK", sort: 44 },
-      "Super League Greece": { label: "Super League Greece", badge: "GR", sort: 45 },
-      "Super Lig": { label: "Super Lig", badge: "TR", sort: 46 },
-      "Saudi Pro League": { label: "Saudi Pro League", badge: "SA", sort: 47 }
+      "Belgian Pro League": { label: "Liga Belga", badge: "BE", sort: 43 },
+      "Challenger Pro League": { label: "Liga Belga 2", badge: "BE", sort: 44 },
+      "Superliga": { label: "Superliga", badge: "DK", sort: 45 },
+      "Super League Greece": { label: "Super League Greece", badge: "GR", sort: 46 },
+      "Super Lig": { label: "Super Lig", badge: "TR", sort: 47 },
+      "Saudi Pro League": { label: "Saudi Pro League", badge: "SA", sort: 48 }
     };
 
-    function escapeHtml(value) {
+function escapeHtml(value) {
       return String(value ?? "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
@@ -1713,6 +1768,7 @@
         "MLS": "USA",
         "Austrian Bundesliga": "Austria",
         "Belgian Pro League": "Belgium",
+        "Challenger Pro League": "Belgium",
         "Superliga": "Denmark",
         "Super League Greece": "Greece",
         "Super Lig": "Turkey",
@@ -2067,7 +2123,7 @@
       }) || null;
     }
 
-function getMetrics(match) {
+    function getMetrics(match) {
       const metrics = maybeJson(match.metrics) || {};
       const markets = maybeJson(match.markets) || {};
       const probabilities = maybeJson(match.probabilities) || {};
@@ -2444,11 +2500,14 @@ function getMetrics(match) {
 
       if (normalizedLeague === "Saudi Pro League") return "SA";
       if (normalizedLeague === "Bundesliga" || normalizedLeague === "2. Bundesliga") return "DE";
+      if (normalizedLeague === "Belgian Pro League" || normalizedLeague === "Challenger Pro League") return "BE";
+
       if (
         normalizedLeague === "UEFA Conference League" ||
         normalizedLeague === "UEFA Europa League" ||
         normalizedLeague === "UEFA Champions League"
       ) return null;
+
       if (
         normalizedLeague === "CONMEBOL Libertadores" ||
         normalizedLeague === "CONMEBOL Sudamericana"
@@ -2925,7 +2984,7 @@ function getMetrics(match) {
       renderTicket();
     }
 
-    function ticketItemMarkup(item, index) {
+function ticketItemMarkup(item, index) {
       return `
         <div class="ticket-leg">
           <div class="ticket-leg-index">${index + 1}</div>
@@ -2975,7 +3034,7 @@ function getMetrics(match) {
       `;
     }
 
-function renderRadar() {
+    function renderRadar() {
       const list = document.getElementById("radarList");
       if (!list) return;
 
@@ -3146,39 +3205,6 @@ function renderRadar() {
       document.getElementById("analysisOverlay")?.classList.remove("open");
     }
 
-    function inferCountryFromLeague(league) {
-      const normalized = normalizeLeagueName(league);
-
-      const map = {
-        "Brasileirão Série A": "Brazil",
-        "Brasileirão Série B": "Brazil",
-        "Brasileirão Feminino": "Brazil",
-        "Copa do Brasil": "Brazil",
-        "Copa do Nordeste": "Brazil",
-        "Copa Verde": "Brazil",
-        "Liga Argentina": "Argentina",
-        "Copa Argentina": "Argentina",
-        "Serie A": "Italy",
-        "La Liga": "Spain",
-        "Premier League": "England",
-        "Bundesliga": "Germany",
-        "2. Bundesliga": "Germany",
-        "Ligue 1": "France",
-        "Eredivisie": "Netherlands",
-        "Liga MX": "Mexico",
-        "Primeira Liga": "Portugal",
-        "MLS": "USA",
-        "Austrian Bundesliga": "Austria",
-        "Belgian Pro League": "Belgium",
-        "Superliga": "Denmark",
-        "Super League Greece": "Greece",
-        "Super Lig": "Turkey",
-        "Saudi Pro League": "Saudi Arabia"
-      };
-
-      return map[normalized] || null;
-    }
-
     function buildCompetitions() {
       const map = new Map();
       const visibleMatches = state.matches.filter(match =>
@@ -3315,7 +3341,7 @@ function renderRadar() {
                 <span>${escapeHtml(formatKickoff(match.kickoff))}</span>
               </div>
 
-              <div class="ticket-helper" style="margin-top:8px; color: var(--muted);">
+              <div class="game-pick-preview">
                 Mercado principal: ${escapeHtml(previewPick)}
               </div>
             </div>
