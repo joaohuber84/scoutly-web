@@ -35,18 +35,24 @@
       --ticket-line: rgba(126, 90, 17, 0.18);
       --ticket-chip: rgba(255,255,255,0.56);
 
-      --radar-card: rgba(11, 26, 48, 0.98);
-      --radar-card-2: rgba(16, 34, 62, 0.98);
-      --radar-border: rgba(92, 136, 255, 0.18);
-      --radar-soft: rgba(116,167,255,0.10);
-      --radar-rank-bg: rgba(78, 127, 255, 0.18);
-      --radar-rank-border: rgba(116,167,255,0.24);
-      --radar-rank-text: #dce7ff;
+      --radar-shell-1: #10345a;
+      --radar-shell-2: #0b2745;
+      --radar-shell-border: rgba(94, 163, 255, 0.24);
+      --radar-card: rgba(17, 52, 86, 0.94);
+      --radar-card-2: rgba(10, 34, 60, 0.96);
+      --radar-border: rgba(100, 166, 255, 0.22);
+      --radar-soft: rgba(116,167,255,0.14);
+      --radar-rank-bg: rgba(90, 156, 255, 0.22);
+      --radar-rank-border: rgba(126,186,255,0.30);
+      --radar-rank-text: #eef5ff;
 
-      --competition-card: rgba(16, 31, 56, 0.98);
-      --competition-card-2: rgba(10, 22, 41, 0.98);
-      --competition-border: rgba(112,154,255,0.16);
-      --competition-glow: rgba(116,167,255,0.12);
+      --competition-shell-1: #17304e;
+      --competition-shell-2: #0f2137;
+      --competition-shell-border: rgba(130, 170, 255, 0.20);
+      --competition-card: rgba(23, 47, 79, 0.96);
+      --competition-card-2: rgba(12, 28, 47, 0.98);
+      --competition-border: rgba(130,170,255,0.18);
+      --competition-glow: rgba(116,167,255,0.16);
     }
 
     * {
@@ -392,6 +398,33 @@
       min-width: 0;
     }
 
+    .radar-panel {
+      background:
+        linear-gradient(180deg, var(--radar-shell-1), var(--radar-shell-2));
+      border: 1px solid var(--radar-shell-border);
+      box-shadow:
+        0 22px 44px rgba(0,0,0,0.28),
+        inset 0 1px 0 rgba(255,255,255,0.03);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .radar-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top right, rgba(116,167,255,0.18), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(0,255,136,0.08), transparent 24%);
+      pointer-events: none;
+    }
+
+    .radar-panel .panel-header,
+    .radar-panel .panel-body {
+      position: relative;
+      z-index: 1;
+    }
+
     .radar-list {
       display: grid;
       gap: 12px;
@@ -425,8 +458,8 @@
     .radar-day-label {
       font-size: 12px;
       font-weight: 900;
-      color: #dfe9ff;
-      letter-spacing: 0.04em;
+      color: #ecf4ff;
+      letter-spacing: 0.06em;
       margin: 4px 2px 0;
       text-transform: uppercase;
     }
@@ -439,14 +472,14 @@
     .radar-time-label {
       font-size: 11px;
       font-weight: 900;
-      color: var(--amber);
+      color: #ffe29f;
       letter-spacing: 0.08em;
       text-transform: uppercase;
       margin: 2px 2px 0;
     }
 
     .radar-item {
-      background: linear-gradient(180deg, var(--radar-card-2), var(--radar-card));
+      background: linear-gradient(180deg, var(--radar-card), var(--radar-card-2));
       border: 1px solid var(--radar-border);
       border-radius: var(--radius-lg);
       padding: 13px;
@@ -465,7 +498,7 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(circle at top right, rgba(116,167,255,0.10), transparent 30%),
+        radial-gradient(circle at top right, rgba(116,167,255,0.12), transparent 30%),
         linear-gradient(180deg, rgba(255,255,255,0.02), transparent 45%);
       pointer-events: none;
     }
@@ -479,7 +512,7 @@
     }
 
     .radar-item:hover {
-      border-color: rgba(130,170,255,0.30);
+      border-color: rgba(145,190,255,0.34);
       box-shadow: 0 16px 30px rgba(0,0,0,0.24);
     }
 
@@ -505,6 +538,7 @@
       font-weight: 900;
       font-size: 13px;
       flex-shrink: 0;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
     }
 
     .radar-market {
@@ -519,7 +553,7 @@
     }
 
     .radar-kickoff {
-      color: var(--muted);
+      color: #bdd0ef;
       font-size: 11px;
       margin-top: 8px;
       line-height: 1.4;
@@ -765,6 +799,32 @@
 
     .section {
       margin-top: 24px;
+    }
+
+    .section-shell {
+      background: linear-gradient(180deg, var(--competition-shell-1), var(--competition-shell-2));
+      border: 1px solid var(--competition-shell-border);
+      border-radius: var(--radius-xl);
+      box-shadow:
+        0 22px 42px rgba(0,0,0,0.26),
+        inset 0 1px 0 rgba(255,255,255,0.03);
+      padding: 18px 16px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .section-shell::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top right, rgba(116,167,255,0.12), transparent 32%);
+      pointer-events: none;
+    }
+
+    .section-shell > * {
+      position: relative;
+      z-index: 1;
     }
 
     .section-head {
@@ -1259,6 +1319,10 @@
         padding: 24px 24px 0;
       }
 
+      .section-shell {
+        padding: 22px;
+      }
+
       .brand-title {
         font-size: 28px;
       }
@@ -1415,12 +1479,12 @@
           </div>
         </div>
 
-        <div class="panel">
+        <div class="panel radar-panel">
           <div class="panel-header">
             <div class="eyebrow">Radar Scoutly</div>
             <h2 class="panel-title">Radar do dia</h2>
             <p class="panel-subtitle">
-              As melhores oportunidades ativas do momento, organizadas por dia e horário para leitura rápida e decisão mais clara.
+              As melhores oportunidades ativas do momento, organizadas por dia e horário, com prioridade total para os jogos de hoje e leitura mais clara do produto.
             </p>
           </div>
 
@@ -1433,32 +1497,34 @@
       </div>
 
       <div class="section">
-        <div class="section-head">
-          <div>
-            <h2 class="section-title">🌍 Competições em destaque</h2>
-            <p class="section-copy">Explore as principais ligas e competições com jogos nos próximos 7 dias.</p>
-          </div>
-
-          <button class="ghost-button hidden" id="backToCompetitionsBtn">
-            ← Voltar para competições
-          </button>
-        </div>
-
-        <div id="competitionsWrap">
-          <div id="competitionsGrid" class="competitions-grid">
-            <div class="loading-state">Carregando competições...</div>
-          </div>
-        </div>
-
-        <div id="gamesWrap" class="hidden">
-          <div class="section-head" style="margin-top: 8px;">
+        <div class="section-shell">
+          <div class="section-head">
             <div>
-              <h3 class="section-title" id="selectedCompetitionTitle">Jogos da competição</h3>
-              <p class="section-copy" id="selectedCompetitionCopy">Selecione um jogo para ver a análise.</p>
+              <h2 class="section-title">🌍 Competições em destaque</h2>
+              <p class="section-copy">Explore as principais ligas e competições com jogos nos próximos 7 dias.</p>
+            </div>
+
+            <button class="ghost-button hidden" id="backToCompetitionsBtn">
+              ← Voltar para competições
+            </button>
+          </div>
+
+          <div id="competitionsWrap">
+            <div id="competitionsGrid" class="competitions-grid">
+              <div class="loading-state">Carregando competições...</div>
             </div>
           </div>
 
-          <div id="gamesGrid" class="games-grid"></div>
+          <div id="gamesWrap" class="hidden">
+            <div class="section-head" style="margin-top: 8px;">
+              <div>
+                <h3 class="section-title" id="selectedCompetitionTitle">Jogos da competição</h3>
+                <p class="section-copy" id="selectedCompetitionCopy">Selecione um jogo para ver a análise.</p>
+              </div>
+            </div>
+
+            <div id="gamesGrid" class="games-grid"></div>
+          </div>
         </div>
       </div>
 
@@ -1551,7 +1617,9 @@
       dataRefreshTimer: null,
       lastRadarSnapshot: [],
       lastOpenedMatchId: null,
-      ticketRotationIndex: 0
+      ticketRotationIndex: 0,
+      lastTicketSignature: "",
+      lastTicketLineSignature: ["", "", ""]
     };
 
     const TEAM_NAME_MAP = {
@@ -1713,7 +1781,7 @@
       "Saudi Pro League": { label: "Saudi Pro League", badge: "SA", sort: 48 }
     };
 
-function escapeHtml(value) {
+    function escapeHtml(value) {
       return String(value ?? "")
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
@@ -2605,7 +2673,7 @@ function escapeHtml(value) {
         });
     }
 
-    function buildFallbackTicketPool() {
+function buildFallbackTicketPool() {
       return getRadarEligibleMatches()
         .filter(match => isStillRelevantForTicket(match.kickoff))
         .sort((a, b) => {
@@ -2636,10 +2704,11 @@ function escapeHtml(value) {
     function getTicketRotationPattern(step) {
       const patterns = [
         [0],
+        [1],
+        [2],
         [0, 1],
         [1, 2],
         [0, 2],
-        [0, 1],
         [0, 1, 2]
       ];
       return patterns[step % patterns.length];
@@ -2700,6 +2769,28 @@ function escapeHtml(value) {
       }
 
       return result;
+    }
+
+    function splitRadarPoolsByDay(items) {
+      const today = startOfDay(new Date()).getTime();
+      const tomorrow = endOfDay(new Date()).getTime();
+
+      const todayItems = [];
+      const futureItems = [];
+
+      for (const item of items) {
+        const kickoff = parseDateSafe(item.kickoff);
+        if (!kickoff) continue;
+
+        const ts = kickoff.getTime();
+        if (ts >= today && ts <= tomorrow) {
+          todayItems.push(item);
+        } else {
+          futureItems.push(item);
+        }
+      }
+
+      return { todayItems, futureItems };
     }
 
     function buildRadarSnapshot() {
@@ -2781,8 +2872,22 @@ function escapeHtml(value) {
         return getMatchProbability(b) - getMatchProbability(a);
       });
 
-      let merged = balanceRadarByLeague(combinedPool, RADAR_MAX_PER_LEAGUE);
-      merged = fillRadarShortage(merged, combinedPool);
+      const { todayItems, futureItems } = splitRadarPoolsByDay(combinedPool);
+
+      let mergedToday = balanceRadarByLeague(todayItems, RADAR_MAX_PER_LEAGUE);
+      mergedToday = fillRadarShortage(mergedToday, todayItems);
+
+      let merged = [...mergedToday];
+
+      if (merged.length < RADAR_MAX_ITEMS) {
+        const futureBalanced = balanceRadarByLeague(
+          futureItems.filter(item => !merged.some(m => String(m.id) === String(item.id))),
+          RADAR_MAX_PER_LEAGUE
+        );
+
+        merged = fillRadarShortage(merged, futureBalanced);
+        merged = fillRadarShortage(merged, futureItems);
+      }
 
       if (merged.length < RADAR_MIN_ITEMS) {
         const extra = state.matches
@@ -2798,9 +2903,17 @@ function escapeHtml(value) {
             return d > new Date() && d <= extraLookAhead;
           })
           .sort((a, b) => {
+            const kickoffA = parseDateSafe(a.kickoff)?.getTime() || 0;
+            const kickoffB = parseDateSafe(b.kickoff)?.getTime() || 0;
+
+            const aToday = startOfDay(new Date(kickoffA)).getTime() === startOfDay(new Date()).getTime();
+            const bToday = startOfDay(new Date(kickoffB)).getTime() === startOfDay(new Date()).getTime();
+
+            if (aToday !== bToday) return aToday ? -1 : 1;
+
             const pDiff = getMatchProbability(b) - getMatchProbability(a);
             if (Math.abs(pDiff) > 0.0001) return pDiff;
-            return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
+            return kickoffA - kickoffB;
           })
           .map((match, index) => ({
             ...match,
@@ -2821,6 +2934,14 @@ function escapeHtml(value) {
         .sort((a, b) => {
           const ta = new Date(a.kickoff).getTime();
           const tb = new Date(b.kickoff).getTime();
+
+          const todayStart = startOfDay(new Date()).getTime();
+          const todayEnd = endOfDay(new Date()).getTime();
+
+          const aToday = ta >= todayStart && ta <= todayEnd;
+          const bToday = tb >= todayStart && tb <= todayEnd;
+
+          if (aToday !== bToday) return aToday ? -1 : 1;
           if (ta !== tb) return ta - tb;
           return (a.radar_rank || 999) - (b.radar_rank || 999);
         })
@@ -2852,13 +2973,20 @@ function escapeHtml(value) {
       const ticket = [];
 
       const sortedPool = [...pool].sort((a, b) => {
+        const todayStart = startOfDay(new Date()).getTime();
+        const todayEnd = endOfDay(new Date()).getTime();
+        const aTime = new Date(a.kickoff).getTime();
+        const bTime = new Date(b.kickoff).getTime();
+        const aToday = aTime >= todayStart && aTime <= todayEnd;
+        const bToday = bTime >= todayStart && bTime <= todayEnd;
+
+        if (aToday !== bToday) return aToday ? -1 : 1;
+
         const fa = marketPriority(a.family);
         const fb = marketPriority(b.family);
         if (fa !== fb) return fa - fb;
 
-        const ta = new Date(a.kickoff).getTime();
-        const tb = new Date(b.kickoff).getTime();
-        if (ta !== tb) return ta - tb;
+        if (aTime !== bTime) return aTime - bTime;
 
         return b.probability - a.probability;
       });
@@ -2891,6 +3019,80 @@ function escapeHtml(value) {
       return ticket.sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
     }
 
+    function getLineSignature(item) {
+      if (!item) return "";
+      return `${item.match_id}::${String(item.market || "").toLowerCase()}`;
+    }
+
+    function getTicketSignature(ticket) {
+      return ticket.map(getLineSignature).join("|");
+    }
+
+    function replaceTicketLines(current, nextCandidates, rotationTargets) {
+      const output = current.length ? [...current] : [];
+      const used = new Set(output.map(getLineSignature).filter(Boolean));
+      const candidateQueue = nextCandidates.filter(Boolean);
+
+      for (const index of rotationTargets) {
+        const previousSignature = getLineSignature(output[index]);
+
+        const replacement = candidateQueue.find(candidate => {
+          const signature = getLineSignature(candidate);
+          if (!signature) return false;
+          if (signature === previousSignature) return false;
+          if (used.has(signature)) return false;
+          return true;
+        });
+
+        if (replacement) {
+          if (previousSignature) used.delete(previousSignature);
+          output[index] = replacement;
+          used.add(getLineSignature(replacement));
+        }
+      }
+
+      return output.filter(Boolean);
+    }
+
+    function forceDifferentTicket(baseTicket, pool) {
+      const currentSignature = getTicketSignature(baseTicket);
+      const candidates = [...pool];
+
+      for (let attempt = 0; attempt < candidates.length; attempt += 1) {
+        const rotated = [...candidates.slice(attempt), ...candidates.slice(0, attempt)];
+        const trial = [];
+        const usedMatches = new Set();
+        const usedFamilies = new Set();
+
+        for (const item of rotated) {
+          if (usedMatches.has(item.match_id)) continue;
+          if (usedFamilies.has(item.family)) continue;
+
+          trial.push(item);
+          usedMatches.add(item.match_id);
+          usedFamilies.add(item.family);
+
+          if (trial.length >= TICKET_SIZE) break;
+        }
+
+        if (trial.length < TICKET_SIZE) {
+          for (const item of rotated) {
+            if (usedMatches.has(item.match_id)) continue;
+            trial.push(item);
+            usedMatches.add(item.match_id);
+            if (trial.length >= TICKET_SIZE) break;
+          }
+        }
+
+        const signature = getTicketSignature(trial);
+        if (signature && signature !== currentSignature) {
+          return trial.sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
+        }
+      }
+
+      return baseTicket;
+    }
+
     function generateTicket(forceRotate = true) {
       const radarItems = buildRadarSnapshot();
 
@@ -2902,24 +3104,31 @@ function escapeHtml(value) {
         state.ticketRotationIndex += 1;
       }
 
+      const radarTicketPool = uniqueByMatchAndMarket(
+        radarItems
+          .map(item =>
+            normalizeTicketPick({
+              match_id: item.id,
+              market: item.radar_market,
+              probability: item.radar_probability
+            })
+          )
+          .filter(Boolean)
+      );
+
       const radarTicket = buildTicketFromRadarSnapshot(
         radarItems,
         state.ticketRotationIndex
       );
 
       if (radarTicket.length) {
-        const current = state.currentTicket.length ? [...state.currentTicket] : [];
-        const rotationTargets = getTicketRotationPattern(state.ticketRotationIndex);
-        let nextTicket = current.length ? [...current] : [...radarTicket];
+        let nextTicket = state.currentTicket.length ? [...state.currentTicket] : [...radarTicket];
 
-        if (!current.length) {
+        if (!state.currentTicket.length) {
           nextTicket = [...radarTicket];
-        } else {
-          rotationTargets.forEach(index => {
-            if (radarTicket[index]) {
-              nextTicket[index] = radarTicket[index];
-            }
-          });
+        } else if (forceRotate) {
+          const rotationTargets = getTicketRotationPattern(state.ticketRotationIndex);
+          nextTicket = replaceTicketLines(nextTicket, radarTicketPool, rotationTargets);
         }
 
         const seenMatches = new Set();
@@ -2933,7 +3142,7 @@ function escapeHtml(value) {
           cleaned.push(item);
         });
 
-        for (const item of radarTicket) {
+        for (const item of radarTicketPool) {
           if (cleaned.length >= TICKET_SIZE) break;
           const key = `${item.match_id}::${item.market}`;
           if (seenMatches.has(key)) continue;
@@ -2941,9 +3150,20 @@ function escapeHtml(value) {
           cleaned.push(item);
         }
 
-        state.currentTicket = cleaned.slice(0, TICKET_SIZE).sort(
-          (a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime()
-        );
+        nextTicket = cleaned
+          .slice(0, TICKET_SIZE)
+          .sort((a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime());
+
+        if (forceRotate) {
+          const newSignature = getTicketSignature(nextTicket);
+          if (newSignature === state.lastTicketSignature) {
+            nextTicket = forceDifferentTicket(nextTicket, radarTicketPool);
+          }
+        }
+
+        state.currentTicket = nextTicket;
+        state.lastTicketSignature = getTicketSignature(state.currentTicket);
+        state.lastTicketLineSignature = state.currentTicket.map(getLineSignature);
         renderTicket();
         return;
       }
@@ -2980,11 +3200,18 @@ function escapeHtml(value) {
         }
       }
 
-      state.currentTicket = picks;
+      let finalPicks = picks;
+      if (forceRotate && getTicketSignature(finalPicks) === state.lastTicketSignature) {
+        finalPicks = forceDifferentTicket(finalPicks, pool);
+      }
+
+      state.currentTicket = finalPicks;
+      state.lastTicketSignature = getTicketSignature(state.currentTicket);
+      state.lastTicketLineSignature = state.currentTicket.map(getLineSignature);
       renderTicket();
     }
 
-function ticketItemMarkup(item, index) {
+    function ticketItemMarkup(item, index) {
       return `
         <div class="ticket-leg">
           <div class="ticket-leg-index">${index + 1}</div>
@@ -3394,156 +3621,101 @@ function ticketItemMarkup(item, index) {
       state.dailyPicks = data || [];
     }
 
-    async function loadMatches() {
-      const { data: matchesData, error: matchesError } = await supabaseClient
+async function loadMatches() {
+      const { data, error } = await supabaseClient
         .from("matches")
         .select("*")
-        .order("priority", { ascending: false })
         .order("kickoff", { ascending: true });
 
-      if (matchesError) throw matchesError;
-
-      const { data: analysisData, error: analysisError } = await supabaseClient
-        .from("match_analysis")
-        .select("*");
-
-      if (analysisError) throw analysisError;
-
-      const analysisMap = new Map(
-        (analysisData || []).map(item => [String(item.match_id), item])
-      );
-
-      state.matches = (matchesData || []).map(match => {
-        const normalizedLeague = normalizeLeagueName(match.league);
-        const analysis = analysisMap.get(String(match.id)) || {};
-
-        return {
-          ...match,
-          ...analysis,
-          id: match.id,
-          home_team: normalizeTeamName(match.home_team),
-          away_team: normalizeTeamName(match.away_team),
-          league: normalizedLeague,
-          country: match.country || inferCountryFromLeague(normalizedLeague),
-          kickoff: match.kickoff || match.date,
-          home_logo: match.home_logo,
-          away_logo: match.away_logo,
-          probabilities: match.probabilities,
-          metrics: match.metrics,
-          markets: match.markets
-        };
-      }).filter(match => {
-        if (!match.home_team || !match.away_team) return false;
-        if (!match.league) return false;
-        if (shouldHideLeague(match.league)) return false;
-        return true;
-      });
+      if (error) throw error;
+      state.matches = data || [];
     }
 
-    function refreshUIOnly() {
-      renderRadar();
-      renderCompetitions();
-      generateTicket(false);
-
-      if (state.selectedLeague) {
-        openCompetition(state.selectedLeague);
-      }
-
-      const openOverlay = document.getElementById("analysisOverlay");
-      if (openOverlay?.classList.contains("open") && state.lastOpenedMatchId) {
-        openAnalysis(state.lastOpenedMatchId);
-      }
-    }
-
-    async function refreshAllData(silent = false) {
+    async function loadAllData() {
       const errors = {};
-
-      if (!silent) setStatus("Atualizando Scoutly...", true);
-
-      try {
-        await loadDailyPicks();
-      } catch (error) {
-        console.error("daily_picks refresh error:", error);
-        errors.daily_picks = error.message || JSON.stringify(error);
-      }
 
       try {
         await loadMatches();
-      } catch (error) {
-        console.error("matches refresh error:", error);
-        errors.matches = error.message || JSON.stringify(error);
+      } catch (e) {
+        errors.matches = e.message;
+      }
+
+      try {
+        await loadDailyPicks();
+      } catch (e) {
+        errors.daily_picks = e.message;
       }
 
       if (Object.keys(errors).length) {
         renderLoadError(errors);
-        return false;
+        return;
       }
 
-      refreshUIOnly();
-      setStatus(`Conexão OK · Matches carregados: ${state.matches.length}`, true);
-      return true;
+      hydrateState();
+      renderAll();
+    }
+
+    function hydrateState() {
+      if (!Array.isArray(state.matches)) state.matches = [];
+      if (!Array.isArray(state.dailyPicks)) state.dailyPicks = [];
+      if (!Array.isArray(state.currentTicket)) state.currentTicket = [];
+    }
+
+    function renderAll() {
+      renderRadar();
+      renderTicket();
+      renderCompetitions();
+      setStatus("Scoutly ativo e atualizado.", true);
+    }
+
+    function setStatus(text, ok = true) {
+      const el = document.getElementById("statusBar");
+      if (!el) return;
+
+      el.textContent = text;
+      el.classList.toggle("ok", ok);
+      el.classList.toggle("error", !ok);
+    }
+
+    function setupEvents() {
+      document.getElementById("refreshBtn")?.addEventListener("click", () => {
+        setStatus("Atualizando dados...", true);
+        loadAllData();
+      });
+
+      document.getElementById("generateTicketBtn")?.addEventListener("click", () => {
+        generateTicket(true);
+      });
+
+      document.getElementById("analysisClose")?.addEventListener("click", closeAnalysis);
+      document.getElementById("analysisOverlay")?.addEventListener("click", e => {
+        if (e.target.id === "analysisOverlay") closeAnalysis();
+      });
+
+      document.getElementById("backToCompetitionsBtn")?.addEventListener("click", backToCompetitions);
     }
 
     function startAutoRefresh() {
-      if (state.refreshTimer) clearInterval(state.refreshTimer);
-      if (state.dataRefreshTimer) clearInterval(state.dataRefreshTimer);
+      if (state.autoRefreshTimer) {
+        clearInterval(state.autoRefreshTimer);
+      }
 
-      state.refreshTimer = setInterval(() => {
-        refreshUIOnly();
-      }, AUTO_UI_REFRESH_MS);
-
-      state.dataRefreshTimer = setInterval(() => {
-        refreshAllData(true);
-      }, AUTO_DATA_REFRESH_MS);
+      state.autoRefreshTimer = setInterval(() => {
+        loadAllData();
+      }, AUTO_REFRESH_INTERVAL);
     }
 
-    function bindStaticEvents() {
-      const generateBtn = document.getElementById("generateTicketBtn");
-      if (generateBtn && !generateBtn.dataset.bound) {
-        generateBtn.addEventListener("click", () => {
-          generateTicket(true);
-        });
-        generateBtn.dataset.bound = "1";
-      }
-
-      const backBtn = document.getElementById("backToCompetitionsBtn");
-      if (backBtn && !backBtn.dataset.bound) {
-        backBtn.addEventListener("click", backToCompetitions);
-        backBtn.dataset.bound = "1";
-      }
-
-      const closeBtn = document.getElementById("closeAnalysisBtn");
-      if (closeBtn && !closeBtn.dataset.bound) {
-        closeBtn.addEventListener("click", closeAnalysis);
-        closeBtn.dataset.bound = "1";
-      }
-
-      const overlay = document.getElementById("analysisOverlay");
-      if (overlay && !overlay.dataset.bound) {
-        overlay.addEventListener("click", e => {
-          if (e.target.id === "analysisOverlay") closeAnalysis();
-        });
-        overlay.dataset.bound = "1";
-      }
-
-      if (!document.body.dataset.scoutlyEscBound) {
-        document.addEventListener("keydown", e => {
-          if (e.key === "Escape") closeAnalysis();
-        });
-        document.body.dataset.scoutlyEscBound = "1";
+    function init() {
+      try {
+        setupEvents();
+        loadAllData();
+        startAutoRefresh();
+      } catch (e) {
+        renderLoadError({ init: e.message });
       }
     }
 
-    async function initialize() {
-      bindStaticEvents();
-
-      const ok = await refreshAllData(false);
-      if (!ok) return;
-
-      startAutoRefresh();
-    }
-
-    document.addEventListener("DOMContentLoaded", initialize);
+    document.addEventListener("DOMContentLoaded", init);
   </script>
 </body>
 </html>
