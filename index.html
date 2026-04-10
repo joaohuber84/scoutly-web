@@ -34,6 +34,16 @@
       --ticket-soft-ink: rgba(44, 32, 8, 0.72);
       --ticket-line: rgba(126, 90, 17, 0.18);
       --ticket-chip: rgba(255,255,255,0.56);
+
+      --radar-card: rgba(13, 28, 53, 0.98);
+      --radar-card-2: rgba(17, 36, 68, 0.98);
+      --radar-border: rgba(94, 140, 255, 0.18);
+      --radar-soft: rgba(120, 170, 255, 0.08);
+
+      --competition-card: rgba(18, 34, 60, 0.98);
+      --competition-card-2: rgba(11, 24, 45, 0.98);
+      --competition-border: rgba(112,154,255,0.16);
+      --competition-glow: rgba(116,167,255,0.12);
     }
 
     * {
@@ -365,7 +375,8 @@
     .market-line-copy,
     .analysis-market,
     .ticket-market,
-    .radar-market {
+    .radar-market,
+    .game-pick-preview {
       overflow-wrap: anywhere;
       word-break: break-word;
     }
@@ -432,12 +443,26 @@
     }
 
     .radar-item {
-      background: rgba(255,255,255,0.045);
-      border: 1px solid rgba(112,154,255,0.14);
+      background:
+        linear-gradient(180deg, var(--radar-card-2), var(--radar-card));
+      border: 1px solid var(--radar-border);
       border-radius: var(--radius-lg);
       padding: 13px;
       cursor: pointer;
       transition: 0.2s ease;
+      box-shadow: 0 14px 28px rgba(0,0,0,0.22);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .radar-item::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top right, rgba(116,167,255,0.10), transparent 30%),
+        linear-gradient(180deg, rgba(255,255,255,0.02), transparent 45%);
+      pointer-events: none;
     }
 
     .competition-card:hover,
@@ -455,6 +480,8 @@
       justify-content: space-between;
       gap: 10px;
       margin-bottom: 8px;
+      position: relative;
+      z-index: 1;
     }
 
     .radar-rank {
@@ -478,6 +505,8 @@
       letter-spacing: -0.03em;
       line-height: 1.25;
       margin-top: 8px;
+      position: relative;
+      z-index: 1;
     }
 
     .radar-kickoff {
@@ -485,9 +514,11 @@
       font-size: 11px;
       margin-top: 8px;
       line-height: 1.4;
+      position: relative;
+      z-index: 1;
     }
 
-    /* ===== BILHETE NOVO ===== */
+    /* ===== BILHETE ===== */
 
     .ticket-card {
       background: linear-gradient(180deg, var(--ticket-paper-1) 0%, var(--ticket-paper-2) 100%);
@@ -510,13 +541,7 @@
     }
 
     .ticket-card::after {
-      content: "";
-      position: absolute;
-      left: 18px;
-      right: 18px;
-      top: 84px;
-      border-top: 2px dashed rgba(126, 90, 17, 0.18);
-      pointer-events: none;
+      display: none;
     }
 
     .ticket-header {
@@ -558,13 +583,6 @@
     .ticket-main {
       display: grid;
       gap: 14px;
-    }
-
-    .ticket-rotation-note {
-      font-size: 11px;
-      color: var(--ticket-soft-ink);
-      margin-bottom: 10px;
-      font-weight: 700;
     }
 
     .ticket-legs {
@@ -691,36 +709,6 @@
       border-color: rgba(126, 90, 17, 0.10);
     }
 
-    .ticket-summary {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-      margin-bottom: 14px;
-    }
-
-    .ticket-summary-card {
-      background: rgba(255,255,255,0.45);
-      border: 1px solid rgba(126, 90, 17, 0.12);
-      border-radius: 16px;
-      padding: 12px;
-      min-width: 0;
-    }
-
-    .ticket-summary-label {
-      font-size: 11px;
-      color: var(--ticket-soft-ink);
-      margin-bottom: 6px;
-      line-height: 1.3;
-    }
-
-    .ticket-summary-value {
-      font-size: 18px;
-      font-weight: 900;
-      color: var(--ticket-ink);
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-    }
-
     .ticket-actions {
       display: flex;
       flex-wrap: wrap;
@@ -807,8 +795,8 @@
     }
 
     .competition-card {
-      background: linear-gradient(180deg, rgba(21,36,64,0.98), rgba(11,24,45,0.98));
-      border: 1px solid rgba(112,154,255,0.16);
+      background: linear-gradient(180deg, var(--competition-card), var(--competition-card-2));
+      border: 1px solid var(--competition-border);
       border-radius: var(--radius-lg);
       padding: 16px;
       box-shadow: 0 16px 34px rgba(0,0,0,0.30);
@@ -822,7 +810,8 @@
       content: "";
       position: absolute;
       inset: 0;
-      background: radial-gradient(circle at top right, rgba(116,167,255,0.10), transparent 32%);
+      background:
+        radial-gradient(circle at top right, var(--competition-glow), transparent 32%);
       pointer-events: none;
     }
 
@@ -832,6 +821,8 @@
       justify-content: space-between;
       gap: 12px;
       margin-bottom: 10px;
+      position: relative;
+      z-index: 1;
     }
 
     .competition-flag {
@@ -862,6 +853,8 @@
       font-size: 16px;
       font-weight: 800;
       line-height: 1.25;
+      position: relative;
+      z-index: 1;
     }
 
     .competition-bottom {
@@ -869,6 +862,8 @@
       font-size: 12px;
       margin-top: 10px;
       line-height: 1.5;
+      position: relative;
+      z-index: 1;
     }
 
     .games-grid {
@@ -908,6 +903,15 @@
       font-size: 12px;
       margin-top: 8px;
       line-height: 1.4;
+    }
+
+    .game-pick-preview {
+      margin-top: 8px;
+      color: #dfe8ff;
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 700;
+      opacity: 0.95;
     }
 
     .analysis-overlay {
@@ -1333,14 +1337,6 @@
       .ticket-market {
         font-size: 16px;
       }
-
-      .ticket-summary {
-        grid-template-columns: 1fr;
-      }
-
-      .ticket-summary-value {
-        font-size: 17px;
-      }
     }
   </style>
 </head>
@@ -1502,10 +1498,11 @@
       "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpuZ2RjYXRseGx4YW1jZXFweGlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIzNTQ0MDUsImV4cCI6MjA4NzkzMDQwNX0.fExn5-TVJKzljnLdg2wqF2I8FjBoNmb1wDmugLUP04M"
     );
 
-    const MATCH_END_GRACE_MINUTES = 115;
-    const RADAR_LOOKAHEAD_HOURS = 120;
+    const MATCH_END_GRACE_MINUTES = 5;
+    const RADAR_LOOKAHEAD_HOURS = 48;
     const RADAR_MIN_ITEMS = 10;
     const RADAR_MAX_ITEMS = 15;
+    const RADAR_MAX_PER_LEAGUE = 3;
     const TICKET_SIZE = 3;
     const AUTO_UI_REFRESH_MS = 60000;
     const AUTO_DATA_REFRESH_MS = 180000;
@@ -1610,7 +1607,10 @@
       "German 2. Bundesliga": "2. Bundesliga",
       "CONMEBOL Libertadores": "CONMEBOL Libertadores",
       "Copa Libertadores": "CONMEBOL Libertadores",
-      "Libertadores": "CONMEBOL Libertadores"
+      "Libertadores": "CONMEBOL Libertadores",
+      "CONMEBOL Sudamericana": "CONMEBOL Sudamericana",
+      "Sudamericana": "CONMEBOL Sudamericana",
+      "Sul-Americana": "CONMEBOL Sudamericana"
     };
 
     const leagueMeta = {
@@ -1630,7 +1630,6 @@
       "UEFA Europa League": { label: "Europa League", badge: "🏆", sort: 12 },
       "UEFA Conference League": { label: "Conference League", badge: "🏆", sort: 13 },
       "CONMEBOL Sudamericana": { label: "Sul-Americana", badge: "🏆", sort: 14 },
-      "Sul-Americana": { label: "Sul-Americana", badge: "🏆", sort: 14 },
       "CONCACAF Champions Cup": { label: "CONCACAF Champions Cup", badge: "🏆", sort: 15 },
       "Copa do Brasil": { label: "Copa do Brasil", badge: "🏆", sort: 20 },
       "Brasileirão Série A": { label: "Brasileirão Série A", badge: "BR", sort: 21 },
@@ -1687,6 +1686,51 @@
     function normalizeLeagueName(league) {
       const raw = String(league || "").trim();
       return LEAGUE_ALIASES[raw] || raw;
+    }
+
+    function inferCountryFromLeague(league) {
+      const normalized = normalizeLeagueName(league);
+
+      const map = {
+        "Brasileirão Série A": "Brazil",
+        "Brasileirão Série B": "Brazil",
+        "Brasileirão Feminino": "Brazil",
+        "Copa do Brasil": "Brazil",
+        "Copa do Nordeste": "Brazil",
+        "Copa Sul-Sudeste": "Brazil",
+        "Copa Verde": "Brazil",
+        "Liga Argentina": "Argentina",
+        "Copa Argentina": "Argentina",
+        "Serie A": "Italy",
+        "La Liga": "Spain",
+        "Premier League": "England",
+        "Bundesliga": "Germany",
+        "2. Bundesliga": "Germany",
+        "Ligue 1": "France",
+        "Eredivisie": "Netherlands",
+        "Liga MX": "Mexico",
+        "Primeira Liga": "Portugal",
+        "MLS": "USA",
+        "Austrian Bundesliga": "Austria",
+        "Belgian Pro League": "Belgium",
+        "Superliga": "Denmark",
+        "Super League Greece": "Greece",
+        "Super Lig": "Turkey",
+        "Saudi Pro League": "Saudi Arabia",
+        "UEFA Champions League": "World",
+        "UEFA Europa League": "World",
+        "UEFA Conference League": "World",
+        "CONMEBOL Libertadores": "World",
+        "CONMEBOL Sudamericana": "World",
+        "CONCACAF Champions Cup": "World",
+        "FIFA World Cup": "World",
+        "FIFA Club World Cup": "World",
+        "UEFA Nations League": "World",
+        "International Friendlies": "World",
+        "Amistosos Internacionais": "World"
+      };
+
+      return map[normalized] || null;
     }
 
     function getLeagueDisplay(league) {
@@ -1923,7 +1967,7 @@
       return `<span class="chip chip-alt">${escapeHtml(label)}</span>`;
     }
 
-function detectDirection(market = "") {
+    function detectDirection(market = "") {
       const m = String(market || "").toLowerCase();
       if (m.includes("mais de")) return "over";
       if (m.includes("menos de")) return "under";
@@ -2023,7 +2067,7 @@ function detectDirection(market = "") {
       }) || null;
     }
 
-    function getMetrics(match) {
+function getMetrics(match) {
       const metrics = maybeJson(match.metrics) || {};
       const markets = maybeJson(match.markets) || {};
       const probabilities = maybeJson(match.probabilities) || {};
@@ -2400,36 +2444,56 @@ function detectDirection(market = "") {
 
       if (normalizedLeague === "Saudi Pro League") return "SA";
       if (normalizedLeague === "Bundesliga" || normalizedLeague === "2. Bundesliga") return "DE";
-      if (normalizedLeague === "UEFA Conference League" || normalizedLeague === "UEFA Europa League" || normalizedLeague === "UEFA Champions League") return null;
-      if (normalizedLeague === "CONMEBOL Libertadores" || normalizedLeague === "CONMEBOL Sudamericana") return null;
+      if (
+        normalizedLeague === "UEFA Conference League" ||
+        normalizedLeague === "UEFA Europa League" ||
+        normalizedLeague === "UEFA Champions League"
+      ) return null;
+      if (
+        normalizedLeague === "CONMEBOL Libertadores" ||
+        normalizedLeague === "CONMEBOL Sudamericana"
+      ) return null;
 
       const flags = {
         Brazil: "BR",
+        Brasil: "BR",
         Inglaterra: "GB",
         England: "GB",
         Spain: "ES",
+        Espanha: "ES",
         Italy: "IT",
+        Itália: "IT",
         Germany: "DE",
+        Alemanha: "DE",
         France: "FR",
+        França: "FR",
         Portugal: "PT",
         Netherlands: "NL",
+        Holanda: "NL",
         Belgium: "BE",
+        Bélgica: "BE",
         USA: "US",
         "United States": "US",
+        "Estados Unidos": "US",
         Argentina: "AR",
         Mexico: "MX",
+        México: "MX",
         Turkey: "TR",
+        Turquia: "TR",
         Greece: "GR",
+        Grécia: "GR",
         Switzerland: "CH",
+        Suíça: "CH",
         Denmark: "DK",
+        Dinamarca: "DK",
         Austria: "AT",
+        Áustria: "AT",
         "Saudi Arabia": "SA",
         "Arábia Saudita": "SA",
         Saudi: "SA",
         KSA: "SA",
-        Alemanha: "DE",
-        Germany: "DE",
-        World: null
+        World: null,
+        Mundo: null
       };
 
       return flags[normalizedCountry] ?? null;
@@ -2522,6 +2586,63 @@ function detectDirection(market = "") {
       return patterns[step % patterns.length];
     }
 
+    function balanceRadarByLeague(items, maxPerLeague = RADAR_MAX_PER_LEAGUE) {
+      const counts = new Map();
+      const selected = [];
+
+      for (const item of items) {
+        const league = normalizeLeagueName(item.league);
+        const current = counts.get(league) || 0;
+
+        if (current >= maxPerLeague) continue;
+
+        counts.set(league, current + 1);
+        selected.push(item);
+
+        if (selected.length >= RADAR_MAX_ITEMS) break;
+      }
+
+      return selected;
+    }
+
+    function fillRadarShortage(baseItems, sourceItems) {
+      const existingIds = new Set(baseItems.map(item => String(item.id)));
+      const counts = new Map();
+
+      baseItems.forEach(item => {
+        const league = normalizeLeagueName(item.league);
+        counts.set(league, (counts.get(league) || 0) + 1);
+      });
+
+      const result = [...baseItems];
+
+      for (const item of sourceItems) {
+        if (result.length >= RADAR_MAX_ITEMS) break;
+        if (existingIds.has(String(item.id))) continue;
+
+        const league = normalizeLeagueName(item.league);
+        const current = counts.get(league) || 0;
+
+        if (current >= RADAR_MAX_PER_LEAGUE) continue;
+
+        result.push(item);
+        existingIds.add(String(item.id));
+        counts.set(league, current + 1);
+      }
+
+      if (result.length < RADAR_MIN_ITEMS) {
+        for (const item of sourceItems) {
+          if (result.length >= RADAR_MAX_ITEMS) break;
+          if (existingIds.has(String(item.id))) continue;
+
+          result.push(item);
+          existingIds.add(String(item.id));
+        }
+      }
+
+      return result;
+    }
+
     function buildRadarSnapshot() {
       const eligibleMatches = getRadarEligibleMatches();
       const nowTs = Date.now();
@@ -2574,7 +2695,7 @@ function detectDirection(market = "") {
 
           return ta - tb;
         })
-        .slice(0, 40)
+        .slice(0, 60)
         .map((match, index) => ({
           ...match,
           league: normalizeLeagueName(match.league),
@@ -2587,23 +2708,22 @@ function detectDirection(market = "") {
           source: "fallback"
         }));
 
-      let merged = [...rankedFromDaily, ...fallback];
+      const combinedPool = [...rankedFromDaily, ...fallback].sort((a, b) => {
+        const ta = new Date(a.kickoff).getTime();
+        const tb = new Date(b.kickoff).getTime();
 
-      merged = merged
-        .sort((a, b) => {
-          const ta = new Date(a.kickoff).getTime();
-          const tb = new Date(b.kickoff).getTime();
+        const aStarted = ta <= nowTs;
+        const bStarted = tb <= nowTs;
 
-          const aStarted = ta <= nowTs;
-          const bStarted = tb <= nowTs;
+        if (aStarted !== bStarted) return aStarted ? -1 : 1;
+        if (ta !== tb) return ta - tb;
+        if (a.radar_rank !== b.radar_rank) return a.radar_rank - b.radar_rank;
 
-          if (aStarted !== bStarted) return aStarted ? -1 : 1;
-          if (ta !== tb) return ta - tb;
-          if (a.radar_rank !== b.radar_rank) return a.radar_rank - b.radar_rank;
+        return getMatchProbability(b) - getMatchProbability(a);
+      });
 
-          return getMatchProbability(b) - getMatchProbability(a);
-        })
-        .slice(0, RADAR_MAX_ITEMS);
+      let merged = balanceRadarByLeague(combinedPool, RADAR_MAX_PER_LEAGUE);
+      merged = fillRadarShortage(merged, combinedPool);
 
       if (merged.length < RADAR_MIN_ITEMS) {
         const extra = state.matches
@@ -2623,7 +2743,6 @@ function detectDirection(market = "") {
             if (Math.abs(pDiff) > 0.0001) return pDiff;
             return new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime();
           })
-          .slice(0, RADAR_MIN_ITEMS - merged.length)
           .map((match, index) => ({
             ...match,
             league: normalizeLeagueName(match.league),
@@ -2636,14 +2755,17 @@ function detectDirection(market = "") {
             source: "extra"
           }));
 
-        merged = [...merged, ...extra]
-          .sort((a, b) => {
-            const ta = new Date(a.kickoff).getTime();
-            const tb = new Date(b.kickoff).getTime();
-            return ta - tb;
-          })
-          .slice(0, RADAR_MAX_ITEMS);
+        merged = fillRadarShortage(merged, extra);
       }
+
+      merged = merged
+        .sort((a, b) => {
+          const ta = new Date(a.kickoff).getTime();
+          const tb = new Date(b.kickoff).getTime();
+          if (ta !== tb) return ta - tb;
+          return (a.radar_rank || 999) - (b.radar_rank || 999);
+        })
+        .slice(0, RADAR_MAX_ITEMS);
 
       state.lastRadarSnapshot = merged.map((item, index) => ({
         ...item,
@@ -2841,30 +2963,7 @@ function detectDirection(market = "") {
         state.currentTicket.reduce((acc, item) => acc + Number(item.probability || 0), 0) /
         state.currentTicket.length;
 
-      const rotationTargets = getTicketRotationPattern(state.ticketRotationIndex)
-        .map(index => index + 1)
-        .join(", ");
-
       el.innerHTML = `
-        <div class="ticket-summary">
-          <div class="ticket-summary-card">
-            <div class="ticket-summary-label">Entradas no bilhete</div>
-            <div class="ticket-summary-value">${state.currentTicket.length}</div>
-          </div>
-          <div class="ticket-summary-card">
-            <div class="ticket-summary-label">Confiança geral</div>
-            <div class="ticket-summary-value">${escapeHtml(probabilityToTier(avgProbability))}</div>
-          </div>
-          <div class="ticket-summary-card">
-            <div class="ticket-summary-label">Próxima rotação</div>
-            <div class="ticket-summary-value">Linha ${escapeHtml(rotationTargets)}</div>
-          </div>
-        </div>
-
-        <div class="ticket-rotation-note">
-          Cada clique alterna a rotação do bilhete de forma mais viva: às vezes 1 linha, às vezes 2, e às vezes o bloco inteiro.
-        </div>
-
         <div class="ticket-legs">
           ${state.currentTicket.map((item, index) => ticketItemMarkup(item, index)).join("")}
         </div>
@@ -2887,26 +2986,9 @@ function renderRadar() {
         return;
       }
 
-      const now = new Date();
-      const hasManyToday = radarItems.filter(item => {
-        const d = parseDateSafe(item.kickoff);
-        if (!d) return false;
-        return formatDayKey(d) === formatDayKey(now);
-      }).length >= 6;
-
-      let filteredRadar = radarItems;
-
-      if (hasManyToday) {
-        filteredRadar = radarItems.filter(item => {
-          const d = parseDateSafe(item.kickoff);
-          if (!d) return false;
-          return formatDayKey(d) === formatDayKey(now);
-        });
-      }
-
       const groupsByDay = new Map();
 
-      filteredRadar.forEach(item => {
+      radarItems.forEach(item => {
         const dayKey = formatDayKey(item.kickoff);
         if (!groupsByDay.has(dayKey)) {
           groupsByDay.set(dayKey, {
@@ -3064,6 +3146,39 @@ function renderRadar() {
       document.getElementById("analysisOverlay")?.classList.remove("open");
     }
 
+    function inferCountryFromLeague(league) {
+      const normalized = normalizeLeagueName(league);
+
+      const map = {
+        "Brasileirão Série A": "Brazil",
+        "Brasileirão Série B": "Brazil",
+        "Brasileirão Feminino": "Brazil",
+        "Copa do Brasil": "Brazil",
+        "Copa do Nordeste": "Brazil",
+        "Copa Verde": "Brazil",
+        "Liga Argentina": "Argentina",
+        "Copa Argentina": "Argentina",
+        "Serie A": "Italy",
+        "La Liga": "Spain",
+        "Premier League": "England",
+        "Bundesliga": "Germany",
+        "2. Bundesliga": "Germany",
+        "Ligue 1": "France",
+        "Eredivisie": "Netherlands",
+        "Liga MX": "Mexico",
+        "Primeira Liga": "Portugal",
+        "MLS": "USA",
+        "Austrian Bundesliga": "Austria",
+        "Belgian Pro League": "Belgium",
+        "Superliga": "Denmark",
+        "Super League Greece": "Greece",
+        "Super Lig": "Turkey",
+        "Saudi Pro League": "Saudi Arabia"
+      };
+
+      return map[normalized] || null;
+    }
+
     function buildCompetitions() {
       const map = new Map();
       const visibleMatches = state.matches.filter(match =>
@@ -3184,6 +3299,7 @@ function renderRadar() {
       gamesGrid.innerHTML = matches.map(match => {
         const homeTeam = normalizeTeamName(match.home_team);
         const awayTeam = normalizeTeamName(match.away_team);
+        const previewPick = getPrimaryPick(match);
 
         return `
           <div class="game-card">
@@ -3199,8 +3315,8 @@ function renderRadar() {
                 <span>${escapeHtml(formatKickoff(match.kickoff))}</span>
               </div>
 
-              <div class="ticket-helper" style="margin-top:8px;">
-                Mercado principal: ${escapeHtml(getPrimaryPick(match))}
+              <div class="ticket-helper" style="margin-top:8px; color: var(--muted);">
+                Mercado principal: ${escapeHtml(previewPick)}
               </div>
             </div>
 
