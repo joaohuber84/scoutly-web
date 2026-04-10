@@ -27,6 +27,13 @@
       --radius-lg: 18px;
       --radius-md: 14px;
       --max-width: 1200px;
+
+      --ticket-paper-1: #f5e6b8;
+      --ticket-paper-2: #e3c773;
+      --ticket-ink: #2c2008;
+      --ticket-soft-ink: rgba(44, 32, 8, 0.72);
+      --ticket-line: rgba(126, 90, 17, 0.18);
+      --ticket-chip: rgba(255,255,255,0.56);
     }
 
     * {
@@ -68,8 +75,10 @@
     .brand {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: 12px;
       min-width: 0;
+      width: 100%;
     }
 
     .brand-fallback {
@@ -478,11 +487,13 @@
       line-height: 1.4;
     }
 
+    /* ===== BILHETE NOVO ===== */
+
     .ticket-card {
-      background: linear-gradient(135deg, rgba(18,36,66,0.98), rgba(15,31,56,0.98));
-      border: 1px solid rgba(240,211,107,0.24);
-      border-radius: var(--radius-xl);
-      box-shadow: 0 24px 50px rgba(0,0,0,0.42);
+      background: linear-gradient(180deg, var(--ticket-paper-1) 0%, var(--ticket-paper-2) 100%);
+      border: 1px solid rgba(126, 90, 17, 0.20);
+      border-radius: 28px;
+      box-shadow: 0 24px 50px rgba(0,0,0,0.26);
       transition: 0.2s ease;
       position: relative;
       overflow: hidden;
@@ -493,8 +504,8 @@
       position: absolute;
       inset: 0;
       background:
-        radial-gradient(circle at top right, rgba(240,211,107,0.10), transparent 30%),
-        linear-gradient(180deg, rgba(255,255,255,0.02), transparent 40%);
+        radial-gradient(circle at top right, rgba(255,255,255,0.26), transparent 28%),
+        radial-gradient(circle at bottom left, rgba(126,90,17,0.08), transparent 28%);
       pointer-events: none;
     }
 
@@ -503,19 +514,21 @@
       position: absolute;
       left: 18px;
       right: 18px;
-      top: 78px;
-      border-top: 2px dashed rgba(255,255,255,0.12);
+      top: 84px;
+      border-top: 2px dashed rgba(126, 90, 17, 0.18);
       pointer-events: none;
     }
 
     .ticket-header {
-      padding: 20px 16px 0;
+      padding: 22px 18px 0;
+      position: relative;
+      z-index: 1;
     }
 
     .ticket-eyebrow {
-      color: var(--amber);
+      color: #8a6513;
       font-size: 11px;
-      font-weight: 800;
+      font-weight: 900;
       letter-spacing: 0.10em;
       text-transform: uppercase;
       margin-bottom: 10px;
@@ -523,25 +536,35 @@
 
     .ticket-title {
       margin: 0;
-      font-size: 21px;
+      font-size: 24px;
       letter-spacing: -0.04em;
-      line-height: 1.1;
+      line-height: 1.05;
+      color: var(--ticket-ink);
     }
 
     .ticket-subtitle {
       margin: 9px 0 0;
-      color: var(--muted);
+      color: var(--ticket-soft-ink);
       font-size: 13px;
       line-height: 1.5;
     }
 
     .ticket-body {
       padding: 18px 16px 16px;
+      position: relative;
+      z-index: 1;
     }
 
     .ticket-main {
       display: grid;
       gap: 14px;
+    }
+
+    .ticket-rotation-note {
+      font-size: 11px;
+      color: var(--ticket-soft-ink);
+      margin-bottom: 10px;
+      font-weight: 700;
     }
 
     .ticket-legs {
@@ -551,28 +574,19 @@
     }
 
     .ticket-legs::after {
-      content: "";
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      right: 10px;
-      width: 2px;
-      background: repeating-linear-gradient(
-        to bottom,
-        rgba(255,255,255,0.20) 0 6px,
-        transparent 6px 12px
-      );
-      opacity: 0.45;
-      pointer-events: none;
+      display: none;
     }
 
     .ticket-leg {
       position: relative;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.48);
+      border: 1px solid rgba(126, 90, 17, 0.14);
       border-radius: 18px;
-      padding: 13px 18px 13px 14px;
+      padding: 15px 16px 14px 14px;
       transition: 0.2s ease;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.45),
+        0 8px 18px rgba(0,0,0,0.05);
     }
 
     .ticket-leg + .ticket-leg::before {
@@ -586,21 +600,22 @@
       border-radius: 999px;
       display: grid;
       place-items: center;
-      background: #081525;
-      border: 1px solid rgba(255,255,255,0.08);
-      color: var(--green);
+      background: #fff8e1;
+      border: 1px solid rgba(126, 90, 17, 0.16);
+      color: #8a6513;
       font-weight: 900;
       font-size: 15px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.08);
     }
 
     .ticket-market {
       margin-top: 8px;
-      font-size: 13px;
+      font-size: 18px;
       font-weight: 900;
-      color: #f4fbff;
+      color: var(--ticket-ink);
       text-transform: uppercase;
       letter-spacing: -0.02em;
-      line-height: 1.35;
+      line-height: 1.25;
     }
 
     .ticket-footer {
@@ -613,113 +628,99 @@
     }
 
     .ticket-confidence {
-      color: var(--amber);
+      color: #6f5312;
       font-size: 12px;
-      font-weight: 800;
+      font-weight: 900;
     }
 
     .ticket-helper {
-      color: var(--muted);
+      color: var(--ticket-soft-ink);
       font-size: 11px;
       line-height: 1.5;
     }
 
-.ticket-summary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 14px;
-}
+    .ticket-leg-index {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      background: rgba(240,211,107,0.22);
+      border: 1px solid rgba(126, 90, 17, 0.16);
+      color: #8a6513;
+      font-size: 11px;
+      font-weight: 900;
+    }
 
-.ticket-summary-card {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 16px;
-  padding: 12px;
-  min-width: 0;
-}
+    .ticket-kickoff-strong {
+      color: var(--ticket-soft-ink);
+      font-size: 11px;
+      margin-top: 8px;
+      line-height: 1.45;
+      font-weight: 700;
+    }
 
-.ticket-summary-label {
-  font-size: 11px;
-  color: var(--muted);
-  margin-bottom: 6px;
-  line-height: 1.3;
-}
+    .ticket-card .team-badge {
+      background: rgba(255,255,255,0.70);
+      border-color: rgba(126, 90, 17, 0.12);
+      color: #5c4511;
+    }
 
-.ticket-summary-value {
-  font-size: 18px;
-  font-weight: 900;
-  color: #ffffff;
-  letter-spacing: -0.03em;
-  line-height: 1.1;
-}
+    .ticket-card .team-names {
+      color: var(--ticket-ink);
+      font-size: 14px;
+    }
 
-.ticket-ticketline {
-  margin-bottom: 14px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.03));
-  border: 1px solid rgba(240,211,107,0.18);
-}
+    .ticket-card .chip-best,
+    .ticket-card .chip-good,
+    .ticket-card .chip-moderate,
+    .ticket-card .chip-extra,
+    .ticket-card .chip-family-goals,
+    .ticket-card .chip-family-btts,
+    .ticket-card .chip-family-corners,
+    .ticket-card .chip-family-shots,
+    .ticket-card .chip-family-sot,
+    .ticket-card .chip-family-cards,
+    .ticket-card .chip-family-result,
+    .ticket-card .chip-alt {
+      background: var(--ticket-chip);
+      color: #5c4511;
+      border-color: rgba(126, 90, 17, 0.10);
+    }
 
-.ticket-ticketline-label {
-  font-size: 11px;
-  color: var(--amber);
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
+    .ticket-summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
+    }
 
-.ticket-ticketline-value {
-  font-size: 14px;
-  font-weight: 800;
-  color: #f8fbff;
-  line-height: 1.45;
-}
+    .ticket-summary-card {
+      background: rgba(255,255,255,0.45);
+      border: 1px solid rgba(126, 90, 17, 0.12);
+      border-radius: 16px;
+      padding: 12px;
+      min-width: 0;
+    }
 
-.ticket-leg-index {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 24px;
-  height: 24px;
-  border-radius: 999px;
-  display: grid;
-  place-items: center;
-  background: rgba(240,211,107,0.14);
-  border: 1px solid rgba(240,211,107,0.20);
-  color: var(--amber);
-  font-size: 11px;
-  font-weight: 900;
-}
+    .ticket-summary-label {
+      font-size: 11px;
+      color: var(--ticket-soft-ink);
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
 
-.ticket-leg {
-  padding-top: 16px;
-}
+    .ticket-summary-value {
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--ticket-ink);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
 
-.ticket-kickoff-strong {
-  color: #dfe9ff;
-  font-size: 11px;
-  margin-top: 8px;
-  line-height: 1.45;
-  opacity: 0.92;
-}
-
-@media (max-width: 720px) {
-  .ticket-summary {
-    grid-template-columns: 1fr;
-  }
-
-  .ticket-summary-value {
-    font-size: 17px;
-  }
-
-  .ticket-ticketline-value {
-    font-size: 13px;
-  }
-}
-    
     .ticket-actions {
       display: flex;
       flex-wrap: wrap;
@@ -742,10 +743,10 @@
     }
 
     .ticket-button {
-      background: linear-gradient(90deg, #f59e0b, #f97316);
-      color: white;
+      background: linear-gradient(180deg, #b88614, #946707);
+      color: #fffdf7;
       padding: 12px 18px;
-      box-shadow: 0 12px 24px rgba(249,115,22,0.24);
+      box-shadow: 0 12px 24px rgba(148,103,7,0.20);
       width: 100%;
     }
 
@@ -1010,13 +1011,6 @@
       margin-top: 10px;
     }
 
-    .analysis-section-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 16px;
-      margin-top: 16px;
-    }
-
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1167,6 +1161,37 @@
       opacity: 0.9;
     }
 
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo img {
+      height: 140px;
+      width: auto;
+      display: block;
+      filter: drop-shadow(0 0 18px rgba(0, 255, 120, 0.8));
+    }
+
+    .logo-text {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.1;
+    }
+
+    .logo-text span {
+      font-size: 30px;
+      font-weight: 900;
+      color: #ffffff;
+    }
+
+    .logo-text small {
+      font-size: 14px;
+      color: #9ab0d3;
+      opacity: 0.9;
+    }
+
     @media (min-width: 721px) {
       .app-shell {
         padding: 24px 16px 60px;
@@ -1258,129 +1283,65 @@
       }
     }
 
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.logo img {
-  height: 140px;
-  width: auto;
-  display: block;
-  filter: drop-shadow(0 0 18px rgba(0, 255, 120, 0.8));
-}
-
-.logo-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.1;
-}
-
-.logo-text span {
-  font-size: 30px;
-  font-weight: 900;
-  color: #ffffff;
-}
-
-.logo-text small {
-  font-size: 14px;
-  color: #9ab0d3;
-  opacity: 0.9;
-}
-
-    .brand {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-}
-
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
     @media (max-width: 768px) {
-  .topbar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
+      .topbar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
 
-  .brand {
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-  }
+      .brand {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 12px;
+      }
 
-  .logo img {
-    height: 80px;
-  }
+      .logo img {
+        height: 88px;
+      }
 
-  .logo-text span {
-    font-size: 22px;
-  }
+      .logo-text span {
+        font-size: 24px;
+      }
 
-  .logo-text small {
-    font-size: 12px;
-  }
+      .logo-text small {
+        font-size: 12px;
+        line-height: 1.15;
+      }
 
-  .status-chip {
-    align-self: flex-start;
-  }
-}
+      .status-chip {
+        align-self: flex-start;
+        font-size: 12px;
+        padding: 7px 10px;
+        max-width: 100%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
-@media (max-width: 768px) {
-  .topbar {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
+      .status-dot {
+        width: 10px;
+        height: 10px;
+      }
 
-  .brand {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 12px;
-  }
+      .ticket-title {
+        font-size: 22px;
+      }
 
-  .logo img {
-    height: 88px;
-  }
+      .ticket-market {
+        font-size: 16px;
+      }
 
-  .logo-text span {
-    font-size: 24px;
-  }
+      .ticket-summary {
+        grid-template-columns: 1fr;
+      }
 
-  .logo-text small {
-    font-size: 12px;
-    line-height: 1.15;
-  }
-
-  @media (max-width: 768px) {
-  .status-chip {
-    align-self: flex-start;
-    font-size: 12px;
-    padding: 7px 10px;
-    max-width: 100%;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  .status-dot {
-    width: 10px;
-    height: 10px;
-  }
-
-.topbar {
-  align-items: flex-start;
-}
-  }
-  
+      .ticket-summary-value {
+        font-size: 17px;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1388,17 +1349,18 @@
     <div class="container">
       <div class="topbar">
         <div class="brand">
-       <div class="logo">
-  <img src="logo-icon.png" alt="Scoutly">
-  <div class="logo-text">
-    <span>Scoutly</span>
-    <small>Radar inteligente de oportunidades</small>
-  </div>
-</div> 
+          <div class="logo">
+            <img src="logo-icon.png" alt="Scoutly">
+            <div class="logo-text">
+              <span>Scoutly</span>
+              <small>Radar inteligente de oportunidades</small>
+            </div>
+          </div>
 
-        <div class="status-chip" id="statusChip">
-          <span class="status-dot"></span>
-          <span id="statusText">Conectando ao Scoutly...</span>
+          <div class="status-chip" id="statusChip">
+            <span class="status-dot"></span>
+            <span id="statusText">Conectando ao Scoutly...</span>
+          </div>
         </div>
       </div>
 
@@ -1510,28 +1472,29 @@
           <div class="analysis-market" id="analysisBestPick">-</div>
         </div>
 
-    <div class="analysis-main-grid">
+        <div class="analysis-main-grid">
+          <div class="left-side">
+            <div class="box">
+              <h3 class="box-title">Leitura do Scoutly</h3>
+              <div id="analysisInsight" style="color:#dbe6fb;line-height:1.65;font-size:14px;"></div>
+            </div>
 
-  <div class="left-side">
-    <div class="box">
-      <h3 class="box-title">Leitura do Scoutly</h3>
-      <div id="analysisInsight" style="color:#dbe6fb;line-height:1.65;font-size:14px;"></div>
-    </div>
+            <div class="box" style="margin-top:16px;">
+              <h3 class="box-title">Números projetados do jogo</h3>
+              <div id="analysisStats" class="stats-grid"></div>
+            </div>
+          </div>
 
-    <div class="box" style="margin-top:16px;">
-      <h3 class="box-title">Números projetados do jogo</h3>
-      <div id="analysisStats" class="stats-grid"></div>
+          <div class="right-side">
+            <div class="box">
+              <h3 class="box-title">Oportunidades alternativas</h3>
+              <div id="marketsList" class="markets-list"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-
-  <div class="right-side">
-    <div class="box">
-      <h3 class="box-title">Oportunidades alternativas</h3>
-      <div id="marketsList" class="markets-list"></div>
-    </div>
-  </div>
-
-</div>
 
   <script>
     const supabaseClient = window.supabase.createClient(
@@ -1627,6 +1590,29 @@
       "Costa Rica": "Costa Rica"
     };
 
+    const LEAGUE_ALIASES = {
+      "UEFA Europa Conference League": "UEFA Conference League",
+      "Europa Conference League": "UEFA Conference League",
+      "Conference League": "UEFA Conference League",
+      "Saudi Pro League": "Saudi Pro League",
+      "Saudi Professional League": "Saudi Pro League",
+      "Saudi League": "Saudi Pro League",
+      "Saudi Premier League": "Saudi Pro League",
+      "Campeonato Saudita": "Saudi Pro League",
+      "Liga Saudita": "Saudi Pro League",
+      "Liga Profissional Saudita": "Saudi Pro League",
+      "Professional League": "Saudi Pro League",
+      "Bundesliga": "Bundesliga",
+      "2. Bundesliga": "2. Bundesliga",
+      "Bundesliga 2": "2. Bundesliga",
+      "German Bundesliga": "Bundesliga",
+      "Germany Bundesliga": "Bundesliga",
+      "German 2. Bundesliga": "2. Bundesliga",
+      "CONMEBOL Libertadores": "CONMEBOL Libertadores",
+      "Copa Libertadores": "CONMEBOL Libertadores",
+      "Libertadores": "CONMEBOL Libertadores"
+    };
+
     const leagueMeta = {
       "FIFA World Cup": { label: "Copa do Mundo", badge: "🌍", sort: 1 },
       "FIFA Club World Cup": { label: "Mundial de Clubes", badge: "🌍", sort: 2 },
@@ -1640,13 +1626,11 @@
       "Eliminatórias da Euro": { label: "Eliminatórias da Euro", badge: "🌍", sort: 8 },
       "Eliminatórias Sul-Americanas": { label: "Eliminatórias Sul-Americanas", badge: "🌍", sort: 9 },
       "UEFA Champions League": { label: "Champions League", badge: "🏆", sort: 10 },
-      "Libertadores": { label: "Libertadores", badge: "🏆", sort: 11 },
       "CONMEBOL Libertadores": { label: "Libertadores", badge: "🏆", sort: 11 },
       "UEFA Europa League": { label: "Europa League", badge: "🏆", sort: 12 },
-      "UEFA Europa Conference League": { label: "Conference League", badge: "🏆", sort: 13 },
       "UEFA Conference League": { label: "Conference League", badge: "🏆", sort: 13 },
-      "Sul-Americana": { label: "Sul-Americana", badge: "🏆", sort: 14 },
       "CONMEBOL Sudamericana": { label: "Sul-Americana", badge: "🏆", sort: 14 },
+      "Sul-Americana": { label: "Sul-Americana", badge: "🏆", sort: 14 },
       "CONCACAF Champions Cup": { label: "CONCACAF Champions Cup", badge: "🏆", sort: 15 },
       "Copa do Brasil": { label: "Copa do Brasil", badge: "🏆", sort: 20 },
       "Brasileirão Série A": { label: "Brasileirão Série A", badge: "BR", sort: 21 },
@@ -1661,17 +1645,18 @@
       "La Liga": { label: "La Liga", badge: "ES", sort: 33 },
       "Premier League": { label: "Premier League", badge: "GB", sort: 34 },
       "Bundesliga": { label: "Bundesliga", badge: "DE", sort: 35 },
-      "Ligue 1": { label: "Ligue 1", badge: "FR", sort: 36 },
-      "Eredivisie": { label: "Eredivisie", badge: "NL", sort: 37 },
-      "Liga MX": { label: "Liga MX", badge: "MX", sort: 38 },
-      "Primeira Liga": { label: "Primeira Liga", badge: "PT", sort: 39 },
-      "MLS": { label: "MLS", badge: "US", sort: 40 },
-      "Austrian Bundesliga": { label: "Austrian Bundesliga", badge: "AT", sort: 41 },
-      "Belgian Pro League": { label: "Belgian Pro League", badge: "BE", sort: 42 },
-      "Superliga": { label: "Superliga", badge: "DK", sort: 43 },
-      "Super League Greece": { label: "Super League Greece", badge: "GR", sort: 44 },
-      "Super Lig": { label: "Super Lig", badge: "TR", sort: 45 },
-      "Saudi Pro League": { label: "Saudi Pro League", badge: "SA", sort: 46 }
+      "2. Bundesliga": { label: "2. Bundesliga", badge: "DE", sort: 36 },
+      "Ligue 1": { label: "Ligue 1", badge: "FR", sort: 37 },
+      "Eredivisie": { label: "Eredivisie", badge: "NL", sort: 38 },
+      "Liga MX": { label: "Liga MX", badge: "MX", sort: 39 },
+      "Primeira Liga": { label: "Primeira Liga", badge: "PT", sort: 40 },
+      "MLS": { label: "MLS", badge: "US", sort: 41 },
+      "Austrian Bundesliga": { label: "Austrian Bundesliga", badge: "AT", sort: 42 },
+      "Belgian Pro League": { label: "Belgian Pro League", badge: "BE", sort: 43 },
+      "Superliga": { label: "Superliga", badge: "DK", sort: 44 },
+      "Super League Greece": { label: "Super League Greece", badge: "GR", sort: 45 },
+      "Super Lig": { label: "Super Lig", badge: "TR", sort: 46 },
+      "Saudi Pro League": { label: "Saudi Pro League", badge: "SA", sort: 47 }
     };
 
     function escapeHtml(value) {
@@ -1699,16 +1684,24 @@
       return TEAM_NAME_MAP[raw] || raw || "-";
     }
 
+    function normalizeLeagueName(league) {
+      const raw = String(league || "").trim();
+      return LEAGUE_ALIASES[raw] || raw;
+    }
+
     function getLeagueDisplay(league) {
-      return leagueMeta[league]?.label || league || "-";
+      const normalized = normalizeLeagueName(league);
+      return leagueMeta[normalized]?.label || normalized || "-";
     }
 
     function getLeagueBadge(league) {
-      return leagueMeta[league]?.badge || "LG";
+      const normalized = normalizeLeagueName(league);
+      return leagueMeta[normalized]?.badge || "LG";
     }
 
     function getLeagueSort(league) {
-      return leagueMeta[league]?.sort || 999;
+      const normalized = normalizeLeagueName(league);
+      return leagueMeta[normalized]?.sort || 999;
     }
 
     function toNumber(value, fallback = null) {
@@ -1930,7 +1923,7 @@
       return `<span class="chip chip-alt">${escapeHtml(label)}</span>`;
     }
 
-    function detectDirection(market = "") {
+function detectDirection(market = "") {
       const m = String(market || "").toLowerCase();
       if (m.includes("mais de")) return "over";
       if (m.includes("menos de")) return "under";
@@ -1958,7 +1951,7 @@
     }
 
     function shouldHideLeague(leagueName) {
-      const name = String(leagueName || "").toLowerCase();
+      const name = String(normalizeLeagueName(leagueName) || "").toLowerCase();
 
       return (
         name.includes("u17") ||
@@ -2283,99 +2276,6 @@
       `).join("");
     }
 
-    function getContextForDisplay(match) {
-      const {
-        homeProb,
-        drawProb,
-        awayProb,
-        over25Prob,
-        under25Prob,
-        under35Prob,
-        bttsProb,
-        probCorners,
-        probShots,
-        probSot,
-        probCards
-      } = getMetrics(match);
-
-      const items = [];
-
-      if (homeProb !== null) items.push({ label: "Vitória mandante", value: percentText(homeProb) });
-      if (drawProb !== null) items.push({ label: "Empate", value: percentText(drawProb) });
-      if (awayProb !== null) items.push({ label: "Vitória visitante", value: percentText(awayProb) });
-
-      if (over25Prob !== null) items.push({ label: "Over 2.5", value: percentText(over25Prob) });
-      if (under25Prob !== null) items.push({ label: "Under 2.5", value: percentText(under25Prob) });
-      if (under35Prob !== null) items.push({ label: "Under 3.5", value: percentText(under35Prob) });
-      if (bttsProb !== null) items.push({ label: "BTTS", value: percentText(bttsProb) });
-      if (probCorners !== null) items.push({ label: "Escanteios", value: percentText(probCorners) });
-      if (probShots !== null) items.push({ label: "Finalizações", value: percentText(probShots) });
-      if (probSot !== null) items.push({ label: "No gol", value: percentText(probSot) });
-      if (probCards !== null) items.push({ label: "Cartões", value: percentText(probCards) });
-
-      return items.slice(0, 8);
-    }
-
-    function contextCardsMarkup(match) {
-      const items = getContextForDisplay(match);
-
-      if (!items.length) {
-        return `<div class="empty-state">Sem contexto adicional relevante para esta partida.</div>`;
-      }
-
-      return items.map(item => {
-        let icon = "📌";
-
-        if (item.label.includes("mandante")) icon = "🏠";
-        else if (item.label.includes("visitante")) icon = "✈️";
-        else if (item.label.includes("Empate")) icon = "🤝";
-        else if (item.label.includes("Over")) icon = "⚽";
-        else if (item.label.includes("Under")) icon = "🧱";
-        else if (item.label.includes("BTTS")) icon = "🔁";
-        else if (item.label.includes("Escanteios")) icon = "🚩";
-        else if (item.label.includes("Finalizações")) icon = "🎯";
-        else if (item.label.includes("No gol")) icon = "🥅";
-        else if (item.label.includes("Cartões")) icon = "🟨";
-
-        return `
-          <div class="stat-item">
-            <div class="stat-label" style="display:flex; gap:6px; align-items:center;">
-              <span>${icon}</span>
-              <span>${escapeHtml(item.label)}</span>
-            </div>
-            <div class="stat-value">${escapeHtml(item.value)}</div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    function getFlag(country) {
-      const flags = {
-        Brazil: "BR",
-        England: "GB",
-        Spain: "ES",
-        Italy: "IT",
-        Germany: "DE",
-        France: "FR",
-        Portugal: "PT",
-        Netherlands: "NL",
-        Belgium: "BE",
-        USA: "US",
-        Argentina: "AR",
-        Mexico: "MX",
-        Turkey: "TR",
-        Greece: "GR",
-        Switzerland: "CH",
-        Denmark: "DK",
-        Austria: "AT",
-        "Saudi Arabia": "SA",
-        KSA: "SA",
-        World: null
-      };
-
-      return flags[country] || null;
-    }
-
     function buildAlternativeCopy(match, market) {
       const family = marketFamily(market);
       const {
@@ -2494,6 +2394,47 @@
       return items;
     }
 
+    function getFlag(country, league = "") {
+      const normalizedCountry = String(country || "").trim();
+      const normalizedLeague = normalizeLeagueName(league);
+
+      if (normalizedLeague === "Saudi Pro League") return "SA";
+      if (normalizedLeague === "Bundesliga" || normalizedLeague === "2. Bundesliga") return "DE";
+      if (normalizedLeague === "UEFA Conference League" || normalizedLeague === "UEFA Europa League" || normalizedLeague === "UEFA Champions League") return null;
+      if (normalizedLeague === "CONMEBOL Libertadores" || normalizedLeague === "CONMEBOL Sudamericana") return null;
+
+      const flags = {
+        Brazil: "BR",
+        Inglaterra: "GB",
+        England: "GB",
+        Spain: "ES",
+        Italy: "IT",
+        Germany: "DE",
+        France: "FR",
+        Portugal: "PT",
+        Netherlands: "NL",
+        Belgium: "BE",
+        USA: "US",
+        "United States": "US",
+        Argentina: "AR",
+        Mexico: "MX",
+        Turkey: "TR",
+        Greece: "GR",
+        Switzerland: "CH",
+        Denmark: "DK",
+        Austria: "AT",
+        "Saudi Arabia": "SA",
+        "Arábia Saudita": "SA",
+        Saudi: "SA",
+        KSA: "SA",
+        Alemanha: "DE",
+        Germany: "DE",
+        World: null
+      };
+
+      return flags[normalizedCountry] ?? null;
+    }
+
     function normalizeTicketPick(rawPick) {
       const match = getMatchById(rawPick.match_id);
       if (!match) return null;
@@ -2506,7 +2447,7 @@
         match_id: match.id,
         home_team: normalizeTeamName(match.home_team),
         away_team: normalizeTeamName(match.away_team),
-        league: match.league,
+        league: normalizeLeagueName(match.league),
         country: match.country,
         kickoff: match.kickoff,
         market: getPrimaryPick(match) || rawPick.market,
@@ -2569,6 +2510,18 @@
       });
     }
 
+    function getTicketRotationPattern(step) {
+      const patterns = [
+        [0],
+        [0, 1],
+        [1, 2],
+        [0, 2],
+        [0, 1],
+        [0, 1, 2]
+      ];
+      return patterns[step % patterns.length];
+    }
+
     function buildRadarSnapshot() {
       const eligibleMatches = getRadarEligibleMatches();
       const nowTs = Date.now();
@@ -2582,6 +2535,7 @@
 
           return {
             ...match,
+            league: normalizeLeagueName(match.league),
             home_team: normalizeTeamName(match.home_team),
             away_team: normalizeTeamName(match.away_team),
             radar_market: getPrimaryPick(match) || item.market,
@@ -2623,6 +2577,7 @@
         .slice(0, 40)
         .map((match, index) => ({
           ...match,
+          league: normalizeLeagueName(match.league),
           home_team: normalizeTeamName(match.home_team),
           away_team: normalizeTeamName(match.away_team),
           radar_market: getPrimaryPick(match),
@@ -2671,6 +2626,7 @@
           .slice(0, RADAR_MIN_ITEMS - merged.length)
           .map((match, index) => ({
             ...match,
+            league: normalizeLeagueName(match.league),
             home_team: normalizeTeamName(match.home_team),
             away_team: normalizeTeamName(match.away_team),
             radar_market: getPrimaryPick(match),
@@ -2771,7 +2727,42 @@
       );
 
       if (radarTicket.length) {
-        state.currentTicket = radarTicket;
+        const current = state.currentTicket.length ? [...state.currentTicket] : [];
+        const rotationTargets = getTicketRotationPattern(state.ticketRotationIndex);
+        let nextTicket = current.length ? [...current] : [...radarTicket];
+
+        if (!current.length) {
+          nextTicket = [...radarTicket];
+        } else {
+          rotationTargets.forEach(index => {
+            if (radarTicket[index]) {
+              nextTicket[index] = radarTicket[index];
+            }
+          });
+        }
+
+        const seenMatches = new Set();
+        const cleaned = [];
+
+        nextTicket.forEach(item => {
+          if (!item) return;
+          const key = `${item.match_id}::${item.market}`;
+          if (seenMatches.has(key)) return;
+          seenMatches.add(key);
+          cleaned.push(item);
+        });
+
+        for (const item of radarTicket) {
+          if (cleaned.length >= TICKET_SIZE) break;
+          const key = `${item.match_id}::${item.market}`;
+          if (seenMatches.has(key)) continue;
+          seenMatches.add(key);
+          cleaned.push(item);
+        }
+
+        state.currentTicket = cleaned.slice(0, TICKET_SIZE).sort(
+          (a, b) => new Date(a.kickoff).getTime() - new Date(b.kickoff).getTime()
+        );
         renderTicket();
         return;
       }
@@ -2812,30 +2803,30 @@
       renderTicket();
     }
 
- function ticketItemMarkup(item, index) {
-  return `
-    <div class="ticket-leg">
-      <div class="ticket-leg-index">${index + 1}</div>
+    function ticketItemMarkup(item, index) {
+      return `
+        <div class="ticket-leg">
+          <div class="ticket-leg-index">${index + 1}</div>
 
-      <div class="teams-row compact">
-        ${teamBadge(item, "home")}
-        <div class="team-names">${escapeHtml(item.home_team)} x ${escapeHtml(item.away_team)}</div>
-        ${teamBadge(item, "away")}
-      </div>
+          <div class="teams-row compact">
+            ${teamBadge(item, "home")}
+            <div class="team-names">${escapeHtml(item.home_team)} x ${escapeHtml(item.away_team)}</div>
+            ${teamBadge(item, "away")}
+          </div>
 
-      <div class="chip-row">
-        ${chipMarkup(item.tier)}
-        ${marketFamilyChip(item.family)}
-      </div>
+          <div class="chip-row">
+            ${chipMarkup(item.tier)}
+            ${marketFamilyChip(item.family)}
+          </div>
 
-      <div class="ticket-market">${escapeHtml(item.market)}</div>
+          <div class="ticket-market">${escapeHtml(item.market)}</div>
 
-      <div class="ticket-kickoff-strong">
-        ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
-      </div>
-    </div>
-  `;
-} 
+          <div class="ticket-kickoff-strong">
+            ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
+          </div>
+        </div>
+      `;
+    }
 
     function renderTicket() {
       const el = document.getElementById("ticketContainer");
@@ -2850,9 +2841,32 @@
         state.currentTicket.reduce((acc, item) => acc + Number(item.probability || 0), 0) /
         state.currentTicket.length;
 
+      const rotationTargets = getTicketRotationPattern(state.ticketRotationIndex)
+        .map(index => index + 1)
+        .join(", ");
+
       el.innerHTML = `
+        <div class="ticket-summary">
+          <div class="ticket-summary-card">
+            <div class="ticket-summary-label">Entradas no bilhete</div>
+            <div class="ticket-summary-value">${state.currentTicket.length}</div>
+          </div>
+          <div class="ticket-summary-card">
+            <div class="ticket-summary-label">Confiança geral</div>
+            <div class="ticket-summary-value">${escapeHtml(probabilityToTier(avgProbability))}</div>
+          </div>
+          <div class="ticket-summary-card">
+            <div class="ticket-summary-label">Próxima rotação</div>
+            <div class="ticket-summary-value">Linha ${escapeHtml(rotationTargets)}</div>
+          </div>
+        </div>
+
+        <div class="ticket-rotation-note">
+          Cada clique alterna a rotação do bilhete de forma mais viva: às vezes 1 linha, às vezes 2, e às vezes o bloco inteiro.
+        </div>
+
         <div class="ticket-legs">
-          ${state.currentTicket.map((item,index) => ticketItemMarkup(item,index)).join("")}
+          ${state.currentTicket.map((item, index) => ticketItemMarkup(item, index)).join("")}
         </div>
 
         <div class="ticket-footer">
@@ -2862,7 +2876,7 @@
       `;
     }
 
-    function renderRadar() {
+function renderRadar() {
       const list = document.getElementById("radarList");
       if (!list) return;
 
@@ -2873,9 +2887,26 @@
         return;
       }
 
+      const now = new Date();
+      const hasManyToday = radarItems.filter(item => {
+        const d = parseDateSafe(item.kickoff);
+        if (!d) return false;
+        return formatDayKey(d) === formatDayKey(now);
+      }).length >= 6;
+
+      let filteredRadar = radarItems;
+
+      if (hasManyToday) {
+        filteredRadar = radarItems.filter(item => {
+          const d = parseDateSafe(item.kickoff);
+          if (!d) return false;
+          return formatDayKey(d) === formatDayKey(now);
+        });
+      }
+
       const groupsByDay = new Map();
 
-      radarItems.forEach(item => {
+      filteredRadar.forEach(item => {
         const dayKey = formatDayKey(item.kickoff);
         if (!groupsByDay.has(dayKey)) {
           groupsByDay.set(dayKey, {
@@ -2964,7 +2995,6 @@
       const analysisBestPick = document.getElementById("analysisBestPick");
       const analysisInsight = document.getElementById("analysisInsight");
       const analysisStats = document.getElementById("analysisStats");
-      const analysisContext = document.getElementById("analysisContext");
       const marketsList = document.getElementById("marketsList");
       const overlay = document.getElementById("analysisOverlay");
 
@@ -3010,10 +3040,6 @@
         analysisStats.innerHTML = statCardsMarkup(match);
       }
 
-      if (analysisContext) {
-        analysisContext.innerHTML = contextCardsMarkup(match);
-      }
-
       if (marketsList) {
         marketsList.innerHTML = detectedMarkets.length
           ? detectedMarkets.map(item => `
@@ -3046,8 +3072,8 @@
       );
 
       for (const match of visibleMatches) {
-        const league = match.league || "";
-        const country = match.country || null;
+        const league = normalizeLeagueName(match.league || "");
+        const country = match.country || inferCountryFromLeague(league);
 
         if (!map.has(league)) {
           map.set(league, {
@@ -3088,7 +3114,7 @@
       }
 
       grid.innerHTML = state.competitions.map(comp => {
-        const flagCode = getFlag(comp.country);
+        const flagCode = getFlag(comp.country, comp.league);
         const flagMarkup = flagCode
           ? `<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="28" alt="${escapeHtml(comp.country || "flag")}" />`
           : `<span>${escapeHtml(getLeagueBadge(comp.league))}</span>`;
@@ -3246,6 +3272,7 @@
       );
 
       state.matches = (matchesData || []).map(match => {
+        const normalizedLeague = normalizeLeagueName(match.league);
         const analysis = analysisMap.get(String(match.id)) || {};
 
         return {
@@ -3254,8 +3281,8 @@
           id: match.id,
           home_team: normalizeTeamName(match.home_team),
           away_team: normalizeTeamName(match.away_team),
-          league: match.league,
-          country: match.country,
+          league: normalizedLeague,
+          country: match.country || inferCountryFromLeague(normalizedLeague),
           kickoff: match.kickoff || match.date,
           home_logo: match.home_logo,
           away_logo: match.away_logo,
