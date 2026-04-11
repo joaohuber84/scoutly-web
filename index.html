@@ -1667,6 +1667,11 @@
       "German 2. Bundesliga": "2. Bundesliga",
       "Germany 2. Bundesliga": "2. Bundesliga",
       "2nd Bundesliga": "2. Bundesliga",
+      "Germany 2 Bundesliga": "2. Bundesliga",
+      "German 2 Bundesliga": "2. Bundesliga",
+       "2 Bundesliga": "2. Bundesliga",
+      "Bundesliga II": "2. Bundesliga",
+
 
       "Belgian Pro League": "Belgian Pro League",
       "Belgium Pro League": "Belgian Pro League",
@@ -1679,6 +1684,10 @@
       "First Division B": "Challenger Pro League",
       "Belgian First Division B": "Challenger Pro League",
       "Belgian Second Division": "Challenger Pro League",
+      "First Division B": "Challenger Pro League",
+      "Belgian First Division B": "Challenger Pro League",
+      "Division 1B": "Challenger Pro League",
+      "Proximus League": "Challenger Pro League",
 
       "CONMEBOL Libertadores": "CONMEBOL Libertadores",
       "Copa Libertadores": "CONMEBOL Libertadores",
@@ -2065,41 +2074,51 @@ function probabilityToTier(prob) {
       return order[family] || 99;
     }
 
-    function shouldHideLeague(leagueName) {
-      const name = String(normalizeLeagueName(leagueName) || "").toLowerCase();
+ function shouldHideLeague(leagueName) {
+  const raw = String(leagueName || "").toLowerCase();
+  const name = String(normalizeLeagueName(leagueName) || "").toLowerCase();
 
-      return (
-        name.includes("u17") ||
-        name.includes("u18") ||
-        name.includes("u19") ||
-        name.includes("u20") ||
-        name.includes("u21") ||
-        name.includes("u23") ||
-        name.includes("under 17") ||
-        name.includes("under 18") ||
-        name.includes("under 19") ||
-        name.includes("under 20") ||
-        name.includes("under 21") ||
-        name.includes("under 23") ||
-        name.includes("sub 17") ||
-        name.includes("sub 18") ||
-        name.includes("sub 19") ||
-        name.includes("sub 20") ||
-        name.includes("sub 21") ||
-        name.includes("sub 23") ||
-        name.includes("2. bundesliga") ||
-        name.includes("bundesliga 2") ||
-        name.includes("challenger pro league") ||
-        name.includes("second division") ||
-        name.includes("2nd division") ||
-        name.includes("division 2") ||
-        name.includes("league II") ||
-        name.includes("reserve") ||
-        name.includes("reserves") ||
-        name.includes("open cup")  
-      );
-    }
+  return (
+    name.includes("u17") ||
+    name.includes("u18") ||
+    name.includes("u19") ||
+    name.includes("u20") ||
+    name.includes("u21") ||
+    name.includes("u23") ||
+    name.includes("under 17") ||
+    name.includes("under 18") ||
+    name.includes("under 19") ||
+    name.includes("under 20") ||
+    name.includes("under 21") ||
+    name.includes("under 23") ||
+    name.includes("sub 17") ||
+    name.includes("sub 18") ||
+    name.includes("sub 19") ||
+    name.includes("sub 20") ||
+    name.includes("sub 21") ||
+    name.includes("sub 23") ||
+   // 🔴 LIGAS QUE QUEREMOS ESCONDER (DIVISÕES 2)
+raw.includes("bundesliga 2") ||
+raw.includes("2 bundesliga") ||
+raw.includes("2. bundesliga") ||
+raw.includes("germany 2") ||
 
+raw.includes("challenger pro league") ||
+raw.includes("division 1b") ||
+raw.includes("first division b") ||
+raw.includes("1st division b") ||
+raw.includes("proximus league") ||
+
+name.includes("2. bundesliga") ||
+name.includes("bundesliga 2") ||
+name.includes("challenger pro league") ||
+name.includes("division 1b") ||
+name.includes("proximus league") ||
+    name.includes("reserve") ||
+    name.includes("reserves") ||
+    name.includes("open cup")
+  );
+}   
     function isStillRelevantForRadar(value) {
       const d = parseDateSafe(value);
       if (!d) return false;
