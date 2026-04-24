@@ -567,11 +567,43 @@ function hasForbiddenMarker(value = "") {
     v.includes("sub 20") ||
     v.includes("sub 21") ||
     v.includes("sub 23") ||
-    v.includes("women reserve") ||
+    v.includes("women") ||
+    v.includes("woman") ||
+    v.includes("female") ||
+    v.includes("feminino") ||
+    v.includes("feminina") ||
+    v.includes("femenil") ||
+    v.includes("frauen") ||
+    v.includes("vrouwen") ||
     v.includes("reserve") ||
     v.includes("reserves") ||
     v.includes("youth")
   )
+}
+
+function isExactTargetLeague(target, rawName, country) {
+  const raw = normalizeText(rawName)
+  const c = normalizeText(country || target.country || "")
+
+  if (hasForbiddenMarker(raw)) return false
+
+  if (target.country === "Germany" && target.display === "Bundesliga") {
+    return c === "germany" && raw === "bundesliga"
+  }
+
+  if (target.country === "Belgium" && target.display === "Belgian Pro League") {
+    return c === "belgium" && (raw === "pro league" || raw === "jupiler pro league")
+  }
+
+  if (target.country === "Mexico" && target.display === "Liga MX") {
+    return c === "mexico" && raw === "liga mx"
+  }
+
+  if (target.country === "Netherlands" && target.display === "Eredivisie") {
+    return c === "netherlands" && raw === "eredivisie"
+  }
+
+  return null
 }
 
 function isLikelyClubName(name = "") {
@@ -729,12 +761,14 @@ async function resolveCountryCompetitions(target) {
 
       if (target.country === "Italy" && normalizeText(rawName).includes("women")) return false
 
-      const rawKey = normalizeText(rawName)
+    const exactDecision = isExactTargetLeague(target, rawName, item.country?.name || target.country)
+if (exactDecision !== null) return exactDecision
 
-      return Array.from(normalizedNames).some((n) => {
-        return rawKey === n || rawKey.includes(n) || n.includes(rawKey)
-      })
-    })
+const rawKey = normalizeText(rawName)
+
+return Array.from(normalizedNames).some((n) => {
+  return rawKey === n
+}) 
     .map((item) => {
       const currentSeason = item?.seasons?.find((s) => s.current) || item?.seasons?.[0]
 
