@@ -3281,6 +3281,7 @@ function buildRadarSnapshot() {
 
                       <div class="radar-market">${escapeHtml(item.radar_market)}</div>
                       <div class="radar-kickoff">
+                      ${getLeagueBadge(item.league, item.country)}
                         ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
                       </div>
                     </div>
