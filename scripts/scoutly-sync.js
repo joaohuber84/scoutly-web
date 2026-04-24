@@ -761,14 +761,20 @@ async function resolveCountryCompetitions(target) {
 
       if (target.country === "Italy" && normalizeText(rawName).includes("women")) return false
 
-    const exactDecision = isExactTargetLeague(target, rawName, item.country?.name || target.country)
-if (exactDecision !== null) return exactDecision
+      const exactDecision = isExactTargetLeague(
+        target,
+        rawName,
+        item.country?.name || target.country
+      )
 
-const rawKey = normalizeText(rawName)
+      if (exactDecision !== null) return exactDecision
 
-return Array.from(normalizedNames).some((n) => {
-  return rawKey === n
-}) 
+      const rawKey = normalizeText(rawName)
+
+      return Array.from(normalizedNames).some((n) => {
+        return rawKey === n
+      })
+    })
     .map((item) => {
       const currentSeason = item?.seasons?.find((s) => s.current) || item?.seasons?.[0]
 
@@ -787,7 +793,6 @@ return Array.from(normalizedNames).some((n) => {
       }
     })
 }
-
 async function resolveSearchCompetition(target) {
   const leagues = await api("/leagues", { search: target.search })
 
