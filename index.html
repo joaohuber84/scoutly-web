@@ -3437,8 +3437,7 @@ function buildRadarSnapshot() {
         const flagCode = getFlag(comp.country, comp.league);
         const flagMarkup = flagCode
           ? `<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="28" alt="${escapeHtml(comp.country || "flag")}" />`
-          : `<span>${escapeHtml(getLeagueBadge(comp.league))}</span>`;
-
+          : `${getLeagueBadge(comp.league, comp.country)}`;
         return `
           <div class="competition-card" data-league="${encodeURIComponent(comp.league)}" role="button" tabindex="0">
             <div class="competition-top">
