@@ -1825,11 +1825,20 @@
       return leagueMeta[normalized]?.label || normalized || "-";
     }
 
-    function getLeagueBadge(league) {
-      const normalized = normalizeLeagueName(league);
-      return leagueMeta[normalized]?.badge || "LG";
-    }
+   function getLeagueBadge(league, country = "") {
+  const normalized = normalizeLeagueName(league);
 
+  const flagCode = getFlag(
+    country || inferCountryFromLeague(normalized),
+    normalized
+  );
+
+  if (flagCode) {
+    return `<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="22" style="border-radius:4px;" />`;
+  }
+
+  return `<span>${leagueMeta[normalized]?.badge || "LG"}</span>`;
+}
     function getLeagueSort(league) {
       const normalized = normalizeLeagueName(league);
       return leagueMeta[normalized]?.sort || 999;
@@ -3254,7 +3263,7 @@ function buildRadarSnapshot() {
                       <div class="radar-top">
                         <div class="radar-rank">${item.visualRank}</div>
                         <div class="league-pill">
-                          <span>${escapeHtml(getLeagueBadge(item.league))}</span>
+                          <span>${getLeagueBadge(item.league, item.country)}</span>
                           <span>${escapeHtml(getLeagueDisplay(item.league))}</span>
                         </div>
                       </div>
@@ -3313,7 +3322,7 @@ function buildRadarSnapshot() {
       }
 
       if (analysisSubtitle) {
-        analysisSubtitle.textContent = `${getLeagueBadge(match.league)} ${getLeagueDisplay(match.league)} • ${formatKickoff(match.kickoff)}`;
+        analysisSubtitle.innerHtml = `${getLeagueBadge(match.league, match.country)} ${getLeagueDisplay(match.league)} • ${formatKickoff(match.kickoff)}`;
       }
 
       if (analysisMatchSmall) {
