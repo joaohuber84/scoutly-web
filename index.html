@@ -3174,8 +3174,8 @@ function buildRadarSnapshot() {
           </div>
 
           <div class="ticket-kickoff">
-  ${getLeagueBadge(item.league, item.country || inferCountryFromLeague(item.league))}
-  ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
+ ${getLeagueBadge(item.league, item.country || inferCountryFromLeague(item.league))}
+${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
 </div>
 
           <div class="chip-row">
@@ -3185,7 +3185,8 @@ function buildRadarSnapshot() {
 
           <div class="ticket-market">${escapeHtml(item.market)}</div>
 
-          <div class="ticket-kickoff-strong">
+          <div class="ticket-kickoff">
+           ${getLeagueBadge(item.league, item.country || inferCountryFromLeague(item.league))}
             ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
           </div>
         </div>
