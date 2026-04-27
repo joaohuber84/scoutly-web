@@ -3319,8 +3319,10 @@ function buildRadarSnapshot() {
       }
 
       if (analysisSubtitle) {
-        analysisSubtitle.innerHtml = `${getLeagueBadge(match.league, match.country)} ${getLeagueDisplay(match.league)} • ${formatKickoff(match.kickoff)}`;
-      }
+       analysisSubtitle.innerHTML = `
+  ${getLeagueBadge(match.league, match.country || inferCountryFromLeague(match.league))}
+  ${escapeHtml(getLeagueDisplay(match.league))} • ${escapeHtml(formatKickoff(match.kickoff))}
+`;
 
       if (analysisMatchSmall) {
         analysisMatchSmall.innerHTML = `
