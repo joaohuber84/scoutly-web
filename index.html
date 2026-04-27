@@ -3173,12 +3173,6 @@ function buildRadarSnapshot() {
             ${teamBadge(item, "away")}
           </div>
 
-         <div class="ticket-kickoff" style="display:flex; align-items:center; gap:6px;">
-  ${getLeagueBadge(item.league, item.country || inferCountryFromLeague(item.league))}
-  <span>
-    ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
-  </span>
-</div>
           <div class="chip-row">
             ${chipMarkup(item.tier)}
             ${marketFamilyChip(item.family)}
@@ -3186,7 +3180,7 @@ function buildRadarSnapshot() {
 
           <div class="ticket-market">${escapeHtml(item.market)}</div>
 
-          <div class="ticket-kickoff">
+          <div class="ticket-kickoff-strong">
            ${getLeagueBadge(item.league, item.country || inferCountryFromLeague(item.league))}
             ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
           </div>
