@@ -3323,6 +3323,7 @@ function buildRadarSnapshot() {
   ${getLeagueBadge(match.league, match.country || inferCountryFromLeague(match.league))}
   ${escapeHtml(getLeagueDisplay(match.league))} • ${escapeHtml(formatKickoff(match.kickoff))}
 `;
+      }
 
       if (analysisMatchSmall) {
         analysisMatchSmall.innerHTML = `
