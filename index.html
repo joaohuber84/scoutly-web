@@ -3512,9 +3512,12 @@ function openCompetition(league) {
               </div>
 
               <div class="game-meta">
-                <span>${escapeHtml(getLeagueBadge(match.league))} ${escapeHtml(getLeagueDisplay(match.league))}</span>
-                <span>${escapeHtml(formatKickoff(match.kickoff))}</span>
-              </div>
+               <span>
+  ${getLeagueBadge(match.league, match.country || inferCountryFromLeague(match.league))}
+  ${escapeHtml(getLeagueDisplay(match.league))}
+</span>
+           <span>• ${escapeHtml(formatKickoff(match.kickoff))}</span>  
+           </div>
 
               <div class="game-pick-preview">
                 Mercado principal: ${escapeHtml(previewPick)}
