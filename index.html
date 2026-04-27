@@ -3173,6 +3173,11 @@ function buildRadarSnapshot() {
             ${teamBadge(item, "away")}
           </div>
 
+          <div class="ticket-kickoff">
+  ${getLeagueBadge(item.league, item.country || inferCountryFromLeague(item.league))}
+  ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
+</div>
+
           <div class="chip-row">
             ${chipMarkup(item.tier)}
             ${marketFamilyChip(item.family)}
