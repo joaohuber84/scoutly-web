@@ -3173,11 +3173,12 @@ function buildRadarSnapshot() {
             ${teamBadge(item, "away")}
           </div>
 
-          <div class="ticket-kickoff">
- ${getLeagueBadge(item.league, item.country || inferCountryFromLeague(item.league))}
-${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
+         <div class="ticket-kickoff" style="display:flex; align-items:center; gap:6px;">
+  ${getLeagueBadge(item.league, item.country || inferCountryFromLeague(item.league))}
+  <span>
+    ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item.kickoff))}
+  </span>
 </div>
-
           <div class="chip-row">
             ${chipMarkup(item.tier)}
             ${marketFamilyChip(item.family)}
@@ -3268,12 +3269,7 @@ ${escapeHtml(getLeagueDisplay(item.league))} • ${escapeHtml(formatKickoff(item
                     <div class="radar-item" data-match-id="${escapeHtml(item.id)}">
                       <div class="radar-top">
                         <div class="radar-rank">${item.visualRank}</div>
-                        <div class="league-pill">
-                          <span>${getLeagueBadge(item.league, item.country)}</span>
-                          <span>${escapeHtml(getLeagueDisplay(item.league))}</span>
                         </div>
-                      </div>
-
                       <div class="teams-row compact">
                         ${teamBadge(item, "home")}
                         <div class="team-names">${escapeHtml(item.home_team)} x ${escapeHtml(item.away_team)}</div>
