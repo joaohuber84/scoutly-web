@@ -2262,18 +2262,82 @@ name.includes("proximus league") ||
       };
     }
 
-    function getPrimaryPick(match) {
-      return (
-        match.best_pick_1 ||
-        match.best_pick ||
-        match.pick ||
-        match.safe_pick ||
-        match.balanced_pick ||
-        match.aggressive_pick ||
-        match.value_pick ||
-        "Mercado em revisão"
-      );
+function getGameContext(match) {
+  const league = String(match.league || "").toLowerCase()
+
+  let context = "normal"
+
+  // 🏆 jogos grandes
+  if (
+    league.includes("champions") ||
+    league.includes("libertadores") ||
+    league.includes("europa") ||
+    league.includes("copa")
+  ) {
+    context = "high_stakes"
+  }
+
+  // 📊 métricas
+  const metrics = getMetrics(match)
+
+  const goals = metrics.avgGoals || 2.5
+  const shots = metrics.avgShots || 20
+  const cards = metrics.avgCards || 4
+
+  return {
+    context,
+    goals,
+    shots,
+    cards
+  }
+}
+    
+   function getPrimaryPick(match) {
+
+  // pick original do banco
+  let basePick =
+    match.best_pick_1 ||
+    match.best_pick ||
+    match.pick ||
+    match.safe_pick ||
+    match.balanced_pick ||
+    match.aggressive_pick ||
+    match.value_pick ||
+    "Mercado em revisão"
+
+  const gameCtx = getGameContext(match)
+
+  let finalPick = basePick.toLowerCase()
+
+  // 🔴 CONTEXTO DE JOGO GRANDE (mata-mata)
+  if (gameCtx.context === "high_stakes") {
+
+    if (finalPick.includes("mais de 2.5")) {
+      return "Menos de 3.5 gols"
     }
+
+    if (finalPick.includes("ambas")) {
+      return "Mais de 3.5 cartões"
+    }
+
+    if (finalPick.includes("escanteios")) {
+      return "Menos de 10.5 escanteios"
+    }
+  }
+
+  // 🟢 JOGO ABERTO (muitos gols)
+  if (gameCtx.goals >= 2.8 && gameCtx.context !== "high_stakes") {
+    return "Mais de 2.5 gols"
+  }
+
+  // 🟡 MUITO CARTÃO
+  if (gameCtx.cards >= 5) {
+    return "Mais de 4.5 cartões"
+  }
+
+  // fallback (mantém o original)
+  return basePick
+}
 
     function getMatchProbability(match) {
       const direct =
