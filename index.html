@@ -2292,10 +2292,8 @@ function getGameContext(match) {
   }
 }
     
-   function getPrimaryPick(match) {
-
-  // pick original do banco
-  let basePick =
+function getPrimaryPick(match) {
+  const basePick =
     match.best_pick_1 ||
     match.best_pick ||
     match.pick ||
@@ -2303,69 +2301,24 @@ function getGameContext(match) {
     match.balanced_pick ||
     match.aggressive_pick ||
     match.value_pick ||
-    "Mercado em revisão"
+    "Mercado em revisão";
 
-  const gameCtx = getGameContext(match)
+  const gameCtx = getGameContext(match);
+  const finalPick = basePick.toLowerCase();
 
-  let finalPick = basePick.toLowerCase()
-     
-     // 🛡️ evita dupla chance em jogo aberto
-if (
-  finalPick.includes("dupla chance") &&
-  gameCtx.goals >= 2.8
-) {
-  return "Mais de 1.5 gols"
-}
-
-// 🎯 diversificação inteligente (só troca se for MUITO melhor)
-if (
-  finalPick.includes("gol") &&
-  gameCtx.corners >= 6.5 &&
-  gameCtx.goals < 3.2
-) {
-  return "Mais de 8.5 escanteios"
-}   
-
-
-  // 🔴 CONTEXTO DE JOGO GRANDE (mata-mata)
+  // 🔴 Só corrige jogos grandes quando o pick original for muito agressivo
   if (gameCtx.context === "high_stakes") {
-
     if (finalPick.includes("mais de 2.5")) {
-      return "Menos de 3.5 gols"
+      return "Menos de 3.5 gols";
     }
 
     if (finalPick.includes("ambas")) {
-      return "Mais de 3.5 cartões"
-    }
-
-    if (finalPick.includes("escanteios")) {
-      return "Menos de 10.5 escanteios"
+      return "Mais de 3.5 cartões";
     }
   }
 
-// 🟢 jogo muito ofensivo
-if (gameCtx.goals >= 3.2 && gameCtx.context !== "high_stakes") {
-  return "Mais de 2.5 gols"
-}
-
-// 🟡 jogo padrão seguro
-if (gameCtx.goals >= 2.2 && gameCtx.goals < 3.2) {
-  return "Mais de 1.5 gols"
-}
-
-// 🔵 jogo controlado
-if (gameCtx.goals < 2.2) {
-  return "Menos de 3.5 gols"
-}
-     
-  // 🟡 MUITO CARTÃO
-  if (gameCtx.cards >= 5) {
-    return "Mais de 4.5 cartões"
-  }
-
-  // fallback (mantém o original)
-  return basePick
-}
+  return basePick;
+}  
 
     function getMatchProbability(match) {
       const direct =
