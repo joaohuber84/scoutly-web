@@ -2308,6 +2308,14 @@ function getGameContext(match) {
   const gameCtx = getGameContext(match)
 
   let finalPick = basePick.toLowerCase()
+     
+     // 🛡️ evita dupla chance em jogo aberto
+if (
+  finalPick.includes("dupla chance") &&
+  gameCtx.goals >= 2.8
+) {
+  return "Mais de 1.5 gols"
+}
 
   // 🔴 CONTEXTO DE JOGO GRANDE (mata-mata)
   if (gameCtx.context === "high_stakes") {
@@ -2325,11 +2333,21 @@ function getGameContext(match) {
     }
   }
 
-  // 🟢 JOGO ABERTO (muitos gols)
-  if (gameCtx.goals >= 2.8 && gameCtx.context !== "high_stakes") {
-    return "Mais de 2.5 gols"
-  }
+// 🟢 jogo muito ofensivo
+if (gameCtx.goals >= 3.2 && gameCtx.context !== "high_stakes") {
+  return "Mais de 2.5 gols"
+}
 
+// 🟡 jogo padrão seguro
+if (gameCtx.goals >= 2.2 && gameCtx.goals < 3.2) {
+  return "Mais de 1.5 gols"
+}
+
+// 🔵 jogo controlado
+if (gameCtx.goals < 2.2) {
+  return "Menos de 3.5 gols"
+}
+     
   // 🟡 MUITO CARTÃO
   if (gameCtx.cards >= 5) {
     return "Mais de 4.5 cartões"
