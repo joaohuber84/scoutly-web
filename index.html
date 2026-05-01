@@ -2317,6 +2317,15 @@ if (
   return "Mais de 1.5 gols"
 }
 
+     // 🎯 evita excesso de picks de gols (diversificação)
+if (
+  finalPick.includes("gol") &&
+  gameCtx.corners >= 5.5
+) {
+  return "Mais de 8.5 escanteios"
+}
+
+
   // 🔴 CONTEXTO DE JOGO GRANDE (mata-mata)
   if (gameCtx.context === "high_stakes") {
 
