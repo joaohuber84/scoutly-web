@@ -2246,71 +2246,57 @@ function toNumber(value, fallback = null) {
       );
     }
 
-   function getAnalysisData(match) {
+  function getAnalysisData(match) {
   const raw = maybeJson(match.data) || {};
 
-  const homeGeneral = raw.home_general || {};
-  const awayGeneral = raw.away_general || {};
-  const homeSide = raw.home_side || {};
-  const awaySide = raw.away_side || {};
-  const context = raw.game_context || {};
+  const homeGeneral = maybeJson(match.home_general) || match.home_general || raw.home_general || {};
+  const awayGeneral = maybeJson(match.away_general) || match.away_general || raw.away_general || {};
+  const homeSide = maybeJson(match.home_side) || match.home_side || raw.home_side || {};
+  const awaySide = maybeJson(match.away_side) || match.away_side || raw.away_side || {};
 
-  // 🔥 PROJEÇÃO (estimada com base nos dados existentes)
+  const home = homeSide && Object.keys(homeSide).length ? homeSide : homeGeneral;
+  const away = awaySide && Object.keys(awaySide).length ? awaySide : awayGeneral;
+
   const statProjection = {
     home: {
-      goals: toNumber(homeGeneral.goals_scored, null),
-      shots_total: toNumber(homeGeneral.shots_total, null),
-      shots_on_goal: toNumber(homeGeneral.shots_on_target, null),
-      corners: toNumber(homeGeneral.corners, null),
-      cards: toNumber(homeGeneral.cards, null)
+      goals: toNumber(home.avg_goals_for, 0),
+      shots_total: toNumber(home.avg_total_shots_for, 0),
+      shots_on_goal: toNumber(home.avg_shots_on_goal_for, 0),
+      corners: toNumber(home.avg_corners_for, 0),
+      cards: toNumber(home.avg_cards_for, 0)
     },
     away: {
-      goals: toNumber(awayGeneral.goals_scored, null),
-      shots_total: toNumber(awayGeneral.shots_total, null),
-      shots_on_goal: toNumber(awayGeneral.shots_on_target, null),
-      corners: toNumber(awayGeneral.corners, null),
-      cards: toNumber(awayGeneral.cards, null)
+      goals: toNumber(away.avg_goals_for, 0),
+      shots_total: toNumber(away.avg_total_shots_for, 0),
+      shots_on_goal: toNumber(away.avg_shots_on_goal_for, 0),
+      corners: toNumber(away.avg_corners_for, 0),
+      cards: toNumber(away.avg_cards_for, 0)
     },
     match: {
-      goals:
-        (toNumber(homeGeneral.goals_scored, 0) +
-         toNumber(awayGeneral.goals_scored, 0)),
-
-      shots_total:
-        (toNumber(homeGeneral.shots_total, 0) +
-         toNumber(awayGeneral.shots_total, 0)),
-
-      shots_on_goal:
-        (toNumber(homeGeneral.shots_on_target, 0) +
-         toNumber(awayGeneral.shots_on_target, 0)),
-
-      corners:
-        (toNumber(homeGeneral.corners, 0) +
-         toNumber(awayGeneral.corners, 0)),
-
-      cards:
-        (toNumber(homeGeneral.cards, 0) +
-         toNumber(awayGeneral.cards, 0))
+      goals: toNumber(match.avg_goals, null) ?? (toNumber(home.avg_goals_for, 0) + toNumber(away.avg_goals_for, 0)),
+      shots_total: toNumber(match.avg_shots, null) ?? (toNumber(home.avg_total_shots_for, 0) + toNumber(away.avg_total_shots_for, 0)),
+      shots_on_goal: toNumber(match.avg_shots_on_target, null) ?? (toNumber(home.avg_shots_on_goal_for, 0) + toNumber(away.avg_shots_on_goal_for, 0)),
+      corners: toNumber(match.avg_corners, null) ?? (toNumber(home.avg_corners_for, 0) + toNumber(away.avg_corners_for, 0)),
+      cards: toNumber(match.avg_cards, null) ?? (toNumber(home.avg_cards_for, 0) + toNumber(away.avg_cards_for, 0))
     }
   };
 
-  // 🔥 MÉDIAS (base real dos times)
   const teamAverages = {
     home: {
-      goals_for: toNumber(homeGeneral.goals_scored, null),
-      goals_against: toNumber(homeGeneral.goals_conceded, null),
-      shots_total: toNumber(homeGeneral.shots_total, null),
-      shots_on_goal: toNumber(homeGeneral.shots_on_target, null),
-      corners: toNumber(homeGeneral.corners, null),
-      cards: toNumber(homeGeneral.cards, null)
+      goals_for: toNumber(homeGeneral.avg_goals_for, 0),
+      goals_against: toNumber(homeGeneral.avg_goals_against, 0),
+      shots_total: toNumber(homeGeneral.avg_total_shots_for, 0),
+      shots_on_goal: toNumber(homeGeneral.avg_shots_on_goal_for, 0),
+      corners: toNumber(homeGeneral.avg_corners_for, 0),
+      cards: toNumber(homeGeneral.avg_cards_for, 0)
     },
     away: {
-      goals_for: toNumber(awayGeneral.goals_scored, null),
-      goals_against: toNumber(awayGeneral.goals_conceded, null),
-      shots_total: toNumber(awayGeneral.shots_total, null),
-      shots_on_goal: toNumber(awayGeneral.shots_on_target, null),
-      corners: toNumber(awayGeneral.corners, null),
-      cards: toNumber(awayGeneral.cards, null)
+      goals_for: toNumber(awayGeneral.avg_goals_for, 0),
+      goals_against: toNumber(awayGeneral.avg_goals_against, 0),
+      shots_total: toNumber(awayGeneral.avg_total_shots_for, 0),
+      shots_on_goal: toNumber(awayGeneral.avg_shots_on_goal_for, 0),
+      corners: toNumber(awayGeneral.avg_corners_for, 0),
+      cards: toNumber(awayGeneral.avg_cards_for, 0)
     }
   };
 
