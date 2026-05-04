@@ -2246,64 +2246,31 @@ function toNumber(value, fallback = null) {
       );
     }
 
-  function getAnalysisData(match) {
-  const raw = maybeJson(match.data) || {};
+ function getAnalysisData(match) {
+  const directData = maybeJson(match.data) || {};
+  const analysisSections = maybeJson(match.analysis_sections) || maybeJson(match.analysis) || directData || {};
+  const statProjection =
+    maybeJson(match.stat_projection) ||
+    maybeJson(match.projection) ||
+    directData.stat_projection ||
+    directData.projection ||
+    null;
 
-  const homeGeneral = maybeJson(match.home_general) || match.home_general || raw.home_general || {};
-  const awayGeneral = maybeJson(match.away_general) || match.away_general || raw.away_general || {};
-  const homeSide = maybeJson(match.home_side) || match.home_side || raw.home_side || {};
-  const awaySide = maybeJson(match.away_side) || match.away_side || raw.away_side || {};
+  const teamAverages =
+    maybeJson(match.team_averages) ||
+    maybeJson(match.team_stats_average) ||
+    directData.team_averages ||
+    directData.team_stats_average ||
+    null;
 
-  const home = homeSide && Object.keys(homeSide).length ? homeSide : homeGeneral;
-  const away = awaySide && Object.keys(awaySide).length ? awaySide : awayGeneral;
-
-  const statProjection = {
-    home: {
-      goals: toNumber(home.avg_goals_for, 0),
-      shots_total: toNumber(home.avg_total_shots_for, 0),
-      shots_on_goal: toNumber(home.avg_shots_on_goal_for, 0),
-      corners: toNumber(home.avg_corners_for, 0),
-      cards: toNumber(home.avg_cards_for, 0)
-    },
-    away: {
-      goals: toNumber(away.avg_goals_for, 0),
-      shots_total: toNumber(away.avg_total_shots_for, 0),
-      shots_on_goal: toNumber(away.avg_shots_on_goal_for, 0),
-      corners: toNumber(away.avg_corners_for, 0),
-      cards: toNumber(away.avg_cards_for, 0)
-    },
-    match: {
-      goals: toNumber(match.avg_goals, null) ?? (toNumber(home.avg_goals_for, 0) + toNumber(away.avg_goals_for, 0)),
-      shots_total: toNumber(match.avg_shots, null) ?? (toNumber(home.avg_total_shots_for, 0) + toNumber(away.avg_total_shots_for, 0)),
-      shots_on_goal: toNumber(match.avg_shots_on_target, null) ?? (toNumber(home.avg_shots_on_goal_for, 0) + toNumber(away.avg_shots_on_goal_for, 0)),
-      corners: toNumber(match.avg_corners, null) ?? (toNumber(home.avg_corners_for, 0) + toNumber(away.avg_corners_for, 0)),
-      cards: toNumber(match.avg_cards, null) ?? (toNumber(home.avg_cards_for, 0) + toNumber(away.avg_cards_for, 0))
-    }
-  };
-
-  const teamAverages = {
-    home: {
-      goals_for: toNumber(homeGeneral.avg_goals_for, 0),
-      goals_against: toNumber(homeGeneral.avg_goals_against, 0),
-      shots_total: toNumber(homeGeneral.avg_total_shots_for, 0),
-      shots_on_goal: toNumber(homeGeneral.avg_shots_on_goal_for, 0),
-      corners: toNumber(homeGeneral.avg_corners_for, 0),
-      cards: toNumber(homeGeneral.avg_cards_for, 0)
-    },
-    away: {
-      goals_for: toNumber(awayGeneral.avg_goals_for, 0),
-      goals_against: toNumber(awayGeneral.avg_goals_against, 0),
-      shots_total: toNumber(awayGeneral.avg_total_shots_for, 0),
-      shots_on_goal: toNumber(awayGeneral.avg_shots_on_goal_for, 0),
-      corners: toNumber(awayGeneral.avg_corners_for, 0),
-      cards: toNumber(awayGeneral.avg_cards_for, 0)
-    }
-  };
-
-  const picks = maybeJson(match.picks) || raw.picks || [];
+  const picks =
+    maybeJson(match.picks) ||
+    directData.picks ||
+    [];
 
   return {
-    raw,
+    raw: directData,
+    analysisSections,
     statProjection,
     teamAverages,
     picks: Array.isArray(picks) ? picks : []
