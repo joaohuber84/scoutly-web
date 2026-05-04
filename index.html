@@ -2246,37 +2246,84 @@ function toNumber(value, fallback = null) {
       );
     }
 
-    function getAnalysisData(match) {
-      const directData = maybeJson(match.data) || {};
-      const analysisSections = maybeJson(match.analysis_sections) || maybeJson(match.analysis) || directData || {};
-      const statProjection =
-        maybeJson(match.stat_projection) ||
-        maybeJson(match.projection) ||
-        directData.stat_projection ||
-        directData.projection ||
-        null;
+   function getAnalysisData(match) {
+  const raw = maybeJson(match.data) || {};
 
-      const teamAverages =
-        maybeJson(match.team_averages) ||
-        maybeJson(match.team_stats_average) ||
-        directData.team_averages ||
-        directData.team_stats_average ||
-        null;
+  const homeGeneral = raw.home_general || {};
+  const awayGeneral = raw.away_general || {};
+  const homeSide = raw.home_side || {};
+  const awaySide = raw.away_side || {};
+  const context = raw.game_context || {};
 
-      const picks =
-        maybeJson(match.picks) ||
-        directData.picks ||
-        [];
+  // 🔥 PROJEÇÃO (estimada com base nos dados existentes)
+  const statProjection = {
+    home: {
+      goals: toNumber(homeGeneral.goals_scored, null),
+      shots_total: toNumber(homeGeneral.shots_total, null),
+      shots_on_goal: toNumber(homeGeneral.shots_on_target, null),
+      corners: toNumber(homeGeneral.corners, null),
+      cards: toNumber(homeGeneral.cards, null)
+    },
+    away: {
+      goals: toNumber(awayGeneral.goals_scored, null),
+      shots_total: toNumber(awayGeneral.shots_total, null),
+      shots_on_goal: toNumber(awayGeneral.shots_on_target, null),
+      corners: toNumber(awayGeneral.corners, null),
+      cards: toNumber(awayGeneral.cards, null)
+    },
+    match: {
+      goals:
+        (toNumber(homeGeneral.goals_scored, 0) +
+         toNumber(awayGeneral.goals_scored, 0)),
 
-      return {
-        raw: directData,
-        analysisSections,
-        statProjection,
-        teamAverages,
-        picks: Array.isArray(picks) ? picks : []
-      };
+      shots_total:
+        (toNumber(homeGeneral.shots_total, 0) +
+         toNumber(awayGeneral.shots_total, 0)),
+
+      shots_on_goal:
+        (toNumber(homeGeneral.shots_on_target, 0) +
+         toNumber(awayGeneral.shots_on_target, 0)),
+
+      corners:
+        (toNumber(homeGeneral.corners, 0) +
+         toNumber(awayGeneral.corners, 0)),
+
+      cards:
+        (toNumber(homeGeneral.cards, 0) +
+         toNumber(awayGeneral.cards, 0))
     }
+  };
 
+  // 🔥 MÉDIAS (base real dos times)
+  const teamAverages = {
+    home: {
+      goals_for: toNumber(homeGeneral.goals_scored, null),
+      goals_against: toNumber(homeGeneral.goals_conceded, null),
+      shots_total: toNumber(homeGeneral.shots_total, null),
+      shots_on_goal: toNumber(homeGeneral.shots_on_target, null),
+      corners: toNumber(homeGeneral.corners, null),
+      cards: toNumber(homeGeneral.cards, null)
+    },
+    away: {
+      goals_for: toNumber(awayGeneral.goals_scored, null),
+      goals_against: toNumber(awayGeneral.goals_conceded, null),
+      shots_total: toNumber(awayGeneral.shots_total, null),
+      shots_on_goal: toNumber(awayGeneral.shots_on_target, null),
+      corners: toNumber(awayGeneral.corners, null),
+      cards: toNumber(awayGeneral.cards, null)
+    }
+  };
+
+  const picks = maybeJson(match.picks) || raw.picks || [];
+
+  return {
+    raw,
+    statProjection,
+    teamAverages,
+    picks: Array.isArray(picks) ? picks : []
+  };
+}
+    
     function getMetrics(match) {
       const analysis = getAnalysisData(match);
       const projection = analysis.statProjection || {};
