@@ -1,5 +1,6 @@
 const { createClient } = require("@supabase/supabase-js")
 const WebSocket = require("ws")
+global.WebSocket = WebSocket
 
 const APISPORTS_KEY = process.env.APISPORTS_KEY || ""
 const SUPABASE_URL = process.env.SUPABASE_URL || ""
