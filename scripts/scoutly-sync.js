@@ -1,4 +1,4 @@
-const { createClient } = require("@supabase/supabase-js")
+const { createClient } = require("@supabase/supabase-js/dist/main/index.js")
 
 const APISPORTS_KEY = process.env.APISPORTS_KEY || ""
 const SUPABASE_URL = process.env.SUPABASE_URL || ""
