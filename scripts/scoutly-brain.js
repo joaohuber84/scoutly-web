@@ -1,4 +1,5 @@
 const { createClient } = require("@supabase/supabase-js")
+const WebSocket = require("ws")
 
 const SUPABASE_URL = process.env.SUPABASE_URL
 const SUPABASE_KEY =
@@ -14,7 +15,21 @@ if (!SUPABASE_KEY) {
   )
 }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false,
+  },
+  realtime: {
+    transport: WebSocket,
+  },
+  global: {
+    headers: {
+      "X-Client-Info": "scoutly-brain-v3",
+    },
+  },
+})
 
 const TIMEZONE = "America/Sao_Paulo"
 const PAST_GRACE_HOURS = 3
@@ -22,13 +37,6 @@ const RADAR_SIZE = 15
 const TICKET_MIN_SIZE = 2
 const TICKET_MAX_SIZE = 3
 
-// ======================================
-// PESO DAS FAMÍLIAS DE MERCADO
-// gols / resultado / escanteios / cartões = mais fortes
-// btts = forte, mas abaixo dos acima
-// sot = intermediário
-// shots = mais fraco
-// ======================================
 const FAMILY_SCORE_WEIGHT = {
   gols: 1.0,
   resultado: 0.98,
@@ -37,24 +45,14 @@ const FAMILY_SCORE_WEIGHT = {
   btts: 0.92,
   sot: 0.91,
   shots: 0.85,
-  outro: 0.70,
+  outro: 0.7,
 }
 
-// ======================================
-// LINHAS DINÂMICAS DISPONÍVEIS
-// evita engessamento
-// ======================================
 const CORNER_OVER_LINES = [6.5, 7.5, 8.5]
 const CORNER_UNDER_LINES = [11.5, 12.5, 13.5]
-
-const CARDS_OVER_LINES = [1.5, 2.5, 3.5, 4.5, 5.5]
-
-const SHOTS_OVER_LINES = [17.5, 19.5, 21.5, 23.5, 25.5]
+const CARDS_OVER_LINES = [1.5, 2.5, 3.5, 4.5]
+const SHOTS_OVER_LINES = [17.5, 19.5, 21.5, 23.5]
 const SOT_OVER_LINES = [5.5, 6.5, 7.5, 8.5]
-
-// ======================================
-// HELPERS
-// ======================================
 
 function toNumber(value, fallback = 0) {
   const n = Number(value)
@@ -71,6 +69,21 @@ function round2(value) {
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value))
+}
+
+function maybeJson(value) {
+  if (!value) return null
+  if (typeof value === "object") return value
+
+  if (typeof value === "string") {
+    try {
+      return JSON.parse(value)
+    } catch (_) {
+      return null
+    }
+  }
+
+  return null
 }
 
 function formatDateInTZ(date, timeZone = TIMEZONE) {
@@ -101,7 +114,6 @@ function getKickoffMs(kickoff) {
 }
 
 function getDayOffsetFromToday(kickoff) {
-  if (!kickoff) return 999
   const kickoffDay = getKickoffDateOnly(kickoff)
   if (!kickoffDay) return 999
 
@@ -118,46 +130,22 @@ function buildMatchLabel(row) {
   return `${row.home_team} x ${row.away_team}`
 }
 
+function compareByKickoff(a, b) {
+  const aTime = getKickoffMs(a.kickoff)
+  const bTime = getKickoffMs(b.kickoff)
+
+  if (aTime !== bTime) return aTime - bTime
+  if (b.main_score !== a.main_score) return b.main_score - a.main_score
+
+  return String(a.league || "").localeCompare(String(b.league || ""))
+}
+
 function compareByScoreThenKickoff(a, b) {
   if (b.main_score !== a.main_score) return b.main_score - a.main_score
   if (b.main_probability !== a.main_probability) {
     return b.main_probability - a.main_probability
   }
-  return getKickoffMs(a.kickoff) - getKickoffMs(b.kickoff)
-}
-
-function compareByKickoff(a, b) {
-  return getKickoffMs(a.kickoff) - getKickoffMs(b.kickoff)
-}
-
-function compareByRadarPriority(a, b) {
-  const aDay = getDayOffsetFromToday(a.kickoff)
-  const bDay = getDayOffsetFromToday(b.kickoff)
-
-  if (aDay !== bDay) return aDay - bDay
-
-  const aKickoff = getKickoffMs(a.kickoff)
-  const bKickoff = getKickoffMs(b.kickoff)
-
-  if (aKickoff !== bKickoff) return aKickoff - bKickoff
-
-  if (b.main_score !== a.main_score) return b.main_score - a.main_score
-  return String(a.league || "").localeCompare(String(b.league || ""))
-}
-
-function maybeJson(value) {
-  if (!value) return null
-  if (typeof value === "object") return value
-
-  if (typeof value === "string") {
-    try {
-      return JSON.parse(value)
-    } catch (_) {
-      return null
-    }
-  }
-
-  return null
+  return compareByKickoff(a, b)
 }
 
 function safeLeague(row) {
@@ -186,7 +174,7 @@ function hasMinimumAnalysis(row) {
 
 function getStrengthLabel(score) {
   if (score >= 0.78) return "Forte"
-  if (score >= 0.70) return "Boa"
+  if (score >= 0.7) return "Boa"
   return "Moderada"
 }
 
@@ -196,10 +184,6 @@ function getRhythmLabel(avgShots) {
   if (shots >= 16) return "Moderado"
   return "Baixo"
 }
-
-// ======================================
-// CLASSIFICAÇÃO DE MERCADO
-// ======================================
 
 function marketFamily(market) {
   const m = String(market || "").trim().toLowerCase()
@@ -224,47 +208,15 @@ function marketFamily(market) {
   return "outro"
 }
 
-function marketMacroFromFamily(family, market = "") {
-  const m = String(market || "").toLowerCase()
-
-  if (family === "gols") {
-    if (m.includes("mais de")) return "ofensivo"
-    if (m.includes("menos de")) return "defensivo"
-  }
-
-  if (family === "btts") {
-    if (m.includes("não") || m.includes("nao")) return "defensivo"
-    return "ofensivo"
-  }
-
-  if (family === "escanteios") return "estatistico"
-  if (family === "shots") return "volume"
-  if (family === "sot") return "precisao"
-  if (family === "cards") return "disciplina"
-  if (family === "resultado") return "protecao"
-
-  return "equilibrado"
-}
-
-// ======================================
-// SELEÇÃO DINÂMICA DE LINHAS
-// ======================================
-
 function pickDynamicOverLine(value, lines) {
-  if (!lines.length) return null
-
   const eligible = lines.filter((line) => value >= line + 0.25)
   if (!eligible.length) return lines[0]
-
   return eligible[eligible.length - 1]
 }
 
 function pickDynamicUnderLine(value, lines) {
-  if (!lines.length) return null
-
   const eligible = lines.filter((line) => value <= line - 0.25)
   if (!eligible.length) return lines[lines.length - 1]
-
   return eligible[0]
 }
 
@@ -272,10 +224,6 @@ function buildSubfamily(prefix, side, line) {
   const clean = String(line).replace(".5", "5").replace(".", "")
   return `${prefix}_${side}${clean}`
 }
-
-// ======================================
-// LOAD BASE TABLES
-// ======================================
 
 async function loadBaseTables() {
   const { data: matches, error: matchesError } = await supabase
@@ -303,9 +251,7 @@ async function loadBaseTables() {
     `)
     .order("kickoff", { ascending: true, nullsFirst: false })
 
-  if (matchesError) {
-    throw matchesError
-  }
+  if (matchesError) throw matchesError
 
   const { data: analysis, error: analysisError } = await supabase
     .from("match_analysis")
@@ -342,10 +288,6 @@ async function loadBaseTables() {
   }
 }
 
-// ======================================
-// MERGE MATCH + ANALYSIS
-// ======================================
-
 function mergeMatchRow(matchRow, analysisMap) {
   const analysis = analysisMap.get(String(matchRow.id)) || {}
 
@@ -375,9 +317,7 @@ function mergeMatchRow(matchRow, analysisMap) {
   const avgShotsOnTarget =
     expectedHomeSOT > 0 || expectedAwaySOT > 0
       ? Math.round(expectedHomeSOT + expectedAwaySOT)
-      : Math.round(
-          toNumber(metrics.shots_on_target, 0) || toNumber(metrics.sot, 0)
-        )
+      : Math.round(toNumber(metrics.shots_on_target, 0) || toNumber(metrics.sot, 0))
 
   const avgCorners =
     expectedCorners > 0
@@ -388,10 +328,6 @@ function mergeMatchRow(matchRow, analysisMap) {
     expectedCards > 0
       ? round1(expectedCards)
       : round1(toNumber(metrics.cards, 0) || toNumber(markets.cards, 0))
-
-  const avgFouls = round1(
-    toNumber(metrics.fouls, 0) || toNumber(markets.fouls, 0)
-  )
 
   const homeWinProb = clamp(toNumber(probabilities.home, 0), 0, 1)
   const drawProb = clamp(toNumber(probabilities.draw, 0), 0, 1)
@@ -477,7 +413,7 @@ function mergeMatchRow(matchRow, analysisMap) {
     avg_shots: avgShots,
     avg_shots_on_target: avgShotsOnTarget,
     avg_cards: avgCards,
-    avg_fouls: avgFouls,
+    avg_fouls: null,
 
     over15_prob: round2(over15Prob),
     over25_prob: round2(over25Prob),
@@ -523,31 +459,24 @@ async function loadActiveMatches() {
   console.log("DEBUG TOTAL RAW MATCHES:", matches.length)
   console.log("DEBUG TOTAL ANALYSIS:", analysis.length)
 
-  const analysisMap = new Map(
-    analysis.map((row) => [String(row.match_id), row])
-  )
+  const analysisMap = new Map(analysis.map((row) => [String(row.match_id), row]))
 
   const merged = matches.map((row) => mergeMatchRow(row, analysisMap))
 
-  const filtered = merged.filter((row) => {
-    const kickoffDate = row.kickoff ? new Date(row.kickoff) : null
-    const kickoffValid = kickoffDate && !Number.isNaN(kickoffDate.getTime())
-
-    return kickoffValid && kickoffDate.getTime() >= minTime.getTime()
-  })
-
-  const finalRows = filtered
+  const finalRows = merged
+    .filter((row) => {
+      const kickoffDate = row.kickoff ? new Date(row.kickoff) : null
+      const kickoffValid = kickoffDate && !Number.isNaN(kickoffDate.getTime())
+      return kickoffValid && kickoffDate.getTime() >= minTime.getTime()
+    })
     .filter((row) => row.home_team && row.away_team && row.league)
     .filter((row) => hasMinimumAnalysis(row))
+    .sort(compareByKickoff)
 
   console.log("DEBUG TOTAL FILTRADOS ATIVOS:", finalRows.length)
 
-  return finalRows.sort(compareByKickoff)
+  return finalRows
 }
-
-// ======================================
-// PERFIL DO JOGO
-// ======================================
 
 function getGameProfile(row) {
   if (row.game_profile && String(row.game_profile).trim()) {
@@ -566,51 +495,27 @@ function getGameProfile(row) {
   const bttsProb = toNumber(row.btts_prob)
   const bttsNoProb = clamp(1 - bttsProb, 0, 1)
 
-  if (
-    avgGoals >= 2.8 ||
-    over25Prob >= 0.67 ||
-    (avgShots >= 24 && bttsProb >= 0.62)
-  ) {
+  if (avgGoals >= 2.8 || over25Prob >= 0.67 || (avgShots >= 24 && bttsProb >= 0.62)) {
     return "ofensivo"
   }
 
-  if (
-    avgCorners >= 8.8 &&
-    avgShots >= 21 &&
-    avgGoals >= 2.1
-  ) {
+  if (avgCorners >= 8.8 && avgShots >= 21 && avgGoals >= 2.1) {
     return "estatistico"
   }
 
-  if (
-    avgShots >= 22 &&
-    avgSOT >= 7 &&
-    avgCorners < 9.3
-  ) {
+  if (avgShots >= 22 && avgSOT >= 7 && avgCorners < 9.3) {
     return "volume"
   }
 
-  if (
-    avgSOT >= 7 &&
-    avgGoals >= 2.2 &&
-    avgShots <= 24
-  ) {
+  if (avgSOT >= 7 && avgGoals >= 2.2 && avgShots <= 24) {
     return "precisao"
   }
 
-  if (
-    avgCards >= 3.8 &&
-    avgGoals <= 3.0
-  ) {
+  if (avgCards >= 3.8 && avgGoals <= 3.0) {
     return "disciplinar"
   }
 
-  if (
-    avgGoals <= 2.1 &&
-    under25Prob >= 0.72 &&
-    bttsNoProb >= 0.70 &&
-    avgShots <= 18
-  ) {
+  if (avgGoals <= 2.1 && under25Prob >= 0.72 && bttsNoProb >= 0.7 && avgShots <= 18) {
     return "defensivo"
   }
 
@@ -620,10 +525,6 @@ function getGameProfile(row) {
 
   return "equilibrado"
 }
-
-// ======================================
-// INSIGHT
-// ======================================
 
 function buildInsight(row, bestPick, profile) {
   const avgGoals = round1(row.avg_goals)
@@ -686,10 +587,6 @@ function buildInsight(row, bestPick, profile) {
   return `A leitura Scoutly classifica este confronto como ${profile}, combinando projeção de ${avgGoals} gols, ${avgCorners} escanteios, ${avgShots} finalizações e ${avgSOT} no gol para destacar essa oportunidade.`
 }
 
-// ======================================
-// PUSH PADRONIZADO
-// ======================================
-
 function pushCandidate(candidates, item) {
   const family = item.family || marketFamily(item.market)
   const familyWeight = FAMILY_SCORE_WEIGHT[family] || 0.7
@@ -702,11 +599,6 @@ function pushCandidate(candidates, item) {
     score: adjustedScore,
   })
 }
-
-// ======================================
-// CANTOS
-// menos engessado
-// ======================================
 
 function buildCornerCandidates(row, profile) {
   const candidates = []
@@ -727,123 +619,85 @@ function buildCornerCandidates(row, profile) {
     })
   }
 
-  // OVER CORNERS
   const boostedOverCorners =
     avgCorners +
     (avgShots >= 20 ? 0.35 : 0) +
     (avgShots >= 23 ? 0.25 : 0) +
-    (avgSOT >= 7 ? 0.20 : 0) +
+    (avgSOT >= 7 ? 0.2 : 0) +
     (avgGoals >= 2.6 ? 0.15 : 0) +
-    (profile === "estatistico" ? 0.20 : 0) +
+    (profile === "estatistico" ? 0.2 : 0) +
     (profile === "volume" ? 0.18 : 0) +
-    (profile === "precisao" ? 0.10 : 0)
+    (profile === "precisao" ? 0.1 : 0)
 
   if (boostedOverCorners >= 6.0) {
     const line = pickDynamicOverLine(boostedOverCorners, CORNER_OVER_LINES)
 
-    if (line !== null) {
-      const probability = clamp(
-        0.60 +
-          (boostedOverCorners - line) * 0.11 +
-          (avgShots >= 21 ? 0.02 : 0),
-        0.60,
-        0.91
-      )
+    const probability = clamp(
+      0.6 + (boostedOverCorners - line) * 0.11 + (avgShots >= 21 ? 0.02 : 0),
+      0.6,
+      0.91
+    )
 
-      const score = clamp(
-        0.68 +
-          (boostedOverCorners - line) * 0.09 +
-          (profile === "estatistico" ? 0.03 : 0) +
-          (avgSOT >= 7 ? 0.02 : 0),
-        0.60,
-        0.90
-      )
+    const score = clamp(
+      0.68 +
+        (boostedOverCorners - line) * 0.09 +
+        (profile === "estatistico" ? 0.03 : 0) +
+        (avgSOT >= 7 ? 0.02 : 0),
+      0.6,
+      0.9
+    )
 
-      add(
-        `Mais de ${line} escanteios`,
-        probability,
-        score,
-        buildSubfamily("corners", "over", line)
-      )
-    }
+    add(
+      `Mais de ${line} escanteios`,
+      probability,
+      score,
+      buildSubfamily("corners", "over", line)
+    )
   }
 
-  // UNDER CORNERS
   const controlledCorners =
     avgCorners -
-    (avgShots <= 18 ? 0.30 : 0) -
-    (avgShots <= 16 ? 0.20 : 0) -
+    (avgShots <= 18 ? 0.3 : 0) -
+    (avgShots <= 16 ? 0.2 : 0) -
     (avgGoals <= 2.1 ? 0.15 : 0) -
     (profile === "defensivo" ? 0.18 : 0) -
-    (profile === "controlado" ? 0.20 : 0)
+    (profile === "controlado" ? 0.2 : 0)
 
   if (controlledCorners <= 10.6) {
     const referenceUnder = controlledCorners + 4.0
     const line = pickDynamicUnderLine(referenceUnder, CORNER_UNDER_LINES)
 
-    if (line !== null) {
-      const probability = clamp(
-        0.61 +
-          (line - referenceUnder) * 0.07 +
-          (avgShots <= 18 ? 0.02 : 0),
-        0.58,
-        0.89
-      )
+    const probability = clamp(
+      0.61 + (line - referenceUnder) * 0.07 + (avgShots <= 18 ? 0.02 : 0),
+      0.58,
+      0.89
+    )
 
-      const score = clamp(
-        0.66 +
-          (line - referenceUnder) * 0.06 +
-          (profile === "controlado" ? 0.03 : 0) +
-          (profile === "defensivo" ? 0.02 : 0),
-        0.58,
-        0.87
-      )
+    const score = clamp(
+      0.66 +
+        (line - referenceUnder) * 0.06 +
+        (profile === "controlado" ? 0.03 : 0) +
+        (profile === "defensivo" ? 0.02 : 0),
+      0.58,
+      0.87
+    )
 
-      add(
-        `Menos de ${line} escanteios`,
-        probability,
-        score,
-        buildSubfamily("corners", "under", line)
-      )
-    }
+    add(
+      `Menos de ${line} escanteios`,
+      probability,
+      score,
+      buildSubfamily("corners", "under", line)
+    )
   }
-
-  candidates.forEach((c) => {
-    if (String(c.subfamily).includes("under") && avgShots >= 23) {
-      c.score = clamp(c.score - 0.05, 0, 1)
-      c.probability = clamp(c.probability - 0.04, 0, 1)
-    }
-
-    if (String(c.subfamily).includes("over") && avgShots <= 17) {
-      c.score = clamp(c.score - 0.04, 0, 1)
-      c.probability = clamp(c.probability - 0.03, 0, 1)
-    }
-
-    if (profile === "ofensivo" && String(c.subfamily).includes("over") && avgGoals >= 2.8) {
-      c.score = clamp(c.score + 0.02, 0, 1)
-    }
-
-    if (
-      (profile === "defensivo" || profile === "controlado") &&
-      String(c.subfamily).includes("under")
-    ) {
-      c.score = clamp(c.score + 0.02, 0, 1)
-    }
-  })
 
   return candidates
 }
-
-// ======================================
-// CARTÕES (APENAS OVER, MAIS NATURAL)
-// ======================================
 
 function buildCardsCandidates(row, profile) {
   const candidates = []
 
   const avgCards = toNumber(row.avg_cards)
   const avgGoals = toNumber(row.avg_goals)
-  const avgShots = toNumber(row.avg_shots)
 
   function add(market, probability, score, subfamily) {
     pushCandidate(candidates, {
@@ -859,43 +713,26 @@ function buildCardsCandidates(row, profile) {
   const adjustedCards =
     avgCards +
     (avgGoals <= 2.4 ? 0.25 : 0) +
-    (avgGoals <= 2.0 ? 0.20 : 0) +
-    (profile === "disciplinar" ? 0.30 : 0) +
+    (avgGoals <= 2.0 ? 0.2 : 0) +
+    (profile === "disciplinar" ? 0.3 : 0) +
     (profile === "defensivo" ? 0.15 : 0)
 
   if (adjustedCards >= 1.8) {
     const line = pickDynamicOverLine(adjustedCards, CARDS_OVER_LINES)
 
-    if (line !== null) {
-      const probability = clamp(
-        0.60 + (adjustedCards - line) * 0.12,
-        0.58,
-        0.90
-      )
+    const probability = clamp(0.6 + (adjustedCards - line) * 0.12, 0.58, 0.9)
 
-      const score = clamp(
-        0.66 +
-          (adjustedCards - line) * 0.10 +
-          (profile === "disciplinar" ? 0.03 : 0),
-        0.60,
-        0.88
-      )
+    const score = clamp(
+      0.66 + (adjustedCards - line) * 0.1 + (profile === "disciplinar" ? 0.03 : 0),
+      0.6,
+      0.88
+    )
 
-      add(
-        `Mais de ${line} cartões`,
-        probability,
-        score,
-        buildSubfamily("cards", "over", line)
-      )
-    }
+    add(`Mais de ${line} cartões`, probability, score, buildSubfamily("cards", "over", line))
   }
 
   return candidates
 }
-
-// ======================================
-// FINALIZAÇÕES TOTAIS (MAIS FRACO)
-// ======================================
 
 function buildShotsCandidates(row, profile) {
   const candidates = []
@@ -915,41 +752,19 @@ function buildShotsCandidates(row, profile) {
   }
 
   const adjustedShots =
-    avgShots +
-    (avgGoals >= 2.3 ? 0.8 : 0) +
-    (profile === "volume" ? 0.4 : 0)
+    avgShots + (avgGoals >= 2.3 ? 0.8 : 0) + (profile === "volume" ? 0.4 : 0)
 
   if (adjustedShots >= 15.8) {
     const line = pickDynamicOverLine(adjustedShots, SHOTS_OVER_LINES)
 
-    if (line !== null) {
-      const probability = clamp(
-        0.60 + (adjustedShots - line) * 0.09,
-        0.56,
-        0.86
-      )
+    const probability = clamp(0.6 + (adjustedShots - line) * 0.09, 0.56, 0.86)
+    const score = clamp(0.64 + (adjustedShots - line) * 0.08, 0.58, 0.86)
 
-      const score = clamp(
-        0.64 + (adjustedShots - line) * 0.08,
-        0.58,
-        0.86
-      )
-
-      add(
-        `Mais de ${line} finalizações`,
-        probability,
-        score,
-        buildSubfamily("shots", "over", line)
-      )
-    }
+    add(`Mais de ${line} finalizações`, probability, score, buildSubfamily("shots", "over", line))
   }
 
   return candidates
 }
-
-// ======================================
-// FINALIZAÇÕES NO GOL (MAIS FRACO AINDA)
-// ======================================
 
 function buildSOTCandidates(row, profile) {
   const candidates = []
@@ -969,43 +784,26 @@ function buildSOTCandidates(row, profile) {
   }
 
   const adjustedSOT =
-    avgSOT +
-    (avgGoals >= 2.3 ? 0.4 : 0) +
-    (profile === "precisao" ? 0.4 : 0)
+    avgSOT + (avgGoals >= 2.3 ? 0.4 : 0) + (profile === "precisao" ? 0.4 : 0)
 
   if (adjustedSOT >= 4.4) {
     const line = pickDynamicOverLine(adjustedSOT, SOT_OVER_LINES)
 
-    if (line !== null) {
-      const probability = clamp(
-        0.59 + (adjustedSOT - line) * 0.8,
-        0.55,
-        0.84
-      )
+    const probability = clamp(0.59 + (adjustedSOT - line) * 0.08, 0.55, 0.84)
+    const score = clamp(0.62 + (adjustedSOT - line) * 0.075, 0.56, 0.83)
 
-      const score = clamp(
-        0.62 + (adjustedSOT - line) * 0.075,
-        0.56,
-        0.83
-      )
-
-      add(
-        `Mais de ${line} finalizações no gol`,
-        probability,
-        score,
-        buildSubfamily("sot", "over", line)
-      )
-    }
+    add(
+      `Mais de ${line} finalizações no gol`,
+      probability,
+      score,
+      buildSubfamily("sot", "over", line)
+    )
   }
 
   return candidates
 }
 
-// ======================================
-// GOLS (CARRO-CHEFE)
-// ======================================
-
-function buildGoalsCandidates(row, profile) {
+function buildGoalsCandidates(row) {
   const candidates = []
 
   const avgGoals = toNumber(row.avg_goals)
@@ -1023,66 +821,30 @@ function buildGoalsCandidates(row, profile) {
     })
   }
 
-  // OVER 1.5
   if (avgGoals >= 1.6) {
     const prob = clamp(over25 + 0.18, 0.62, 0.92)
-
-    add(
-      "Mais de 1.5 gols",
-      prob,
-      prob,
-      "gols_over15",
-      "ofensivo"
-    )
+    add("Mais de 1.5 gols", prob, prob, "gols_over15", "ofensivo")
   }
 
-  // OVER 2.5
   if (avgGoals >= 2.2) {
-    const prob = clamp(over25, 0.60, 0.90)
-
-    add(
-      "Mais de 2.5 gols",
-      prob,
-      prob,
-      "gols_over25",
-      "ofensivo"
-    )
+    const prob = clamp(over25, 0.6, 0.9)
+    add("Mais de 2.5 gols", prob, prob, "gols_over25", "ofensivo")
   }
 
-  // UNDER 2.5
   if (avgGoals <= 2.4) {
-    const prob = clamp(under25, 0.60, 0.90)
-
-    add(
-      "Menos de 2.5 gols",
-      prob,
-      prob,
-      "gols_under25",
-      "defensivo"
-    )
+    const prob = clamp(under25, 0.6, 0.9)
+    add("Menos de 2.5 gols", prob, prob, "gols_under25", "defensivo")
   }
 
-  // UNDER 3.5
   if (avgGoals <= 3.0) {
     const prob = clamp(row.under35_prob, 0.62, 0.92)
-
-    add(
-      "Menos de 3.5 gols",
-      prob,
-      prob,
-      "gols_under35",
-      "defensivo"
-    )
+    add("Menos de 3.5 gols", prob, prob, "gols_under35", "defensivo")
   }
 
   return candidates
 }
 
-// ======================================
-// BTTS
-// ======================================
-
-function buildBTTS(row, profile) {
+function buildBTTS(row) {
   const candidates = []
 
   const btts = toNumber(row.btts_prob)
@@ -1100,31 +862,15 @@ function buildBTTS(row, profile) {
   }
 
   if (btts >= 0.58 && avgGoals >= 2.2) {
-    add(
-      "Ambas marcam",
-      btts,
-      btts,
-      "btts_yes",
-      "ofensivo"
-    )
+    add("Ambas marcam", btts, btts, "btts_yes", "ofensivo")
   }
 
   if (btts <= 0.45 && avgGoals <= 2.4) {
-    add(
-      "Ambas não marcam",
-      1 - btts,
-      1 - btts,
-      "btts_no",
-      "defensivo"
-    )
+    add("Ambas não marcam", 1 - btts, 1 - btts, "btts_no", "defensivo")
   }
 
   return candidates
 }
-
-// ======================================
-// RESULTADO / DUPLA CHANCE
-// ======================================
 
 function buildResultCandidates(row, profile) {
   const candidates = []
@@ -1150,53 +896,21 @@ function buildResultCandidates(row, profile) {
   }
 
   if (homeWin >= awayWin && homeOrDraw >= 0.68) {
-    const probability = clamp(
-      homeOrDraw + (diff >= 0.10 ? 0.02 : 0),
-      0.68,
-      0.92
-    )
+    const probability = clamp(homeOrDraw + (diff >= 0.1 ? 0.02 : 0), 0.68, 0.92)
+    const score = clamp(probability + (profile === "equilibrado" ? 0.02 : 0), 0.66, 0.9)
 
-    const score = clamp(
-      probability + (profile === "equilibrado" ? 0.02 : 0),
-      0.66,
-      0.90
-    )
-
-    add(
-      `Dupla chance ${row.home_team} ou empate`,
-      probability,
-      score,
-      "resultado_home_draw"
-    )
+    add(`Dupla chance ${row.home_team} ou empate`, probability, score, "resultado_home_draw")
   }
 
   if (awayWin > homeWin && awayOrDraw >= 0.68) {
-    const probability = clamp(
-      awayOrDraw + (diff >= 0.10 ? 0.02 : 0),
-      0.68,
-      0.92
-    )
+    const probability = clamp(awayOrDraw + (diff >= 0.1 ? 0.02 : 0), 0.68, 0.92)
+    const score = clamp(probability + (profile === "equilibrado" ? 0.02 : 0), 0.66, 0.9)
 
-    const score = clamp(
-      probability + (profile === "equilibrado" ? 0.02 : 0),
-      0.66,
-      0.90
-    )
-
-    add(
-      `Dupla chance ${row.away_team} ou empate`,
-      probability,
-      score,
-      "resultado_away_draw"
-    )
+    add(`Dupla chance ${row.away_team} ou empate`, probability, score, "resultado_away_draw")
   }
 
   return candidates
 }
-
-// ======================================
-// MOTOR PRINCIPAL DE MERCADOS
-// ======================================
 
 function buildMarketCandidates(row, options = {}) {
   const relaxed = options.relaxed === true
@@ -1215,17 +929,14 @@ function buildMarketCandidates(row, options = {}) {
   candidates = candidates.map((item) => {
     let score = toNumber(item.score)
 
-    // reforço extra da hierarquia
     if (item.family === "gols") score += 0.03
     if (item.family === "resultado") score += 0.025
     if (item.family === "escanteios") score += 0.02
     if (item.family === "cards") score += 0.015
 
-    // shots / sot sempre abaixo dos carros-chefe
     if (item.family === "shots") score -= 0.035
     if (item.family === "sot") score -= 0.025
 
-    // ajustes por perfil
     if (profile === "ofensivo" && item.macro === "ofensivo") score += 0.02
     if (profile === "defensivo" && item.macro === "defensivo") score += 0.02
     if (profile === "estatistico" && item.family === "escanteios") score += 0.02
@@ -1245,10 +956,6 @@ function buildMarketCandidates(row, options = {}) {
     .filter((c) => c.probability >= minProbability && c.score >= minScore)
     .sort((a, b) => b.score - a.score)
 }
-
-// ======================================
-// ESCOLHA DA PICK PRINCIPAL + ALTERNATIVAS
-// ======================================
 
 function chooseBestAndAlternatives(candidates, row) {
   if (!candidates.length) {
@@ -1277,8 +984,10 @@ function chooseBestAndAlternatives(candidates, row) {
     if (alternatives.length >= 2) break
   }
 
-  if (alternatives.length < 2) {
-    for (const item of sorted.slice(1)) {
+  if (alternatives.length < 2 && row) {
+    const relaxed = buildMarketCandidates(row, { relaxed: true })
+
+    for (const item of relaxed) {
       if (!item?.market) continue
       if (usedMarkets.has(item.market)) continue
 
@@ -1289,50 +998,8 @@ function chooseBestAndAlternatives(candidates, row) {
     }
   }
 
- if (alternatives.length < 2 && row) {
-    const relaxed = buildMarketCandidates(row, { relaxed: true })
-
-    for (const item of relaxed) {
-      if (!item || !item.market) continue
-      if (usedMarkets.has(item.market)) continue
-
-      alternatives.push(item)
-      usedMarkets.add(item.market)
-
-      if (alternatives.length === 2) break
-    }
-  }
-
-  const hasShotsAlt = alternatives.some(
-    (item) => item.family === "shots" || item.family === "sot"
-  )
-
-  if (!hasShotsAlt) {
-    const shotsCandidate = sorted.find(
-      (item) =>
-        item &&
-        item.market &&
-        !usedMarkets.has(item.market) &&
-        (item.family === "shots" || item.family === "sot") &&
-      item.score >= 0.72
-    )
-
-    if (shotsCandidate) {
-      if (alternatives.length >= 2) {
-        alternatives[alternatives.length - 1] = shotsCandidate
-      } else {
-        alternatives.push(shotsCandidate)
-      }
-      usedMarkets.add(shotsCandidate.market)
-    }
-  }
-
   return { best, alternatives }
 }
-
-// ======================================
-// BUILD DA ANÁLISE FINAL DO JOGO
-// ======================================
 
 function buildAnalysisFromRow(row) {
   const candidates = buildMarketCandidates(row)
@@ -1363,7 +1030,7 @@ function buildAnalysisFromRow(row) {
     avg_shots: Math.round(toNumber(row.avg_shots)),
     avg_shots_on_target: Math.round(toNumber(row.avg_shots_on_target)),
     avg_cards: round1(row.avg_cards),
-    avg_fouls: round1(row.avg_fouls),
+    avg_fouls: null,
 
     home_strength: round1(row.home_strength),
     away_strength: round1(row.away_strength),
@@ -1404,23 +1071,21 @@ function buildAnalysisFromRow(row) {
   }
 }
 
-// ======================================
-// RADAR
-// ======================================
-
 function chooseRadar(analyses) {
-  const today = []
-  const future = []
+  const now = Date.now()
 
-  for (const item of analyses) {
-    const dayOffset = getDayOffsetFromToday(item.kickoff)
-    if (dayOffset <= 0) today.push(item)
-    else future.push(item)
-  }
+  const active = analyses.filter((item) => {
+    const kickoffMs = getKickoffMs(item.kickoff)
+    return kickoffMs >= now - PAST_GRACE_HOURS * 60 * 60 * 1000
+  })
 
-  const todaySorted = [...today].sort(compareByScoreThenKickoff)
-  const futureSorted = [...future].sort(compareByScoreThenKickoff)
-  const radarPool = [...todaySorted, ...futureSorted]
+  const today = active.filter((item) => getDayOffsetFromToday(item.kickoff) <= 0)
+  const future = active.filter((item) => getDayOffsetFromToday(item.kickoff) > 0)
+
+  const pool = [
+    ...today.sort(compareByScoreThenKickoff),
+    ...future.sort(compareByScoreThenKickoff),
+  ]
 
   const radar = []
   const usedMatchIds = new Set()
@@ -1428,7 +1093,7 @@ function chooseRadar(analyses) {
   const usedFamilies = {}
   const usedLeagues = {}
 
-  for (const item of radarPool) {
+  for (const item of pool) {
     if (usedMatchIds.has(item.match_id)) continue
 
     const exactMarketCount = usedExactMarkets[item.main_pick] || 0
@@ -1456,54 +1121,35 @@ function chooseRadar(analyses) {
   }
 
   if (radar.length < RADAR_SIZE) {
-    const backup = [...analyses].sort(compareByScoreThenKickoff)
+    const backup = [...active].sort(compareByScoreThenKickoff)
 
     for (const item of backup) {
       if (usedMatchIds.has(item.match_id)) continue
       radar.push(item)
       usedMatchIds.add(item.match_id)
+
       if (radar.length === RADAR_SIZE) break
     }
   }
 
-  return radar.sort(compareByRadarPriority)
+  return radar.sort(compareByKickoff)
 }
 
-// ======================================
-// BILHETE
-// ======================================
-
 function buildTicketFromRadar(radar) {
-  const ranked = [...radar].sort((a, b) => {
-    const aDay = getDayOffsetFromToday(a.kickoff)
-    const bDay = getDayOffsetFromToday(b.kickoff)
+  const ranked = [...radar].sort(compareByScoreThenKickoff)
 
-    if (aDay !== bDay) return aDay - bDay
-    return compareByScoreThenKickoff(a, b)
-  })
-
-  const uniqueMatches = []
-  const usedMatches = new Set()
-
-  for (const item of ranked) {
-    if (usedMatches.has(item.match_id)) continue
-    uniqueMatches.push(item)
-    usedMatches.add(item.match_id)
-  }
-
-  const desiredSize =
-    uniqueMatches.length >= 3 ? TICKET_MAX_SIZE : TICKET_MIN_SIZE
+  const desiredSize = ranked.length >= 3 ? TICKET_MAX_SIZE : TICKET_MIN_SIZE
 
   const ticket = []
-  const usedTicketMatches = new Set()
+  const usedMatches = new Set()
   const usedFamilies = new Set()
 
   for (const item of ranked) {
-    if (usedTicketMatches.has(item.match_id)) continue
+    if (usedMatches.has(item.match_id)) continue
     if (usedFamilies.has(item.main_family)) continue
 
     ticket.push(item)
-    usedTicketMatches.add(item.match_id)
+    usedMatches.add(item.match_id)
     usedFamilies.add(item.main_family)
 
     if (ticket.length === desiredSize) break
@@ -1511,21 +1157,17 @@ function buildTicketFromRadar(radar) {
 
   if (ticket.length < desiredSize) {
     for (const item of ranked) {
-      if (usedTicketMatches.has(item.match_id)) continue
+      if (usedMatches.has(item.match_id)) continue
 
       ticket.push(item)
-      usedTicketMatches.add(item.match_id)
+      usedMatches.add(item.match_id)
 
       if (ticket.length === desiredSize) break
     }
   }
 
-  return ticket.sort(compareByRadarPriority)
+  return ticket.sort(compareByKickoff)
 }
-
-// ======================================
-// UPDATE MATCH_ANALYSIS
-// ======================================
 
 async function updateMatchAnalysisFromBrain(analyses) {
   for (const item of analyses) {
@@ -1541,17 +1183,10 @@ async function updateMatchAnalysisFromBrain(analyses) {
       .eq("match_id", item.match_id)
 
     if (error) {
-      console.error(
-        `Erro ao atualizar match_analysis ${item.match_id}:`,
-        error.message
-      )
+      console.error(`Erro ao atualizar match_analysis ${item.match_id}:`, error.message)
     }
   }
 }
-
-// ======================================
-// REBUILD DAILY PICKS
-// ======================================
 
 async function rebuildDailyPicks(radar, ticket) {
   const { error: deleteError } = await supabase
@@ -1561,12 +1196,10 @@ async function rebuildDailyPicks(radar, ticket) {
 
   if (deleteError) throw deleteError
 
-  const orderedRadar = [...radar].sort(compareByRadarPriority)
+  const orderedRadar = [...radar].sort(compareByKickoff)
 
   const rows = orderedRadar.map((item, index) => {
-    const isInTicket = ticket.some(
-      (t) => String(t.match_id) === String(item.match_id)
-    )
+    const isInTicket = ticket.some((t) => String(t.match_id) === String(item.match_id))
 
     return {
       rank: index + 1,
@@ -1589,26 +1222,18 @@ async function rebuildDailyPicks(radar, ticket) {
     return
   }
 
-  const { error: insertError } = await supabase
-    .from("daily_picks")
-    .insert(rows)
+  const { error: insertError } = await supabase.from("daily_picks").insert(rows)
 
   if (insertError) throw insertError
 }
 
-// ======================================
-// RUNNER FINAL
-// ======================================
-
 async function runScoutlyBrain() {
-  console.log("🧠 Scoutly Brain FINAL V2 iniciado...")
+  console.log("🧠 Scoutly Brain V3 iniciado...")
 
   const matches = await loadActiveMatches()
   console.log(`📦 Jogos ativos carregados para análise: ${matches.length}`)
 
-  const analyses = matches
-    .map(buildAnalysisFromRow)
-    .filter(Boolean)
+  const analyses = matches.map(buildAnalysisFromRow).filter(Boolean)
 
   console.log(`🧪 Análises válidas geradas: ${analyses.length}`)
 
@@ -1623,7 +1248,7 @@ async function runScoutlyBrain() {
   const radar = chooseRadar(analyses)
   const ticket = buildTicketFromRadar(radar)
 
-  console.log("DEBUG RADAR FINAL:")
+  console.log("DEBUG RADAR FINAL ORDENADO POR HORÁRIO:")
   radar.forEach((item, index) => {
     console.log(
       index + 1,
@@ -1632,12 +1257,6 @@ async function runScoutlyBrain() {
       item.main_pick,
       "| family:",
       item.main_family,
-      "| subfamily:",
-      item.main_subfamily,
-      "| macro:",
-      item.main_macro,
-      "| strength:",
-      item.strength,
       "| score:",
       item.main_score,
       "| kickoff:",
@@ -1654,10 +1273,6 @@ async function runScoutlyBrain() {
       item.main_pick,
       "| family:",
       item.main_family,
-      "| subfamily:",
-      item.main_subfamily,
-      "| strength:",
-      item.strength,
       "| score:",
       item.main_score,
       "| kickoff:",
@@ -1667,12 +1282,12 @@ async function runScoutlyBrain() {
 
   await rebuildDailyPicks(radar, ticket)
 
-  console.log("✅ Scoutly Brain FINAL V2 finalizado com sucesso.")
-  console.log(`📡 Radar do dia gerado com ${radar.length} jogo(s).`)
-  console.log(`🎫 Bilhete do dia definido com ${ticket.length} jogo(s).`)
+  console.log("✅ Scoutly Brain V3 finalizado com sucesso.")
+  console.log(`📡 Radar gerado com ${radar.length} jogo(s), em ordem de horário.`)
+  console.log(`🎫 Bilhete definido com ${ticket.length} jogo(s).`)
 }
 
 runScoutlyBrain().catch((error) => {
-  console.error("❌ Erro no Scoutly Brain FINAL V2:", error)
+  console.error("❌ Erro no Scoutly Brain V3:", error)
   process.exit(1)
 })
