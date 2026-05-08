@@ -2246,12 +2246,14 @@ function toNumber(value, fallback = null) {
       );
     }
 
- function getAnalysisData(match) {
+function getAnalysisData(match) {
   const directData = maybeJson(match.data) || {};
-  const analysisSections = maybeJson(match.analysis_sections) || maybeJson(match.analysis) || directData || {};
+
   const statProjection =
     maybeJson(match.stat_projection) ||
     maybeJson(match.projection) ||
+    maybeJson(directData.stat_projection) ||
+    maybeJson(directData.projection) ||
     directData.stat_projection ||
     directData.projection ||
     null;
@@ -2259,12 +2261,23 @@ function toNumber(value, fallback = null) {
   const teamAverages =
     maybeJson(match.team_averages) ||
     maybeJson(match.team_stats_average) ||
+    maybeJson(directData.team_averages) ||
+    maybeJson(directData.team_stats_average) ||
     directData.team_averages ||
     directData.team_stats_average ||
     null;
 
+  const analysisSections =
+    maybeJson(match.analysis_sections) ||
+    maybeJson(match.analysis) ||
+    maybeJson(directData.analysis_sections) ||
+    directData.analysis_sections ||
+    directData ||
+    {};
+
   const picks =
     maybeJson(match.picks) ||
+    maybeJson(match.markets)?.picks ||
     directData.picks ||
     [];
 
@@ -3191,73 +3204,92 @@ function toNumber(value, fallback = null) {
       state.dailyPicks = data || [];
     }
 
-    async function loadMatches() {
-      const { data: matchesData, error: matchesError } = await supabaseClient
-        .from("matches")
-        .select("*")
-        .order("kickoff", { ascending: true });
+   async function loadMatches() {
+  const { data: matchesData, error: matchesError } = await supabaseClient
+    .from("matches")
+    .select("*")
+    .order("kickoff", { ascending: true });
 
-      if (matchesError) throw matchesError;
+  if (matchesError) throw matchesError;
 
-      const { data: analysisData, error: analysisError } = await supabaseClient
-        .from("match_analysis")
-        .select("*");
+  const { data: analysisData, error: analysisError } = await supabaseClient
+    .from("match_analysis")
+    .select("*");
 
-      if (analysisError) throw analysisError;
+  if (analysisError) throw analysisError;
 
-      const analysisMap = new Map();
+  const analysisMap = new Map();
 
-      (analysisData || []).forEach(item => {
-        const key =
-          item.fixture_id ??
-          item.match_id ??
-          item.id;
+  (analysisData || []).forEach(item => {
+    const keys = [
+      item.fixture_id,
+      item.match_id,
+      item.id
+    ].filter(v => v !== undefined && v !== null);
 
-        if (key !== undefined && key !== null) {
-          analysisMap.set(String(key), item);
-        }
-      });
+    keys.forEach(key => analysisMap.set(String(key), item));
+  });
 
-      state.matches = (matchesData || []).map(match => {
-        const fixtureKey =
-          match.fixture_id ??
-          match.match_id ??
-          match.id;
+  state.matches = (matchesData || []).map(match => {
+    const fixtureKey =
+      match.fixture_id ??
+      match.match_id ??
+      match.id;
 
-        const analysis = analysisMap.get(String(fixtureKey)) || {};
-        const normalizedLeague = normalizeLeagueName(match.league || match.league_name || analysis.league_name);
+    const analysis = analysisMap.get(String(fixtureKey)) || {};
+    const normalizedLeague = normalizeLeagueName(
+      match.league ||
+      match.league_name ||
+      analysis.league_name
+    );
 
-        return {
-          ...match,
-          ...analysis,
+    return {
+      ...match,
+      ...analysis,
 
-          id: match.id || match.fixture_id || analysis.fixture_id,
-          fixture_id: match.fixture_id || analysis.fixture_id || match.id,
-          match_id: match.match_id || match.fixture_id || analysis.fixture_id || match.id,
+      id: fixtureKey,
+      fixture_id: fixtureKey,
+      match_id: fixtureKey,
 
-          home_team: normalizeTeamName(match.home_team || match.home_team_name || analysis.home_team_name),
-          away_team: normalizeTeamName(match.away_team || match.away_team_name || analysis.away_team_name),
+      home_team: normalizeTeamName(
+        match.home_team ||
+        match.home_team_name ||
+        analysis.home_team_name
+      ),
+      away_team: normalizeTeamName(
+        match.away_team ||
+        match.away_team_name ||
+        analysis.away_team_name
+      ),
 
-          league: normalizedLeague,
-          country: match.country || match.league_country || analysis.league_country || inferCountryFromLeague(normalizedLeague),
+      league: normalizedLeague,
+      country:
+        match.country ||
+        match.league_country ||
+        analysis.league_country ||
+        inferCountryFromLeague(normalizedLeague),
 
-          kickoff: match.kickoff || match.date || analysis.date,
+      kickoff:
+        match.kickoff ||
+        match.date ||
+        analysis.kickoff ||
+        analysis.date,
 
-          home_logo: match.home_logo || match.home_team_logo,
-          away_logo: match.away_logo || match.away_team_logo,
+      home_logo: match.home_logo || match.home_team_logo || analysis.home_logo || analysis.home_team_logo,
+      away_logo: match.away_logo || match.away_team_logo || analysis.away_logo || analysis.away_team_logo,
 
-          probabilities: match.probabilities,
-          metrics: match.metrics,
-          markets: match.markets
-        };
-      }).filter(match => {
-        if (!match.home_team || !match.away_team) return false;
-        if (!match.league) return false;
-        if (!match.kickoff) return false;
-        if (shouldHideLeague(match.league)) return false;
-        return true;
-      });
-    }
+      probabilities: match.probabilities,
+      metrics: match.metrics,
+      markets: match.markets
+    };
+  }).filter(match => {
+    if (!match.home_team || !match.away_team) return false;
+    if (!match.league) return false;
+    if (!match.kickoff) return false;
+    if (shouldHideLeague(match.league)) return false;
+    return true;
+  });
+}
 
     function refreshUIOnly() {
       renderRadar();
