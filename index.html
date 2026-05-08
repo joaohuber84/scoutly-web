@@ -1589,7 +1589,7 @@
     );
 
     const MATCH_END_GRACE_MINUTES = 5;
-    const RADAR_LOOKAHEAD_HOURS = 48;
+    const RADAR_LOOKAHEAD_HOURS = 168;
     const RADAR_MIN_ITEMS = 10;
     const RADAR_MAX_ITEMS = 15;
     const RADAR_MAX_PER_LEAGUE = 3;
@@ -2699,85 +2699,89 @@ function getAnalysisData(match) {
       });
     }
 
-    function buildRadarSnapshot() {
-      const eligibleMatches = getRadarEligibleMatches();
-      const nowTs = Date.now();
+   function buildRadarSnapshot() {
+  const eligibleMatches = getRadarEligibleMatches();
+  const nowTs = Date.now();
 
-      const combinedPool = eligibleMatches
-        .map((match, index) => {
-          const primary = getPrimaryPick(match);
-          const probability = getMatchProbability(match);
-          const league = normalizeLeagueName(match.league);
-          const important =
-            league.toLowerCase().includes("champions") ||
-            league.toLowerCase().includes("libertadores") ||
-            league.toLowerCase().includes("sudamericana") ||
-            league.toLowerCase().includes("europa") ||
-            league.toLowerCase().includes("copa");
+  const combinedPool = eligibleMatches
+    .map((match, index) => {
+      const primary = getPrimaryPick(match);
+      const probability = getMatchProbability(match);
+      const league = normalizeLeagueName(match.league);
+      const leagueLower = league.toLowerCase();
 
-          return {
-            ...match,
-            league,
-            home_team: normalizeTeamName(match.home_team),
-            away_team: normalizeTeamName(match.away_team),
-            radar_market: primary,
-            radar_probability: probability,
-            radar_family: marketFamily(primary),
-            radar_rank: index + 1,
-            important
-          };
-        })
-        .sort((a, b) => {
-          const ta = new Date(a.kickoff).getTime();
-          const tb = new Date(b.kickoff).getTime();
+      const important =
+        leagueLower.includes("champions") ||
+        leagueLower.includes("libertadores") ||
+        leagueLower.includes("sudamericana") ||
+        leagueLower.includes("europa") ||
+        leagueLower.includes("conference") ||
+        leagueLower.includes("copa") ||
+        leagueLower.includes("premier league") ||
+        leagueLower.includes("la liga") ||
+        leagueLower.includes("serie a") ||
+        leagueLower.includes("bundesliga") ||
+        leagueLower.includes("ligue 1");
 
-          const todayStart = startOfDay(new Date()).getTime();
-          const todayEnd = endOfDay(new Date()).getTime();
+      return {
+        ...match,
+        league,
+        home_team: normalizeTeamName(match.home_team),
+        away_team: normalizeTeamName(match.away_team),
+        radar_market: primary,
+        radar_probability: probability,
+        radar_family: marketFamily(primary),
+        radar_rank: index + 1,
+        important
+      };
+    })
+    .sort((a, b) => {
+      const ta = new Date(a.kickoff).getTime();
+      const tb = new Date(b.kickoff).getTime();
 
-          const aToday = ta >= todayStart && ta <= todayEnd;
-          const bToday = tb >= todayStart && tb <= todayEnd;
+      const dayA = startOfDay(new Date(a.kickoff)).getTime();
+      const dayB = startOfDay(new Date(b.kickoff)).getTime();
 
-          if (aToday !== bToday) return aToday ? -1 : 1;
+      if (dayA !== dayB) return dayA - dayB;
 
-          const aStarted = ta <= nowTs;
-          const bStarted = tb <= nowTs;
-          if (aStarted !== bStarted) return aStarted ? -1 : 1;
+      const hourDiff = ta - tb;
+      if (hourDiff !== 0) return hourDiff;
 
-          const importanceDiff = Number(b.important) - Number(a.important);
-          if (importanceDiff !== 0) return importanceDiff;
+      const importanceDiff = Number(b.important) - Number(a.important);
+      if (importanceDiff !== 0) return importanceDiff;
 
-          const fa = marketPriority(a.radar_family);
-          const fb = marketPriority(b.radar_family);
-          if (fa !== fb) return fa - fb;
+      const pDiff = b.radar_probability - a.radar_probability;
+      if (Math.abs(pDiff) > 0.0001) return pDiff;
 
-          const pDiff = b.radar_probability - a.radar_probability;
-          if (Math.abs(pDiff) > 0.0001) return pDiff;
+      const fa = marketPriority(a.radar_family);
+      const fb = marketPriority(b.radar_family);
+      if (fa !== fb) return fa - fb;
 
-          return ta - tb;
-        });
+      return ta - tb;
+    });
 
-      const counts = new Map();
-      const selected = [];
+  const counts = new Map();
+  const selected = [];
 
-      for (const item of combinedPool) {
-        const league = normalizeLeagueName(item.league);
-        const current = counts.get(league) || 0;
+  for (const item of combinedPool) {
+    const league = normalizeLeagueName(item.league);
+    const current = counts.get(league) || 0;
 
-        if (current >= RADAR_MAX_PER_LEAGUE && !item.important) continue;
+    if (current >= RADAR_MAX_PER_LEAGUE && !item.important) continue;
 
-        selected.push(item);
-        counts.set(league, current + 1);
+    selected.push(item);
+    counts.set(league, current + 1);
 
-        if (selected.length >= RADAR_MAX_ITEMS) break;
-      }
+    if (selected.length >= RADAR_MAX_ITEMS) break;
+  }
 
-      state.lastRadarSnapshot = selected.map((item, index) => ({
-        ...item,
-        visualRank: index + 1
-      }));
+  state.lastRadarSnapshot = selected.map((item, index) => ({
+    ...item,
+    visualRank: index + 1
+  }));
 
-      return state.lastRadarSnapshot;
-    }
+  return state.lastRadarSnapshot;
+}
 
     function buildTicketFromRadarSnapshot(radarItems, rotateSeed = 0) {
       const pool = uniqueByMatchAndMarket(
