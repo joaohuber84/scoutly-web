@@ -18,26 +18,19 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
     autoRefreshToken: false,
     detectSessionInUrl: false,
   },
-  realtime: {
-    enabled: false,
-  },
-  global: {
-    headers: {
-      "X-Client-Info": "scoutly-sync-v13-8",
-    },
-  },
 })
 
 const API = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
-const SYNC_VERSION = "V13.8"
+const SYNC_VERSION = "V13.9"
 
 const WINDOW_HOURS = Number(process.env.WINDOW_HOURS || 168)
+const ANALYSIS_LIMIT = Number(process.env.ANALYSIS_LIMIT || 35)
 
 const FORM_LIMIT_GENERAL = 10
 const FORM_LIMIT_HOME_AWAY = 5
 const FORM_LIMIT_LAST5 = 5
-const MAX_RECENT_FIXTURES_FETCH = 20
+const MAX_RECENT_FIXTURES_FETCH = 18
 const MIN_REQUIRED_RECENT_MATCHES = 3
 
 const MAX_DAILY_PICKS = 20
@@ -47,6 +40,8 @@ const MAX_SAME_MARKET_IN_DAILY = 3
 const MAX_SAME_LEAGUE_IN_DAILY = 5
 const MAX_INTERNATIONAL_IN_DAILY = 10
 const MAX_BRAZIL_IN_DAILY = 8
+
+const API_DELAY_MS = Number(process.env.API_DELAY_MS || 850)
 
 const MARKET_PRIORITY_ORDER = {
   team_corners: 1,
@@ -60,17 +55,13 @@ const MARKET_PRIORITY_ORDER = {
 }
 
 const TARGET_LEAGUE_IDS = [
-  // UEFA / CONMEBOL / International
-  2, 3, 848, 13, 15, 9, 11, 34, 39,
+  2, 3, 848, 13, 15, 9, 11, 34,
 
-  // Brazil
-  71, 72, 73, 74, 75, 76,
+  71, 73, 74, 75, 76,
 
-  // Europe top leagues
   39, 140, 135, 78, 61, 88, 94, 203, 144,
 
-  // Cups / Americas / others
-  45, 48, 81, 137, 143, 141, 40, 253, 262, 274, 307
+  45, 48, 81, 137, 143, 141, 40, 253, 262, 274, 307,
 ]
 
 const IMPORTANT_KEYWORDS = [
@@ -93,7 +84,6 @@ const IMPORTANT_KEYWORDS = [
   "ligue 1",
   "brasileirão",
   "brasileirao",
-  "serie b",
   "copa do brasil",
   "fa cup",
   "efl cup",
@@ -125,6 +115,12 @@ const BAD_COMPETITION_KEYWORDS = [
   "juniors",
   "women",
   "feminino",
+  "2. bundesliga",
+  "bundesliga 2",
+  "challenger pro league",
+  "first division b",
+  "division 1b",
+  "proximus league",
 ]
 
 const BIG_TEAMS = [
@@ -170,12 +166,6 @@ const BIG_TEAMS = [
   "atlético mineiro",
   "river plate",
   "boca juniors",
-  "racing club",
-  "independiente",
-  "estudiantes",
-  "olympique marseille",
-  "lyon",
-  "monaco",
 ]
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -307,13 +297,15 @@ async function apiGet(path, params = {}, retry = 2) {
 
   for (let attempt = 0; attempt <= retry; attempt++) {
     try {
+      await sleep(API_DELAY_MS)
+
       const res = await fetch(url.toString(), {
         headers: { "x-apisports-key": APISPORTS_KEY },
       })
 
       if (!res.ok) {
         if (attempt < retry) {
-          await sleep(900 + attempt * 700)
+          await sleep(1200 + attempt * 1000)
           continue
         }
 
@@ -326,11 +318,10 @@ async function apiGet(path, params = {}, retry = 2) {
         console.log("API errors:", json.errors)
       }
 
-      await sleep(250)
       return json.response || []
     } catch (err) {
       if (attempt < retry) {
-        await sleep(1000 + attempt * 1000)
+        await sleep(1500 + attempt * 1200)
         continue
       }
 
@@ -363,25 +354,11 @@ function extractFixtureStat(statsArr, fixture, teamId, opponentId, side) {
   const corners = statValue(statsArr, teamId, ["Corner Kicks", "Corners"])
   const opponentCorners = statValue(statsArr, opponentId, ["Corner Kicks", "Corners"])
 
-  const shotsOnGoal = statValue(statsArr, teamId, [
-    "Shots on Goal",
-    "Shots on target",
-  ])
+  const shotsOnGoal = statValue(statsArr, teamId, ["Shots on Goal", "Shots on target"])
+  const opponentShotsOnGoal = statValue(statsArr, opponentId, ["Shots on Goal", "Shots on target"])
 
-  const opponentShotsOnGoal = statValue(statsArr, opponentId, [
-    "Shots on Goal",
-    "Shots on target",
-  ])
-
-  const totalShots = statValue(statsArr, teamId, [
-    "Total Shots",
-    "Shots total",
-  ])
-
-  const opponentTotalShots = statValue(statsArr, opponentId, [
-    "Total Shots",
-    "Shots total",
-  ])
+  const totalShots = statValue(statsArr, teamId, ["Total Shots", "Shots total"])
+  const opponentTotalShots = statValue(statsArr, opponentId, ["Total Shots", "Shots total"])
 
   const yellowCards = statValue(statsArr, teamId, ["Yellow Cards"])
   const redCards = statValue(statsArr, teamId, ["Red Cards"])
@@ -600,15 +577,8 @@ async function fetchTeamRecentForm(teamId, season, sideFilter = null) {
     .filter((f) => ["FT", "AET", "PEN"].includes(f.fixture?.status?.short))
     .filter((f) => {
       if (!sideFilter) return true
-
-      if (sideFilter === "home") {
-        return f.teams?.home?.id === teamId
-      }
-
-      if (sideFilter === "away") {
-        return f.teams?.away?.id === teamId
-      }
-
+      if (sideFilter === "home") return f.teams?.home?.id === teamId
+      if (sideFilter === "away") return f.teams?.away?.id === teamId
       return true
     })
 
@@ -628,18 +598,10 @@ async function fetchTeamRecentForm(teamId, season, sideFilter = null) {
     })
 
     const isHome = fx.teams?.home?.id === teamId
-    const opponentId = isHome
-      ? fx.teams?.away?.id
-      : fx.teams?.home?.id
+    const opponentId = isHome ? fx.teams?.away?.id : fx.teams?.home?.id
 
     rows.push(
-      extractFixtureStat(
-        stats,
-        fx,
-        teamId,
-        opponentId,
-        isHome ? "home" : "away"
-      )
+      extractFixtureStat(stats, fx, teamId, opponentId, isHome ? "home" : "away")
     )
   }
 
@@ -649,18 +611,10 @@ async function fetchTeamRecentForm(teamId, season, sideFilter = null) {
     })
 
     const isHome = fx.teams?.home?.id === teamId
-    const opponentId = isHome
-      ? fx.teams?.away?.id
-      : fx.teams?.home?.id
+    const opponentId = isHome ? fx.teams?.away?.id : fx.teams?.home?.id
 
     rowsLast5.push(
-      extractFixtureStat(
-        stats,
-        fx,
-        teamId,
-        opponentId,
-        isHome ? "home" : "away"
-      )
+      extractFixtureStat(stats, fx, teamId, opponentId, isHome ? "home" : "away")
     )
   }
 
@@ -672,52 +626,28 @@ async function fetchTeamRecentForm(teamId, season, sideFilter = null) {
   }
 }
 
-function buildGameContext(
-  fixture,
-  homeGeneral,
-  awayGeneral,
-  homeSide,
-  awaySide
-) {
+function buildGameContext(fixture, homeGeneral, awayGeneral, homeSide, awaySide) {
   const leagueName = fixture.league_name || fixture.league || ""
   const country = fixture.league_country || fixture.country || ""
   const home = fixture.home_team_name || fixture.home_team || ""
   const away = fixture.away_team_name || fixture.away_team || ""
 
-  const importantCompetition =
-    isImportantCompetition(leagueName)
-
-  const brazilCompetition =
-    isBrazilCompetition(country, leagueName)
-
-  const internationalCompetition =
-    isInternationalCompetition(country, leagueName)
-
+  const importantCompetition = isImportantCompetition(leagueName)
+  const brazilCompetition = isBrazilCompetition(country, leagueName)
+  const internationalCompetition = isInternationalCompetition(country, leagueName)
   const bigTeamGame = hasBigTeam(home, away)
 
   const avgGoalProfile =
-    (
-      safeNumber(homeGeneral.avg_total_goals) +
-      safeNumber(awayGeneral.avg_total_goals)
-    ) / 2
+    (safeNumber(homeGeneral.avg_total_goals) + safeNumber(awayGeneral.avg_total_goals)) / 2
 
   const avgCornerProfile =
-    (
-      safeNumber(homeGeneral.avg_total_corners) +
-      safeNumber(awayGeneral.avg_total_corners)
-    ) / 2
+    (safeNumber(homeGeneral.avg_total_corners) + safeNumber(awayGeneral.avg_total_corners)) / 2
 
   const avgCardProfile =
-    (
-      safeNumber(homeGeneral.avg_cards_total) +
-      safeNumber(awayGeneral.avg_cards_total)
-    ) / 2
+    (safeNumber(homeGeneral.avg_cards_total) + safeNumber(awayGeneral.avg_cards_total)) / 2
 
   const avgFoulProfile =
-    (
-      safeNumber(homeGeneral.avg_fouls_total) +
-      safeNumber(awayGeneral.avg_fouls_total)
-    ) / 2
+    (safeNumber(homeGeneral.avg_fouls_total) + safeNumber(awayGeneral.avg_fouls_total)) / 2
 
   const homeAttackStrength =
     safeNumber(homeSide.avg_goals_for) +
@@ -731,23 +661,15 @@ function buildGameContext(
     safeNumber(awaySide.avg_corners_for) * 0.2 +
     safeNumber(awaySide.avg_total_shots_for) * 0.04
 
-  const balanceGap = Math.abs(
-    homeAttackStrength - awayAttackStrength
-  )
+  const balanceGap = Math.abs(homeAttackStrength - awayAttackStrength)
 
   let gameProfile = "balanced"
 
-  if (
-    avgGoalProfile >= 2.7 &&
-    avgCornerProfile >= 8.5
-  ) {
+  if (avgGoalProfile >= 2.7 && avgCornerProfile >= 8.5) {
     gameProfile = "open_game"
   }
 
-  if (
-    avgGoalProfile <= 2.1 &&
-    avgCardProfile >= 4
-  ) {
+  if (avgGoalProfile <= 2.1 && avgCardProfile >= 4) {
     gameProfile = "tight_physical"
   }
 
@@ -755,10 +677,7 @@ function buildGameContext(
     gameProfile = "favorite_pressure"
   }
 
-  if (
-    importantCompetition &&
-    avgCardProfile >= 3.5
-  ) {
+  if (importantCompetition && avgCardProfile >= 3.5) {
     gameProfile = "high_stakes"
   }
 
@@ -793,46 +712,24 @@ function buildTeamAverages(forms) {
   return {
     home: {
       matches: forms.homeGeneral.matches,
-
       goals_for: forms.homeGeneral.avg_goals_for,
       goals_against: forms.homeGeneral.avg_goals_against,
-
-      shots_total:
-        forms.homeGeneral.avg_total_shots_for,
-
-      shots_on_goal:
-        forms.homeGeneral.avg_shots_on_goal_for,
-
-      corners:
-        forms.homeGeneral.avg_corners_for,
-
-      cards:
-        forms.homeGeneral.avg_cards_for,
-
-      fouls:
-        forms.homeGeneral.avg_fouls_for,
+      shots_total: forms.homeGeneral.avg_total_shots_for,
+      shots_on_goal: forms.homeGeneral.avg_shots_on_goal_for,
+      corners: forms.homeGeneral.avg_corners_for,
+      cards: forms.homeGeneral.avg_cards_for,
+      fouls: forms.homeGeneral.avg_fouls_for,
     },
 
     away: {
       matches: forms.awayGeneral.matches,
-
       goals_for: forms.awayGeneral.avg_goals_for,
       goals_against: forms.awayGeneral.avg_goals_against,
-
-      shots_total:
-        forms.awayGeneral.avg_total_shots_for,
-
-      shots_on_goal:
-        forms.awayGeneral.avg_shots_on_goal_for,
-
-      corners:
-        forms.awayGeneral.avg_corners_for,
-
-      cards:
-        forms.awayGeneral.avg_cards_for,
-
-      fouls:
-        forms.awayGeneral.avg_fouls_for,
+      shots_total: forms.awayGeneral.avg_total_shots_for,
+      shots_on_goal: forms.awayGeneral.avg_shots_on_goal_for,
+      corners: forms.awayGeneral.avg_corners_for,
+      cards: forms.awayGeneral.avg_cards_for,
+      fouls: forms.awayGeneral.avg_fouls_for,
     },
   }
 }
@@ -841,70 +738,30 @@ function buildLast5Summary(forms) {
   return {
     home: {
       matches: forms.homeLast5.matches,
-
-      goals_for:
-        forms.homeLast5.avg_goals_for,
-
-      goals_against:
-        forms.homeLast5.avg_goals_against,
-
-      shots_total:
-        forms.homeLast5.avg_total_shots_for,
-
-      shots_on_goal:
-        forms.homeLast5.avg_shots_on_goal_for,
-
-      corners:
-        forms.homeLast5.avg_corners_for,
-
-      cards:
-        forms.homeLast5.avg_cards_for,
-
-      fouls:
-        forms.homeLast5.avg_fouls_for,
-
-      over_25_corners_pct:
-        forms.homeLast5.team_over_25_corners_pct,
-
-      over_35_corners_pct:
-        forms.homeLast5.team_over_35_corners_pct,
-
-      over_45_corners_pct:
-        forms.homeLast5.team_over_45_corners_pct,
+      goals_for: forms.homeLast5.avg_goals_for,
+      goals_against: forms.homeLast5.avg_goals_against,
+      shots_total: forms.homeLast5.avg_total_shots_for,
+      shots_on_goal: forms.homeLast5.avg_shots_on_goal_for,
+      corners: forms.homeLast5.avg_corners_for,
+      cards: forms.homeLast5.avg_cards_for,
+      fouls: forms.homeLast5.avg_fouls_for,
+      over_25_corners_pct: forms.homeLast5.team_over_25_corners_pct,
+      over_35_corners_pct: forms.homeLast5.team_over_35_corners_pct,
+      over_45_corners_pct: forms.homeLast5.team_over_45_corners_pct,
     },
 
     away: {
       matches: forms.awayLast5.matches,
-
-      goals_for:
-        forms.awayLast5.avg_goals_for,
-
-      goals_against:
-        forms.awayLast5.avg_goals_against,
-
-      shots_total:
-        forms.awayLast5.avg_total_shots_for,
-
-      shots_on_goal:
-        forms.awayLast5.avg_shots_on_goal_for,
-
-      corners:
-        forms.awayLast5.avg_corners_for,
-
-      cards:
-        forms.awayLast5.avg_cards_for,
-
-      fouls:
-        forms.awayLast5.avg_fouls_for,
-
-      over_25_corners_pct:
-        forms.awayLast5.team_over_25_corners_pct,
-
-      over_35_corners_pct:
-        forms.awayLast5.team_over_35_corners_pct,
-
-      over_45_corners_pct:
-        forms.awayLast5.team_over_45_corners_pct,
+      goals_for: forms.awayLast5.avg_goals_for,
+      goals_against: forms.awayLast5.avg_goals_against,
+      shots_total: forms.awayLast5.avg_total_shots_for,
+      shots_on_goal: forms.awayLast5.avg_shots_on_goal_for,
+      corners: forms.awayLast5.avg_corners_for,
+      cards: forms.awayLast5.avg_cards_for,
+      fouls: forms.awayLast5.avg_fouls_for,
+      over_25_corners_pct: forms.awayLast5.team_over_25_corners_pct,
+      over_35_corners_pct: forms.awayLast5.team_over_35_corners_pct,
+      over_45_corners_pct: forms.awayLast5.team_over_45_corners_pct,
     },
   }
 }
@@ -924,21 +781,14 @@ function weightedAverage(parts = []) {
   }
 
   if (!totalWeight) return 0
-
   return round(total / totalWeight)
 }
 
-function buildStatProjection(
-  fixture,
-  forms,
-  context
-) {
+function buildStatProjection(fixture, forms, context) {
   const hG = forms.homeGeneral
   const aG = forms.awayGeneral
-
   const hS = forms.homeSide
   const aS = forms.awaySide
-
   const h5 = forms.homeLast5
   const a5 = forms.awayLast5
 
@@ -1047,23 +897,12 @@ function buildStatProjection(
     away,
 
     match: {
-      goals:
-        round(home.goals + away.goals),
-
-      shots_total:
-        round(home.shots_total + away.shots_total),
-
-      shots_on_goal:
-        round(home.shots_on_goal + away.shots_on_goal),
-
-      corners:
-        round(home.corners + away.corners),
-
-      cards:
-        round(home.cards + away.cards),
-
-      fouls:
-        round(home.fouls + away.fouls),
+      goals: round(home.goals + away.goals),
+      shots_total: round(home.shots_total + away.shots_total),
+      shots_on_goal: round(home.shots_on_goal + away.shots_on_goal),
+      corners: round(home.corners + away.corners),
+      cards: round(home.cards + away.cards),
+      fouls: round(home.fouls + away.fouls),
     },
   }
 }
@@ -1071,113 +910,31 @@ function buildStatProjection(
 function buildAnalysisSections(fixture, teamAverages, statProjection, last5Summary, context) {
   return {
     comparison_rows: [
-      {
-        label: "Gols marcados",
-        home: teamAverages.home.goals_for,
-        away: teamAverages.away.goals_for,
-      },
-      {
-        label: "Gols sofridos",
-        home: teamAverages.home.goals_against,
-        away: teamAverages.away.goals_against,
-      },
-      {
-        label: "Finalizações totais",
-        home: teamAverages.home.shots_total,
-        away: teamAverages.away.shots_total,
-      },
-      {
-        label: "Finalizações no gol",
-        home: teamAverages.home.shots_on_goal,
-        away: teamAverages.away.shots_on_goal,
-      },
-      {
-        label: "Escanteios",
-        home: teamAverages.home.corners,
-        away: teamAverages.away.corners,
-      },
-      {
-        label: "Cartões",
-        home: teamAverages.home.cards,
-        away: teamAverages.away.cards,
-      },
-      {
-        label: "Faltas",
-        home: teamAverages.home.fouls,
-        away: teamAverages.away.fouls,
-      },
+      { label: "Gols marcados", home: teamAverages.home.goals_for, away: teamAverages.away.goals_for },
+      { label: "Gols sofridos", home: teamAverages.home.goals_against, away: teamAverages.away.goals_against },
+      { label: "Finalizações totais", home: teamAverages.home.shots_total, away: teamAverages.away.shots_total },
+      { label: "Finalizações no gol", home: teamAverages.home.shots_on_goal, away: teamAverages.away.shots_on_goal },
+      { label: "Escanteios", home: teamAverages.home.corners, away: teamAverages.away.corners },
+      { label: "Cartões", home: teamAverages.home.cards, away: teamAverages.away.cards },
+      { label: "Faltas", home: teamAverages.home.fouls, away: teamAverages.away.fouls },
     ],
 
     projection_rows: [
-      {
-        label: "Gols",
-        home: statProjection.home.goals,
-        away: statProjection.away.goals,
-        match: statProjection.match.goals,
-      },
-      {
-        label: "Finalizações totais",
-        home: statProjection.home.shots_total,
-        away: statProjection.away.shots_total,
-        match: statProjection.match.shots_total,
-      },
-      {
-        label: "Finalizações no gol",
-        home: statProjection.home.shots_on_goal,
-        away: statProjection.away.shots_on_goal,
-        match: statProjection.match.shots_on_goal,
-      },
-      {
-        label: "Escanteios",
-        home: statProjection.home.corners,
-        away: statProjection.away.corners,
-        match: statProjection.match.corners,
-      },
-      {
-        label: "Cartões",
-        home: statProjection.home.cards,
-        away: statProjection.away.cards,
-        match: statProjection.match.cards,
-      },
-      {
-        label: "Faltas",
-        home: statProjection.home.fouls,
-        away: statProjection.away.fouls,
-        match: statProjection.match.fouls,
-      },
+      { label: "Gols", home: statProjection.home.goals, away: statProjection.away.goals, match: statProjection.match.goals },
+      { label: "Finalizações totais", home: statProjection.home.shots_total, away: statProjection.away.shots_total, match: statProjection.match.shots_total },
+      { label: "Finalizações no gol", home: statProjection.home.shots_on_goal, away: statProjection.away.shots_on_goal, match: statProjection.match.shots_on_goal },
+      { label: "Escanteios", home: statProjection.home.corners, away: statProjection.away.corners, match: statProjection.match.corners },
+      { label: "Cartões", home: statProjection.home.cards, away: statProjection.away.cards, match: statProjection.match.cards },
+      { label: "Faltas", home: statProjection.home.fouls, away: statProjection.away.fouls, match: statProjection.match.fouls },
     ],
 
     last5_rows: [
-      {
-        label: "Gols",
-        home: last5Summary.home.goals_for,
-        away: last5Summary.away.goals_for,
-      },
-      {
-        label: "Finalizações totais",
-        home: last5Summary.home.shots_total,
-        away: last5Summary.away.shots_total,
-      },
-      {
-        label: "Finalizações no gol",
-        home: last5Summary.home.shots_on_goal,
-        away: last5Summary.away.shots_on_goal,
-      },
-      {
-        label: "Escanteios",
-        home: last5Summary.home.corners,
-        away: last5Summary.away.corners,
-      },
-      {
-        label: "Cartões",
-        home: last5Summary.home.cards,
-        away: last5Summary.away.cards,
-      },
-      {
-        label: "Faltas",
-        home: last5Summary.home.fouls,
-        away: last5Summary.away.fouls,
-      },
+      { label: "Gols", home: last5Summary.home.goals_for, away: last5Summary.away.goals_for },
+      { label: "Finalizações totais", home: last5Summary.home.shots_total, away: last5Summary.away.shots_total },
+      { label: "Finalizações no gol", home: last5Summary.home.shots_on_goal, away: last5Summary.away.shots_on_goal },
+      { label: "Escanteios", home: last5Summary.home.corners, away: last5Summary.away.corners },
+      { label: "Cartões", home: last5Summary.home.cards, away: last5Summary.away.cards },
+      { label: "Faltas", home: last5Summary.home.fouls, away: last5Summary.away.fouls },
     ],
 
     context: {
@@ -1640,8 +1397,7 @@ function calculateRadarScore(fixture, picks, context) {
   else if (h > 72 && h <= 168) timeBoost = 3
   else timeBoost = 1
 
-  const marketDiversityBoost =
-    new Set(picks.map((p) => p.market_type)).size * 2
+  const marketDiversityBoost = new Set(picks.map((p) => p.market_type)).size * 2
 
   return round(
     clamp(
@@ -1700,7 +1456,6 @@ function selectDailyPicks(candidates = []) {
 
     if ((counts.market[marketKey] || 0) >= MAX_SAME_MARKET_IN_DAILY) continue
     if ((counts.league[leagueKey] || 0) >= MAX_SAME_LEAGUE_IN_DAILY) continue
-
     if (pick.is_brazil_competition && counts.brazil >= MAX_BRAZIL_IN_DAILY) continue
 
     if (
@@ -1761,29 +1516,22 @@ async function fetchUpcomingFixtures() {
 
   const byId = new Map()
 
-  const currentYear = new Date().getFullYear()
-  const seasonsToTry = [currentYear, currentYear - 1]
-
   for (const leagueId of TARGET_LEAGUE_IDS) {
-    for (const season of seasonsToTry) {
-      const leagueFixtures = await apiGet("/fixtures", {
-        league: leagueId,
-        season,
-        from: toDateString(now),
-        to: toDateString(end),
-        timezone: TIMEZONE,
-      })
+    const leagueFixtures = await apiGet("/fixtures", {
+      league: leagueId,
+      season: new Date().getFullYear(),
+      from: toDateString(now),
+      to: toDateString(end),
+      timezone: TIMEZONE,
+    })
 
-      for (const fx of leagueFixtures) {
-        const id = fx.fixture?.id
-        if (id) byId.set(String(id), fx)
-      }
+    for (const fx of leagueFixtures) {
+      const id = fx.fixture?.id
+      if (id) byId.set(String(id), fx)
     }
   }
 
   const fixtures = Array.from(byId.values())
-
-  console.log(`Fixtures únicos encontrados antes dos filtros: ${fixtures.length}`)
 
   return fixtures
     .filter((f) => ["NS", "TBD"].includes(f.fixture?.status?.short))
@@ -1850,7 +1598,7 @@ async function processFixture(rawFixture) {
     const last5Summary = buildLast5Summary(forms)
     const statProjection = buildStatProjection(base, forms, context)
 
-    let picks = buildMatchPicks(base, forms, context, statProjection).map(
+    const picks = buildMatchPicks(base, forms, context, statProjection).map(
       (pick) => enrichPick(pick, base, context)
     )
 
