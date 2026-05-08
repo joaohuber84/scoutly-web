@@ -2478,93 +2478,119 @@ function getAnalysisData(match) {
       `).join("");
     }
 
-    function compareTableMarkup(match, type) {
-      const homeTeam = normalizeTeamName(match.home_team || match.home_team_name);
-      const awayTeam = normalizeTeamName(match.away_team || match.away_team_name);
-      const analysis = getAnalysisData(match);
+ function compareTableMarkup(match, type) {
+  const homeTeam = normalizeTeamName(match.home_team || match.home_team_name);
+  const awayTeam = normalizeTeamName(match.away_team || match.away_team_name);
+  const analysis = getAnalysisData(match);
+  const metrics = getMetrics(match);
 
-      let rows = [];
-
-      if (type === "projection") {
-        const projection = analysis.statProjection || {};
-        const h = projection.home || {};
-        const a = projection.away || {};
-        const m = projection.match || {};
-
-        rows = [
-          { label: "Gols", home: h.goals, away: a.goals },
-          { label: "Finalizações", home: h.shots_total, away: a.shots_total },
-          { label: "No gol", home: h.shots_on_goal, away: a.shots_on_goal },
-          { label: "Escanteios", home: h.corners, away: a.corners },
-          { label: "Cartões", home: h.cards, away: a.cards }
-        ];
-
-        const total = [
-          { label: "Gols", value: m.goals },
-          { label: "Fin.", value: m.shots_total },
-          { label: "No gol", value: m.shots_on_goal },
-          { label: "Cantos", value: m.corners },
-          { label: "Cartões", value: m.cards }
-        ];
-
-        return `
-          <div class="compare-box">
-            <div class="compare-head">
-              <div class="compare-team-left">${escapeHtml(homeTeam)}</div>
-              <div class="compare-label">Projeção</div>
-              <div class="compare-team-right">${escapeHtml(awayTeam)}</div>
-            </div>
-            ${rows.map(row => `
-              <div class="compare-row">
-                <div class="compare-value-left">${escapeHtml(formatDecimal(row.home, 1))}</div>
-                <div class="compare-stat-label">${escapeHtml(row.label)}</div>
-                <div class="compare-value-right">${escapeHtml(formatDecimal(row.away, 1))}</div>
-              </div>
-            `).join("")}
-          </div>
-
-          <div class="projection-total-row">
-            ${total.map(item => `
-              <div class="projection-pill">
-                <div class="projection-pill-label">${escapeHtml(item.label)}</div>
-                <div class="projection-pill-value">${escapeHtml(formatDecimal(item.value, item.label === "Fin." ? 0 : 1))}</div>
-              </div>
-            `).join("")}
-          </div>
-        `;
-      }
-
-      const averages = analysis.teamAverages || {};
-      const h = averages.home || {};
-      const a = averages.away || {};
-
-      rows = [
-        { label: "Gols pró", home: h.goals_for, away: a.goals_for },
-        { label: "Gols contra", home: h.goals_against, away: a.goals_against },
-        { label: "Finalizações", home: h.shots_total, away: a.shots_total },
-        { label: "No gol", home: h.shots_on_goal, away: a.shots_on_goal },
-        { label: "Escanteios", home: h.corners, away: a.corners },
-        { label: "Cartões", home: h.cards, away: a.cards }
-      ];
-
-      return `
-        <div class="compare-box">
-          <div class="compare-head">
-            <div class="compare-team-left">${escapeHtml(homeTeam)}</div>
-            <div class="compare-label">Médias</div>
-            <div class="compare-team-right">${escapeHtml(awayTeam)}</div>
-          </div>
-          ${rows.map(row => `
-            <div class="compare-row">
-              <div class="compare-value-left">${escapeHtml(formatDecimal(row.home, 1))}</div>
-              <div class="compare-stat-label">${escapeHtml(row.label)}</div>
-              <div class="compare-value-right">${escapeHtml(formatDecimal(row.away, 1))}</div>
-            </div>
-          `).join("")}
-        </div>
-      `;
+  function firstNumber(...values) {
+    for (const value of values) {
+      const num = toNumber(value, null);
+      if (num !== null) return num;
     }
+    return null;
+  }
 
+  if (type === "projection") {
+    const projection = analysis.statProjection || {};
+    const h = projection.home || {};
+    const a = projection.away || {};
+    const m = projection.match || {};
+
+    const rows = [
+      {
+        label: "Gols",
+        home: firstNumber(h.goals, metrics.expectedHomeGoals, match.expected_home_goals),
+        away: firstNumber(a.goals, metrics.expectedAwayGoals, match.expected_away_goals)
+      },
+      {
+        label: "Finalizações totais",
+        home: firstNumber(h.shots_total, metrics.expectedHomeShots, match.expected_home_shots),
+        away: firstNumber(a.shots_total, metrics.expectedAwayShots, match.expected_away_shots)
+      },
+      {
+        label: "Finalizações no gol",
+        home: firstNumber(h.shots_on_goal, metrics.expectedHomeSOT, match.expected_home_sot),
+        away: firstNumber(a.shots_on_goal, metrics.expectedAwaySOT, match.expected_away_sot)
+      },
+      {
+        label: "Escanteios",
+        home: firstNumber(h.corners, metrics.expectedHomeCorners, match.expected_home_corners),
+        away: firstNumber(a.corners, metrics.expectedAwayCorners, match.expected_away_corners)
+      },
+      {
+        label: "Cartões",
+        home: firstNumber(h.cards, metrics.expectedHomeCards, match.expected_home_cards),
+        away: firstNumber(a.cards, metrics.expectedAwayCards, match.expected_away_cards)
+      }
+    ];
+
+    const total = [
+      { label: "Gols", value: firstNumber(m.goals, metrics.avgGoals, match.avg_goals) },
+      { label: "Fin. totais", value: firstNumber(m.shots_total, metrics.avgShots, match.avg_shots) },
+      { label: "No gol", value: firstNumber(m.shots_on_goal, metrics.avgShotsOnTarget, match.avg_shots_on_target) },
+      { label: "Cantos", value: firstNumber(m.corners, metrics.avgCorners, match.avg_corners) },
+      { label: "Cartões", value: firstNumber(m.cards, metrics.avgCards, match.avg_cards) }
+    ];
+
+    return `
+      <div class="compare-box">
+        <div class="compare-head">
+          <div class="compare-team-left">${escapeHtml(homeTeam)}</div>
+          <div class="compare-label">Projeção</div>
+          <div class="compare-team-right">${escapeHtml(awayTeam)}</div>
+        </div>
+        ${rows.map(row => `
+          <div class="compare-row">
+            <div class="compare-value-left">${escapeHtml(formatDecimal(row.home, 1))}</div>
+            <div class="compare-stat-label">${escapeHtml(row.label)}</div>
+            <div class="compare-value-right">${escapeHtml(formatDecimal(row.away, 1))}</div>
+          </div>
+        `).join("")}
+      </div>
+
+      <div class="projection-total-row">
+        ${total.map(item => `
+          <div class="projection-pill">
+            <div class="projection-pill-label">${escapeHtml(item.label)}</div>
+            <div class="projection-pill-value">${escapeHtml(formatDecimal(item.value, item.label.includes("Fin") ? 0 : 1))}</div>
+          </div>
+        `).join("")}
+      </div>
+    `;
+  }
+
+  const averages = analysis.teamAverages || {};
+  const h = averages.home || {};
+  const a = averages.away || {};
+
+  const rows = [
+    { label: "Gols pró", home: h.goals_for, away: a.goals_for },
+    { label: "Gols contra", home: h.goals_against, away: a.goals_against },
+    { label: "Finalizações totais", home: h.shots_total, away: a.shots_total },
+    { label: "Finalizações no gol", home: h.shots_on_goal, away: a.shots_on_goal },
+    { label: "Escanteios", home: h.corners, away: a.corners },
+    { label: "Cartões", home: h.cards, away: a.cards }
+  ];
+
+  return `
+    <div class="compare-box">
+      <div class="compare-head">
+        <div class="compare-team-left">${escapeHtml(homeTeam)}</div>
+        <div class="compare-label">Médias</div>
+        <div class="compare-team-right">${escapeHtml(awayTeam)}</div>
+      </div>
+      ${rows.map(row => `
+        <div class="compare-row">
+          <div class="compare-value-left">${escapeHtml(formatDecimal(row.home, 1))}</div>
+          <div class="compare-stat-label">${escapeHtml(row.label)}</div>
+          <div class="compare-value-right">${escapeHtml(formatDecimal(row.away, 1))}</div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
     function buildAlternativeCopy(match, market) {
       const family = marketFamily(market);
       const metrics = getMetrics(match);
