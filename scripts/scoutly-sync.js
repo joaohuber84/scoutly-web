@@ -1761,22 +1761,29 @@ async function fetchUpcomingFixtures() {
 
   const byId = new Map()
 
-  for (const leagueId of TARGET_LEAGUE_IDS) {
-    const leagueFixtures = await apiGet("/fixtures", {
-      league: leagueId,
-      season: new Date().getFullYear(),
-      from: toDateString(now),
-      to: toDateString(end),
-      timezone: TIMEZONE,
-    })
+  const currentYear = new Date().getFullYear()
+  const seasonsToTry = [currentYear, currentYear - 1]
 
-    for (const fx of leagueFixtures) {
-      const id = fx.fixture?.id
-      if (id) byId.set(String(id), fx)
+  for (const leagueId of TARGET_LEAGUE_IDS) {
+    for (const season of seasonsToTry) {
+      const leagueFixtures = await apiGet("/fixtures", {
+        league: leagueId,
+        season,
+        from: toDateString(now),
+        to: toDateString(end),
+        timezone: TIMEZONE,
+      })
+
+      for (const fx of leagueFixtures) {
+        const id = fx.fixture?.id
+        if (id) byId.set(String(id), fx)
+      }
     }
   }
 
   const fixtures = Array.from(byId.values())
+
+  console.log(`Fixtures únicos encontrados antes dos filtros: ${fixtures.length}`)
 
   return fixtures
     .filter((f) => ["NS", "TBD"].includes(f.fixture?.status?.short))
