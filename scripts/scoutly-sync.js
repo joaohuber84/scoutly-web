@@ -1792,37 +1792,6 @@ async function fetchUpcomingFixtures() {
     .slice(0, MAX_RADAR_GAMES)
 }
 
-  for (const leagueId of TARGET_LEAGUE_IDS) {
-    const leagueFixtures = await apiGet("/fixtures", {
-      league: leagueId,
-      season: new Date().getFullYear(),
-      from: toDateString(now),
-      to: toDateString(end),
-      timezone: TIMEZONE,
-    })
-
-    for (const fx of leagueFixtures) {
-      const id = fx.fixture?.id
-      if (id) byId.set(String(id), fx)
-    }
-  }
-
-  const fixtures = Array.from(byId.values())
-
-  return fixtures
-    .filter((f) => ["NS", "TBD"].includes(f.fixture?.status?.short))
-    .filter((f) => !isBadCompetition(f.league?.name))
-    .sort((a, b) => {
-      const aPriority = fixturePriorityScore(a)
-      const bPriority = fixturePriorityScore(b)
-
-      if (aPriority !== bPriority) return bPriority - aPriority
-
-      return getFixtureTimestamp(a) - getFixtureTimestamp(b)
-    })
-    .slice(0, MAX_RADAR_GAMES)
-}
-
 async function processFixture(rawFixture) {
   const base = getFixtureBase(rawFixture)
 
