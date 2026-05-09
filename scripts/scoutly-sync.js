@@ -1553,10 +1553,10 @@ function buildTeamCornerCandidates(payload) {
     })
   }
 
-  const totalCorners = safeNumber(metrics.expectedCorners, 0)
-  const homeShots = safeNumber(metrics.expectedHomeShots, 0)
-  const awayShots = safeNumber(metrics.expectedAwayShots, 0)
-  const totalShots = Math.max(homeShots + awayShots, 1)
+const totalCorners = safeNumber(metrics.expectedCorners ?? metrics.expected_corners, 0)
+const homeShots = safeNumber(metrics.expectedHomeShots ?? metrics.expected_home_shots, 0)
+const awayShots = safeNumber(metrics.expectedAwayShots ?? metrics.expected_away_shots, 0)
+const totalShots = Math.max(homeShots + awayShots, 1)
 
   const homeShare = clamp(homeShots / totalShots, 0.35, 0.65)
   const awayShare = clamp(awayShots / totalShots, 0.35, 0.65)
