@@ -1539,6 +1539,62 @@ function buildSOTCandidates(metrics, probs) {
   return candidates.sort((a, b) => b.score - a.score)
 }
 
+function buildTeamCornerCandidates(payload) {
+  const { homeTeam, awayTeam, metrics } = payload
+  const candidates = []
+
+  function add(market, probability) {
+    if (!market) return
+    candidates.push({
+      market,
+      probability: round(probability),
+      score: lineScore(probability, "escanteios", market),
+      family: "escanteios",
+    })
+  }
+
+  const totalCorners = safeNumber(metrics.expectedCorners, 0)
+  const homeShots = safeNumber(metrics.expectedHomeShots, 0)
+  const awayShots = safeNumber(metrics.expectedAwayShots, 0)
+  const totalShots = Math.max(homeShots + awayShots, 1)
+
+  const homeShare = clamp(homeShots / totalShots, 0.35, 0.65)
+  const awayShare = clamp(awayShots / totalShots, 0.35, 0.65)
+
+  const expectedHomeCorners = round(totalCorners * homeShare)
+  const expectedAwayCorners = round(totalCorners * awayShare)
+
+  function addTeamLines(teamName, expectedCorners) {
+    if (!teamName) return
+
+    if (expectedCorners >= 3.2) {
+      add(
+        `${teamName} mais de 2.5 escanteios`,
+        clamp(0.60 + (expectedCorners - 3.2) * 0.07, 0.60, 0.88)
+      )
+    }
+
+    if (expectedCorners >= 4.0) {
+      add(
+        `${teamName} mais de 3.5 escanteios`,
+        clamp(0.57 + (expectedCorners - 4.0) * 0.07, 0.57, 0.85)
+      )
+    }
+
+    if (expectedCorners >= 4.9) {
+      add(
+        `${teamName} mais de 4.5 escanteios`,
+        clamp(0.54 + (expectedCorners - 4.9) * 0.07, 0.54, 0.82)
+      )
+    }
+  }
+
+  addTeamLines(homeTeam, expectedHomeCorners)
+  addTeamLines(awayTeam, expectedAwayCorners)
+
+  return candidates.sort((a, b) => b.score - a.score)
+}
+
 function buildCardsCandidates(metrics, probs) {
   const candidates = []
 
@@ -1617,7 +1673,14 @@ function buildCandidateMarkets(payload) {
   buildSOTCandidates(metrics, probabilities).forEach((item) => candidates.push(item))
   buildCardsCandidates(metrics, probabilities).forEach((item) => candidates.push(item))
   buildCornerCandidates(metrics).forEach((item) => candidates.push(item))
-
+buildTeamCornerCandidates({
+  homeTeam,
+  awayTeam,
+  metrics,
+  homeProfile,
+  awayProfile,
+}).forEach((item) => candidates.push(item))
+  
   const mismatch = Math.abs(homeProb - awayProb)
 
   if (homeProb >= 0.62) {
