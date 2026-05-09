@@ -18,19 +18,23 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
     autoRefreshToken: false,
     detectSessionInUrl: false,
   },
+  global: {
+    headers: {
+      "X-Client-Info": "scoutly-sync-v14-schema-real",
+    },
+  },
 })
 
 const API = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
-const SYNC_VERSION = "V13.9"
+const SYNC_VERSION = "V14_SCHEMA_REAL"
 
 const WINDOW_HOURS = Number(process.env.WINDOW_HOURS || 168)
-const ANALYSIS_LIMIT = Number(process.env.ANALYSIS_LIMIT || 35)
 
 const FORM_LIMIT_GENERAL = 10
 const FORM_LIMIT_HOME_AWAY = 5
 const FORM_LIMIT_LAST5 = 5
-const MAX_RECENT_FIXTURES_FETCH = 18
+const MAX_RECENT_FIXTURES_FETCH = 20
 const MIN_REQUIRED_RECENT_MATCHES = 3
 
 const MAX_DAILY_PICKS = 20
@@ -38,10 +42,6 @@ const MAX_RADAR_GAMES = 120
 
 const MAX_SAME_MARKET_IN_DAILY = 3
 const MAX_SAME_LEAGUE_IN_DAILY = 5
-const MAX_INTERNATIONAL_IN_DAILY = 10
-const MAX_BRAZIL_IN_DAILY = 8
-
-const API_DELAY_MS = Number(process.env.API_DELAY_MS || 850)
 
 const MARKET_PRIORITY_ORDER = {
   team_corners: 1,
@@ -57,7 +57,7 @@ const MARKET_PRIORITY_ORDER = {
 const TARGET_LEAGUE_IDS = [
   2, 3, 848, 13, 15, 9, 11, 34,
 
-  71, 73, 74, 75, 76,
+  71, 72, 73, 74, 75, 76,
 
   39, 140, 135, 78, 61, 88, 94, 203, 144,
 
@@ -84,6 +84,7 @@ const IMPORTANT_KEYWORDS = [
   "ligue 1",
   "brasileirão",
   "brasileirao",
+  "serie b",
   "copa do brasil",
   "fa cup",
   "efl cup",
@@ -115,12 +116,6 @@ const BAD_COMPETITION_KEYWORDS = [
   "juniors",
   "women",
   "feminino",
-  "2. bundesliga",
-  "bundesliga 2",
-  "challenger pro league",
-  "first division b",
-  "division 1b",
-  "proximus league",
 ]
 
 const BIG_TEAMS = [
@@ -166,6 +161,9 @@ const BIG_TEAMS = [
   "atlético mineiro",
   "river plate",
   "boca juniors",
+  "racing club",
+  "independiente",
+  "estudiantes",
 ]
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -209,7 +207,25 @@ function safeNumber(value) {
 }
 
 function probabilityFromScore(score) {
-  return round(clamp(safeNumber(score) / 100, 0.45, 0.92), 3)
+  return round(clamp(safeNumber(score) / 100, 0.45, 0.96), 3)
+}
+
+function addHours(date, hours) {
+  return new Date(date.getTime() + hours * 60 * 60 * 1000)
+}
+
+function toDateString(date) {
+  return date.toISOString().slice(0, 10)
+}
+
+function hoursUntil(dateValue) {
+  const d = new Date(dateValue)
+  if (Number.isNaN(d.getTime())) return 999
+  return (d.getTime() - Date.now()) / (1000 * 60 * 60)
+}
+
+function getFixtureTimestamp(fixture) {
+  return fixture?.fixture?.timestamp || 0
 }
 
 function isBadCompetition(leagueName = "") {
@@ -268,24 +284,6 @@ function hasBigTeam(home = "", away = "") {
   })
 }
 
-function addHours(date, hours) {
-  return new Date(date.getTime() + hours * 60 * 60 * 1000)
-}
-
-function toDateString(date) {
-  return date.toISOString().slice(0, 10)
-}
-
-function hoursUntil(dateValue) {
-  const d = new Date(dateValue)
-  if (Number.isNaN(d.getTime())) return 999
-  return (d.getTime() - Date.now()) / (1000 * 60 * 60)
-}
-
-function getFixtureTimestamp(fixture) {
-  return fixture?.fixture?.timestamp || 0
-}
-
 async function apiGet(path, params = {}, retry = 2) {
   const url = new URL(`${API}${path}`)
 
@@ -297,15 +295,13 @@ async function apiGet(path, params = {}, retry = 2) {
 
   for (let attempt = 0; attempt <= retry; attempt++) {
     try {
-      await sleep(API_DELAY_MS)
-
       const res = await fetch(url.toString(), {
         headers: { "x-apisports-key": APISPORTS_KEY },
       })
 
       if (!res.ok) {
         if (attempt < retry) {
-          await sleep(1200 + attempt * 1000)
+          await sleep(900 + attempt * 700)
           continue
         }
 
@@ -318,10 +314,11 @@ async function apiGet(path, params = {}, retry = 2) {
         console.log("API errors:", json.errors)
       }
 
+      await sleep(250)
       return json.response || []
     } catch (err) {
       if (attempt < retry) {
-        await sleep(1500 + attempt * 1200)
+        await sleep(1000 + attempt * 1000)
         continue
       }
 
@@ -354,14 +351,29 @@ function extractFixtureStat(statsArr, fixture, teamId, opponentId, side) {
   const corners = statValue(statsArr, teamId, ["Corner Kicks", "Corners"])
   const opponentCorners = statValue(statsArr, opponentId, ["Corner Kicks", "Corners"])
 
-  const shotsOnGoal = statValue(statsArr, teamId, ["Shots on Goal", "Shots on target"])
-  const opponentShotsOnGoal = statValue(statsArr, opponentId, ["Shots on Goal", "Shots on target"])
+  const shotsOnGoal = statValue(statsArr, teamId, [
+    "Shots on Goal",
+    "Shots on target",
+  ])
 
-  const totalShots = statValue(statsArr, teamId, ["Total Shots", "Shots total"])
-  const opponentTotalShots = statValue(statsArr, opponentId, ["Total Shots", "Shots total"])
+  const opponentShotsOnGoal = statValue(statsArr, opponentId, [
+    "Shots on Goal",
+    "Shots on target",
+  ])
+
+  const totalShots = statValue(statsArr, teamId, [
+    "Total Shots",
+    "Shots total",
+  ])
+
+  const opponentTotalShots = statValue(statsArr, opponentId, [
+    "Total Shots",
+    "Shots total",
+  ])
 
   const yellowCards = statValue(statsArr, teamId, ["Yellow Cards"])
   const redCards = statValue(statsArr, teamId, ["Red Cards"])
+
   const opponentYellowCards = statValue(statsArr, opponentId, ["Yellow Cards"])
   const opponentRedCards = statValue(statsArr, opponentId, ["Red Cards"])
 
@@ -523,7 +535,6 @@ function getFixtureBase(fixture) {
   return {
     fixture_id: fixture.fixture?.id,
     match_id: fixture.fixture?.id,
-    id: fixture.fixture?.id,
 
     date: fixture.fixture?.date,
     kickoff: fixture.fixture?.date,
@@ -557,11 +568,6 @@ function getFixtureBase(fixture) {
 
     home_goals: fixture.goals?.home,
     away_goals: fixture.goals?.away,
-
-    venue_name: fixture.fixture?.venue?.name,
-    venue_city: fixture.fixture?.venue?.city,
-
-    updated_at: nowISO(),
   }
 }
 
@@ -582,40 +588,26 @@ async function fetchTeamRecentForm(teamId, season, sideFilter = null) {
       return true
     })
 
-  const selected = finished.slice(
-    0,
-    sideFilter ? FORM_LIMIT_HOME_AWAY : FORM_LIMIT_GENERAL
-  )
-
+  const selected = finished.slice(0, sideFilter ? FORM_LIMIT_HOME_AWAY : FORM_LIMIT_GENERAL)
   const last5 = finished.slice(0, FORM_LIMIT_LAST5)
 
   const rows = []
   const rowsLast5 = []
 
   for (const fx of selected) {
-    const stats = await apiGet("/fixtures/statistics", {
-      fixture: fx.fixture?.id,
-    })
-
+    const stats = await apiGet("/fixtures/statistics", { fixture: fx.fixture?.id })
     const isHome = fx.teams?.home?.id === teamId
     const opponentId = isHome ? fx.teams?.away?.id : fx.teams?.home?.id
 
-    rows.push(
-      extractFixtureStat(stats, fx, teamId, opponentId, isHome ? "home" : "away")
-    )
+    rows.push(extractFixtureStat(stats, fx, teamId, opponentId, isHome ? "home" : "away"))
   }
 
   for (const fx of last5) {
-    const stats = await apiGet("/fixtures/statistics", {
-      fixture: fx.fixture?.id,
-    })
-
+    const stats = await apiGet("/fixtures/statistics", { fixture: fx.fixture?.id })
     const isHome = fx.teams?.home?.id === teamId
     const opponentId = isHome ? fx.teams?.away?.id : fx.teams?.home?.id
 
-    rowsLast5.push(
-      extractFixtureStat(stats, fx, teamId, opponentId, isHome ? "home" : "away")
-    )
+    rowsLast5.push(extractFixtureStat(stats, fx, teamId, opponentId, isHome ? "home" : "away"))
   }
 
   return {
@@ -692,18 +684,14 @@ function buildGameContext(fixture, homeGeneral, awayGeneral, homeSide, awaySide)
     brazilCompetition,
     internationalCompetition,
     bigTeamGame,
-
     gameProfile,
-
     avgGoalProfile: round(avgGoalProfile),
     avgCornerProfile: round(avgCornerProfile),
     avgCardProfile: round(avgCardProfile),
     avgFoulProfile: round(avgFoulProfile),
-
     homeAttackStrength: round(homeAttackStrength),
     awayAttackStrength: round(awayAttackStrength),
     balanceGap: round(balanceGap),
-
     contextBoost,
   }
 }
@@ -720,7 +708,6 @@ function buildTeamAverages(forms) {
       cards: forms.homeGeneral.avg_cards_for,
       fouls: forms.homeGeneral.avg_fouls_for,
     },
-
     away: {
       matches: forms.awayGeneral.matches,
       goals_for: forms.awayGeneral.avg_goals_for,
@@ -749,7 +736,6 @@ function buildLast5Summary(forms) {
       over_35_corners_pct: forms.homeLast5.team_over_35_corners_pct,
       over_45_corners_pct: forms.homeLast5.team_over_45_corners_pct,
     },
-
     away: {
       matches: forms.awayLast5.matches,
       goals_for: forms.awayLast5.avg_goals_for,
@@ -784,7 +770,7 @@ function weightedAverage(parts = []) {
   return round(total / totalWeight)
 }
 
-function buildStatProjection(fixture, forms, context) {
+function buildStatProjection(fixture, forms) {
   const hG = forms.homeGeneral
   const aG = forms.awayGeneral
   const hS = forms.homeSide
@@ -800,7 +786,6 @@ function buildStatProjection(fixture, forms, context) {
       { value: aG.avg_goals_against, weight: 0.12 },
       { value: h5.avg_goals_for, weight: 0.12 },
     ]),
-
     shots_total: weightedAverage([
       { value: hS.avg_total_shots_for, weight: 0.34 },
       { value: aS.avg_total_shots_against, weight: 0.26 },
@@ -808,7 +793,6 @@ function buildStatProjection(fixture, forms, context) {
       { value: aG.avg_total_shots_against, weight: 0.12 },
       { value: h5.avg_total_shots_for, weight: 0.12 },
     ]),
-
     shots_on_goal: weightedAverage([
       { value: hS.avg_shots_on_goal_for, weight: 0.34 },
       { value: aS.avg_shots_on_goal_against, weight: 0.26 },
@@ -816,7 +800,6 @@ function buildStatProjection(fixture, forms, context) {
       { value: aG.avg_shots_on_goal_against, weight: 0.12 },
       { value: h5.avg_shots_on_goal_for, weight: 0.12 },
     ]),
-
     corners: weightedAverage([
       { value: hS.avg_corners_for, weight: 0.36 },
       { value: aS.avg_corners_against, weight: 0.26 },
@@ -824,19 +807,17 @@ function buildStatProjection(fixture, forms, context) {
       { value: aG.avg_corners_against, weight: 0.12 },
       { value: h5.avg_corners_for, weight: 0.12 },
     ]),
-
     cards: weightedAverage([
-      { value: hS.avg_cards_for, weight: 0.30 },
+      { value: hS.avg_cards_for, weight: 0.3 },
       { value: aS.avg_cards_against, weight: 0.24 },
-      { value: hG.avg_cards_for, weight: 0.20 },
+      { value: hG.avg_cards_for, weight: 0.2 },
       { value: aG.avg_cards_against, weight: 0.14 },
       { value: h5.avg_cards_for, weight: 0.12 },
     ]),
-
     fouls: weightedAverage([
-      { value: hS.avg_fouls_for, weight: 0.30 },
+      { value: hS.avg_fouls_for, weight: 0.3 },
       { value: aS.avg_fouls_against, weight: 0.24 },
-      { value: hG.avg_fouls_for, weight: 0.20 },
+      { value: hG.avg_fouls_for, weight: 0.2 },
       { value: aG.avg_fouls_against, weight: 0.14 },
       { value: h5.avg_fouls_for, weight: 0.12 },
     ]),
@@ -850,7 +831,6 @@ function buildStatProjection(fixture, forms, context) {
       { value: hG.avg_goals_against, weight: 0.12 },
       { value: a5.avg_goals_for, weight: 0.12 },
     ]),
-
     shots_total: weightedAverage([
       { value: aS.avg_total_shots_for, weight: 0.34 },
       { value: hS.avg_total_shots_against, weight: 0.26 },
@@ -858,7 +838,6 @@ function buildStatProjection(fixture, forms, context) {
       { value: hG.avg_total_shots_against, weight: 0.12 },
       { value: a5.avg_total_shots_for, weight: 0.12 },
     ]),
-
     shots_on_goal: weightedAverage([
       { value: aS.avg_shots_on_goal_for, weight: 0.34 },
       { value: hS.avg_shots_on_goal_against, weight: 0.26 },
@@ -866,7 +845,6 @@ function buildStatProjection(fixture, forms, context) {
       { value: hG.avg_shots_on_goal_against, weight: 0.12 },
       { value: a5.avg_shots_on_goal_for, weight: 0.12 },
     ]),
-
     corners: weightedAverage([
       { value: aS.avg_corners_for, weight: 0.36 },
       { value: hS.avg_corners_against, weight: 0.26 },
@@ -874,19 +852,17 @@ function buildStatProjection(fixture, forms, context) {
       { value: hG.avg_corners_against, weight: 0.12 },
       { value: a5.avg_corners_for, weight: 0.12 },
     ]),
-
     cards: weightedAverage([
-      { value: aS.avg_cards_for, weight: 0.30 },
+      { value: aS.avg_cards_for, weight: 0.3 },
       { value: hS.avg_cards_against, weight: 0.24 },
-      { value: aG.avg_cards_for, weight: 0.20 },
+      { value: aG.avg_cards_for, weight: 0.2 },
       { value: hG.avg_cards_against, weight: 0.14 },
       { value: a5.avg_cards_for, weight: 0.12 },
     ]),
-
     fouls: weightedAverage([
-      { value: aS.avg_fouls_for, weight: 0.30 },
+      { value: aS.avg_fouls_for, weight: 0.3 },
       { value: hS.avg_fouls_against, weight: 0.24 },
-      { value: aG.avg_fouls_for, weight: 0.20 },
+      { value: aG.avg_fouls_for, weight: 0.2 },
       { value: hG.avg_fouls_against, weight: 0.14 },
       { value: a5.avg_fouls_for, weight: 0.12 },
     ]),
@@ -895,7 +871,6 @@ function buildStatProjection(fixture, forms, context) {
   return {
     home,
     away,
-
     match: {
       goals: round(home.goals + away.goals),
       shots_total: round(home.shots_total + away.shots_total),
@@ -903,46 +878,6 @@ function buildStatProjection(fixture, forms, context) {
       corners: round(home.corners + away.corners),
       cards: round(home.cards + away.cards),
       fouls: round(home.fouls + away.fouls),
-    },
-  }
-}
-
-function buildAnalysisSections(fixture, teamAverages, statProjection, last5Summary, context) {
-  return {
-    comparison_rows: [
-      { label: "Gols marcados", home: teamAverages.home.goals_for, away: teamAverages.away.goals_for },
-      { label: "Gols sofridos", home: teamAverages.home.goals_against, away: teamAverages.away.goals_against },
-      { label: "Finalizações totais", home: teamAverages.home.shots_total, away: teamAverages.away.shots_total },
-      { label: "Finalizações no gol", home: teamAverages.home.shots_on_goal, away: teamAverages.away.shots_on_goal },
-      { label: "Escanteios", home: teamAverages.home.corners, away: teamAverages.away.corners },
-      { label: "Cartões", home: teamAverages.home.cards, away: teamAverages.away.cards },
-      { label: "Faltas", home: teamAverages.home.fouls, away: teamAverages.away.fouls },
-    ],
-
-    projection_rows: [
-      { label: "Gols", home: statProjection.home.goals, away: statProjection.away.goals, match: statProjection.match.goals },
-      { label: "Finalizações totais", home: statProjection.home.shots_total, away: statProjection.away.shots_total, match: statProjection.match.shots_total },
-      { label: "Finalizações no gol", home: statProjection.home.shots_on_goal, away: statProjection.away.shots_on_goal, match: statProjection.match.shots_on_goal },
-      { label: "Escanteios", home: statProjection.home.corners, away: statProjection.away.corners, match: statProjection.match.corners },
-      { label: "Cartões", home: statProjection.home.cards, away: statProjection.away.cards, match: statProjection.match.cards },
-      { label: "Faltas", home: statProjection.home.fouls, away: statProjection.away.fouls, match: statProjection.match.fouls },
-    ],
-
-    last5_rows: [
-      { label: "Gols", home: last5Summary.home.goals_for, away: last5Summary.away.goals_for },
-      { label: "Finalizações totais", home: last5Summary.home.shots_total, away: last5Summary.away.shots_total },
-      { label: "Finalizações no gol", home: last5Summary.home.shots_on_goal, away: last5Summary.away.shots_on_goal },
-      { label: "Escanteios", home: last5Summary.home.corners, away: last5Summary.away.corners },
-      { label: "Cartões", home: last5Summary.home.cards, away: last5Summary.away.cards },
-      { label: "Faltas", home: last5Summary.home.fouls, away: last5Summary.away.fouls },
-    ],
-
-    context: {
-      profile: context.gameProfile,
-      important: context.importantCompetition,
-      big_team_game: context.bigTeamGame,
-      brazil: context.brazilCompetition,
-      international: context.internationalCompetition,
     },
   }
 }
@@ -962,21 +897,17 @@ function pushPick(picks, pick) {
 function enrichPick(pick, fixture, context) {
   return {
     ...pick,
-
     league_id: fixture.league_id,
     league_name: fixture.league_name,
     league: fixture.league_name,
     league_country: fixture.league_country,
     country: fixture.country,
-
     home_team_name: fixture.home_team_name,
     away_team_name: fixture.away_team_name,
     home_team: fixture.home_team_name,
     away_team: fixture.away_team_name,
-
     date: fixture.date,
     kickoff: fixture.kickoff,
-
     game_profile: context.gameProfile,
     is_brazil_competition: context.brazilCompetition,
     is_international_competition: context.internationalCompetition,
@@ -1011,12 +942,7 @@ function buildGoalsPicks(fixture, forms, context, projection) {
       side: "match",
       line: 1.5,
       direction: "over",
-      score:
-        50 +
-        over15Pct * 0.32 +
-        projectedGoals * 5 +
-        projectedSot * 1.2 +
-        context.contextBoost * 0.18,
+      score: 50 + over15Pct * 0.32 + projectedGoals * 5 + projectedSot * 1.2 + context.contextBoost * 0.18,
       reason: `Projeção de ${round(projectedGoals)} gols e ${round(over15Pct)}% de consistência recente acima de 1.5 gols.`,
     })
   }
@@ -1029,21 +955,12 @@ function buildGoalsPicks(fixture, forms, context, projection) {
       side: "match",
       line: 2.5,
       direction: "over",
-      score:
-        44 +
-        over25Pct * 0.34 +
-        projectedGoals * 6 +
-        projectedSot * 1.1 +
-        context.contextBoost * 0.14,
+      score: 44 + over25Pct * 0.34 + projectedGoals * 6 + projectedSot * 1.1 + context.contextBoost * 0.14,
       reason: `Jogo com projeção ofensiva favorável: ${round(projectedGoals)} gols e ${round(projectedSot)} finalizações no gol.`,
     })
   }
 
-  if (
-    under35Pct >= 64 &&
-    projectedGoals <= 2.75 &&
-    context.gameProfile !== "open_game"
-  ) {
+  if (under35Pct >= 64 && projectedGoals <= 2.75 && context.gameProfile !== "open_game") {
     pushPick(picks, {
       fixture_id: fixture.fixture_id,
       market_type: "under_goals",
@@ -1051,11 +968,7 @@ function buildGoalsPicks(fixture, forms, context, projection) {
       side: "match",
       line: 3.5,
       direction: "under",
-      score:
-        48 +
-        under35Pct * 0.33 +
-        (3.5 - projectedGoals) * 5 +
-        context.contextBoost * 0.08,
+      score: 48 + under35Pct * 0.33 + (3.5 - projectedGoals) * 5 + context.contextBoost * 0.08,
       reason: `Linha conservadora: projeção de ${round(projectedGoals)} gols e boa taxa recente abaixo de 3.5.`,
     })
   }
@@ -1070,14 +983,6 @@ function buildTotalCornersPicks(fixture, forms, context, projection) {
     (safeNumber(forms.homeGeneral.over_75_corners_pct) +
       safeNumber(forms.awayGeneral.over_75_corners_pct)) / 2
 
-  const over85Pct =
-    (safeNumber(forms.homeGeneral.over_85_corners_pct) +
-      safeNumber(forms.awayGeneral.over_85_corners_pct)) / 2
-
-  const over95Pct =
-    (safeNumber(forms.homeGeneral.over_95_corners_pct) +
-      safeNumber(forms.awayGeneral.over_95_corners_pct)) / 2
-
   const projectedCorners = safeNumber(projection.match.corners)
 
   if (over75Pct >= 58 && projectedCorners >= 7.8) {
@@ -1088,16 +993,12 @@ function buildTotalCornersPicks(fixture, forms, context, projection) {
       side: "match",
       line: 7.5,
       direction: "over",
-      score:
-        47 +
-        over75Pct * 0.34 +
-        projectedCorners * 3 +
-        context.contextBoost * 0.18,
+      score: 47 + over75Pct * 0.34 + projectedCorners * 3 + context.contextBoost * 0.18,
       reason: `Projeção de ${round(projectedCorners)} escanteios totais, com boa consistência recente acima da linha 7.5.`,
     })
   }
 
-  if (over85Pct >= 54 && projectedCorners >= 8.6) {
+  if (projectedCorners >= 8.6) {
     pushPick(picks, {
       fixture_id: fixture.fixture_id,
       market_type: "total_corners",
@@ -1105,29 +1006,8 @@ function buildTotalCornersPicks(fixture, forms, context, projection) {
       side: "match",
       line: 8.5,
       direction: "over",
-      score:
-        44 +
-        over85Pct * 0.35 +
-        projectedCorners * 3.1 +
-        context.contextBoost * 0.15,
+      score: 44 + over75Pct * 0.24 + projectedCorners * 3.2 + context.contextBoost * 0.15,
       reason: `Jogo projeta volume forte de cantos: ${round(projectedCorners)} escanteios no total.`,
-    })
-  }
-
-  if (over95Pct >= 50 && projectedCorners >= 9.5) {
-    pushPick(picks, {
-      fixture_id: fixture.fixture_id,
-      market_type: "total_corners",
-      market: "Mais de 9.5 escanteios",
-      side: "match",
-      line: 9.5,
-      direction: "over",
-      score:
-        42 +
-        over95Pct * 0.35 +
-        projectedCorners * 3.2 +
-        context.contextBoost * 0.12,
-      reason: `Linha mais alta de escanteios sustentada por projeção próxima/acima de 10 cantos.`,
     })
   }
 
@@ -1168,12 +1048,7 @@ function buildTeamCornersPicks(fixture, forms, context, projection) {
         side: item.side,
         line: 2.5,
         direction: "over",
-        score:
-          45 +
-          item.projected * 6 +
-          item.pct25 * 0.32 +
-          (item.pressure ? 5 : 0) +
-          context.contextBoost * 0.12,
+        score: 45 + item.projected * 6 + item.pct25 * 0.32 + (item.pressure ? 5 : 0) + context.contextBoost * 0.12,
         reason: `${item.team} projeta ${round(item.projected)} escanteios e tem boa consistência recente acima de 2.5.`,
       })
     }
@@ -1187,12 +1062,7 @@ function buildTeamCornersPicks(fixture, forms, context, projection) {
         side: item.side,
         line: 3.5,
         direction: "over",
-        score:
-          44 +
-          item.projected * 6 +
-          item.pct35 * 0.34 +
-          (item.pressure ? 6 : 0) +
-          context.contextBoost * 0.12,
+        score: 44 + item.projected * 6 + item.pct35 * 0.34 + (item.pressure ? 6 : 0) + context.contextBoost * 0.12,
         reason: `${item.team} tem projeção individual de ${round(item.projected)} escanteios.`,
       })
     }
@@ -1206,12 +1076,7 @@ function buildTeamCornersPicks(fixture, forms, context, projection) {
         side: item.side,
         line: 4.5,
         direction: "over",
-        score:
-          42 +
-          item.projected * 6 +
-          item.pct45 * 0.35 +
-          (item.pressure ? 7 : 0) +
-          context.contextBoost * 0.1,
+        score: 42 + item.projected * 6 + item.pct45 * 0.35 + (item.pressure ? 7 : 0) + context.contextBoost * 0.1,
         reason: `${item.team} mostra volume alto de cantos, com projeção de ${round(item.projected)}.`,
       })
     }
@@ -1296,11 +1161,7 @@ function buildShotsPicks(fixture, forms, context, projection) {
         side: item.side,
         line: 7.5,
         direction: "over",
-        score:
-          40 +
-          item.shots * 4.2 +
-          (item.pressure ? 5 : 0) +
-          context.contextBoost * 0.06,
+        score: 40 + item.shots * 4.2 + (item.pressure ? 5 : 0) + context.contextBoost * 0.06,
         reason: `${item.team} projeta ${round(item.shots)} finalizações totais.`,
       })
     }
@@ -1314,11 +1175,7 @@ function buildShotsPicks(fixture, forms, context, projection) {
         side: item.side,
         line: 9.5,
         direction: "over",
-        score:
-          39 +
-          item.shots * 4.3 +
-          (item.pressure ? 6 : 0) +
-          context.contextBoost * 0.06,
+        score: 39 + item.shots * 4.3 + (item.pressure ? 6 : 0) + context.contextBoost * 0.06,
         reason: `${item.team} tem volume projetado forte em finalizações totais.`,
       })
     }
@@ -1332,11 +1189,7 @@ function buildShotsPicks(fixture, forms, context, projection) {
         side: item.side,
         line: 2.5,
         direction: "over",
-        score:
-          43 +
-          item.sot * 7 +
-          (item.pressure ? 5 : 0) +
-          context.contextBoost * 0.08,
+        score: 43 + item.sot * 7 + (item.pressure ? 5 : 0) + context.contextBoost * 0.08,
         reason: `${item.team} projeta ${round(item.sot)} finalizações no gol.`,
       })
     }
@@ -1350,11 +1203,7 @@ function buildShotsPicks(fixture, forms, context, projection) {
         side: item.side,
         line: 3.5,
         direction: "over",
-        score:
-          41 +
-          item.sot * 7 +
-          (item.pressure ? 6 : 0) +
-          context.contextBoost * 0.08,
+        score: 41 + item.sot * 7 + (item.pressure ? 6 : 0) + context.contextBoost * 0.08,
         reason: `${item.team} tem projeção forte de finalizações no alvo.`,
       })
     }
@@ -1377,9 +1226,7 @@ function buildMatchPicks(fixture, forms, context, projection) {
     .sort((a, b) => {
       const pa = MARKET_PRIORITY_ORDER[a.market_type] || 99
       const pb = MARKET_PRIORITY_ORDER[b.market_type] || 99
-
       if (pa !== pb) return pa - pb
-
       return safeNumber(b.score) - safeNumber(a.score)
     })
     .slice(0, 6)
@@ -1390,7 +1237,6 @@ function calculateRadarScore(fixture, picks, context) {
   const h = hoursUntil(fixture.kickoff)
 
   let timeBoost = 0
-
   if (h >= -1 && h <= 6) timeBoost = 14
   else if (h > 6 && h <= 24) timeBoost = 10
   else if (h > 24 && h <= 72) timeBoost = 6
@@ -1428,11 +1274,6 @@ function selectDailyPicks(candidates = []) {
 
     if (aToday !== bToday) return aToday ? -1 : 1
 
-    const aBrazil = a.is_brazil_competition ? 1 : 0
-    const bBrazil = b.is_brazil_competition ? 1 : 0
-
-    if (aBrazil !== bBrazil) return bBrazil - aBrazil
-
     const scoreDiff = safeNumber(b.score) - safeNumber(a.score)
     if (Math.abs(scoreDiff) > 5) return scoreDiff
 
@@ -1442,8 +1283,6 @@ function selectDailyPicks(candidates = []) {
   const counts = {
     market: {},
     league: {},
-    brazil: 0,
-    international: 0,
   }
 
   const selected = []
@@ -1456,26 +1295,14 @@ function selectDailyPicks(candidates = []) {
 
     if ((counts.market[marketKey] || 0) >= MAX_SAME_MARKET_IN_DAILY) continue
     if ((counts.league[leagueKey] || 0) >= MAX_SAME_LEAGUE_IN_DAILY) continue
-    if (pick.is_brazil_competition && counts.brazil >= MAX_BRAZIL_IN_DAILY) continue
-
-    if (
-      pick.is_international_competition &&
-      counts.international >= MAX_INTERNATIONAL_IN_DAILY
-    ) {
-      continue
-    }
 
     selected.push({
       ...pick,
       rank: selected.length + 1,
-      daily_rank: selected.length + 1,
     })
 
     counts.market[marketKey] = (counts.market[marketKey] || 0) + 1
     counts.league[leagueKey] = (counts.league[leagueKey] || 0) + 1
-
-    if (pick.is_brazil_competition) counts.brazil += 1
-    if (pick.is_international_competition) counts.international += 1
   }
 
   return selected
@@ -1495,7 +1322,6 @@ function fixturePriorityScore(fixture) {
   const h = hoursUntil(fixture.fixture?.date)
 
   let timeScore = 0
-
   if (h >= -1 && h <= 24) timeScore = 18
   else if (h > 24 && h <= 72) timeScore = 12
   else if (h > 72 && h <= 168) timeScore = 8
@@ -1515,6 +1341,17 @@ async function fetchUpcomingFixtures() {
   const end = addHours(now, WINDOW_HOURS)
 
   const byId = new Map()
+
+  const generalFixtures = await apiGet("/fixtures", {
+    from: toDateString(now),
+    to: toDateString(end),
+    timezone: TIMEZONE,
+  })
+
+  for (const fx of generalFixtures) {
+    const id = fx.fixture?.id
+    if (id) byId.set(String(id), fx)
+  }
 
   for (const leagueId of TARGET_LEAGUE_IDS) {
     const leagueFixtures = await apiGet("/fixtures", {
@@ -1545,6 +1382,12 @@ async function fetchUpcomingFixtures() {
       return getFixtureTimestamp(a) - getFixtureTimestamp(b)
     })
     .slice(0, MAX_RADAR_GAMES)
+}
+
+function buildLegacyAnalysisText(base, bestPick, statProjection) {
+  if (bestPick?.reason) return bestPick.reason
+
+  return `A leitura Scoutly projeta cerca de ${round(statProjection.match.corners)} escanteios, ${round(statProjection.match.shots_on_goal)} finalizações no gol e ${round(statProjection.match.cards)} cartões para este confronto.`
 }
 
 async function processFixture(rawFixture) {
@@ -1596,36 +1439,14 @@ async function processFixture(rawFixture) {
 
     const teamAverages = buildTeamAverages(forms)
     const last5Summary = buildLast5Summary(forms)
-    const statProjection = buildStatProjection(base, forms, context)
+    const statProjection = buildStatProjection(base, forms)
 
-    const picks = buildMatchPicks(base, forms, context, statProjection).map(
+    let picks = buildMatchPicks(base, forms, context, statProjection).map(
       (pick) => enrichPick(pick, base, context)
     )
 
     const radarScore = calculateRadarScore(base, picks, context)
-
-    const analysisSections = buildAnalysisSections(
-      base,
-      teamAverages,
-      statProjection,
-      last5Summary,
-      context
-    )
-
     const bestPick = picks[0] || null
-
-    const analysisData = {
-      sync_version: SYNC_VERSION,
-      stat_projection: statProjection,
-      team_averages: teamAverages,
-      last5_summary: last5Summary,
-      analysis_sections: analysisSections,
-      game_context: context,
-      picks,
-      summary: bestPick
-        ? `${bestPick.market} aparece como melhor leitura. ${bestPick.reason}`
-        : "Jogo analisado, mas sem mercado forte suficiente no momento.",
-    }
 
     return {
       base,
@@ -1634,8 +1455,6 @@ async function processFixture(rawFixture) {
       teamAverages,
       last5Summary,
       statProjection,
-      analysisSections,
-      analysisData,
       picks,
       bestPick,
       radarScore,
@@ -1654,146 +1473,88 @@ async function saveMatch(result) {
     teamAverages,
     statProjection,
     last5Summary,
-    analysisData,
     picks,
     bestPick,
     radarScore,
   } = result
 
+  const legacyInsight = buildLegacyAnalysisText(base, bestPick, statProjection)
+
   const matchPayload = {
-    fixture_id: base.fixture_id,
-    match_id: base.fixture_id,
-
-    kickoff: base.kickoff,
-    date: base.date,
-    timestamp: base.timestamp,
-
-    status: base.status,
-    status_long: base.status_long,
-
-    league_id: base.league_id,
-    league_name: base.league_name,
-    league: base.league_name,
-    league_country: base.league_country,
-    country: base.country,
-    season: base.season,
-    round: base.round,
-
-    home_team_id: base.home_team_id,
-    home_team_name: base.home_team_name,
+    id: base.fixture_id,
     home_team: base.home_team_name,
-    home_team_logo: base.home_team_logo,
-    home_logo: base.home_logo,
-
-    away_team_id: base.away_team_id,
-    away_team_name: base.away_team_name,
     away_team: base.away_team_name,
-    away_team_logo: base.away_team_logo,
+    league: base.league_name,
+    League: base.league_name,
+    match_date: base.date ? String(base.date).slice(0, 10) : null,
+    Kickoff: base.kickoff,
+    kickoff: base.kickoff,
+    home_logo: base.home_logo,
     away_logo: base.away_logo,
 
-    venue_name: base.venue_name,
-    venue_city: base.venue_city,
-
-    best_market: bestPick?.market || null,
-    best_market_type: bestPick?.market_type || null,
-    best_pick_score: bestPick?.score || null,
-    best_pick_reason: bestPick?.reason || null,
-
-    probability: bestPick?.probability || probabilityFromScore(radarScore),
-    confidence_score: bestPick?.score || radarScore,
-
-    radar_score: radarScore,
-    radar_reason: bestPick?.reason || "Jogo relevante pelo contexto e horário.",
-    is_radar_visible:
-      radarScore >= 58 || context.importantCompetition || context.bigTeamGame,
-
     avg_goals: statProjection.match.goals,
-    avg_shots: statProjection.match.shots_total,
-    avg_shots_on_target: statProjection.match.shots_on_goal,
     avg_corners: statProjection.match.corners,
+    avg_shots: statProjection.match.shots_total,
     avg_cards: statProjection.match.cards,
     avg_fouls: statProjection.match.fouls,
+    avg_shots_on_target: statProjection.match.shots_on_goal,
 
-    expected_home_goals: statProjection.home.goals,
-    expected_away_goals: statProjection.away.goals,
-    expected_home_shots: statProjection.home.shots_total,
-    expected_away_shots: statProjection.away.shots_total,
-    expected_home_sot: statProjection.home.shots_on_goal,
-    expected_away_sot: statProjection.away.shots_on_goal,
-    expected_home_corners: statProjection.home.corners,
-    expected_away_corners: statProjection.away.corners,
-    expected_home_cards: statProjection.home.cards,
-    expected_away_cards: statProjection.away.cards,
-    expected_home_fouls: statProjection.home.fouls,
-    expected_away_fouls: statProjection.away.fouls,
-    expected_corners: statProjection.match.corners,
-    expected_cards: statProjection.match.cards,
-    expected_fouls: statProjection.match.fouls,
+    insight: legacyInsight,
 
+    pick: bestPick?.market || null,
+    confidence: bestPick?.score || radarScore,
+    confidence_score: bestPick?.score || radarScore,
+
+    best_pick_1: picks[0]?.market || null,
+    best_pick_2: picks[1]?.market || null,
+    best_pick_3: picks[2]?.market || null,
+    safe_pick: picks[0]?.market || null,
+    balanced_pick: picks[1]?.market || null,
+    aggressive_pick: picks[2]?.market || null,
+    value_pick: picks[3]?.market || null,
+
+    country: base.country || base.league_country || null,
+    fixture_id: base.fixture_id,
+    markets: {
+      picks,
+      best: bestPick?.market || null,
+      corners: statProjection.match.corners,
+      cards: statProjection.match.cards,
+      shots: statProjection.match.shots_total,
+      sot: statProjection.match.shots_on_goal,
+    },
     metrics: {
       goals: statProjection.match.goals,
-      shots: statProjection.match.shots_total,
-      shots_on_target: statProjection.match.shots_on_goal,
       corners: statProjection.match.corners,
       cards: statProjection.match.cards,
       fouls: statProjection.match.fouls,
+      shots: statProjection.match.shots_total,
+      shots_on_target: statProjection.match.shots_on_goal,
     },
-
-    markets: {
-      best: bestPick?.market || null,
-      picks,
-    },
-
     probabilities: {
-      main: bestPick?.probability || probabilityFromScore(radarScore),
+      home: 0.33,
+      draw: 0.33,
+      away: 0.33,
     },
-
-    stat_projection: statProjection,
-    team_averages: teamAverages,
-    last5_summary: last5Summary,
-
-    game_context: context,
-    game_profile: context.gameProfile,
-
-    is_brazil_competition: context.brazilCompetition,
-    is_international_competition: context.internationalCompetition,
-    is_big_team_game: context.bigTeamGame,
-    is_important_competition: context.importantCompetition,
-
-    is_match_visible: true,
-    is_competition_visible: true,
-
-    sync_version: SYNC_VERSION,
+    probability: probabilityFromScore(bestPick?.score || radarScore),
+    priority: Math.round(radarScore),
+    region: context.brazilCompetition ? "brazil" : context.internationalCompetition ? "international" : "other",
     updated_at: nowISO(),
   }
 
   const { error: matchError } = await supabase
     .from("matches")
-    .upsert(matchPayload, { onConflict: "fixture_id" })
+    .upsert(matchPayload, { onConflict: "id" })
 
   if (matchError) {
     console.log("Erro salvando matches:", matchError.message)
   }
 
   const analysisPayload = {
-    fixture_id: base.fixture_id,
     match_id: base.fixture_id,
 
-    home_team_name: base.home_team_name,
-    away_team_name: base.away_team_name,
-    league_name: base.league_name,
-    league_country: base.league_country,
-    date: base.date,
-    kickoff: base.kickoff,
-
-    data: analysisData,
-
-    stat_projection: statProjection,
-    team_averages: teamAverages,
-    last5_summary: last5Summary,
-    analysis_sections: analysisData.analysis_sections,
-    game_context: context,
-    picks,
+    home_strength: context.homeAttackStrength,
+    away_strength: context.awayAttackStrength,
 
     expected_home_goals: statProjection.home.goals,
     expected_away_goals: statProjection.away.goals,
@@ -1801,42 +1562,48 @@ async function saveMatch(result) {
     expected_away_shots: statProjection.away.shots_total,
     expected_home_sot: statProjection.home.shots_on_goal,
     expected_away_sot: statProjection.away.shots_on_goal,
-    expected_home_corners: statProjection.home.corners,
-    expected_away_corners: statProjection.away.corners,
-    expected_home_cards: statProjection.home.cards,
-    expected_away_cards: statProjection.away.cards,
-    expected_home_fouls: statProjection.home.fouls,
-    expected_away_fouls: statProjection.away.fouls,
     expected_corners: statProjection.match.corners,
     expected_cards: statProjection.match.cards,
-    expected_fouls: statProjection.match.fouls,
 
-    summary: analysisData.summary,
-    sync_version: SYNC_VERSION,
-    updated_at: nowISO(),
+    prob_over25: clamp(safeNumber(statProjection.match.goals) / 3.5, 0.2, 0.85),
+    prob_btts: clamp((safeNumber(statProjection.home.goals) + safeNumber(statProjection.away.goals)) / 4, 0.2, 0.8),
+    prob_corners: clamp(safeNumber(statProjection.match.corners) / 10, 0.1, 0.9),
+    prob_shots: clamp(safeNumber(statProjection.match.shots_total) / 25, 0.2, 0.95),
+    prob_sot: clamp(safeNumber(statProjection.match.shots_on_goal) / 9, 0.2, 0.95),
+    prob_cards: clamp(safeNumber(statProjection.match.cards) / 5, 0.08, 0.9),
+
+    best_pick_1: picks[0]?.market || null,
+    best_pick_2: picks[1]?.market || null,
+    best_pick_3: picks[2]?.market || null,
+    aggressive_pick: picks[3]?.market || null,
+
+    analysis_text: legacyInsight,
+
+    analysis_sections: {
+      team_averages: teamAverages,
+      last5_summary: last5Summary,
+      stat_projection: statProjection,
+      game_context: context,
+      picks,
+    },
+
+    data: {
+      sync_version: SYNC_VERSION,
+      team_averages: teamAverages,
+      last5_summary: last5Summary,
+      stat_projection: statProjection,
+      game_context: context,
+      picks,
+      summary: legacyInsight,
+    },
   }
 
   const { error: analysisError } = await supabase
     .from("match_analysis")
-    .upsert(analysisPayload, { onConflict: "fixture_id" })
+    .upsert(analysisPayload, { onConflict: "match_id" })
 
   if (analysisError) {
     console.log("Erro salvando match_analysis:", analysisError.message)
-
-    const fallbackPayload = {
-      fixture_id: base.fixture_id,
-      match_id: base.fixture_id,
-      data: analysisData,
-      updated_at: nowISO(),
-    }
-
-    const { error: fallbackError } = await supabase
-      .from("match_analysis")
-      .upsert(fallbackPayload, { onConflict: "fixture_id" })
-
-    if (fallbackError) {
-      console.log("Erro salvando fallback match_analysis:", fallbackError.message)
-    }
   }
 }
 
@@ -1855,71 +1622,32 @@ async function saveDailyPicks(allPicks = []) {
   if (!selected.length) return []
 
   const rows = selected.map((pick, index) => ({
-    fixture_id: pick.fixture_id,
-    match_id: pick.fixture_id,
-
     rank: index + 1,
-    daily_rank: index + 1,
+    match_id: pick.fixture_id,
+    fixture_id: pick.fixture_id,
 
-    market_type: pick.market_type,
+    home_team: pick.home_team_name,
+    away_team: pick.away_team_name,
+    home_team_name: pick.home_team_name,
+    away_team_name: pick.away_team_name,
+
+    league: pick.league_name,
     market: pick.market,
-    team: pick.team || null,
-    side: pick.side || null,
-    line: pick.line || null,
-    direction: pick.direction || null,
-
-    score: pick.score,
     probability: pick.probability,
     confidence:
       pick.score >= 74 ? "Forte" : pick.score >= 66 ? "Boa" : "Moderada",
-    reason: pick.reason,
 
-    league_id: pick.league_id,
-    league_name: pick.league_name,
-    league: pick.league_name,
-    league_country: pick.league_country,
-    country: pick.country,
-
-    home_team_name: pick.home_team_name,
-    away_team_name: pick.away_team_name,
-    home_team: pick.home_team_name,
-    away_team: pick.away_team_name,
-
-    date: pick.date,
+    is_opportunity: true,
     kickoff: pick.kickoff,
 
-    game_profile: pick.game_profile,
-    is_brazil_competition: pick.is_brazil_competition,
-    is_international_competition: pick.is_international_competition,
-    is_big_team_game: pick.is_big_team_game,
-    is_important_competition: pick.is_important_competition,
-
-    sync_version: SYNC_VERSION,
-    created_at: nowISO(),
-    updated_at: nowISO(),
+    home_logo: null,
+    away_logo: null,
   }))
 
   const { error } = await supabase.from("daily_picks").insert(rows)
 
   if (error) {
     console.log("Erro inserindo daily_picks:", error.message)
-
-    const fallbackRows = selected.map((pick, index) => ({
-      fixture_id: pick.fixture_id,
-      match_id: pick.fixture_id,
-      rank: index + 1,
-      market: pick.market,
-      probability: pick.probability,
-      kickoff: pick.kickoff,
-    }))
-
-    const { error: fallbackError } = await supabase
-      .from("daily_picks")
-      .insert(fallbackRows)
-
-    if (fallbackError) {
-      console.log("Erro inserindo fallback daily_picks:", fallbackError.message)
-    }
   }
 
   return selected
