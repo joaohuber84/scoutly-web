@@ -1673,13 +1673,13 @@ function buildCandidateMarkets(payload) {
   buildSOTCandidates(metrics, probabilities).forEach((item) => candidates.push(item))
   buildCardsCandidates(metrics, probabilities).forEach((item) => candidates.push(item))
   buildCornerCandidates(metrics).forEach((item) => candidates.push(item))
-buildTeamCornerCandidates({
-  homeTeam,
-  awayTeam,
-  metrics,
-  homeProfile,
-  awayProfile,
-}).forEach((item) => candidates.push(item))
+// buildTeamCornerCandidates({
+ // homeTeam,
+  // awayTeam,
+ // metrics,
+ // homeProfile,
+ // awayProfile,
+// }).forEach((item) => candidates.push(item))
   
   const mismatch = Math.abs(homeProb - awayProb)
 
