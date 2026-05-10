@@ -3480,58 +3480,59 @@ function buildRadarSnapshot() {
 const teamComparisonBox = document.getElementById("teamComparisonBox")
 
 if (teamComparisonBox) {
-  const homeLogo = match.homeLogo || ""
-  const awayLogo = match.awayLogo || ""
+  const homeLogo = match.home_logo || "";
+  const awayLogo = match.away_logo || "";
 
-  const homeTeam = match.homeTeam || "Casa"
-  const awayTeam = match.awayTeam || "Visitante"
+  const homeTeam = normalizeTeamName(match.home_team || "Casa");
+  const awayTeam = normalizeTeamName(match.away_team || "Visitante");
 
-  const metrics = match.metrics || {}
+  const metricsData = getMetrics(match);
 
-  const homeGoals = Number(metrics.expected_home_goals || 0).toFixed(1)
-const awayGoals = Number(metrics.expected_away_goals || 0).toFixed(1)
+  const homeGoals = formatDecimal(match.expected_home_goals, 1);
+  const awayGoals = formatDecimal(match.expected_away_goals, 1);
 
-const homeShots = Number(metrics.expected_home_shots || 0).toFixed(1)
-const awayShots = Number(metrics.expected_away_shots || 0).toFixed(1)
+  const homeShots = formatDecimal(match.expected_home_shots, 1);
+  const awayShots = formatDecimal(match.expected_away_shots, 1);
 
-const homeSOT = Number(metrics.expected_home_sot || 0).toFixed(1)
-const awaySOT = Number(metrics.expected_away_sot || 0).toFixed(1)
+  const homeSOT = formatDecimal(match.expected_home_sot, 1);
+  const awaySOT = formatDecimal(match.expected_away_sot, 1);
 
-const totalCorners = Number(metrics.expected_corners || 0)
-const totalCards = Number(metrics.expected_cards || 0)
+  const homeCorners = "—";
+  const awayCorners = "—";
 
-const homeCorners = (totalCorners * 0.52).toFixed(1)
-const awayCorners = (totalCorners * 0.48).toFixed(1)
+  const homeCards = "—";
+  const awayCards = "—";
 
-const homeCards = (totalCards * 0.50).toFixed(1)
-const awayCards = (totalCards * 0.50).toFixed(1)
-  
+  function logoImg(url, name) {
+    return url
+      ? `<img src="${escapeHtml(url)}" class="team-logo" alt="${escapeHtml(name)}" />`
+      : `<div class="team-logo-fallback">${escapeHtml(teamInitials(name))}</div>`;
+  }
+
   function comparisonRow(label, homeValue, awayValue) {
     return `
       <div class="team-row">
-
         <div class="team-side">
-          <img src="${homeLogo}" class="team-logo">
+          ${logoImg(homeLogo, homeTeam)}
           <div>
-            <div class="team-name">${homeTeam}</div>
-            <div class="metric-value">${homeValue}</div>
+            <div class="team-name">${escapeHtml(homeTeam)}</div>
+            <div class="metric-value">${escapeHtml(homeValue)}</div>
           </div>
         </div>
 
         <div class="metric-center">
-          <div class="metric-label">${label}</div>
+          <div class="metric-label">${escapeHtml(label)}</div>
         </div>
 
         <div class="team-side right">
           <div>
-            <div class="team-name">${awayTeam}</div>
-            <div class="metric-value">${awayValue}</div>
+            <div class="team-name">${escapeHtml(awayTeam)}</div>
+            <div class="metric-value">${escapeHtml(awayValue)}</div>
           </div>
-          <img src="${awayLogo}" class="team-logo">
+          ${logoImg(awayLogo, awayTeam)}
         </div>
-
       </div>
-    `
+    `;
   }
 
   teamComparisonBox.innerHTML = `
@@ -3542,7 +3543,7 @@ const awayCards = (totalCards * 0.50).toFixed(1)
       ${comparisonRow("Escanteios", homeCorners, awayCorners)}
       ${comparisonRow("Cartões", homeCards, awayCards)}
     </div>
-  `
+  `;
 }
       
       if (marketsList) {
