@@ -3488,21 +3488,24 @@ if (teamComparisonBox) {
 
   const metrics = match.metrics || {}
 
-  const homeGoals = Number(metrics.expectedHomeGoals || 0).toFixed(1)
-  const awayGoals = Number(metrics.expectedAwayGoals || 0).toFixed(1)
+  const homeGoals = Number(metrics.expected_home_goals || 0).toFixed(1)
+const awayGoals = Number(metrics.expected_away_goals || 0).toFixed(1)
 
-  const homeShots = Number(metrics.expectedHomeShots || 0).toFixed(1)
-  const awayShots = Number(metrics.expectedAwayShots || 0).toFixed(1)
+const homeShots = Number(metrics.expected_home_shots || 0).toFixed(1)
+const awayShots = Number(metrics.expected_away_shots || 0).toFixed(1)
 
-  const homeSOT = Number(metrics.expectedHomeShotsOnTarget || 0).toFixed(1)
-  const awaySOT = Number(metrics.expectedAwayShotsOnTarget || 0).toFixed(1)
+const homeSOT = Number(metrics.expected_home_sot || 0).toFixed(1)
+const awaySOT = Number(metrics.expected_away_sot || 0).toFixed(1)
 
-  const homeCorners = Number(metrics.expectedHomeCorners || 0).toFixed(1)
-  const awayCorners = Number(metrics.expectedAwayCorners || 0).toFixed(1)
+const totalCorners = Number(metrics.expected_corners || 0)
+const totalCards = Number(metrics.expected_cards || 0)
 
-  const homeCards = Number(metrics.expectedHomeCards || 0).toFixed(1)
-  const awayCards = Number(metrics.expectedAwayCards || 0).toFixed(1)
+const homeCorners = (totalCorners * 0.52).toFixed(1)
+const awayCorners = (totalCorners * 0.48).toFixed(1)
 
+const homeCards = (totalCards * 0.50).toFixed(1)
+const awayCards = (totalCards * 0.50).toFixed(1)
+  
   function comparisonRow(label, homeValue, awayValue) {
     return `
       <div class="team-row">
