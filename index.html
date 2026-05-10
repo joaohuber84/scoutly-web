@@ -3771,23 +3771,24 @@ function openCompetition(league) {
 
       if (matchesError) throw matchesError;
 
-      const { data: analysisData, error: analysisError } = await supabaseClient
-        .from("match_analysis")
+      const { data: statsData, error: statsError } = await supabaseClient
+        .from("match_stats")
         .select("*");
 
-      if (analysisError) throw analysisError;
+      if (statsError) throw statsError;
 
-      const analysisMap = new Map(
-        (analysisData || []).map(item => [String(item.match_id), item])
+      const statsMap = new Map(
+        (statsData || []).map(item => [String(item.match_id), item])
       );
 
       state.matches = (matchesData || []).map(match => {
         const normalizedLeague = normalizeLeagueName(match.league);
-        const analysis = analysisMap.get(String(match.id)) || {};
+        const stats = statsMap.get(String(match.id)) || {};
 
         return {
           ...match,
           ...analysis,
+          ...stats,
           id: match.id,
           home_team: normalizeTeamName(match.home_team),
           away_team: normalizeTeamName(match.away_team),
