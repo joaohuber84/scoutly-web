@@ -2322,6 +2322,19 @@ name.includes("proximus league") ||
         toNumber(match.away_win_prob, null) ??
         toNumber(probabilities.away, null);
 
+const probabilitiesAway =
+  toNumber(match.away_win_prob, null) ??
+  toNumber(probabilities.away, null);
+
+const homeGoals = toNumber(match.expected_home_goals, null);
+const awayGoals = toNumber(match.expected_away_goals, null);
+
+const homeShots = toNumber(match.expected_home_shots, null);
+const awayShots = toNumber(match.expected_away_shots, null);
+
+const homeSOT = toNumber(match.expected_home_sot, null);
+const awaySOT = toNumber(match.expected_away_sot, null);
+      
       return {
         avgGoals,
         avgCorners,
@@ -2333,6 +2346,12 @@ name.includes("proximus league") ||
         probabilitiesHome,
         probabilitiesDraw,
         probabilitiesAway
+        homeGoals,
+        awayGoals,
+        homeShots,
+        awayShots,
+        homeSOT,
+        awaySOT,
       };
     }
 
