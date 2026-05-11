@@ -1083,7 +1083,9 @@
 .box-title {
   margin: 0 0 12px;
   font-size: 16px;
+  font-weight: 800;
   letter-spacing: -0.03em;
+  line-height: 1.2;
 }
     
     .analysis-highlight {
@@ -1114,8 +1116,9 @@
       background: linear-gradient(180deg, rgba(20,34,60,0.95), rgba(10,20,40,0.98));
       border: 1px solid rgba(120,160,255,0.18);
       border-radius: 16px;
-      padding: 10px 8px;
-      min-height: 82px;
+      padding: 10px;
+      min-height: 96px;
+      aspect-ratio: 1 / 1;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -1135,10 +1138,10 @@
     }
 
     .stat-label {
-      color: rgba(200,220,255,0.72);
+      color: #9FB0D0;
       font-size: 10px;
-      line-height: 1.15;
-      margin-bottom: 6px;
+      line-height: 1.25;
+      margin-bottom: 0 auto 6px;
       text-align: center;
       max-width: 72px;
     }
@@ -1192,10 +1195,10 @@
     
 .team-row {
   display: grid;
-  grid-template-columns: 58px 1fr 58px;
+  grid-template-columns: 82px 1fr 82px;
   min-height: 52px;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
   padding: 12px 14px;
   border-radius: 14px;
   background: rgba(255,255,255,0.035);
@@ -1229,6 +1232,7 @@
   font-weight: 900;
   color: #ffffff;
   text-align: center;
+  line-height: 1;
 }
 
 .team-name {
