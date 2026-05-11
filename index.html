@@ -3533,6 +3533,12 @@ if (teamComparisonBox) {
   const homeCards = formatDecimal(match.expected_home_cards ?? match.home_yellow_cards, 1);
   const awayCards = formatDecimal(match.expected_away_cards ?? match.away_yellow_cards, 1);
 
+  function logoImg(url, name) {
+  return url
+    ? `<img src="${escapeHtml(url)}" class="team-logo" alt="${escapeHtml(name)}" />`
+    : `<div class="team-logo-fallback">${escapeHtml(teamInitials(name))}</div>`;
+}
+
   function comparisonRow(label, homeValue, awayValue) {
     return `
       <div class="team-row">
