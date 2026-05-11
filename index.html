@@ -3549,48 +3549,47 @@ const awayCards = formatDecimal(
   1
 );
 
-  function logoImg(url, name) {
-    return url
-      ? `<img src="${escapeHtml(url)}" class="team-logo" alt="${escapeHtml(name)}" />`
-      : `<div class="team-logo-fallback">${escapeHtml(teamInitials(name))}</div>`;
-  }
+function logoImg(url, name) {
+  return url
+    ? `<img src="${escapeHtml(url)}" class="team-logo" alt="${escapeHtml(name)}" />`
+    : `<div class="team-logo-fallback">${escapeHtml(teamInitials(name))}</div>`;
+}
 
-  function comparisonRow(label, homeValue, awayValue) {
-    return `
-      <div class="team-row">
-        <div class="team-side">
-          ${logoImg(homeLogo, homeTeam)}
-          <div>
-            <div class="team-name">${escapeHtml(homeTeam)}</div>
-            <div class="metric-value">${escapeHtml(homeValue)}</div>
-          </div>
-        </div>
-
-        <div class="metric-center">
-          <div class="metric-label">${escapeHtml(label)}</div>
-        </div>
-
-        <div class="team-side right">
-          <div>
-            <div class="team-name">${escapeHtml(awayTeam)}</div>
-            <div class="metric-value">${escapeHtml(awayValue)}</div>
-          </div>
-          ${logoImg(awayLogo, awayTeam)}
-        </div>
+function comparisonRow(label, homeValue, awayValue) {
+  return `
+    <div class="team-row">
+      <div class="team-metric left">${escapeHtml(homeValue)}</div>
+      <div class="metric-center">
+        <div class="metric-label">${escapeHtml(label)}</div>
       </div>
-    `;
-  }
-
-  teamComparisonBox.innerHTML = `
-    <div class="team-comparison">
-      ${comparisonRow("Gols esperados", homeGoals, awayGoals)}
-      ${comparisonRow("Finalizações", homeShots, awayShots)}
-      ${comparisonRow("No gol", homeSOT, awaySOT)}
-      ${comparisonRow("Escanteios", homeCorners, awayCorners)}
-      ${comparisonRow("Cartões", homeCards, awayCards)}
+      <div class="team-metric right">${escapeHtml(awayValue)}</div>
     </div>
   `;
 }
+
+teamComparisonBox.innerHTML = `
+  <div class="team-comparison">
+    <div class="comparison-header">
+      <div class="comparison-team">
+        ${logoImg(homeLogo, homeTeam)}
+        <div class="team-name">${escapeHtml(homeTeam)}</div>
+      </div>
+
+      <div class="comparison-vs">VS</div>
+
+      <div class="comparison-team right">
+        <div class="team-name">${escapeHtml(awayTeam)}</div>
+        ${logoImg(awayLogo, awayTeam)}
+      </div>
+    </div>
+
+    ${comparisonRow("Gols esperados", homeGoals, awayGoals)}
+    ${comparisonRow("Finalizações", homeShots, awayShots)}
+    ${comparisonRow("No gol", homeSOT, awaySOT)}
+    ${comparisonRow("Escanteios", homeCorners, awayCorners)}
+    ${comparisonRow("Cartões", homeCards, awayCards)}
+  </div>
+`;
       
       if (marketsList) {
         marketsList.innerHTML = detectedMarkets.length
