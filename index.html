@@ -1042,7 +1042,7 @@
 
     .analysis-body {
       padding: 16px;
-      max-width: 980px
+      max-width: 980px;
       margin: 0 auto;
     }
 
@@ -1104,7 +1104,7 @@
 
     .stats-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 10px;
       margin-top: 14px;
     }
@@ -1113,7 +1113,7 @@
       background: linear-gradient(180deg, rgba(20,34,60,0.95), rgba(10,20,40,0.98));
       border: 1px solid rgba(120,160,255,0.18);
       border-radius: 16px;
-      padding: 10px, 8px;
+      padding: 10px 8px;
       min-height: 82px;
       display: flex;
       flex-direction: column;
@@ -1216,7 +1216,7 @@
 
 .metric-label {
   font-size: 11px;
-  line-heigt: 1.15;
+  line-height: 1.15;
   color: #9fb0d0;
   text-align: center;
 }
@@ -1681,7 +1681,8 @@
   <h3 class="box-title">Comparativo dos times</h3>
   <div id="teamComparisonBox"></div>
 </div>
-
+          </div>
+          
           <div class="right-side">
             <div class="box">
               <h3 class="box-title">Oportunidades alternativas</h3>
@@ -1691,7 +1692,6 @@
         </div>
       </div>
     </div>
-  </div>
 
   <script>
     const supabaseClient = window.supabase.createClient(
