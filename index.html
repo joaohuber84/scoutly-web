@@ -2246,111 +2246,115 @@ name.includes("proximus league") ||
       );
     }
 
-    function getMetrics(match) {
-      const metrics = maybeJson(match.metrics) || {};
-      console.log("METRICS DEBUG", metrics)
-      const markets = maybeJson(match.markets) || {};
-      const probabilities = maybeJson(match.probabilities) || {};
+  function getMetrics(match) {
+  const metrics = maybeJson(match.metrics) || {};
+  const markets = maybeJson(match.markets) || {};
+  const probabilities = maybeJson(match.probabilities) || {};
 
-      const expectedHomeGoals = toNumber(match.expected_home_goals, null);
-      const expectedAwayGoals = toNumber(match.expected_away_goals, null);
-      const expectedHomeShots = toNumber(match.expected_home_shots, null);
-      const expectedAwayShots = toNumber(match.expected_away_shots, null);
-      const expectedHomeSOT = toNumber(match.expected_home_sot, null);
-      const expectedAwaySOT = toNumber(match.expected_away_sot, null);
-      const expectedCorners = toNumber(match.expected_corners, null);
-      const expectedCards = toNumber(match.expected_cards, null);
+  const expectedHomeGoals = toNumber(match.expected_home_goals, null);
+  const expectedAwayGoals = toNumber(match.expected_away_goals, null);
+  const expectedHomeShots = toNumber(match.expected_home_shots, null);
+  const expectedAwayShots = toNumber(match.expected_away_shots, null);
+  const expectedHomeSOT = toNumber(match.expected_home_sot, null);
+  const expectedAwaySOT = toNumber(match.expected_away_sot, null);
 
-      const avgGoals =
-        (expectedHomeGoals !== null || expectedAwayGoals !== null)
-          ? (expectedHomeGoals || 0) + (expectedAwayGoals || 0)
-          : (
-              toNumber(metrics.goals, null) ??
-              toNumber(markets.goals, null) ??
-              toNumber(match.avg_goals, null)
-            );
+  const expectedCorners = toNumber(match.expected_corners, null);
+  const expectedCards = toNumber(match.expected_cards, null);
 
-      const avgCorners =
-        expectedCorners ??
-        toNumber(metrics.corners, null) ??
-        toNumber(markets.corners, null) ??
-        toNumber(match.avg_corners, null);
+  const avgGoals =
+    expectedHomeGoals !== null || expectedAwayGoals !== null
+      ? (expectedHomeGoals || 0) + (expectedAwayGoals || 0)
+      : toNumber(metrics.goals, null) ??
+        toNumber(markets.goals, null) ??
+        toNumber(match.avg_goals, null);
 
-      const avgShots =
-        (expectedHomeShots !== null || expectedAwayShots !== null)
-          ? (expectedHomeShots || 0) + (expectedAwayShots || 0)
-          : (
-              toNumber(metrics.shots, null) ??
-              toNumber(markets.shots, null) ??
-              toNumber(match.avg_shots, null)
-            );
+  const avgCorners =
+    expectedCorners ??
+    toNumber(metrics.corners, null) ??
+    toNumber(markets.corners, null) ??
+    toNumber(match.avg_corners, null);
 
-      const avgShotsOnTarget =
-        (expectedHomeSOT !== null || expectedAwaySOT !== null)
-          ? (expectedHomeSOT || 0) + (expectedAwaySOT || 0)
-          : (
-              toNumber(metrics.shots_on_target, null) ??
-              toNumber(metrics.sot, null) ??
-              toNumber(markets.shots_on_target, null) ??
-              toNumber(match.avg_shots_on_target, null)
-            );
+  const avgShots =
+    expectedHomeShots !== null || expectedAwayShots !== null
+      ? (expectedHomeShots || 0) + (expectedAwayShots || 0)
+      : toNumber(metrics.shots, null) ??
+        toNumber(markets.shots, null) ??
+        toNumber(match.avg_shots, null);
 
-      const avgCards =
-        expectedCards ??
-        toNumber(metrics.cards, null) ??
-        toNumber(markets.cards, null) ??
-        toNumber(match.avg_cards, null);
+  const avgShotsOnTarget =
+    expectedHomeSOT !== null || expectedAwaySOT !== null
+      ? (expectedHomeSOT || 0) + (expectedAwaySOT || 0)
+      : toNumber(metrics.shots_on_target, null) ??
+        toNumber(metrics.sot, null) ??
+        toNumber(markets.shots_on_target, null) ??
+        toNumber(match.avg_shots_on_target, null);
 
-      const avgFouls =
-        toNumber(metrics.fouls, null) ??
-        toNumber(markets.fouls, null) ??
-        toNumber(match.avg_fouls, null);
+  const avgCards =
+    expectedCards ??
+    toNumber(metrics.cards, null) ??
+    toNumber(markets.cards, null) ??
+    toNumber(match.avg_cards, null);
 
-      const over25Prob =
-        toNumber(match.prob_over25, null) ??
-        toNumber(markets.over25, null);
+  const avgFouls =
+    toNumber(metrics.fouls, null) ??
+    toNumber(markets.fouls, null) ??
+    toNumber(match.avg_fouls, null);
 
-      const probabilitiesHome =
-        toNumber(match.home_win_prob, null) ??
-        toNumber(probabilities.home, null);
+  const over25Prob =
+    toNumber(match.prob_over25, null) ??
+    toNumber(markets.over25, null);
 
-      const probabilitiesDraw =
-        toNumber(match.draw_prob, null) ??
-        toNumber(probabilities.draw, null);
+  const probabilitiesHome =
+    toNumber(match.home_win_prob, null) ??
+    toNumber(probabilities.home, null);
 
-      const probabilitiesAway =
-        toNumber(match.away_win_prob, null) ??
-        toNumber(probabilities.away, null);
+  const probabilitiesDraw =
+    toNumber(match.draw_prob, null) ??
+    toNumber(probabilities.draw, null);
 
-const homeGoals = toNumber(match.expected_home_goals, null);
-const awayGoals = toNumber(match.expected_away_goals, null);
+  const probabilitiesAway =
+    toNumber(match.away_win_prob, null) ??
+    toNumber(probabilities.away, null);
 
-const homeShots = toNumber(match.expected_home_shots, null);
-const awayShots = toNumber(match.expected_away_shots, null);
+  const homeGoals = expectedHomeGoals;
+  const awayGoals = expectedAwayGoals;
 
-const homeSOT = toNumber(match.expected_home_sot, null);
-const awaySOT = toNumber(match.expected_away_sot, null);
-      
-      return {
-        avgGoals,
-        avgCorners,
-        avgShots,
-        avgShotsOnTarget,
-        avgCards,
-        avgFouls,
-        over25Prob,
-        probabilitiesHome,
-        probabilitiesDraw,
-        probabilitiesAway
-        homeGoals,
-        awayGoals,
-        homeShots,
-        awayShots,
-        homeSOT,
-        awaySOT,
-      };
-    }
+  const homeShots = expectedHomeShots;
+  const awayShots = expectedAwayShots;
 
+  const homeSOT = expectedHomeSOT;
+  const awaySOT = expectedAwaySOT;
+
+  const homeCorners = toNumber(match.expected_home_corners, null);
+  const awayCorners = toNumber(match.expected_away_corners, null);
+
+  const homeCards = toNumber(match.expected_home_cards, null);
+  const awayCards = toNumber(match.expected_away_cards, null);
+
+  return {
+    avgGoals,
+    avgCorners,
+    avgShots,
+    avgShotsOnTarget,
+    avgCards,
+    avgFouls,
+    over25Prob,
+    probabilitiesHome,
+    probabilitiesDraw,
+    probabilitiesAway,
+    homeGoals,
+    awayGoals,
+    homeShots,
+    awayShots,
+    homeSOT,
+    awaySOT,
+    homeCorners,
+    awayCorners,
+    homeCards,
+    awayCards
+  };
+} 
+    
 function getGameContext(match) {
   const league = String(match.league || "").toLowerCase()
 
