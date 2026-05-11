@@ -1133,7 +1133,7 @@
       overflow-wrap: anywhere;
     }
 
-team-comparison {
+.team-comparison {
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -1167,6 +1167,18 @@ team-comparison {
   object-fit: contain;
 }
 
+    .team-logo-fallback {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 11px;
+  font-weight: 900;
+}
+    
 .team-name {
   font-size: 13px;
   font-weight: 700;
@@ -3517,11 +3529,25 @@ if (teamComparisonBox) {
   const homeSOT = formatDecimal(match.expected_home_sot, 1);
   const awaySOT = formatDecimal(match.expected_away_sot, 1);
 
-  const homeCorners = "—";
-  const awayCorners = "—";
+  const homeCorners = formatDecimal(
+  match.expected_home_corners ?? match.home_corners,
+  1
+);
 
-  const homeCards = "—";
-  const awayCards = "—";
+const awayCorners = formatDecimal(
+  match.expected_away_corners ?? match.away_corners,
+  1
+);
+
+const homeCards = formatDecimal(
+  match.expected_home_cards ?? match.home_yellow_cards,
+  1
+);
+
+const awayCards = formatDecimal(
+  match.expected_away_cards ?? match.away_yellow_cards,
+  1
+);
 
   function logoImg(url, name) {
     return url
@@ -3782,51 +3808,68 @@ function openCompetition(league) {
       state.dailyPicks = data || [];
     }
 
-    async function loadMatches() {
-      const { data: matchesData, error: matchesError } = await supabaseClient
-        .from("matches")
-        .select("*")
-        .order("priority", { ascending: false })
-        .order("kickoff", { ascending: true });
+async function loadMatches() {
+  const { data: matchesData, error: matchesError } = await supabaseClient
+    .from("matches")
+    .select("*")
+    .order("priority", { ascending: false })
+    .order("kickoff", { ascending: true });
 
-      if (matchesError) throw matchesError;
+  if (matchesError) throw matchesError;
 
-      const { data: statsData, error: statsError } = await supabaseClient
-        .from("match_stats")
-        .select("*");
+  const { data: statsData, error: statsError } = await supabaseClient
+    .from("match_stats")
+    .select("*");
 
-      if (statsError) throw statsError;
+  if (statsError) throw statsError;
 
-      const statsMap = new Map(
-        (statsData || []).map(item => [String(item.match_id), item])
-      );
+  const { data: analysisData, error: analysisError } = await supabaseClient
+    .from("match_analysis")
+    .select("*");
 
-      state.matches = (matchesData || []).map(match => {
-        const normalizedLeague = normalizeLeagueName(match.league);
-        const stats = statsMap.get(String(match.id)) || {};
+  if (analysisError) throw analysisError;
 
-        return {
-          ...match,
-          ...stats,
-          id: match.id,
-          home_team: normalizeTeamName(match.home_team),
-          away_team: normalizeTeamName(match.away_team),
-          league: normalizedLeague,
-          country: match.country || inferCountryFromLeague(normalizedLeague),
-          kickoff: match.kickoff || match.date,
-          home_logo: match.home_logo,
-          away_logo: match.away_logo,
-          probabilities: match.probabilities,
-          metrics: match.metrics,
-          markets: match.markets
-        };
-      }).filter(match => {
-        if (!match.home_team || !match.away_team) return false;
-        if (!match.league) return false;
-        if (shouldHideLeague(match.league)) return false;
-        return true;
-      });
-    }
+  const statsMap = new Map(
+    (statsData || []).map(item => [String(item.match_id), item])
+  );
+
+  const analysisMap = new Map(
+    (analysisData || []).map(item => [String(item.match_id), item])
+  );
+
+  state.matches = (matchesData || []).map(match => {
+    const normalizedLeague = normalizeLeagueName(match.league);
+    const stats = statsMap.get(String(match.id)) || {};
+    const analysis = analysisMap.get(String(match.id)) || {};
+
+    return {
+      ...match,
+      ...analysis,
+      ...stats,
+
+      id: match.id,
+      match_id: match.id,
+
+      home_team: normalizeTeamName(match.home_team),
+      away_team: normalizeTeamName(match.away_team),
+      league: normalizedLeague,
+      country: match.country || analysis.country || inferCountryFromLeague(normalizedLeague),
+      kickoff: match.kickoff || analysis.kickoff || match.date,
+
+      home_logo: match.home_logo,
+      away_logo: match.away_logo,
+
+      probabilities: analysis.probabilities || match.probabilities,
+      metrics: analysis.metrics || match.metrics,
+      markets: analysis.markets || match.markets
+    };
+  }).filter(match => {
+    if (!match.home_team || !match.away_team) return false;
+    if (!match.league) return false;
+    if (shouldHideLeague(match.league)) return false;
+    return true;
+  });
+}
 
     function refreshUIOnly() {
       renderRadar();
