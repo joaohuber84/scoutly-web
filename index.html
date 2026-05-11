@@ -3509,16 +3509,14 @@ function buildRadarSnapshot() {
         analysisStats.innerHTML = statCardsMarkup(match);
       }
 
-const teamComparisonBox = document.getElementById("teamComparisonBox")
+const teamComparisonBox = document.getElementById("teamComparisonBox");
 
 if (teamComparisonBox) {
   const homeLogo = match.home_logo || "";
   const awayLogo = match.away_logo || "";
 
-  const homeTeam = normalizeTeamName(match.home_team || "Casa");
-  const awayTeam = normalizeTeamName(match.away_team || "Visitante");
-
-  const metricsData = getMetrics(match);
+  const homeTeamName = normalizeTeamName(match.home_team || "Casa");
+  const awayTeamName = normalizeTeamName(match.away_team || "Visitante");
 
   const homeGoals = formatDecimal(match.expected_home_goals, 1);
   const awayGoals = formatDecimal(match.expected_away_goals, 1);
@@ -3529,67 +3527,48 @@ if (teamComparisonBox) {
   const homeSOT = formatDecimal(match.expected_home_sot, 1);
   const awaySOT = formatDecimal(match.expected_away_sot, 1);
 
-  const homeCorners = formatDecimal(
-  match.expected_home_corners ?? match.home_corners,
-  1
-);
+  const homeCorners = formatDecimal(match.expected_home_corners ?? match.home_corners, 1);
+  const awayCorners = formatDecimal(match.expected_away_corners ?? match.away_corners, 1);
 
-const awayCorners = formatDecimal(
-  match.expected_away_corners ?? match.away_corners,
-  1
-);
+  const homeCards = formatDecimal(match.expected_home_cards ?? match.home_yellow_cards, 1);
+  const awayCards = formatDecimal(match.expected_away_cards ?? match.away_yellow_cards, 1);
 
-const homeCards = formatDecimal(
-  match.expected_home_cards ?? match.home_yellow_cards,
-  1
-);
-
-const awayCards = formatDecimal(
-  match.expected_away_cards ?? match.away_yellow_cards,
-  1
-);
-
-function logoImg(url, name) {
-  return url
-    ? `<img src="${escapeHtml(url)}" class="team-logo" alt="${escapeHtml(name)}" />`
-    : `<div class="team-logo-fallback">${escapeHtml(teamInitials(name))}</div>`;
-}
-
-function comparisonRow(label, homeValue, awayValue) {
-  return `
-    <div class="team-row">
-      <div class="team-metric left">${escapeHtml(homeValue)}</div>
-      <div class="metric-center">
-        <div class="metric-label">${escapeHtml(label)}</div>
+  function comparisonRow(label, homeValue, awayValue) {
+    return `
+      <div class="team-row">
+        <div class="team-metric left">${escapeHtml(homeValue)}</div>
+        <div class="metric-center">
+          <div class="metric-label">${escapeHtml(label)}</div>
+        </div>
+        <div class="team-metric right">${escapeHtml(awayValue)}</div>
       </div>
-      <div class="team-metric right">${escapeHtml(awayValue)}</div>
+    `;
+  }
+
+  teamComparisonBox.innerHTML = `
+    <div class="team-comparison">
+      <div class="comparison-header">
+        <div class="comparison-team">
+          ${logoImg(homeLogo, homeTeamName)}
+          <div class="team-name">${escapeHtml(homeTeamName)}</div>
+        </div>
+
+        <div class="comparison-vs">VS</div>
+
+        <div class="comparison-team right">
+          <div class="team-name">${escapeHtml(awayTeamName)}</div>
+          ${logoImg(awayLogo, awayTeamName)}
+        </div>
+      </div>
+
+      ${comparisonRow("Gols esperados", homeGoals, awayGoals)}
+      ${comparisonRow("Finalizações", homeShots, awayShots)}
+      ${comparisonRow("No gol", homeSOT, awaySOT)}
+      ${comparisonRow("Escanteios", homeCorners, awayCorners)}
+      ${comparisonRow("Cartões", homeCards, awayCards)}
     </div>
   `;
 }
-
-teamComparisonBox.innerHTML = `
-  <div class="team-comparison">
-    <div class="comparison-header">
-      <div class="comparison-team">
-        ${logoImg(homeLogo, homeTeam)}
-        <div class="team-name">${escapeHtml(homeTeam)}</div>
-      </div>
-
-      <div class="comparison-vs">VS</div>
-
-      <div class="comparison-team right">
-        <div class="team-name">${escapeHtml(awayTeam)}</div>
-        ${logoImg(awayLogo, awayTeam)}
-      </div>
-    </div>
-
-    ${comparisonRow("Gols esperados", homeGoals, awayGoals)}
-    ${comparisonRow("Finalizações", homeShots, awayShots)}
-    ${comparisonRow("No gol", homeSOT, awaySOT)}
-    ${comparisonRow("Escanteios", homeCorners, awayCorners)}
-    ${comparisonRow("Cartões", homeCards, awayCards)}
-  </div>
-`;
       
       if (marketsList) {
         marketsList.innerHTML = detectedMarkets.length
