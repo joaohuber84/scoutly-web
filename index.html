@@ -1195,33 +1195,39 @@
     
 .team-row {
   display: grid;
-  grid-template-columns: 82px 1fr 82px;
-  min-height: 52px;
+  grid-template-columns: 70px 1fr 70px;
+  min-height: 48px;
   align-items: center;
-  gap: 14px;
-  padding: 12px 14px;
+  gap: 10px;
+  padding: 10px 12px;
   border-radius: 14px;
   background: rgba(255,255,255,0.035);
   border: 1px solid rgba(255,255,255,0.06);
 }
 
-.team-side,
-.team-side.right {
-  display: flex;
+.team-side {
+  displey: flex;
   align-items: center;
-  justify-content: center;
-  text-align: center;
+  justify-content: flex-start;
+  text-align: left;
+  
+.team-side.right {
+  justify-content: flex-end;
+  text-align: right;
 }
 
 .metric-center {
   text-align: center;
  min-width: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .metric-label {
   font-size: 10px;
-  line-height: 1.25;
-  max-width: 72px;
+  line-height: 1.15;
+  max-width: 80px;
   margin: 0 auto;
   color: #9fb0d0;
   text-align: center;
@@ -1684,7 +1690,7 @@
   <div id="analysisStats" class="stats-grid"></div>
 </div>
 
-<div class="box" style="margin-top:16px;">
+<div class="box" 
   <h3 class="box-title">Comparativo dos times</h3>
   <div id="teamComparisonBox"></div>
 </div>
