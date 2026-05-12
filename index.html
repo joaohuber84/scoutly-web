@@ -3765,39 +3765,6 @@ if (teamComparisonBox) {
     </div>
   `;
 }
-
-      const formWrapper = document.getElementById("formWrapper");
-
-if(formWrapper){
-
-  formWrapper.innerHTML = `
-
-    <div class="form-team">
-      ${logoImg(homeLogo, homeTeamName)}
-
-      <div class="form-sequence">
-        <span class="form win">V</span>
-        <span class="form draw">E</span>
-        <span class="form win">V</span>
-        <span class="form loss">D</span>
-        <span class="form win">V</span>
-      </div>
-    </div>
-
-    <div class="form-team">
-      ${logoImg(awayLogo, awayTeamName)}
-
-      <div class="form-sequence">
-        <span class="form loss">D</span>
-        <span class="form loss">D</span>
-        <span class="form draw">E</span>
-        <span class="form win">V</span>
-        <span class="form win">V</span>
-      </div>
-    </div>
-
-  `;
-}
       
       if (marketsList) {
         marketsList.innerHTML = detectedMarkets.length
