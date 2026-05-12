@@ -1189,6 +1189,48 @@
  text-align: center;
 }
 
+.comparison-header-clean {
+  display: grid;
+  grid-template-columns: 1fr 70px 1fr;
+  align-items: center;
+  margin: 10px 0 18px;
+  min-height: 72px;
+}
+
+.comparison-logo-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 72px;
+}
+
+.comparison-logo-side .team-logo {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+}
+
+.comparison-logo-side .team-logo-fallback {
+  width: 46px;
+  height: 46px;
+}
+
+.comparison-vs-clean {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 72px;
+  font-size: 20px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: 2px;
+}
+
+.comparison-rows-clean {
+  display: grid;
+  gap: 8px;
+}
+    
 .form-row{
   display:flex;
   justify-content:space-between;
@@ -3744,26 +3786,29 @@ if (teamComparisonBox) {
     `;
   }
 
-  teamComparisonBox.innerHTML = `
-    <div class="comparison-team">
-  ${logoImg(homeLogo, homeTeamName)}
-</div>
-
-<div class="comparison-vs">VS</div>
-
-<div class="comparison-team right">
-  ${logoImg(awayLogo, awayTeamName)}
-</div>
-        </div>
+teamComparisonBox.innerHTML = `
+  <div class="team-comparison">
+    <div class="comparison-header-clean">
+      <div class="comparison-logo-side">
+        ${logoImg(homeLogo, homeTeamName)}
       </div>
 
+      <div class="comparison-vs-clean">VS</div>
+
+      <div class="comparison-logo-side">
+        ${logoImg(awayLogo, awayTeamName)}
+      </div>
+    </div>
+
+    <div class="comparison-rows-clean">
       ${comparisonRow("Gols marcados", homeGoals, awayGoals)}
       ${comparisonRow("Finalizações totais", homeShots, awayShots)}
       ${comparisonRow("Finalizações no gol", homeSOT, awaySOT)}
       ${comparisonRow("Escanteios", homeCorners, awayCorners)}
       ${comparisonRow("Cartões", homeCards, awayCards)}
     </div>
-  `;
+  </div>
+`;
 }
       
       if (marketsList) {
