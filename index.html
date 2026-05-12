@@ -3820,42 +3820,6 @@ teamComparisonBox.innerHTML = `
   </div>
 `;
 }
-
-     const formWrapper = document.getElementById("formWrapper");
-
-if (formWrapper) {
-  formWrapper.innerHTML = `
-    <div class="form-title">Forma recente</div>
-
-    <div class="form-team-line">
-      <div class="form-logo-box">
-        ${logoImg(homeLogo, homeTeamName)}
-      </div>
-
-      <div class="form-dots">
-        <span class="form win">V</span>
-        <span class="form draw">E</span>
-        <span class="form win">V</span>
-        <span class="form loss">D</span>
-        <span class="form win">V</span>
-      </div>
-    </div>
-
-    <div class="form-team-line">
-      <div class="form-logo-box">
-        ${logoImg(awayLogo, awayTeamName)}
-      </div>
-
-      <div class="form-dots">
-        <span class="form loss">D</span>
-        <span class="form loss">D</span>
-        <span class="form draw">E</span>
-        <span class="form win">V</span>
-        <span class="form win">V</span>
-      </div>
-    </div>
-  `;
-} 
       
       if (marketsList) {
         marketsList.innerHTML = detectedMarkets.length
