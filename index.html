@@ -1245,66 +1245,76 @@
   gap:8px;
 }
 
-    .form-wrapper{
-  margin-top:16px;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
+.form-wrapper {
+  margin-top: 18px;
+  padding: 12px 10px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
-.form-team{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
+.form-title {
+  font-size: 12px;
+  font-weight: 900;
+  color: #ffffff;
+  text-align: center;
+  margin-bottom: 10px;
 }
 
-.form-team-logo{
-  width:26px;
-  height:26px;
-  object-fit:contain;
+.form-team-line {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
 }
 
-.form-sequence{
-  display:flex;
-  gap:6px;
+.form-team-line:last-child {
+  margin-bottom: 0;
 }
 
-    .team-form span {
-      width: 26px;
-      height: 26px;
-      border-radius: 999px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 800;
-      color: #fff;
-    }
-
-.form{
-  width:24px;
-  height:24px;
-  border-radius:50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:12px;
-  font-weight:700;
-  color:#fff;
+.form-logo-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.form.win{
-  background:#22c55e;
+.form-logo-box .team-logo,
+.form-logo-box .team-logo-fallback {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
 }
 
-.form.draw{
-  background:#94a3b8;
+.form-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
 }
 
-.form.loss{
-  background:#ef4444;
+.form {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 900;
+  color: white;
 }
+
+.form.win {
+  background: #22c55e;
+}
+
+.form.draw {
+  background: #94a3b8;
+}
+
+.form.loss {
+  background: #ef4444;
+}  
     
 .team-name {
   font-size: 13px;
@@ -3810,6 +3820,42 @@ teamComparisonBox.innerHTML = `
   </div>
 `;
 }
+
+     const formWrapper = document.getElementById("formWrapper");
+
+if (formWrapper) {
+  formWrapper.innerHTML = `
+    <div class="form-title">Forma recente</div>
+
+    <div class="form-team-line">
+      <div class="form-logo-box">
+        ${logoImg(homeLogo, homeTeamName)}
+      </div>
+
+      <div class="form-dots">
+        <span class="form win">V</span>
+        <span class="form draw">E</span>
+        <span class="form win">V</span>
+        <span class="form loss">D</span>
+        <span class="form win">V</span>
+      </div>
+    </div>
+
+    <div class="form-team-line">
+      <div class="form-logo-box">
+        ${logoImg(awayLogo, awayTeamName)}
+      </div>
+
+      <div class="form-dots">
+        <span class="form loss">D</span>
+        <span class="form loss">D</span>
+        <span class="form draw">E</span>
+        <span class="form win">V</span>
+        <span class="form win">V</span>
+      </div>
+    </div>
+  `;
+} 
       
       if (marketsList) {
         marketsList.innerHTML = detectedMarkets.length
