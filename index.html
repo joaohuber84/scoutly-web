@@ -1049,21 +1049,24 @@
 .analysis-main-grid {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 14px;
+  gap: 16px;
   margin-top: 14px;
   align-items: start;
+  justify-items: center;
 }
 
 .left-side {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
+  grid-template-columns: 260px 320px;
+  gap: 16px;
   align-items: start;
+  justify-content: center;
   min-width: 0;
 }
 
 .right-side {
-  min-width: 0;
+  width: 100%;
+  max-width: 760px;
   margin-top: 0;
 }
 
@@ -1695,27 +1698,26 @@
   ></div>
 </div> 
 
-        <div class="analysis-main-grid">
-          <div class="left-side">
+<div class="analysis-main-grid">
+  <div class="left-side">
+    <div class="box">
+      <h3 class="box-title">Projeção Scoutly para o jogo</h3>
+      <div id="analysisStats" class="stats-grid"></div>
+    </div>
 
-          <div class="box" style="margin-top:16px;">
-  <h3 class="box-title">Projeção Scoutly para o jogo</h3>
-  <div id="analysisStats" class="stats-grid"></div>
-</div>
+    <div class="box">
+      <h3 class="box-title">Médias recentes dos times</h3>
+      <div id="teamComparisonBox"></div>
+    </div>
+  </div>
 
-<div class="box">
-  <h3 class="box-title">Médias recentes dos times</h3>
-  <div id="teamComparisonBox"></div>
-</div>
-          </div>
-          
-          <div class="right-side">
-            <div class="box">
-              <h3 class="box-title">Oportunidades alternativas</h3>
-              <div id="marketsList" class="markets-list"></div>
-            </div>
-          </div>
-        </div>
+  <div class="right-side">
+    <div class="box">
+      <h3 class="box-title">Oportunidades alternativas</h3>
+      <div id="marketsList" class="markets-list"></div>
+    </div>
+  </div>
+</div>     
       </div>
     </div>
 
