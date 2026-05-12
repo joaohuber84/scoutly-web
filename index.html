@@ -1182,9 +1182,9 @@
 }
 
     .comparison-vs {
-  font-size: 16px;
-  font-weight: 900;
-  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.5);
   letter-spacing: 2px;
  text-align: center;
 }
@@ -1248,13 +1248,14 @@
     
 .team-row {
   display: grid;
-  grid-template-columns: 70px 1fr 70px;
+  grid-template-columns: 90px 1fr 90px;
+  min-height: 42px;
   align-items: center;
-  gap: 14px;
-  padding: 14px 16px;
-  border-radius: 16px;
+  gap: 12px;
+  padding: 8px 14px;
+  border-radius: 14px;
   background: rgba(255,255,255,0.035);
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
 .team-side,
@@ -1291,7 +1292,7 @@
 }
 
 .metric-value {
-  font-size: 24px;
+  font-size: 17px;
   font-weight: 900;
   color: #ffffff;
   text-align: center;
@@ -1306,8 +1307,8 @@
 }
 
 .team-logo {
-  width: 26px;
-  height: 26px;
+  width: 42px;
+  height: 42px;
   object-fit: contain;
 }
 
@@ -1777,12 +1778,13 @@
 <div class="analysis-main-grid">
   <div class="left-side">
     <div class="box">
-      <h3 class="box-title">Projeção Scoutly para o jogo</h3>
+      <h3 class="box-title">Projeção Scoutly do jogo</h3>
       <div id="analysisStats" class="stats-grid"></div>
+      <div id="formWrapper" class="form-wrapper"></div>
     </div>
 
     <div class="box">
-      <h3 class="box-title">Médias recentes dos times</h3>
+      <h3 class="box-title">Médias dos times</h3>
       <div id="teamComparisonBox"></div>
     </div>
   </div>
@@ -3729,24 +3731,6 @@ if (teamComparisonBox) {
 </div>
         </div>
       </div>
-
-      <div class="form-row">
-  <div class="team-form">
-    <span class="form win">V</span>
-    <span class="form draw">E</span>
-    <span class="form win">V</span>
-    <span class="form loss">D</span>
-    <span class="form win">V</span>
-  </div>
-
-  <div class="team-form">
-    <span class="form loss">D</span>
-    <span class="form loss">D</span>
-    <span class="form draw">E</span>
-    <span class="form win">V</span>
-    <span class="form win">V</span>
-  </div>
-</div>
 
       ${comparisonRow("Gols marcados", homeGoals, awayGoals)}
       ${comparisonRow("Finalizações totais", homeShots, awayShots)}
