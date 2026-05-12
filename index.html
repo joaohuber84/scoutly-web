@@ -1189,6 +1189,43 @@
  text-align: center;
 }
 
+.form-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin:14px 0 18px;
+  padding:0 12px;
+}
+
+.team-form{
+  display:flex;
+  gap:6px;
+}
+
+.form{
+  width:24px;
+  height:24px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:12px;
+  font-weight:700;
+  color:#fff;
+}
+
+.form.win{
+  background:#22c55e;
+}
+
+.form.draw{
+  background:#9ca3af;
+}
+
+.form.loss{
+  background:#ef4444;
+}
+    
 .team-name {
   font-size: 13px;
   line-height: 1.1;
@@ -3668,20 +3705,35 @@ if (teamComparisonBox) {
   }
 
   teamComparisonBox.innerHTML = `
-    <div class="team-comparison">
-      <div class="comparison-header">
-        <div class="comparison-team">
-          ${logoImg(homeLogo, homeTeamName)}
-          <div class="team-name">${escapeHtml(homeTeamName)}</div>
-        </div>
+    <div class="comparison-team">
+  ${logoImg(homeLogo, homeTeamName)}
+</div>
 
-        <div class="comparison-vs">VS</div>
+<div class="comparison-vs">VS</div>
 
-        <div class="comparison-team right">
-          <div class="team-name">${escapeHtml(awayTeamName)}</div>
-          ${logoImg(awayLogo, awayTeamName)}
+<div class="comparison-team right">
+  ${logoImg(awayLogo, awayTeamName)}
+</div>
         </div>
       </div>
+
+      <div class="form-row">
+  <div class="team-form">
+    <span class="form win">V</span>
+    <span class="form draw">E</span>
+    <span class="form win">V</span>
+    <span class="form loss">D</span>
+    <span class="form win">V</span>
+  </div>
+
+  <div class="team-form">
+    <span class="form loss">D</span>
+    <span class="form loss">D</span>
+    <span class="form draw">E</span>
+    <span class="form win">V</span>
+    <span class="form win">V</span>
+  </div>
+</div>
 
       ${comparisonRow("Gols marcados", homeGoals, awayGoals)}
       ${comparisonRow("Finalizações totais", homeShots, awayShots)}
