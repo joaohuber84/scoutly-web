@@ -1259,6 +1259,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
+  margin-bottom: 10px;
 }
 
 .form-team-line img {
@@ -1269,13 +1270,15 @@
 
 .form-dots {
     display: flex;
+    align-items: center;
     gap: 6px;
 }
 
 .form-dot {
     width: 12px;
     height: 12px;
-    border-radius: 999px;
+    border-radius: 50%;
+  display: inline-block;
 }
 
 .form-dot.win {
@@ -1283,8 +1286,7 @@
 }
 
 .form-dot.draw {
-    background: rgba(255,255,255,0.25);
-    border: 1px solid rgba(255,255,255,0.4);
+    background: #facc15;
 }
 
 .form-dot.loss {
@@ -1846,11 +1848,11 @@
       </div>
 
       <div class="form-dots">
-        <span class="form win">V</span>
-        <span class="form draw">E</span>
-        <span class="form win">V</span>
-        <span class="form loss">D</span>
-        <span class="form win">V</span>
+        <span class="form-dot win">V</span>
+        <span class="form-dot draw">E</span>
+        <span class="form-dot win">V</span>
+        <span class="form-dot loss">D</span>
+        <span class="form-dot win">V</span>
       </div>
 
     </div>
@@ -1862,11 +1864,11 @@
       </div>
 
       <div class="form-dots">
-        <span class="form loss">D</span>
-        <span class="form loss">D</span>
-        <span class="form draw">E</span>
-        <span class="form win">V</span>
-        <span class="form win">V</span>
+        <span class="form-dot loss">D</span>
+        <span class="form-dot loss">D</span>
+        <span class="form-dot draw">E</span>
+        <span class="form-dot win">V</span>
+        <span class="form-dot win">V</span>
       </div>
 
     </div>
