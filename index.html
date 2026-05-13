@@ -1048,9 +1048,8 @@
 
 .analysis-main-grid {
   display: grid;
- grid-template-columns: 340px 1fr;
-  gap: 24px;
-  margin-top: 18px;
+ grid-template-columns: 380px 1fr;
+  gap: 18px;
   align-items: start;
 }
 
@@ -1075,6 +1074,7 @@
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 15px;
+  height: auto;
 }
 
 .box-title {
@@ -1263,10 +1263,23 @@
 }
 
 .form-team-line{
-  display:flex;
-  justify-content:center;
+  display: grid;
+ grid-template-columns: 32px 1fr;
+  align-items: center;
+  gap: 10px;
 }
 
+ .form-logo-box{
+   display: flex;
+   align-items: center;
+   justify-content: center;
+ }
+
+  .form-logo-box{
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
+      
 .form-dots{
   display:flex;
   gap:6px;
@@ -1276,16 +1289,14 @@
   width:22px;
   height:22px;
   border-radius:999px;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  font-size:10px;
-  font-weight:800;
-  color:#fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
 }
-
+  
 .form.win{
   background:#22c55e;
 }
@@ -1836,32 +1847,50 @@
 
 <div class="analysis-main-grid">
   <div class="left-side">
-    <div class="box">
-      <h3 class="box-title">Projeção Scoutly do jogo</h3>
-      <div id="analysisStats" class="stats-grid"></div>
-    <div id="formWrapper" class="form-wrapper">
-  <div class="form-title">Forma recente</div>
+  <div class="box">
+  <h3 class="box-title">Projeção Scoutly do jogo</h3>
+  <div id="analysisStats" class="stats-grid"></div>
+</div>
 
-  <div class="form-team-line">
-    <div class="form-dots">
-      <span class="form win">V</span>
-      <span class="form draw">E</span>
-      <span class="form win">V</span>
-      <span class="form loss">D</span>
-      <span class="form win">V</span>
-    </div>
-  </div>
+<div class="box">
+  <h3 class="box-title">Forma recente</h3>
 
-  <div class="form-team-line">
-    <div class="form-dots">
-      <span class="form loss">D</span>
-      <span class="form loss">D</span>
-      <span class="form draw">E</span>
-      <span class="form win">V</span>
-      <span class="form win">V</span>
+  <div id="formWrapper" class="form-wrapper">
+
+    <div class="form-team-line">
+
+      <div class="form-logo-box">
+        <img src="${homeLogo}" class="team-logo">
+      </div>
+
+      <div class="form-dots">
+        <span class="form win">V</span>
+        <span class="form draw">E</span>
+        <span class="form win">V</span>
+        <span class="form loss">D</span>
+        <span class="form win">V</span>
+      </div>
+
     </div>
+
+    <div class="form-team-line">
+
+      <div class="form-logo-box">
+        <img src="${awayLogo}" class="team-logo">
+      </div>
+
+      <div class="form-dots">
+        <span class="form loss">D</span>
+        <span class="form loss">D</span>
+        <span class="form draw">E</span>
+        <span class="form win">V</span>
+        <span class="form win">V</span>
+      </div>
+
+    </div>
+
   </div>
-    </div>
+</div> 
 
     <div class="box">
       <h3 class="box-title">Médias dos times</h3>
