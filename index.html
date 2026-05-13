@@ -1048,8 +1048,8 @@
 
 .analysis-main-grid {
   display: grid;
- grid-template-columns: 380px 1fr;
-  gap: 16px;
+ grid-template-columns: 1fr 1fr;
+  gap: 18px;
   align-items: start;
   margin-top: 16px;
 }
@@ -1059,6 +1059,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
 }
 
 @media (max-width: 900px) {
@@ -1243,22 +1244,30 @@
 }
 
 .form-wrapper {
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.05);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 14px;
+  align-items: center;
 }
 
 .form-title {
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 15px;
+    font-weight: 800;
     color: rgba(255,255,255,0.9);
     text-align: center;
+  margin-bottom: 14px;
 }
 
 .form-team-line {
     display: flex;
     align-items: center;
-    gap: 10px;
+  justify-content: center;
+    gap: 14px;
   margin-bottom: 10px;
 }
 
@@ -1271,14 +1280,20 @@
 .form-dots {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .form-dot {
-    width: 12px;
-    height: 12px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #ffffff;
+  
 }
 
 .form-dot.win {
@@ -1837,7 +1852,7 @@
 </div>
 
 <div class="box">
-  <h3 class="box-title">Forma recente</h3>
+  <h3 class="box-title">Últimos 5 jogos</h3>
 
   <div id="formWrapper" class="form-wrapper">
 
@@ -1848,11 +1863,11 @@
       </div>
 
       <div class="form-dots">
-        <span class="form-dot win">V</span>
-        <span class="form-dot draw">E</span>
-        <span class="form-dot win">V</span>
-        <span class="form-dot loss">D</span>
-        <span class="form-dot win">V</span>
+        <span class="form-dot win"></span>
+        <span class="form-dot draw"></span>
+        <span class="form-dot win"></span>
+        <span class="form-dot loss"></span>
+        <span class="form-dot win"></span>
       </div>
 
     </div>
@@ -1864,11 +1879,11 @@
       </div>
 
       <div class="form-dots">
-        <span class="form-dot loss">D</span>
-        <span class="form-dot loss">D</span>
-        <span class="form-dot draw">E</span>
-        <span class="form-dot win">V</span>
-        <span class="form-dot win">V</span>
+        <span class="form-dot loss"></span>
+        <span class="form-dot loss"></span>
+        <span class="form-dot draw"></span>
+        <span class="form-dot win"></span>
+        <span class="form-dot win"></span>
       </div>
 
     </div>
@@ -1880,7 +1895,6 @@
       <h3 class="box-title">Médias dos times</h3>
       <div id="teamComparisonBox"></div>
     </div>
-  </div>
 
   <div class="right-side">
     <div class="box">
