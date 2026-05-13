@@ -541,14 +541,14 @@
       align-items: center; gap: 8px; margin-bottom: 16px;
     }
     .h2h-side { display: flex; flex-direction: column; align-items: center; gap: 5px; }
-    .h2h-logo { width: 32px; height: 32px; object-fit: contain; }
+    .h2h-logo { width: 52px; height: 52px; object-fit: contain; }
     .h2h-logo-fb {
-      width: 32px; height: 32px; border-radius: 50%;
+      width: 52px; height: 52px; border-radius: 50%;
       background: var(--surface-3); border: 1px solid var(--border);
       display: flex; align-items: center; justify-content: center;
-      font-size: 9px; font-weight: 700; color: var(--text-2);
+      font-size: 13px; font-weight: 700; color: var(--text-2);
     }
-    .h2h-name { font-size: 10px; font-weight: 700; color: var(--text-2); text-align: center; line-height: 1.2; max-width: 80px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .h2h-name { font-size: 11px; font-weight: 700; color: var(--text-2); text-align: center; line-height: 1.2; max-width: 90px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .h2h-vs { font-family: var(--font-head); font-size: 14px; font-weight: 800; color: var(--text-3); text-align: center; }
 
     .h2h-rows { display: flex; flex-direction: column; gap: 10px; }
@@ -981,6 +981,7 @@ function getRadarEligibleMatches(){
 function getMetrics(match){
   const metrics=maybeJson(match.metrics)||{};
   const markets=maybeJson(match.markets)||{};
+  // probabilidades: lê do JSON persistido no banco
   const probabilities=maybeJson(match.probabilities)||{};
 
   const eHG=toNumber(match.expected_home_goals,null), eAG=toNumber(match.expected_away_goals,null);
@@ -996,19 +997,29 @@ function getMetrics(match){
   const avgFouls=toNumber(metrics.fouls,null)??toNumber(match.avg_fouls,null);
 
   const over25Prob=toNumber(match.prob_over25,null)??toNumber(markets.over25,null);
-  const pH=toNumber(match.home_win_prob,null)??toNumber(probabilities.home,null);
-  const pD=toNumber(match.draw_prob,null)??toNumber(probabilities.draw,null);
-  const pA=toNumber(match.away_win_prob,null)??toNumber(probabilities.away,null);
+
+  // Fix probabilidades: lê do JSON do banco, não de campos virtuais
+  const pH = toNumber(probabilities.home, null) ?? toNumber(match.home_win_prob, null) ?? 0;
+  const pD = toNumber(probabilities.draw, null) ?? toNumber(match.draw_prob, null) ?? 0;
+  const pA = toNumber(probabilities.away, null) ?? toNumber(match.away_win_prob, null) ?? 0;
+
+  // Fix H2H: escanteios e cartões vêm de match_stats (home_corners, away_corners, home_yellow_cards, away_yellow_cards)
+  const homeCorners = toNumber(match.expected_home_corners, null)
+    ?? toNumber(match.home_corners, null);
+  const awayCorners = toNumber(match.expected_away_corners, null)
+    ?? toNumber(match.away_corners, null);
+  const homeCards = toNumber(match.expected_home_cards, null)
+    ?? toNumber(match.home_yellow_cards, null);
+  const awayCards = toNumber(match.expected_away_cards, null)
+    ?? toNumber(match.away_yellow_cards, null);
 
   return {
     avgGoals,avgCorners,avgShots,avgSOT,avgCards,avgFouls,
     over25Prob,pH,pD,pA,
-    homeGoals:eHG,awayGoals:eAG,homeShots:eHS,awayShots:eAS,
+    homeGoals:eHG,awayGoals:eAG,
+    homeShots:eHS,awayShots:eAS,
     homeSOT:eHSOT,awaySOT:eASOT,
-    homeCorners:toNumber(match.expected_home_corners,null),
-    awayCorners:toNumber(match.expected_away_corners,null),
-    homeCards:toNumber(match.expected_home_cards,null),
-    awayCards:toNumber(match.expected_away_cards,null)
+    homeCorners, awayCorners, homeCards, awayCards
   };
 }
 
@@ -1166,7 +1177,12 @@ function openAnalysis(matchId){
   const awayWinPct=Math.round((metrics.pA||0)*100);
   const drawPct=Math.round((metrics.pD||0)*100);
   const over25Pct=Math.round((metrics.over25Prob||0)*100);
-  const bttsPct=Math.round((toNumber(match.prob_btts,0)||toNumber(match.btts_prob,0)||0)*100);
+  // btts: lê de múltiplas fontes possíveis
+  const bttsRaw = toNumber(match.prob_btts,null)
+    ?? toNumber(match.btts_prob,null)
+    ?? toNumber(maybeJson(match.markets)?.btts, null)
+    ?? 0;
+  const bttsPct=Math.round(bttsRaw*100);
 
   document.getElementById("analysisBody").innerHTML=`
     <div class="a-highlight">
