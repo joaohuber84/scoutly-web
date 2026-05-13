@@ -1047,10 +1047,9 @@
     }
 
 .analysis-main-grid {
-  display: grid;
- grid-template-columns: 1fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 18px;
-  align-items: start;
   margin-top: 16px;
 }
 
@@ -1846,11 +1845,13 @@
 
 <div class="analysis-main-grid">
   <div class="left-side">
+    <div class="top-analysis-grid">
   <div class="box">
   <h3 class="box-title">Projeção Scoutly do jogo</h3>
   <div id="analysisStats" class="stats-grid"></div>
 </div>
 
+    </div>
 <div class="box">
   <h3 class="box-title">Últimos 5 jogos</h3>
 
