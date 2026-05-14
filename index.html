@@ -602,6 +602,9 @@
       font-size: 10px; font-weight: 600; background: var(--surface-3);
       border: 1px solid var(--border); color: var(--text-2);
     }
+    .h2h-score-pill.win  { background: rgba(0,200,83,0.14); border-color: rgba(0,200,83,0.25); color: var(--green); }
+    .h2h-score-pill.draw { background: rgba(245,166,35,0.12); border-color: rgba(245,166,35,0.22); color: var(--amber); }
+    .h2h-score-pill.loss { background: rgba(255,71,87,0.12); border-color: rgba(255,71,87,0.22); color: var(--red); }
     .h2h-no-data {
       font-size: 11px; color: var(--text-3); text-align: center;
       padding: 12px 0; font-style: italic;
@@ -1522,6 +1525,26 @@ function openAnalysis(matchId){
   // H2H TABS — inicializa após render
   const formData = maybeJson(match.data) || maybeJson(match.analysis_sections) || null;
 
+  function scorePillClass(score) {
+    // Score formato "X-Y" onde X = gols marcados, Y = gols sofridos
+    const parts = String(score||"").split("-");
+    if (parts.length !== 2) return "";
+    const gf = parseInt(parts[0], 10);
+    const ga = parseInt(parts[1], 10);
+    if (isNaN(gf) || isNaN(ga)) return "";
+    if (gf > ga) return "win";
+    if (gf === ga) return "draw";
+    return "loss";
+  }
+
+  function scorePillsHtml(scores, justify = "") {
+    if (!scores || !scores.length) return "";
+    const style = justify ? `style="justify-content:${justify}"` : "";
+    return `<div class="h2h-scores" ${style}>${scores.map(s =>
+      `<span class="h2h-score-pill ${scorePillClass(s)}">${escapeHtml(s)}</span>`
+    ).join("")}</div>`;
+  }
+
   function streakClass(s) {
     if (!s) return "irr";
     const sl = String(s).toLowerCase();
@@ -1555,12 +1578,12 @@ function openAnalysis(matchId){
           <div style="text-align:center">
             <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${escapeHtml(homeTeam.length>10?homeTeam.slice(0,10)+".":homeTeam)}</div>
             ${hStreak?`<span class="h2h-streak ${streakClass(hStreak)}">${escapeHtml(hStreak)}</span>`:`<span class="h2h-streak irr">sem dados</span>`}
-            ${hScores.length?`<div class="h2h-scores">${hScores.map(s=>`<span class="h2h-score-pill">${escapeHtml(s)}</span>`).join("")}</div>`:""}
+            ${scorePillsHtml(hScores)}
           </div>
           <div style="text-align:center">
             <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${escapeHtml(awayTeam.length>10?awayTeam.slice(0,10)+".":awayTeam)}</div>
             ${aStreak?`<span class="h2h-streak ${streakClass(aStreak)}">${escapeHtml(aStreak)}</span>`:`<span class="h2h-streak irr">sem dados</span>`}
-            ${aScores.length?`<div class="h2h-scores">${aScores.map(s=>`<span class="h2h-score-pill">${escapeHtml(s)}</span>`).join("")}</div>`:""}
+            ${scorePillsHtml(aScores)}
           </div>
         </div>` : ""}`;
   }
@@ -1583,7 +1606,7 @@ function openAnalysis(matchId){
             ${hStreak?`<span class="h2h-streak ${streakClass(hStreak)}">${escapeHtml(hStreak)}</span>`:`<span class="h2h-streak irr">sem dados</span>`}
           </div>
           <div style="font-size:9px;color:var(--text-3);text-align:center;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Últimos resultados</div>
-          ${hScores.length?`<div class="h2h-scores" style="justify-content:center">${hScores.map(s=>`<span class="h2h-score-pill">${escapeHtml(s)}</span>`).join("")}</div>`:`<div class="h2h-no-data">—</div>`}
+          ${hScores.length?scorePillsHtml(hScores,"center"):`<div class="h2h-no-data">—</div>`}
           ${h.matches?`<div style="font-size:9px;color:var(--text-3);text-align:center;margin-top:6px">${h.matches} jogo(s) analisado(s)</div>`:""}
         </div>
         <div>
@@ -1592,7 +1615,7 @@ function openAnalysis(matchId){
             ${aStreak?`<span class="h2h-streak ${streakClass(aStreak)}">${escapeHtml(aStreak)}</span>`:`<span class="h2h-streak irr">sem dados</span>`}
           </div>
           <div style="font-size:9px;color:var(--text-3);text-align:center;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Últimos resultados</div>
-          ${aScores.length?`<div class="h2h-scores" style="justify-content:center">${aScores.map(s=>`<span class="h2h-score-pill">${escapeHtml(s)}</span>`).join("")}</div>`:`<div class="h2h-no-data">—</div>`}
+          ${aScores.length?scorePillsHtml(aScores,"center"):`<div class="h2h-no-data">—</div>`}
           ${a.matches?`<div style="font-size:9px;color:var(--text-3);text-align:center;margin-top:6px">${a.matches} jogo(s) analisado(s)</div>`:""}
         </div>
       </div>`;
