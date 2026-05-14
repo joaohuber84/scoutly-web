@@ -653,7 +653,98 @@
     }
     .market-line-copy { font-size: 11px; color: var(--text-2); line-height: 1.5; }
 
-    /* ─── STATES ──────────────────────────────────────────────────────── */
+    /* ─── STANDINGS ───────────────────────────────────────────────────── */
+    .standings-wrap { margin-top: 16px; }
+    .standings-tabs {
+      display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .standings-tab {
+      padding: 7px 14px; border-radius: 8px; font-size: 12px; font-weight: 700;
+      border: 1px solid var(--border); background: var(--surface-2);
+      color: var(--text-2); cursor: pointer; transition: all 0.2s;
+    }
+    .standings-tab.active {
+      background: var(--green-dim); border-color: rgba(0,200,83,0.3);
+      color: var(--green);
+    }
+    .standings-tab:hover:not(.active) { border-color: var(--border-2); color: var(--text); }
+
+    .standings-table {
+      width: 100%; border-collapse: collapse; font-size: 12px;
+    }
+    .standings-table th {
+      font-size: 10px; font-weight: 700; color: var(--text-3);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 6px 8px; text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+    .standings-table th.left { text-align: left; }
+    .standings-table td {
+      padding: 8px 8px; text-align: center; color: var(--text-2);
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+      font-family: var(--font-mono); font-size: 12px;
+    }
+    .standings-table td.left { text-align: left; font-family: var(--font-body); }
+    .standings-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .standings-table tr.highlight td { background: rgba(0,200,83,0.06); }
+
+    .st-pos {
+      font-weight: 700; color: var(--text-3); width: 28px;
+    }
+    .st-pos.zone-cl   { color: var(--green); }
+    .st-pos.zone-el   { color: var(--blue); }
+    .st-pos.zone-rel  { color: var(--red); }
+
+    .st-team {
+      display: flex; align-items: center; gap: 8px; min-width: 0;
+    }
+    .st-logo {
+      width: 20px; height: 20px; object-fit: contain; flex-shrink: 0;
+    }
+    .st-logo-fb {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--surface-3); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 7px; font-weight: 700; color: var(--text-3); flex-shrink: 0;
+    }
+    .st-name {
+      font-family: var(--font-body); font-size: 12px; font-weight: 600;
+      color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .st-pts { font-weight: 700; color: var(--text); font-size: 13px; }
+    .st-form { display: flex; gap: 3px; }
+    .st-form-dot {
+      width: 16px; height: 16px; border-radius: 4px;
+      font-size: 9px; font-weight: 700; display: flex;
+      align-items: center; justify-content: center;
+    }
+    .st-form-dot.w { background: rgba(0,200,83,0.2); color: var(--green); }
+    .st-form-dot.d { background: rgba(245,166,35,0.15); color: var(--amber); }
+    .st-form-dot.l { background: rgba(255,71,87,0.15); color: var(--red); }
+
+    .standings-actions {
+      display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .standings-toggle-btn {
+      padding: 8px 14px; border-radius: var(--radius); font-size: 12px;
+      font-weight: 700; cursor: pointer; border: 1px solid var(--border);
+      background: var(--surface-2); color: var(--text-2);
+      transition: all 0.2s; display: flex; align-items: center; gap: 6px;
+    }
+    .standings-toggle-btn:hover { border-color: var(--border-2); color: var(--text); }
+    .standings-toggle-btn.active {
+      background: var(--blue-dim); border-color: rgba(77,159,255,0.3); color: var(--blue);
+    }
+    .zone-legend {
+      display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap;
+    }
+    .zone-item {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 10px; color: var(--text-3);
+    }
+    .zone-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
     .loading-state, .empty-state, .error-state {
       padding: 32px 20px; text-align: center;
       color: var(--text-3); font-size: 13px; line-height: 1.6;
@@ -763,8 +854,10 @@
             <h3 class="section-title" id="selectedCompetitionTitle">Jogos</h3>
             <p class="section-desc" id="selectedCompetitionCopy"></p>
           </div>
+          <button class="standings-toggle-btn hidden" id="standingsToggleBtn">📊 Ver classificação</button>
         </div>
         <div id="gamesGrid" class="games-grid"></div>
+        <div id="standingsWrap" class="standings-wrap hidden"></div>
       </div>
     </div>
   </div>
@@ -1694,9 +1787,29 @@ function openCompetition(league){
   document.getElementById("gamesWrap")?.classList.remove("hidden");
   document.getElementById("backToCompetitionsBtn")?.classList.remove("hidden");
 
+  // Reset standings state
+  standingsVisible = false;
+  const standingsWrap = document.getElementById("standingsWrap");
+  const gamesGrid = document.getElementById("gamesGrid");
+  const standingsToggleBtn = document.getElementById("standingsToggleBtn");
+  if (standingsWrap) { standingsWrap.classList.add("hidden"); standingsWrap.innerHTML = ""; }
+  if (gamesGrid) gamesGrid.classList.remove("hidden");
+
+  // Mostrar botão de classificação só para ligas com standings
+  const leagueId = LEAGUE_ID_MAP[normalizeLeagueName(league)];
+  if (standingsToggleBtn) {
+    if (leagueId) {
+      standingsToggleBtn.classList.remove("hidden");
+      standingsToggleBtn.textContent = "📊 Ver classificação";
+      standingsToggleBtn.classList.remove("active");
+      standingsToggleBtn.onclick = () => toggleStandings(league);
+    } else {
+      standingsToggleBtn.classList.add("hidden");
+    }
+  }
+
   const title=document.getElementById("selectedCompetitionTitle");
   const copy=document.getElementById("selectedCompetitionCopy");
-  const gamesGrid=document.getElementById("gamesGrid");
 
   if(title)title.textContent=getLeagueDisplay(league);
   if(copy)copy.textContent=`${matches.length} jogo(s) nos próximos 7 dias.`;
@@ -1726,9 +1839,13 @@ function openCompetition(league){
 
 function backToCompetitions(){
   state.selectedLeague=null;
+  standingsVisible=false;
   document.getElementById("competitionsWrap")?.classList.remove("hidden");
   document.getElementById("gamesWrap")?.classList.add("hidden");
   document.getElementById("backToCompetitionsBtn")?.classList.add("hidden");
+  document.getElementById("standingsToggleBtn")?.classList.add("hidden");
+  document.getElementById("standingsWrap")?.classList.add("hidden");
+  document.getElementById("gamesGrid")?.classList.remove("hidden");
 }
 
 /* ── DATA LOADING ─────────────────────────────────────────────────── */
@@ -1764,7 +1881,210 @@ async function loadMatches(){
   }).filter(m=>m.home_team&&m.away_team&&m.league&&!shouldHideLeague(m.league));
 }
 
-function refreshUIOnly(){
+/* ── LEAGUE ID MAP (API-Football) ─────────────────────────────────── */
+const LEAGUE_ID_MAP = {
+  "Brasileirão Série A": 71,
+  "Brasileirão Série B": 72,
+  "Copa do Brasil": null,
+  "Copa do Nordeste": null,
+  "Premier League": 39,
+  "La Liga": 140,
+  "Serie A": 135,
+  "Bundesliga": 78,
+  "Ligue 1": 61,
+  "Eredivisie": 88,
+  "Liga MX": 262,
+  "MLS": 253,
+  "Primeira Liga": 94,
+  "Austrian Bundesliga": 218,
+  "Belgian Pro League": 144,
+  "Superliga": 119,
+  "Super League Greece": 197,
+  "Super Lig": 203,
+  "Saudi Pro League": 307,
+  "Liga Argentina": 128,
+  "UEFA Champions League": 2,
+  "UEFA Europa League": 3,
+  "UEFA Conference League": 848,
+  "CONMEBOL Libertadores": 13,
+  "CONMEBOL Sudamericana": 11
+};
+
+const CURRENT_SEASON = new Date().getFullYear();
+const API_FOOTBALL_KEY = "705f52b4ec1295f3c369365c2d71cb71";
+
+// Zonas de classificação por liga
+function getZoneRules(leagueId) {
+  const zones = {
+    71:  { cl:[1,4], el:[5,6], rel:[17,20] },  // Brasileirão A
+    72:  { cl:[1,4], el:[], rel:[17,20] },       // Brasileirão B
+    39:  { cl:[1,4], el:[5,6], rel:[18,20] },    // Premier League
+    140: { cl:[1,4], el:[5,6], rel:[18,20] },    // La Liga
+    135: { cl:[1,4], el:[5,6], rel:[18,20] },    // Serie A
+    78:  { cl:[1,4], el:[5,6], rel:[16,18] },    // Bundesliga
+    61:  { cl:[1,4], el:[5,6], rel:[17,18] },    // Ligue 1
+    88:  { cl:[1,4], el:[5,6], rel:[17,18] },    // Eredivisie
+    128: { cl:[1,4], el:[5,6], rel:[25,28] },    // Liga Argentina
+    253: { cl:[1,9], el:[], rel:[] },             // MLS (playoff)
+  };
+  return zones[leagueId] || { cl:[1,4], el:[], rel:[] };
+}
+
+function getPosZoneClass(pos, leagueId) {
+  const z = getZoneRules(leagueId);
+  if (z.cl.length && pos >= z.cl[0] && pos <= z.cl[1]) return "zone-cl";
+  if (z.el.length && pos >= z.el[0] && pos <= z.el[1]) return "zone-el";
+  if (z.rel.length && pos >= z.rel[0] && pos <= z.rel[1]) return "zone-rel";
+  return "";
+}
+
+async function fetchStandings(leagueId, season) {
+  try {
+    const res = await fetch(
+      `https://v3.football.api-sports.io/standings?league=${leagueId}&season=${season}`,
+      { headers: { "x-apisports-key": API_FOOTBALL_KEY } }
+    );
+    const data = await res.json();
+    if (!data?.response?.length) return null;
+    return data.response[0]?.league?.standings || null;
+  } catch(e) {
+    console.error("Standings fetch error:", e);
+    return null;
+  }
+}
+
+function renderFormDots(form) {
+  if (!form) return "";
+  return form.split("").slice(-5).map(f => {
+    const cls = f==="W"?"w":f==="D"?"d":"l";
+    const label = f==="W"?"V":f==="D"?"E":"D";
+    return `<div class="st-form-dot ${cls}">${label}</div>`;
+  }).join("");
+}
+
+function renderStandingsGroup(group, leagueId) {
+  const rows = group.map(team => {
+    const pos = team.rank;
+    const zoneClass = getPosZoneClass(pos, leagueId);
+    const logo = team.team?.logo
+      ? `<img src="${escapeHtml(team.team.logo)}" class="st-logo" onerror="this.style.display='none'">`
+      : `<div class="st-logo-fb">${escapeHtml(teamInitials(team.team?.name||""))}</div>`;
+    const all = team.all || {};
+    const goaldiff = (all.goals?.for||0) - (all.goals?.against||0);
+    const gdStr = goaldiff > 0 ? `+${goaldiff}` : String(goaldiff);
+    return `
+      <tr>
+        <td class="st-pos left ${zoneClass}">${pos}</td>
+        <td class="left">
+          <div class="st-team">
+            ${logo}
+            <span class="st-name">${escapeHtml(team.team?.name||"-")}</span>
+          </div>
+        </td>
+        <td>${all.played||0}</td>
+        <td>${all.win||0}</td>
+        <td>${all.draw||0}</td>
+        <td>${all.lose||0}</td>
+        <td>${all.goals?.for||0}</td>
+        <td>${all.goals?.against||0}</td>
+        <td>${gdStr}</td>
+        <td class="st-pts">${team.points||0}</td>
+        <td><div class="st-form">${renderFormDots(team.form)}</div></td>
+      </tr>`;
+  }).join("");
+
+  return `
+    <table class="standings-table">
+      <thead>
+        <tr>
+          <th class="left">#</th>
+          <th class="left">Time</th>
+          <th>J</th><th>V</th><th>E</th><th>D</th>
+          <th>GP</th><th>GC</th><th>SG</th>
+          <th>PTS</th><th>Forma</th>
+        </tr>
+      </thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="zone-legend">
+      <div class="zone-item"><div class="zone-dot" style="background:var(--green)"></div>Fase de grupos/CL</div>
+      <div class="zone-item"><div class="zone-dot" style="background:var(--blue)"></div>Europa/Sul-Americana</div>
+      <div class="zone-item"><div class="zone-dot" style="background:var(--red)"></div>Rebaixamento</div>
+    </div>`;
+}
+
+async function loadAndRenderStandings(league) {
+  const leagueId = LEAGUE_ID_MAP[normalizeLeagueName(league)];
+  const wrap = document.getElementById("standingsWrap");
+  if (!wrap) return;
+
+  if (!leagueId) {
+    wrap.innerHTML = `<div class="empty-state">Tabela de classificação não disponível para esta competição (formato de copa ou eliminatória).</div>`;
+    return;
+  }
+
+  wrap.innerHTML = `<div class="loading-state">Carregando classificação...</div>`;
+
+  // Tenta season atual, se não tiver dado tenta season anterior
+  let standings = await fetchStandings(leagueId, CURRENT_SEASON);
+  if (!standings) standings = await fetchStandings(leagueId, CURRENT_SEASON - 1);
+
+  if (!standings || !standings.length) {
+    wrap.innerHTML = `<div class="empty-state">Classificação não encontrada para ${escapeHtml(getLeagueDisplay(league))}.</div>`;
+    return;
+  }
+
+  // Se tiver múltiplos grupos (Champions, Libertadores etc.)
+  if (standings.length > 1) {
+    const tabs = standings.map((g, i) => {
+      const groupName = g[0]?.group || `Grupo ${i+1}`;
+      return `<button class="standings-tab${i===0?" active":""}" data-group="${i}">${escapeHtml(groupName)}</button>`;
+    }).join("");
+
+    wrap.innerHTML = `
+      <div class="standings-tabs" id="standingsTabs">${tabs}</div>
+      <div id="standingsContent">${renderStandingsGroup(standings[0], leagueId)}</div>`;
+
+    document.getElementById("standingsTabs")?.addEventListener("click", e => {
+      const btn = e.target.closest(".standings-tab");
+      if (!btn) return;
+      document.querySelectorAll(".standings-tab").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const groupIdx = Number(btn.dataset.group);
+      const content = document.getElementById("standingsContent");
+      if (content) content.innerHTML = renderStandingsGroup(standings[groupIdx], leagueId);
+    });
+  } else {
+    wrap.innerHTML = renderStandingsGroup(standings[0], leagueId);
+  }
+}
+
+/* ── STANDINGS TOGGLE ─────────────────────────────────────────────── */
+let standingsVisible = false;
+
+function toggleStandings(league) {
+  const wrap = document.getElementById("standingsWrap");
+  const gamesGrid = document.getElementById("gamesGrid");
+  const btn = document.getElementById("standingsToggleBtn");
+  if (!wrap || !btn) return;
+
+  standingsVisible = !standingsVisible;
+
+  if (standingsVisible) {
+    wrap.classList.remove("hidden");
+    gamesGrid?.classList.add("hidden");
+    btn.textContent = "⚽ Ver jogos";
+    btn.classList.add("active");
+    if (!wrap.innerHTML || wrap.innerHTML.includes("loading-state")) {
+      loadAndRenderStandings(league);
+    }
+  } else {
+    wrap.classList.add("hidden");
+    gamesGrid?.classList.remove("hidden");
+    btn.textContent = "📊 Ver classificação";
+    btn.classList.remove("active");
+  }
+}
   renderRadar();renderCompetitions();
   if(!state.currentTicket.length)generateTicket(false);else renderTicket();
   if(state.selectedLeague)openCompetition(state.selectedLeague);
