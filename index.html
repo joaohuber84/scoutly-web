@@ -82,18 +82,18 @@
 
     .brand { display: flex; align-items: center; gap: 14px; }
     .brand-logo {
-      width: 52px; height: 52px; border-radius: 14px;
+      width: 72px; height: 72px; border-radius: 18px;
       background: transparent;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
     .brand-logo img {
-      width: 52px; height: 52px; object-fit: contain;
+      width: 72px; height: 72px; object-fit: contain;
     }
     .brand-logo-fallback { 
-      width: 52px; height: 52px; border-radius: 14px;
+      width: 72px; height: 72px; border-radius: 18px;
       background: var(--green); display: flex; align-items: center; justify-content: center;
-      color: #000; font-size: 24px; line-height: 1;
+      color: #000; font-size: 36px; line-height: 1;
     }
     .brand-name {
       font-family: var(--font-head); font-size: 26px; font-weight: 800;
@@ -120,6 +120,45 @@
       0%,100% { opacity: 1; box-shadow: 0 0 8px var(--green); }
       50% { opacity: 0.6; box-shadow: 0 0 4px var(--green); }
     }
+
+    /* ─── ASSERTIVENESS BAR ──────────────────────────────────────────── */
+    .assert-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 12px 18px;
+      margin-bottom: 18px;
+      display: flex; align-items: center; gap: 8px;
+      flex-wrap: wrap;
+    }
+    .assert-label {
+      font-size: 11px; font-weight: 700; color: var(--text-3);
+      letter-spacing: 0.08em; text-transform: uppercase;
+      flex-shrink: 0;
+    }
+    .assert-divider {
+      width: 1px; height: 16px; background: var(--border);
+      flex-shrink: 0;
+    }
+    .assert-items {
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    }
+    .assert-item {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;
+      background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--text-2);
+    }
+    .assert-item .assert-pct {
+      font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    }
+    .assert-item.good { background: var(--green-dim); border-color: rgba(0,200,83,0.2); }
+    .assert-item.good .assert-pct { color: var(--green); }
+    .assert-item.ok { background: var(--amber-dim); border-color: rgba(245,166,35,0.18); }
+    .assert-item.ok .assert-pct { color: var(--amber); }
+    .assert-item.low { background: var(--surface-2); border-color: var(--border); }
+    .assert-item.low .assert-pct { color: var(--text-2); }
+    .assert-loading { font-size: 11px; color: var(--text-3); font-style: italic; }
 
     /* ─── HERO GRID ───────────────────────────────────────────────────── */
     .hero-grid {
@@ -837,6 +876,15 @@
     <div class="status-pill" id="statusChip">
       <span class="status-dot"></span>
       <span id="statusText">Conectando...</span>
+    </div>
+  </div>
+
+  <!-- ══ ASSERTIVIDADE ══════════════════════════════════════════════════════ -->
+  <div class="assert-bar" id="assertBar">
+    <span class="assert-label">📊 Histórico Scoutly</span>
+    <div class="assert-divider"></div>
+    <div class="assert-items" id="assertItems">
+      <span class="assert-loading">Carregando histórico...</span>
     </div>
   </div>
 
@@ -1606,7 +1654,7 @@ function openAnalysis(matchId){
             ${hStreak?`<span class="h2h-streak ${streakClass(hStreak)}">${escapeHtml(hStreak)}</span>`:`<span class="h2h-streak irr">sem dados</span>`}
           </div>
           <div style="font-size:9px;color:var(--text-3);text-align:center;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Últimos resultados</div>
-          ${hScores.length?scorePillsHtml(hScores,"center"):`<div class="h2h-no-data">—</div>`}
+          ${hScores.length?`<div class="h2h-scores" style="justify-content:center">${hScores.map(s=>`<span class="h2h-score-pill">${escapeHtml(s)}</span>`).join("")}</div>`:`<div class="h2h-no-data">—</div>`}
           ${h.matches?`<div style="font-size:9px;color:var(--text-3);text-align:center;margin-top:6px">${h.matches} jogo(s) analisado(s)</div>`:""}
         </div>
         <div>
@@ -1615,7 +1663,7 @@ function openAnalysis(matchId){
             ${aStreak?`<span class="h2h-streak ${streakClass(aStreak)}">${escapeHtml(aStreak)}</span>`:`<span class="h2h-streak irr">sem dados</span>`}
           </div>
           <div style="font-size:9px;color:var(--text-3);text-align:center;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Últimos resultados</div>
-          ${aScores.length?scorePillsHtml(aScores,"center"):`<div class="h2h-no-data">—</div>`}
+          ${aScores.length?`<div class="h2h-scores" style="justify-content:center">${aScores.map(s=>`<span class="h2h-score-pill">${escapeHtml(s)}</span>`).join("")}</div>`:`<div class="h2h-no-data">—</div>`}
           ${a.matches?`<div style="font-size:9px;color:var(--text-3);text-align:center;margin-top:6px">${a.matches} jogo(s) analisado(s)</div>`:""}
         </div>
       </div>`;
@@ -2268,6 +2316,98 @@ function toggleStandings(league) {
   }
 }
 
+/* ── ASSERTIVENESS ────────────────────────────────────────────────── */
+async function loadAssertiveness() {
+  const el = document.getElementById("assertItems");
+  if (!el) return;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("pick_results")
+      .select("correct, market, created_at")
+      .order("created_at", { ascending: false })
+      .limit(500);
+
+    if (error) throw error;
+    if (!data || !data.length) {
+      el.innerHTML = `<span class="assert-item"><span class="assert-pct" style="color:var(--text-3)">Sem histórico ainda</span></span>`;
+      return;
+    }
+
+    const now = new Date();
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+    function calcRate(items) {
+      if (!items.length) return null;
+      const correct = items.filter(i => i.correct === true).length;
+      return Math.round((correct / items.length) * 100);
+    }
+
+    function itemClass(pct) {
+      if (pct === null) return "low";
+      if (pct >= 65) return "good";
+      if (pct >= 55) return "ok";
+      return "low";
+    }
+
+    function itemHtml(label, pct, count) {
+      if (pct === null) return "";
+      const cls = itemClass(pct);
+      return `<div class="assert-item ${cls}">
+        <span style="color:var(--text-3)">${label}</span>
+        <span class="assert-pct">${pct}%</span>
+        <span style="font-size:9px;color:var(--text-3)">(${count})</span>
+      </div>`;
+    }
+
+    // Por período
+    const weekData = data.filter(i => new Date(i.created_at) >= weekAgo);
+    const monthData = data.filter(i => new Date(i.created_at) >= monthAgo);
+    const weekRate = calcRate(weekData);
+    const monthRate = calcRate(monthData);
+    const totalRate = calcRate(data);
+
+    // Por mercado (nos últimos 30 dias)
+    const families = {
+      "Gols": monthData.filter(i => {
+        const m = String(i.market||"").toLowerCase();
+        return (m.includes("gol") && !m.includes("escanteio")) || m.includes("ambas");
+      }),
+      "Escanteios": monthData.filter(i => String(i.market||"").toLowerCase().includes("escanteio")),
+      "Finalizações": monthData.filter(i => {
+        const m = String(i.market||"").toLowerCase();
+        return m.includes("finaliz") || m.includes("no gol");
+      }),
+      "Cartões": monthData.filter(i => String(i.market||"").toLowerCase().includes("cart")),
+    };
+
+    let html = "";
+    if (weekRate !== null) html += itemHtml("Esta semana", weekRate, weekData.length);
+    if (monthRate !== null) html += itemHtml("Este mês", monthRate, monthData.length);
+
+    // Separador de mercados
+    const familyItems = Object.entries(families)
+      .filter(([,items]) => items.length >= 3)
+      .map(([label, items]) => itemHtml(label, calcRate(items), items.length))
+      .join("");
+
+    if (familyItems) {
+      html += `<div class="assert-divider" style="margin:0 4px"></div>${familyItems}`;
+    }
+
+    if (!html) {
+      html = `<span class="assert-item"><span class="assert-pct" style="color:var(--text-3)">Total: ${totalRate ?? "—"}% (${data.length} picks)</span></span>`;
+    }
+
+    el.innerHTML = html;
+  } catch(e) {
+    console.error("Erro ao carregar assertividade:", e);
+    const el2 = document.getElementById("assertItems");
+    if (el2) el2.innerHTML = `<span class="assert-loading">Histórico indisponível</span>`;
+  }
+}
+
 function refreshUIOnly(){
   renderRadar();renderCompetitions();
   if(!state.currentTicket.length)generateTicket(false);else renderTicket();
@@ -2307,7 +2447,7 @@ function bindStaticEvents(){
   if(!document.body.dataset.escBound){document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAnalysis();});document.body.dataset.escBound="1";}
 }
 
-async function initialize(){ bindStaticEvents();const ok=await refreshAllData(false);if(!ok)return;startAutoRefresh(); }
+async function initialize(){ bindStaticEvents();const ok=await refreshAllData(false);if(!ok)return;loadAssertiveness();startAutoRefresh(); }
 document.addEventListener("DOMContentLoaded",initialize);
 </script>
 </body>
