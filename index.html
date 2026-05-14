@@ -82,16 +82,19 @@
 
     .brand { display: flex; align-items: center; gap: 14px; }
     .brand-logo {
-      width: 48px; height: 48px; border-radius: 14px;
-      background: var(--green); display: flex; align-items: center; justify-content: center;
-      box-shadow: 0 0 24px rgba(0,200,83,0.35);
+      width: 52px; height: 52px; border-radius: 14px;
+      background: transparent;
+      display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
     .brand-logo img {
-      width: 36px; height: 36px; object-fit: contain;
-      filter: brightness(0) invert(1);
+      width: 52px; height: 52px; object-fit: contain;
     }
-    .brand-logo-fallback { color: #000; font-size: 22px; line-height: 1; }
+    .brand-logo-fallback { 
+      width: 52px; height: 52px; border-radius: 14px;
+      background: var(--green); display: flex; align-items: center; justify-content: center;
+      color: #000; font-size: 24px; line-height: 1;
+    }
     .brand-name {
       font-family: var(--font-head); font-size: 26px; font-weight: 800;
       color: var(--text); letter-spacing: -0.02em; line-height: 1;
@@ -342,18 +345,19 @@
 
     /* ─── TEAM BADGE ──────────────────────────────────────────────────── */
     .team-badge {
-      width: 28px; height: 28px; border-radius: 8px;
+      width: 36px; height: 36px; border-radius: 10px;
       background: var(--surface-3); border: 1px solid var(--border);
       display: flex; align-items: center; justify-content: center;
-      overflow: hidden; flex-shrink: 0; font-size: 10px; font-weight: 700; color: var(--text-2);
+      overflow: hidden; flex-shrink: 0; font-size: 11px; font-weight: 700; color: var(--text-2);
     }
-    .team-badge.sm { width: 22px; height: 22px; border-radius: 6px; font-size: 9px; }
-    .team-badge img { width: 100%; height: 100%; object-fit: cover; }
+    .team-badge.sm { width: 28px; height: 28px; border-radius: 8px; font-size: 10px; }
+    .team-badge.lg { width: 44px; height: 44px; border-radius: 12px; font-size: 13px; }
+    .team-badge img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
 
     /* ticket badge */
     .ticket-leg .team-badge { background: rgba(255,248,225,0.08); border-color: rgba(245,166,35,0.12); color: rgba(255,248,225,0.7); }
     .team-names { font-size: 13px; font-weight: 600; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .ticket-leg .team-names { color: rgba(255,248,225,0.85); }
+    .ticket-leg .team-names { color: rgba(255,248,225,0.85); font-size: 14px; }
 
     /* ─── SECTION SHELL ───────────────────────────────────────────────── */
     .section { margin-top: 24px; }
@@ -533,7 +537,13 @@
       align-items: center; justify-content: center;
     }
     .stat-label { font-size: 9px; color: var(--text-3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 5px; line-height: 1.2; }
-    .stat-value { font-family: var(--font-mono); font-size: 20px; font-weight: 600; color: var(--text); line-height: 1; }
+    .stat-value {
+      font-family: var(--font-mono);
+      font-size: 22px; font-weight: 600;
+      color: var(--text); line-height: 1;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+    }
 
     /* H2H */
     .h2h-teams-hd {
@@ -981,7 +991,6 @@ function getRadarEligibleMatches(){
 function getMetrics(match){
   const metrics=maybeJson(match.metrics)||{};
   const markets=maybeJson(match.markets)||{};
-  // probabilidades: lê do JSON persistido no banco
   const probabilities=maybeJson(match.probabilities)||{};
 
   const eHG=toNumber(match.expected_home_goals,null), eAG=toNumber(match.expected_away_goals,null);
@@ -989,36 +998,69 @@ function getMetrics(match){
   const eHSOT=toNumber(match.expected_home_sot,null), eASOT=toNumber(match.expected_away_sot,null);
   const eC=toNumber(match.expected_corners,null), eCA=toNumber(match.expected_cards,null);
 
-  const avgGoals=eHG!==null||eAG!==null?(eHG||0)+(eAG||0):toNumber(metrics.goals,null)??toNumber(match.avg_goals,null);
-  const avgCorners=eC??toNumber(metrics.corners,null)??toNumber(match.avg_corners,null);
-  const avgShots=eHS!==null||eAS!==null?(eHS||0)+(eAS||0):toNumber(metrics.shots,null)??toNumber(match.avg_shots,null);
-  const avgSOT=eHSOT!==null||eASOT!==null?(eHSOT||0)+(eASOT||0):toNumber(metrics.shots_on_target,null)??toNumber(match.avg_shots_on_target,null);
-  const avgCards=eCA??toNumber(metrics.cards,null)??toNumber(match.avg_cards,null);
-  const avgFouls=toNumber(metrics.fouls,null)??toNumber(match.avg_fouls,null);
+  // Leitura robusta com múltiplos fallbacks por campo
+  const avgGoals = eHG!==null||eAG!==null
+    ? (eHG||0)+(eAG||0)
+    : toNumber(metrics.goals,null)??toNumber(match.avg_goals,null)??toNumber(markets.goals,null);
 
-  const over25Prob=toNumber(match.prob_over25,null)??toNumber(markets.over25,null);
+  const avgCorners = eC
+    ?? toNumber(metrics.corners,null)
+    ?? toNumber(match.avg_corners,null)
+    ?? toNumber(markets.corners,null);
 
-  // Fix probabilidades: lê do JSON do banco, não de campos virtuais
-  const pH = toNumber(probabilities.home, null) ?? toNumber(match.home_win_prob, null) ?? 0;
-  const pD = toNumber(probabilities.draw, null) ?? toNumber(match.draw_prob, null) ?? 0;
-  const pA = toNumber(probabilities.away, null) ?? toNumber(match.away_win_prob, null) ?? 0;
+  const avgShots = eHS!==null||eAS!==null
+    ? (eHS||0)+(eAS||0)
+    : toNumber(metrics.shots,null)??toNumber(match.avg_shots,null)??toNumber(markets.shots,null);
 
-  // Fix H2H: escanteios e cartões vêm de match_stats (home_corners, away_corners, home_yellow_cards, away_yellow_cards)
-  const homeCorners = toNumber(match.expected_home_corners, null)
-    ?? toNumber(match.home_corners, null);
-  const awayCorners = toNumber(match.expected_away_corners, null)
-    ?? toNumber(match.away_corners, null);
-  const homeCards = toNumber(match.expected_home_cards, null)
-    ?? toNumber(match.home_yellow_cards, null);
-  const awayCards = toNumber(match.expected_away_cards, null)
-    ?? toNumber(match.away_yellow_cards, null);
+  const avgSOT = eHSOT!==null||eASOT!==null
+    ? (eHSOT||0)+(eASOT||0)
+    : toNumber(metrics.shots_on_target,null)
+      ??toNumber(match.avg_shots_on_target,null)
+      ??toNumber(metrics.sot,null);
+
+  const avgCards = eCA
+    ?? toNumber(metrics.cards,null)
+    ?? toNumber(match.avg_cards,null)
+    ?? toNumber(markets.cards,null);
+
+  const avgFouls = toNumber(metrics.fouls,null)
+    ?? toNumber(match.avg_fouls,null)
+    ?? toNumber(markets.fouls,null);
+
+  const over25Prob = toNumber(match.prob_over25,null)
+    ?? toNumber(match.over25_prob,null)
+    ?? toNumber(markets.over25,null);
+
+  // Probabilidades — JSON do banco é a fonte correta
+  const pH = toNumber(probabilities.home,null)
+    ?? toNumber(match.home_win_prob,null)
+    ?? toNumber(match.home_result_prob,null)
+    ?? 0;
+  const pD = toNumber(probabilities.draw,null)
+    ?? toNumber(match.draw_prob,null)
+    ?? toNumber(match.draw_result_prob,null)
+    ?? 0;
+  const pA = toNumber(probabilities.away,null)
+    ?? toNumber(match.away_win_prob,null)
+    ?? toNumber(match.away_result_prob,null)
+    ?? 0;
+
+  // H2H por time — corners e cartões de match_stats
+  const homeCorners = toNumber(match.expected_home_corners,null)
+    ?? toNumber(match.home_corners,null);
+  const awayCorners = toNumber(match.expected_away_corners,null)
+    ?? toNumber(match.away_corners,null);
+  const homeCards = toNumber(match.expected_home_cards,null)
+    ?? toNumber(match.home_yellow_cards,null);
+  const awayCards = toNumber(match.expected_away_cards,null)
+    ?? toNumber(match.away_yellow_cards,null);
 
   return {
-    avgGoals,avgCorners,avgShots,avgSOT,avgCards,avgFouls,
-    over25Prob,pH,pD,pA,
-    homeGoals:eHG,awayGoals:eAG,
-    homeShots:eHS,awayShots:eAS,
-    homeSOT:eHSOT,awaySOT:eASOT,
+    avgGoals, avgCorners, avgShots, avgSOT, avgCards, avgFouls,
+    over25Prob, pH, pD, pA,
+    homeGoals:eHG, awayGoals:eAG,
+    homeShots:eHS, awayShots:eAS,
+    homeSOT:eHSOT, awaySOT:eASOT,
     homeCorners, awayCorners, homeCards, awayCards
   };
 }
@@ -1523,9 +1565,9 @@ function renderRadar(){
                 </div>
               </div>
               <div class="radar-teams">
-                ${teamBadge(item,"home","sm")}
+                ${teamBadge(item,"home")}
                 <div class="team-names">${escapeHtml(item.home_team)} × ${escapeHtml(item.away_team)}</div>
-                ${teamBadge(item,"away","sm")}
+                ${teamBadge(item,"away")}
               </div>
               <div class="chips" style="margin-bottom:6px">
                 ${chipMarkup(probabilityToTier(item.radar_probability))}
@@ -1606,9 +1648,9 @@ function openCompetition(league){
     <div class="game-card">
       <div class="game-main">
         <div class="teams-row" style="display:flex;align-items:center;gap:7px;margin-bottom:6px">
-          ${teamBadge(match,"home","sm")}
+          ${teamBadge(match,"home")}
           <div class="game-match">${escapeHtml(normalizeTeamName(match.home_team))} × ${escapeHtml(normalizeTeamName(match.away_team))}</div>
-          ${teamBadge(match,"away","sm")}
+          ${teamBadge(match,"away")}
         </div>
         <div class="game-meta">
           ${getLeagueBadge(match.league,match.country||inferCountryFromLeague(match.league))}
