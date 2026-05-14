@@ -208,9 +208,18 @@
       display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
     }
     .ticket-market {
-      font-family: var(--font-head); font-size: 15px; font-weight: 800;
-      color: #fff8e1; text-transform: uppercase; letter-spacing: -0.01em;
-      line-height: 1.2; margin-bottom: 8px;
+      font-family: var(--font-body); font-size: 13px; font-weight: 700;
+      color: #fff8e1; line-height: 1.3; margin-bottom: 8px;
+    }
+    .ticket-market-num {
+      font-family: var(--font-mono); font-size: 22px; font-weight: 700;
+      color: var(--amber); line-height: 1; display: block;
+      font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+    }
+    .ticket-market-label {
+      font-family: var(--font-body); font-size: 11px; font-weight: 600;
+      color: rgba(255,248,225,0.6); text-transform: uppercase;
+      letter-spacing: 0.04em; display: block; margin-top: 3px;
     }
     .ticket-meta {
       font-size: 11px; color: rgba(255,248,225,0.45); line-height: 1.4;
@@ -305,9 +314,18 @@
       margin-bottom: 7px; flex: 1; min-width: 0;
     }
     .radar-market {
-      font-family: var(--font-head); font-size: 13px; font-weight: 800;
-      color: var(--text); text-transform: uppercase;
-      letter-spacing: -0.01em; line-height: 1.2; margin-top: 6px;
+      font-family: var(--font-body); font-size: 13px; font-weight: 700;
+      color: var(--text); line-height: 1.3; margin-top: 6px;
+    }
+    .radar-market-num {
+      font-family: var(--font-mono); font-size: 18px; font-weight: 700;
+      color: var(--green); line-height: 1; display: block;
+      font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+    }
+    .radar-market-label {
+      font-family: var(--font-body); font-size: 11px; font-weight: 600;
+      color: var(--text-2); text-transform: uppercase;
+      letter-spacing: 0.04em; display: block; margin-top: 2px;
     }
     .radar-footer {
       display: flex; align-items: center; justify-content: space-between;
@@ -345,14 +363,20 @@
 
     /* ─── TEAM BADGE ──────────────────────────────────────────────────── */
     .team-badge {
-      width: 36px; height: 36px; border-radius: 10px;
+      width: 36px; height: 36px; min-width: 36px; min-height: 36px;
+      border-radius: 10px;
       background: var(--surface-3); border: 1px solid var(--border);
       display: flex; align-items: center; justify-content: center;
       overflow: hidden; flex-shrink: 0; font-size: 11px; font-weight: 700; color: var(--text-2);
     }
-    .team-badge.sm { width: 28px; height: 28px; border-radius: 8px; font-size: 10px; }
-    .team-badge.lg { width: 44px; height: 44px; border-radius: 12px; font-size: 13px; }
-    .team-badge img { width: 100%; height: 100%; object-fit: contain; padding: 2px; }
+    .team-badge.sm { width: 28px; height: 28px; min-width: 28px; min-height: 28px; border-radius: 8px; font-size: 10px; }
+    .team-badge.lg { width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: 12px; font-size: 13px; }
+    .team-badge img {
+      width: 100%; height: 100%;
+      object-fit: contain;
+      max-width: 100%; max-height: 100%;
+      padding: 3px;
+    }
 
     /* ticket badge */
     .ticket-leg .team-badge { background: rgba(255,248,225,0.08); border-color: rgba(245,166,35,0.12); color: rgba(255,248,225,0.7); }
@@ -613,9 +637,19 @@
     }
     .market-line:hover { border-color: var(--border-2); }
     .market-line-name {
-      font-family: var(--font-head); font-size: 13px; font-weight: 800;
-      text-transform: uppercase; color: var(--text); letter-spacing: -0.01em;
+      font-family: var(--font-body); font-size: 13px; font-weight: 700;
+      color: var(--text); line-height: 1.3;
       margin-top: 8px; margin-bottom: 5px;
+    }
+    .market-line-num {
+      font-family: var(--font-mono); font-size: 20px; font-weight: 700;
+      color: var(--green); display: block; line-height: 1;
+      font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+    }
+    .market-line-sublabel {
+      font-family: var(--font-body); font-size: 10px; font-weight: 600;
+      color: var(--text-3); text-transform: uppercase;
+      letter-spacing: 0.04em; display: block; margin-top: 2px;
     }
     .market-line-copy { font-size: 11px; color: var(--text-2); line-height: 1.5; }
 
@@ -1109,6 +1143,32 @@ function detectDirection(m){ const mm=String(m||"").toLowerCase(); return mm.inc
 function extractLine(m){ const mm=String(m||"").replace(",","."); const r=mm.match(/(\d+(\.\d+)?)/); return r?Number(r[1]):null; }
 function marketPriority(f){ return({gols:1,btts:2,shots:3,sot:4,cards:5,resultado:6,escanteios:7,outro:8})[f]||99; }
 
+// Formata mercado como número grande + label limpo
+function formatMarketDisplay(market, numClass, labelClass) {
+  const m = String(market||"").trim();
+  const lower = m.toLowerCase();
+  const line = extractLine(m);
+  const dir = detectDirection(m);
+
+  // Mercados com número
+  if (line !== null && dir !== null) {
+    const dirLabel = dir === "over" ? "Mais de" : "Menos de";
+    let typeLabel = "";
+    if (lower.includes("gol")) typeLabel = "Gols";
+    else if (lower.includes("escanteio")) typeLabel = "Escanteios";
+    else if (lower.includes("no gol")) typeLabel = "Finalizações no gol";
+    else if (lower.includes("finaliz")) typeLabel = "Finalizações";
+    else if (lower.includes("cart")) typeLabel = "Cartões";
+    else typeLabel = m.replace(/[\d.,]+/g,"").replace(/mais de|menos de/gi,"").trim();
+
+    const numStr = Number.isInteger(line) ? String(line) : line.toFixed(1).replace(".", ",");
+    return `<span class="${numClass}">${dirLabel} ${numStr}</span><span class="${labelClass}">${escapeHtml(typeLabel)}</span>`;
+  }
+
+  // Mercados sem número (dupla chance, ambas marcam, etc.)
+  return `<span class="${labelClass}" style="font-size:13px;color:var(--text)">${escapeHtml(m)}</span>`;
+}
+
 /* ── INSIGHT ──────────────────────────────────────────────────────── */
 function buildFallbackInsight(match){
   const p=getPrimaryPick(match).toLowerCase();
@@ -1237,7 +1297,7 @@ function openAnalysis(matchId){
         ${chipMarkup(primaryTier)}
         ${marketFamilyChip(marketFamily(primaryPick))}
       </div>
-      <div class="a-market">${escapeHtml(primaryPick)}</div>
+      <div class="a-market">${formatMarketDisplay(primaryPick,"radar-market-num","radar-market-label")}</div>
       <div class="a-insight">${escapeHtml(insight)}</div>
     </div>
 
@@ -1281,7 +1341,7 @@ function openAnalysis(matchId){
             ${detectedMarkets.length?detectedMarkets.map(i=>`
               <div class="market-line">
                 <div class="chips">${chipMarkup(i.tier)}${marketFamilyChip(i.family)}</div>
-                <div class="market-line-name">${escapeHtml(i.market)}</div>
+                <div class="market-line-name">${formatMarketDisplay(i.market,"market-line-num","market-line-sublabel")}</div>
                 <div class="market-line-copy">${escapeHtml(i.copy)}</div>
               </div>`).join(""):`<div class="empty-state">Nenhuma alternativa encontrada para este jogo.</div>`}
           </div>
@@ -1516,7 +1576,7 @@ function ticketLegMarkup(item,index){
       ${chipMarkup(item.tier)}
       ${marketFamilyChip(item.family)}
     </div>
-    <div class="ticket-market">${escapeHtml(item.market)}</div>
+    <div class="ticket-market">${formatMarketDisplay(item.market,"ticket-market-num","ticket-market-label")}</div>
     <div class="ticket-meta">
       ${getLeagueBadge(item.league,item.country||inferCountryFromLeague(item.league))}
       ${escapeHtml(getLeagueDisplay(item.league))} · ${escapeHtml(formatKickoff(item.kickoff))}
@@ -1573,7 +1633,7 @@ function renderRadar(){
                 ${chipMarkup(probabilityToTier(item.radar_probability))}
                 ${marketFamilyChip(marketFamily(item.radar_market))}
               </div>
-              <div class="radar-market">${escapeHtml(item.radar_market)}</div>
+              <div class="radar-market">${formatMarketDisplay(item.radar_market,"radar-market-num","radar-market-label")}</div>
             </div>`).join("")}
         </div>`).join("")}
     </div>`;
