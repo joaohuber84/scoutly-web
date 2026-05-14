@@ -2085,6 +2085,8 @@ function toggleStandings(league) {
     btn.classList.remove("active");
   }
 }
+
+function refreshUIOnly(){
   renderRadar();renderCompetitions();
   if(!state.currentTicket.length)generateTicket(false);else renderTicket();
   if(state.selectedLeague)openCompetition(state.selectedLeague);
