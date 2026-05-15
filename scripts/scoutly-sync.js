@@ -71,6 +71,10 @@ const RADAR_BLACKLIST = new Set([
   "Copa da Grécia","Copa da Dinamarca","KNVB Cup","Taça da Liga",
   "Copa Chile","Copa Colombia","Copa MX","Leagues Cup","Copa Sul-Sudeste",
   "Copa Verde","Recopa Sul-Americana","Copa Asiática","Copa da Escócia",
+  // Copas de ligas menores — sem mercado relevante nas casas brasileiras
+  "Copa do Chile","Copa da Colômbia","Copa BetPlay","Copa MX",
+  "Copa por México","Copa da Noruega","Copa da Suécia","Copa da Finlândia",
+  "Copa da Polônia","Copa da Romênia","Copa da Sérvia","Copa da Croácia",
 ])
 
 function getLeagueTierScore(league) {
@@ -105,10 +109,8 @@ const TARGET_COMPETITIONS = [
   { mode:"country", country:"Argentina", type:"cup", names:["Copa Argentina","Copa de la Liga Profesional","Copa de la Liga"], display:"Copa Argentina", region:"general", priority:76 },
   // CHILE
   { mode:"country", country:"Chile", type:"league", names:["Primera División","Primera Division","Primera B"], display:"Liga Chilena", region:"general", priority:76 },
-  { mode:"country", country:"Chile", type:"cup", names:["Copa Chile"], display:"Copa Chile", region:"general", priority:70 },
   // COLÔMBIA
   { mode:"country", country:"Colombia", type:"league", names:["Liga BetPlay Dimayor","Primera A","Categoría Primera A","Liga Dimayor"], display:"Liga Colombiana", region:"general", priority:76 },
-  { mode:"country", country:"Colombia", type:"cup", names:["Copa Colombia","Copa BetPlay"], display:"Copa Colombia", region:"general", priority:70 },
   // PERU
   { mode:"country", country:"Peru", type:"league", names:["Liga 1","Liga 1 Betsson"], display:"Liga Peruana", region:"general", priority:74 },
   // URUGUAI
