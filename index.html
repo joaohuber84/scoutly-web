@@ -2459,13 +2459,19 @@ function renderAgenda() {
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
 
-  // Todos os jogos de hoje — com ou sem pick
+  // Todos os jogos de hoje que ainda vão acontecer ou estão ao vivo
+  // Jogos já encerrados não aparecem
   const todayMatches = (state.matches || [])
     .filter(m => {
       if (!m.kickoff) return false;
       const d = parseDateSafe(m.kickoff);
       if (!d) return false;
-      return d >= todayStart && d <= todayEnd && !shouldHideLeague(m.league);
+      if (d < todayStart || d > todayEnd) return false;
+      if (shouldHideLeague(m.league)) return false;
+      // Remove jogos que já terminaram (com grace de 110 minutos — duração média de um jogo)
+      const finishedCutoff = new Date(d.getTime() + 110 * 60 * 1000);
+      if (finishedCutoff < now) return false;
+      return true;
     })
     .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff));
 
