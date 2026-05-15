@@ -1029,42 +1029,63 @@
 </head>
 <body>
 
-<!-- GATE DE ACESSO -->
-<div id="accessGate" style="
-  position:fixed;inset:0;background:#080b12;z-index:99999;
-  display:flex;align-items:center;justify-content:center;
-  font-family:'DM Sans',sans-serif;
-">
-  <div style="
-    background:#0e1219;border:1px solid rgba(255,255,255,0.08);
-    border-radius:16px;padding:32px 28px;width:100%;max-width:340px;
-    text-align:center;
-  ">
-    <img src="logo-icon.png" alt="Scoutly" style="width:56px;height:56px;margin-bottom:16px"
-      onerror="this.style.display='none'">
+<!-- GATE DE ACESSO - standalone, não depende de nenhum outro script -->
+<div id="accessGate" style="position:fixed;inset:0;background:#080b12;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;">
+  <div style="background:#0e1219;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:32px 28px;width:100%;max-width:340px;text-align:center;">
+    <img src="logo-icon.png" alt="Scoutly" style="width:56px;height:56px;margin-bottom:16px" onerror="this.style.display='none'">
     <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:4px">Scoutly</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:24px">
-      Radar Inteligente de Oportunidades
-    </div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:24px">Radar Inteligente de Oportunidades</div>
     <input id="accessInput" type="password" placeholder="Código de acesso"
-      style="
-        width:100%;box-sizing:border-box;
-        background:#161b26;border:1px solid rgba(255,255,255,0.1);
-        border-radius:10px;padding:12px 16px;color:#fff;font-size:14px;
-        outline:none;margin-bottom:10px;
-        font-family:'DM Sans',sans-serif;
-      "
-      onkeydown="if(event.key==='Enter')checkAccess()"
+      style="width:100%;box-sizing:border-box;background:#161b26;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px 16px;color:#fff;font-size:14px;outline:none;margin-bottom:10px;font-family:'DM Sans',sans-serif;"
     >
-    <div id="accessError" style="font-size:11px;color:#ff4757;margin-bottom:10px;min-height:16px"></div>
-    <button onclick="checkAccess()" style="
-      width:100%;padding:12px;border-radius:10px;
-      background:#00c853;border:none;color:#000;
-      font-size:14px;font-weight:800;cursor:pointer;
-      font-family:'DM Sans',sans-serif;
-    ">Entrar</button>
+    <div id="accessError" style="font-size:11px;color:#ff4757;margin-bottom:10px;min-height:16px;"></div>
+    <button id="accessBtn" style="width:100%;padding:12px;border-radius:10px;background:#00c853;border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:'DM Sans',sans-serif;">
+      Entrar
+    </button>
   </div>
 </div>
+
+<script>
+(function() {
+  var KEY = "scoutly_access";
+  var CODE = "2026scoutly";
+
+  function tryUnlock() {
+    var input = document.getElementById("accessInput");
+    var error = document.getElementById("accessError");
+    var val = input ? input.value.trim() : "";
+    if (val === CODE) {
+      try { localStorage.setItem(KEY, "1"); } catch(e) {}
+      var gate = document.getElementById("accessGate");
+      if (gate) gate.style.display = "none";
+    } else {
+      if (error) error.textContent = "Código inválido. Tente novamente.";
+      if (input) { input.value = ""; input.focus(); }
+    }
+  }
+
+  // Verifica se já tem acesso salvo
+  try {
+    if (localStorage.getItem(KEY) === "1") {
+      var gate = document.getElementById("accessGate");
+      if (gate) gate.style.display = "none";
+    }
+  } catch(e) {}
+
+  // Binds
+  window.addEventListener("DOMContentLoaded", function() {
+    var btn = document.getElementById("accessBtn");
+    var input = document.getElementById("accessInput");
+    if (btn) btn.addEventListener("click", tryUnlock);
+    if (input) input.addEventListener("keydown", function(e) {
+      if (e.key === "Enter") tryUnlock();
+    });
+    // Foca no input se gate estiver visível
+    var gate = document.getElementById("accessGate");
+    if (gate && gate.style.display !== "none" && input) input.focus();
+  });
+})();
+</script>
 
 <div class="shell">
 
@@ -2798,49 +2819,7 @@ function startLiveModule() {
 }
 
 /* ── ACCESS GATE ──────────────────────────────────────────────────── */
-const ACCESS_KEY = "scoutly_access";
-const ACCESS_CODE = "2026scoutly";
-
-function checkAccess() {
-  const input = document.getElementById("accessInput");
-  const error = document.getElementById("accessError");
-  if (!input) return;
-  if (input.value.trim() === ACCESS_CODE) {
-    localStorage.setItem(ACCESS_KEY, "1");
-    unlockApp();
-  } else {
-    error.textContent = "Código inválido. Tente novamente.";
-    input.value = "";
-    input.focus();
-  }
-}
-
-function unlockApp() {
-  const gate = document.getElementById("accessGate");
-  if (gate) {
-    gate.style.opacity = "0";
-    gate.style.transition = "opacity 0.3s";
-    setTimeout(() => gate.remove(), 300);
-  }
-  initialize();
-}
-
-function bootApp() {
-  if (localStorage.getItem(ACCESS_KEY) === "1") {
-    const gate = document.getElementById("accessGate");
-    if (gate) gate.remove();
-    initialize();
-  } else {
-    // Foca no input automaticamente
-    setTimeout(() => document.getElementById("accessInput")?.focus(), 100);
-  }
-}
-
-document.addEventListener("DOMContentLoaded", bootApp);
-// Fallback: se DOMContentLoaded já disparou, chama direto
-if (document.readyState === "complete" || document.readyState === "interactive") {
-  bootApp();
-}
+// Gate implementado inline no topo do HTML — independente do script principal
 
 /* ── INITIALIZE ───────────────────────────────────────────────────── */
 function renderLoadError(errorMap={}){
@@ -3336,6 +3315,7 @@ function bindStaticEvents(){
 }
 
 async function initialize(){ bindStaticEvents();const ok=await refreshAllData(false);if(!ok)return;loadAssertiveness();startLiveModule();startAutoRefresh(); }
+initialize();
 </script>
 </body>
 </html>
