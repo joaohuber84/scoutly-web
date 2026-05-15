@@ -160,6 +160,56 @@
     .assert-item.low .assert-pct { color: var(--text-2); }
     .assert-loading { font-size: 11px; color: var(--text-3); font-style: italic; }
 
+    /* ── AO VIVO ──────────────────────────────────────────────────────── */
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(255,71,87,0.15); border: 1px solid rgba(255,71,87,0.3);
+      color: #ff4757; border-radius: 6px; padding: 3px 8px;
+      font-size: 10px; font-weight: 800; letter-spacing: .04em;
+    }
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%; background: #ff4757;
+      animation: livePulse 1.2s ease-in-out infinite;
+    }
+    @keyframes livePulse {
+      0%,100% { opacity:1; transform:scale(1); }
+      50% { opacity:0.4; transform:scale(0.7); }
+    }
+    .live-score {
+      font-family: var(--font-mono); font-size: 14px; font-weight: 800;
+      color: var(--text); letter-spacing: .02em;
+    }
+    .live-score-wrap {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 6px; flex-wrap: wrap;
+    }
+    .live-minute { font-size: 10px; color: var(--text-3); font-family: var(--font-mono); }
+    .finished-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--surface-3); border: 1px solid var(--border);
+      color: var(--text-3); border-radius: 6px; padding: 3px 8px;
+      font-size: 10px; font-weight: 700;
+    }
+    .live-stats-section {
+      background: var(--surface-2); border: 1px solid rgba(255,71,87,0.2);
+      border-radius: var(--radius); padding: 14px; margin-bottom: 14px;
+    }
+    .live-stats-title {
+      font-size: 9px; font-weight: 700; color: #ff4757;
+      text-transform: uppercase; letter-spacing: .08em;
+      display: flex; align-items: center; gap: 6px; margin-bottom: 12px;
+    }
+    .live-stat-row {
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      align-items: center; gap: 6px; margin-bottom: 8px; font-size: 11px;
+    }
+    .live-stat-home { text-align:right; font-family:var(--font-mono); font-weight:700; color:var(--text); }
+    .live-stat-away { text-align:left; font-family:var(--font-mono); font-weight:700; color:var(--text); }
+    .live-stat-label { text-align:center; color:var(--text-3); font-size:10px; }
+    .live-stat-bar-wrap { grid-column:1/-1; display:flex; height:3px; border-radius:2px; overflow:hidden; margin-top:-4px; margin-bottom:4px; }
+    .live-stat-bar-home { background:var(--green); transition:width .4s; }
+    .live-stat-bar-away { background:var(--blue); transition:width .4s; }
+
     /* ─── HERO GRID ───────────────────────────────────────────────────── */
     .hero-grid {
       display: grid;
@@ -1781,6 +1831,9 @@ function openAnalysis(matchId){
   state.lastOpenedMatchId=match.id;
   document.getElementById("analysisOverlay").classList.add("open");
 
+  // Injeta stats ao vivo se jogo estiver acontecendo
+  injectLiveStatsInModal(match.id);
+
   // H2H TABS — inicializa após render
   const formData = maybeJson(match.data) || maybeJson(match.analysis_sections) || null;
 
@@ -1934,6 +1987,8 @@ function openAnalysis(matchId){
 
 function closeAnalysis(){
   document.getElementById("analysisOverlay").classList.remove("open");
+  if (liveState.modalInterval) { clearInterval(liveState.modalInterval); liveState.modalInterval = null; }
+  liveState.activeModalId = null;
 }
 
 /* ── TICKET ───────────────────────────────────────────────────────── */
@@ -2297,6 +2352,265 @@ function backToCompetitions(){
   document.getElementById("standingsToggleBtn")?.classList.add("hidden");
   document.getElementById("standingsWrap")?.classList.add("hidden");
   document.getElementById("gamesGrid")?.classList.remove("hidden");
+}
+
+/* ── LIVE SCORE MODULE ────────────────────────────────────────────── */
+const liveState = {
+  data: new Map(),        // matchId → { score, minute, status, stats }
+  interval: null,
+  modalInterval: null,
+  activeModalId: null,
+};
+
+const LIVE_REFRESH_MS = 15 * 60 * 1000; // 15 min
+const LIVE_STATUSES = ["1H","2H","ET","BT","P","LIVE"];
+const FINISHED_STATUSES = ["FT","AET","PEN"];
+
+function isMatchLive(kickoff) {
+  const d = parseDateSafe(kickoff);
+  if (!d) return false;
+  const now = new Date();
+  const elapsed = (now - d) / 60000;
+  return elapsed >= -5 && elapsed <= 130; // janela: 5 min antes até 130 min depois
+}
+
+async function fetchLiveFixtures() {
+  try {
+    const res = await fetch(`https://v3.football.api-sports.io/fixtures?live=all`, {
+      headers: { "x-apisports-key": API_FOOTBALL_KEY }
+    });
+    const json = await res.json();
+    return json.response || [];
+  } catch (e) {
+    console.error("Live fetch error:", e);
+    return [];
+  }
+}
+
+async function fetchFixtureStats(fixtureId) {
+  try {
+    const res = await fetch(
+      `https://v3.football.api-sports.io/fixtures/statistics?fixture=${fixtureId}`,
+      { headers: { "x-apisports-key": API_FOOTBALL_KEY } }
+    );
+    const json = await res.json();
+    return json.response || [];
+  } catch (e) {
+    console.error("Stats fetch error:", e);
+    return [];
+  }
+}
+
+function getStat(stats, teamIndex, type) {
+  const teamStats = stats[teamIndex]?.statistics || [];
+  const found = teamStats.find(s => s.type === type);
+  if (!found || found.value === null || found.value === undefined) return "0";
+  return String(found.value ?? "0").replace("%","");
+}
+
+async function refreshLiveData() {
+  // Só busca ao vivo se houver matches na janela
+  const relevant = (state.matches || []).filter(m => isMatchLive(m.kickoff));
+  if (!relevant.length) return;
+
+  const liveFixtures = await fetchLiveFixtures();
+
+  // Mapa rápido por fixture id
+  const liveMap = new Map();
+  liveFixtures.forEach(f => { liveMap.set(f.fixture.id, f); });
+
+  // Atualiza state para cada match relevante
+  relevant.forEach(m => {
+    const id = Number(m.id);
+    const fixture = liveMap.get(id);
+    if (fixture) {
+      const short = fixture.fixture?.status?.short || "";
+      liveState.data.set(String(id), {
+        homeScore: safeNum(fixture.goals?.home),
+        awayScore: safeNum(fixture.goals?.away),
+        minute: fixture.fixture?.status?.elapsed || null,
+        status: short,
+        isLive: LIVE_STATUSES.includes(short),
+        isFinished: FINISHED_STATUSES.includes(short),
+      });
+    }
+  });
+
+  // Re-render indicators nos cards
+  updateLiveIndicators();
+
+  // Se modal aberto for um jogo ao vivo, atualiza stats
+  if (liveState.activeModalId) {
+    const live = liveState.data.get(String(liveState.activeModalId));
+    if (live?.isLive) {
+      await refreshModalLiveStats(liveState.activeModalId);
+    }
+  }
+}
+
+function safeNum(v, fb = 0) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fb;
+}
+
+function updateLiveIndicators() {
+  // Atualiza cards do radar
+  document.querySelectorAll(".radar-item[data-match-id]").forEach(el => {
+    const id = el.dataset.matchId;
+    const live = liveState.data.get(String(id));
+    if (!live) return;
+    let indicator = el.querySelector(".live-score-wrap");
+    if (!indicator) {
+      indicator = document.createElement("div");
+      indicator.className = "live-score-wrap";
+      el.insertBefore(indicator, el.querySelector(".chips") || el.firstChild);
+    }
+    indicator.innerHTML = buildLiveIndicatorHtml(live);
+  });
+
+  // Atualiza cards do bilhete
+  document.querySelectorAll("[data-analyze-id]").forEach(btn => {
+    const id = btn.dataset.analyzeId;
+    const live = liveState.data.get(String(id));
+    if (!live) return;
+    const card = btn.closest(".game-card") || btn.closest(".ticket-item");
+    if (!card) return;
+    let indicator = card.querySelector(".live-score-wrap");
+    if (!indicator) {
+      indicator = document.createElement("div");
+      indicator.className = "live-score-wrap";
+      const meta = card.querySelector(".game-meta") || card.querySelector(".ticket-meta");
+      if (meta) meta.parentNode.insertBefore(indicator, meta);
+      else card.insertBefore(indicator, card.firstChild);
+    }
+    indicator.innerHTML = buildLiveIndicatorHtml(live);
+  });
+}
+
+function buildLiveIndicatorHtml(live) {
+  if (!live) return "";
+  const score = `<span class="live-score">${live.homeScore} — ${live.awayScore}</span>`;
+  if (live.isLive) {
+    const min = live.minute ? `<span class="live-minute">${live.minute}'</span>` : "";
+    return `<span class="live-badge"><span class="live-dot"></span>AO VIVO</span> ${score} ${min}`;
+  }
+  if (live.isFinished) {
+    return `<span class="finished-badge">⏱ FIM</span> ${score}`;
+  }
+  return "";
+}
+
+async function refreshModalLiveStats(matchId) {
+  const statsData = await fetchFixtureStats(matchId);
+  if (!statsData.length) return;
+
+  const live = liveState.data.get(String(matchId));
+  const section = document.getElementById("liveStatsSection");
+  if (!section) return;
+
+  const homeName = statsData[0]?.team?.name || "Casa";
+  const awayName = statsData[1]?.team?.name || "Fora";
+
+  function statRow(label, hVal, aVal) {
+    const h = Number(hVal) || 0;
+    const a = Number(aVal) || 0;
+    const total = h + a || 1;
+    const hPct = Math.round((h / total) * 100);
+    const aPct = 100 - hPct;
+    return `
+      <div class="live-stat-row">
+        <div class="live-stat-home">${hVal}</div>
+        <div class="live-stat-label">${label}</div>
+        <div class="live-stat-away">${aVal}</div>
+      </div>
+      <div class="live-stat-row">
+        <div class="live-stat-bar-wrap">
+          <div class="live-stat-bar-home" style="width:${hPct}%"></div>
+          <div class="live-stat-bar-away" style="width:${aPct}%"></div>
+        </div>
+      </div>`;
+  }
+
+  const corners = [getStat(statsData,0,"Corner Kicks"), getStat(statsData,1,"Corner Kicks")];
+  const shots = [getStat(statsData,0,"Total Shots"), getStat(statsData,1,"Total Shots")];
+  const sot = [getStat(statsData,0,"Shots on Goal"), getStat(statsData,1,"Shots on Goal")];
+  const poss = [getStat(statsData,0,"Ball Possession"), getStat(statsData,1,"Ball Possession")];
+  const cards = [
+    safeNum(getStat(statsData,0,"Yellow Cards")) + safeNum(getStat(statsData,0,"Red Cards")),
+    safeNum(getStat(statsData,1,"Yellow Cards")) + safeNum(getStat(statsData,1,"Red Cards")),
+  ];
+
+  const minLabel = live?.minute ? ` · ${live.minute}'` : "";
+  section.innerHTML = `
+    <div class="live-stats-section">
+      <div class="live-stats-title">
+        <span class="live-dot"></span>
+        STATS AO VIVO${minLabel}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;font-size:9px;color:var(--text-3);text-align:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)">
+        <div>${escapeHtml(homeName)}</div>
+        <div>${escapeHtml(awayName)}</div>
+      </div>
+      ${statRow("Escanteios", corners[0], corners[1])}
+      ${statRow("Finalizações", shots[0], shots[1])}
+      ${statRow("No gol", sot[0], sot[1])}
+      ${statRow("Posse (%)", poss[0].replace("%",""), poss[1].replace("%",""))}
+      ${statRow("Cartões", cards[0], cards[1])}
+    </div>`;
+}
+
+function injectLiveStatsInModal(matchId) {
+  // Cria/limpa a seção de stats ao vivo no modal
+  const analysisCard = document.querySelector(".analysis-card");
+  if (!analysisCard) return;
+
+  // Remove seção anterior se existir
+  const existing = document.getElementById("liveStatsSection");
+  if (existing) existing.remove();
+
+  const live = liveState.data.get(String(matchId));
+  if (!live?.isLive && !live?.isFinished) return;
+
+  // Insere antes do primeiro a-box
+  const firstBox = analysisCard.querySelector(".a-box");
+  if (!firstBox) return;
+
+  const wrapper = document.createElement("div");
+  wrapper.id = "liveStatsSection";
+
+  if (live.isFinished) {
+    wrapper.innerHTML = `
+      <div class="live-stats-section" style="border-color:var(--border)">
+        <div class="live-stats-title" style="color:var(--text-3)">⏱ JOGO ENCERRADO · Placar final: ${live.homeScore} — ${live.awayScore}</div>
+      </div>`;
+    firstBox.parentNode.insertBefore(wrapper, firstBox);
+    return;
+  }
+
+  firstBox.parentNode.insertBefore(wrapper, firstBox);
+  liveState.activeModalId = matchId;
+  refreshModalLiveStats(matchId);
+
+  // Inicia intervalo de atualização do modal
+  if (liveState.modalInterval) clearInterval(liveState.modalInterval);
+  liveState.modalInterval = setInterval(() => {
+    if (!document.getElementById("analysisOverlay")?.classList.contains("open")) {
+      clearInterval(liveState.modalInterval);
+      liveState.activeModalId = null;
+      return;
+    }
+    refreshModalLiveStats(matchId);
+  }, LIVE_REFRESH_MS);
+}
+
+function startLiveModule() {
+  // Só ativa se houver jogos na janela ao vivo
+  const hasLiveWindow = (state.matches || []).some(m => isMatchLive(m.kickoff));
+  if (!hasLiveWindow) return;
+
+  refreshLiveData();
+  if (liveState.interval) clearInterval(liveState.interval);
+  liveState.interval = setInterval(refreshLiveData, LIVE_REFRESH_MS);
 }
 
 /* ── DATA LOADING ─────────────────────────────────────────────────── */
@@ -2792,7 +3106,7 @@ function bindStaticEvents(){
   if(!document.body.dataset.escBound){document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAnalysis();});document.body.dataset.escBound="1";}
 }
 
-async function initialize(){ bindStaticEvents();const ok=await refreshAllData(false);if(!ok)return;loadAssertiveness();startAutoRefresh(); }
+async function initialize(){ bindStaticEvents();const ok=await refreshAllData(false);if(!ok)return;loadAssertiveness();startLiveModule();startAutoRefresh(); }
 document.addEventListener("DOMContentLoaded",initialize);
 </script>
 </body>
