@@ -121,6 +121,71 @@
       50% { opacity: 0.6; box-shadow: 0 0 4px var(--green); }
     }
 
+    /* ── AGENDA DO DIA ────────────────────────────────────────────────── */
+    .agenda-section {
+      margin-bottom: 24px;
+    }
+    .agenda-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .agenda-title {
+      font-family: var(--font-title); font-size: 18px; font-weight: 800;
+      color: var(--text);
+    }
+    .agenda-count {
+      font-size: 11px; color: var(--text-3);
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 20px; padding: 3px 10px;
+    }
+    .agenda-hour-group { margin-bottom: 16px; }
+    .agenda-hour-label {
+      font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+      color: var(--green); margin-bottom: 8px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .agenda-hour-label::after {
+      content: ""; flex: 1; height: 1px; background: var(--border);
+    }
+    .agenda-row {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 10px 14px;
+      margin-bottom: 6px; cursor: pointer; transition: border-color 0.15s, background 0.15s;
+    }
+    .agenda-row:hover { border-color: var(--border-2); background: var(--surface-2); }
+    .agenda-row.has-pick { border-left: 3px solid rgba(0,200,83,0.4); }
+    .agenda-row.is-live { border-left: 3px solid rgba(255,71,87,0.5); }
+    .agenda-league-badge {
+      flex-shrink: 0; display: flex; align-items: center; gap: 4px;
+      font-size: 10px; color: var(--text-3); min-width: 28px;
+    }
+    .agenda-teams {
+      flex: 1; min-width: 0;
+      font-size: 13px; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .agenda-pick {
+      font-size: 10px; color: var(--green); font-weight: 700;
+      background: var(--green-dim); border: 1px solid rgba(0,200,83,0.2);
+      border-radius: 5px; padding: 2px 7px; flex-shrink: 0;
+      max-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .agenda-live-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(255,71,87,0.15); border: 1px solid rgba(255,71,87,0.3);
+      color: #ff4757; border-radius: 5px; padding: 2px 7px;
+      font-size: 10px; font-weight: 800; flex-shrink: 0;
+    }
+    .agenda-score {
+      font-family: var(--font-mono); font-size: 12px; font-weight: 800;
+      color: var(--text); flex-shrink: 0;
+    }
+    .agenda-empty {
+      font-size: 13px; color: var(--text-3); text-align: center;
+      padding: 20px; font-style: italic;
+    }
+
     /* ── SEÇÃO AO VIVO ────────────────────────────────────────────────── */
     .live-section {
       display: none;
@@ -1155,6 +1220,19 @@
       </div>
     </div>
 
+  </div>
+
+  <!-- ══ AGENDA DO DIA ════════════════════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-card">
+      <div class="agenda-header">
+        <div class="agenda-title">📅 Jogos de Hoje</div>
+        <span class="agenda-count" id="agendaCount">0 jogos</span>
+      </div>
+      <div id="agendaList">
+        <div class="loading-state">Carregando jogos...</div>
+      </div>
+    </div>
   </div>
 
   <!-- ══ COMPETIÇÕES ══════════════════════════════════════════════════════ -->
@@ -2371,6 +2449,107 @@ function renderRadar(){
   if (liveState.data.size > 0) updateLiveIndicators();
 }
 
+/* ── AGENDA DO DIA ────────────────────────────────────────────────── */
+function renderAgenda() {
+  const list = document.getElementById("agendaList");
+  const countEl = document.getElementById("agendaCount");
+  if (!list) return;
+
+  const now = new Date();
+  const todayStart = startOfDay(now);
+  const todayEnd = endOfDay(now);
+
+  // Todos os jogos de hoje — com ou sem pick
+  const todayMatches = (state.matches || [])
+    .filter(m => {
+      if (!m.kickoff) return false;
+      const d = parseDateSafe(m.kickoff);
+      if (!d) return false;
+      return d >= todayStart && d <= todayEnd && !shouldHideLeague(m.league);
+    })
+    .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff));
+
+  if (countEl) countEl.textContent = `${todayMatches.length} jogo${todayMatches.length !== 1 ? "s" : ""}`;
+
+  if (!todayMatches.length) {
+    list.innerHTML = `<div class="agenda-empty">Nenhum jogo encontrado para hoje.</div>`;
+    return;
+  }
+
+  // Agrupa por horário
+  const hourGroups = new Map();
+  todayMatches.forEach(m => {
+    const hour = formatKickoffHour(m.kickoff);
+    if (!hourGroups.has(hour)) hourGroups.set(hour, []);
+    hourGroups.get(hour).push(m);
+  });
+
+  list.innerHTML = Array.from(hourGroups.entries()).map(([hour, matches]) => {
+    const rows = matches.map(match => {
+      const pick = getPrimaryPick(match);
+      const hasPick = pick && pick !== "Mercado em revisão";
+      const live = liveState.data.get(String(match.id));
+      const isLive = live?.isLive;
+      const isFinished = live?.isFinished;
+
+      const badge = getLeagueBadge(
+        match.league,
+        match.country || inferCountryFromLeague(match.league)
+      );
+
+      // Score ao vivo
+      let liveHtml = "";
+      if (isLive) {
+        liveHtml = `
+          <span class="agenda-live-badge">
+            <span class="live-dot" style="width:5px;height:5px"></span>
+            ${live.minute ? live.minute+"'" : "AO VIVO"}
+          </span>
+          <span class="agenda-score">${live.homeScore}–${live.awayScore}</span>`;
+      } else if (isFinished) {
+        liveHtml = `<span class="agenda-score" style="color:var(--text-3)">${live.homeScore}–${live.awayScore}</span>`;
+      }
+
+      const rowClass = isLive ? "agenda-row is-live" : hasPick ? "agenda-row has-pick" : "agenda-row";
+
+      return `<div class="${rowClass}" onclick="openAnalysis('${escapeHtml(String(match.id))}')">
+        <div class="agenda-league-badge">${badge}</div>
+        <div class="agenda-teams">
+          ${escapeHtml(normalizeTeamName(match.home_team))} × ${escapeHtml(normalizeTeamName(match.away_team))}
+          <div style="font-size:10px;color:var(--text-3);margin-top:1px">${escapeHtml(getLeagueDisplay(match.league))}</div>
+        </div>
+        ${liveHtml}
+        ${hasPick && !isLive ? `<div class="agenda-pick" title="${escapeHtml(pick)}">📌 ${escapeHtml(pick)}</div>` : ""}
+      </div>`;
+    }).join("");
+
+    return `<div class="agenda-hour-group">
+      <div class="agenda-hour-label">${escapeHtml(hour)}</div>
+      ${rows}
+    </div>`;
+  }).join("");
+
+  // Bind ao vivo nos rows da agenda
+  if (liveState.data.size > 0) updateAgendaLiveIndicators();
+}
+
+function updateAgendaLiveIndicators() {
+  // Atualiza placares ao vivo na agenda sem re-renderizar tudo
+  document.querySelectorAll(".agenda-row").forEach(row => {
+    const onclickAttr = row.getAttribute("onclick") || "";
+    const match = onclickAttr.match(/'([^']+)'/);
+    if (!match) return;
+    const id = match[1];
+    const live = liveState.data.get(String(id));
+    if (!live) return;
+    // Marca como ao vivo
+    if (live.isLive) {
+      row.classList.add("is-live");
+      row.classList.remove("has-pick");
+    }
+  });
+}
+
 /* ── COMPETITIONS ─────────────────────────────────────────────────── */
 function buildCompetitions(){
   const map=new Map();
@@ -3273,7 +3452,7 @@ function openTeamPanel(el) {
 }
 
 function refreshUIOnly(){
-  renderRadar();renderCompetitions();
+  renderRadar();renderAgenda();renderCompetitions();
   if(!state.currentTicket.length)generateTicket(false);else renderTicket();
   if(state.selectedLeague)openCompetition(state.selectedLeague);
   const ov=document.getElementById("analysisOverlay");
@@ -3286,7 +3465,7 @@ async function refreshAllData(silent=false){
   try{await loadDailyPicks();}catch(e){errors.daily_picks=e.message||JSON.stringify(e);}
   try{await loadMatches();}catch(e){errors.matches=e.message||JSON.stringify(e);}
   if(Object.keys(errors).length){renderLoadError(errors);return false;}
-  renderRadar();renderCompetitions();generateTicket(false);
+  renderRadar();renderAgenda();renderCompetitions();generateTicket(false);
   if(state.selectedLeague)openCompetition(state.selectedLeague);
   const ov=document.getElementById("analysisOverlay");
   if(ov?.classList.contains("open")&&state.lastOpenedMatchId)openAnalysis(state.lastOpenedMatchId);
