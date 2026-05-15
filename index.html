@@ -834,9 +834,59 @@
       display: flex; align-items: center; gap: 5px;
       font-size: 10px; color: var(--text-3);
     }
-    .zone-dot {
-      width: 8px; height: 8px; border-radius: 50%;
+    .zone-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* MINI PAINEL DO TIME */
+    .st-name { cursor: pointer; }
+    .st-name:hover { color: var(--green); text-decoration: underline; text-underline-offset: 2px; }
+
+    .team-panel-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      z-index: 9000; display: flex; align-items: flex-end; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
     }
+    .team-panel-overlay.open { opacity: 1; pointer-events: all; }
+    .team-panel {
+      background: var(--surface); border: 1px solid var(--border-2);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      width: 100%; max-width: 560px; padding: 20px;
+      transform: translateY(100%); transition: transform 0.25s ease;
+    }
+    .team-panel-overlay.open .team-panel { transform: translateY(0); }
+    .team-panel-header {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+    }
+    .team-panel-logo {
+      width: 44px; height: 44px; object-fit: contain;
+    }
+    .team-panel-info { flex: 1; }
+    .team-panel-name {
+      font-family: var(--font-title); font-size: 18px; font-weight: 700;
+      color: var(--text); line-height: 1.2;
+    }
+    .team-panel-meta {
+      font-size: 11px; color: var(--text-3); margin-top: 3px;
+    }
+    .team-panel-close {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--surface-3); border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; color: var(--text-2); font-size: 16px; flex-shrink: 0;
+    }
+    .team-panel-section { margin-bottom: 14px; }
+    .team-panel-section-title {
+      font-size: 9px; font-weight: 700; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px;
+    }
+    .team-panel-results {
+      display: flex; gap: 5px; flex-wrap: wrap;
+    }
+    .team-panel-next {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 10px 14px;
+      font-size: 12px; color: var(--text-2); line-height: 1.5;
+    }
+    .team-panel-next strong { color: var(--text); }
     .loading-state, .empty-state, .error-state {
       padding: 32px 20px; text-align: center;
       color: var(--text-3); font-size: 13px; line-height: 1.6;
@@ -978,6 +1028,28 @@
   </div>
 
 </div><!-- /shell -->
+
+<!-- MINI PAINEL DO TIME -->
+<div class="team-panel-overlay" id="teamPanelOverlay" onclick="closeTeamPanel(event)">
+  <div class="team-panel" id="teamPanel">
+    <div class="team-panel-header">
+      <img class="team-panel-logo" id="tpLogo" src="" alt="" onerror="this.style.display='none'">
+      <div class="team-panel-info">
+        <div class="team-panel-name" id="tpName">—</div>
+        <div class="team-panel-meta" id="tpMeta"></div>
+      </div>
+      <div class="team-panel-close" onclick="closeTeamPanel()">✕</div>
+    </div>
+    <div class="team-panel-section">
+      <div class="team-panel-section-title">Últimos resultados</div>
+      <div class="team-panel-results" id="tpResults"></div>
+    </div>
+    <div class="team-panel-section">
+      <div class="team-panel-section-title">Próximo jogo</div>
+      <div class="team-panel-next" id="tpNext">Carregando...</div>
+    </div>
+  </div>
+</div>
 
 <!-- ══ ANALYSIS OVERLAY ═════════════════════════════════════════════════ -->
 <div class="analysis-overlay" id="analysisOverlay">
@@ -2411,7 +2483,15 @@ function renderStandingsGroup(group, leagueId) {
         <td class="left">
           <div class="st-team">
             ${logo}
-            <span class="st-name">${escapeHtml(team.team?.name||"-")}</span>
+            <span class="st-name"
+              data-team="${escapeHtml(team.team?.name||"")}"
+              data-logo="${escapeHtml(team.team?.logo||"")}"
+              data-pos="${pos}"
+              data-pts="${team.points||0}"
+              data-played="${all.played||0}"
+              data-form="${escapeHtml(team.form||"")}"
+              onclick="openTeamPanel(this)"
+            >${escapeHtml(team.team?.name||"-")}</span>
           </div>
         </td>
         <td>${all.played||0}</td>
@@ -2610,6 +2690,67 @@ async function loadAssertiveness() {
     const el2 = document.getElementById("assertItems");
     if (el2) el2.innerHTML = `<span class="assert-loading">Histórico indisponível</span>`;
   }
+}
+
+function closeTeamPanel(e) {
+  if (e && e.target !== document.getElementById("teamPanelOverlay")) return;
+  document.getElementById("teamPanelOverlay").classList.remove("open");
+}
+
+function openTeamPanel(el) {
+  const teamName = el.dataset.team || "—";
+  const logo = el.dataset.logo || "";
+  const pos = el.dataset.pos || "—";
+  const pts = el.dataset.pts || "0";
+  const played = el.dataset.played || "0";
+  const form = el.dataset.form || "";
+
+  // Preenche header
+  const logoEl = document.getElementById("tpLogo");
+  logoEl.src = logo;
+  logoEl.style.display = logo ? "block" : "none";
+  document.getElementById("tpName").textContent = teamName;
+  document.getElementById("tpMeta").textContent = `${pos}º lugar · ${pts} pts · ${played} jogos`;
+
+  // Resultados de forma (W/D/L → bolinhas coloridas)
+  const resultsEl = document.getElementById("tpResults");
+  if (form) {
+    resultsEl.innerHTML = form.split("").slice(-5).map(f => {
+      const cls = f==="W"?"win":f==="D"?"draw":"loss";
+      const label = f==="W"?"V":f==="D"?"E":"D";
+      return `<div class="result-dot ${cls}" style="width:28px;height:28px;font-size:11px">${label}</div>`;
+    }).join("");
+  } else {
+    resultsEl.innerHTML = `<span style="font-size:11px;color:var(--text-3)">Sem dados de forma</span>`;
+  }
+
+  // Próximo jogo — busca nos matches do banco
+  const nextEl = document.getElementById("tpNext");
+  const normName = String(teamName).toLowerCase().trim();
+  const nextMatch = (state.matches || [])
+    .filter(m => {
+      const h = String(m.home_team||"").toLowerCase().trim();
+      const a = String(m.away_team||"").toLowerCase().trim();
+      const kickoff = new Date(m.kickoff);
+      return (h === normName || a === normName) && kickoff > new Date();
+    })
+    .sort((a,b) => new Date(a.kickoff) - new Date(b.kickoff))[0];
+
+  if (nextMatch) {
+    const isHome = String(nextMatch.home_team||"").toLowerCase().trim() === normName;
+    const opponent = isHome ? nextMatch.away_team : nextMatch.home_team;
+    const venue = isHome ? "Casa" : "Fora";
+    const kickoff = formatKickoff(nextMatch.kickoff);
+    const pick = getPrimaryPick(nextMatch);
+    nextEl.innerHTML = `
+      <strong>${escapeHtml(opponent)}</strong> · ${venue}<br>
+      <span style="color:var(--text-3)">${escapeHtml(kickoff)} · ${escapeHtml(nextMatch.league||"")}</span>
+      ${pick && pick !== "Mercado em revisão" ? `<br><span style="color:var(--green);font-size:11px">📌 ${escapeHtml(pick)}</span>` : ""}`;
+  } else {
+    nextEl.innerHTML = `<span style="color:var(--text-3)">Nenhum jogo encontrado nos próximos dias</span>`;
+  }
+
+  document.getElementById("teamPanelOverlay").classList.add("open");
 }
 
 function refreshUIOnly(){
