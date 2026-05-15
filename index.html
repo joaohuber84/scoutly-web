@@ -121,6 +121,63 @@
       50% { opacity: 0.6; box-shadow: 0 0 4px var(--green); }
     }
 
+    /* ── SEÇÃO AO VIVO ────────────────────────────────────────────────── */
+    .live-section {
+      display: none;
+      margin-bottom: 18px;
+      background: var(--surface);
+      border: 1px solid rgba(255,71,87,0.25);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .live-section.has-live { display: block; }
+    .live-section-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px 10px;
+      border-bottom: 1px solid rgba(255,71,87,0.15);
+    }
+    .live-section-title {
+      font-family: var(--font-title); font-size: 13px; font-weight: 800;
+      color: #ff4757; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .live-section-count {
+      background: rgba(255,71,87,0.15); color: #ff4757;
+      border-radius: 20px; padding: 2px 8px;
+      font-size: 10px; font-weight: 700; margin-left: auto;
+    }
+    .live-game-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 16px; cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+    .live-game-row:last-child { border-bottom: none; }
+    .live-game-row:hover { background: rgba(255,71,87,0.05); }
+    .live-game-teams { flex: 1; min-width: 0; }
+    .live-game-match {
+      font-size: 13px; font-weight: 700; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .live-game-meta {
+      font-size: 10px; color: var(--text-3); margin-top: 2px;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .live-game-score-block { text-align: center; flex-shrink: 0; }
+    .live-game-score {
+      font-family: var(--font-mono); font-size: 18px; font-weight: 800;
+      color: var(--text); line-height: 1;
+    }
+    .live-game-minute {
+      font-size: 10px; color: #ff4757; font-weight: 700;
+      font-family: var(--font-mono); margin-top: 2px;
+    }
+    .live-game-pick {
+      font-size: 10px; color: var(--green); font-weight: 700;
+      background: var(--green-dim); border: 1px solid rgba(0,200,83,0.2);
+      border-radius: 5px; padding: 3px 7px; flex-shrink: 0;
+      max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
     /* ─── ASSERTIVENESS BAR ──────────────────────────────────────────── */
     .assert-bar {
       background: var(--surface);
@@ -972,6 +1029,43 @@
 </head>
 <body>
 
+<!-- GATE DE ACESSO -->
+<div id="accessGate" style="
+  position:fixed;inset:0;background:#080b12;z-index:99999;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Sans',sans-serif;
+">
+  <div style="
+    background:#0e1219;border:1px solid rgba(255,255,255,0.08);
+    border-radius:16px;padding:32px 28px;width:100%;max-width:340px;
+    text-align:center;
+  ">
+    <img src="logo-icon.png" alt="Scoutly" style="width:56px;height:56px;margin-bottom:16px"
+      onerror="this.style.display='none'">
+    <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:4px">Scoutly</div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:24px">
+      Radar Inteligente de Oportunidades
+    </div>
+    <input id="accessInput" type="password" placeholder="Código de acesso"
+      style="
+        width:100%;box-sizing:border-box;
+        background:#161b26;border:1px solid rgba(255,255,255,0.1);
+        border-radius:10px;padding:12px 16px;color:#fff;font-size:14px;
+        outline:none;margin-bottom:10px;
+        font-family:'DM Sans',sans-serif;
+      "
+      onkeydown="if(event.key==='Enter')checkAccess()"
+    >
+    <div id="accessError" style="font-size:11px;color:#ff4757;margin-bottom:10px;min-height:16px"></div>
+    <button onclick="checkAccess()" style="
+      width:100%;padding:12px;border-radius:10px;
+      background:#00c853;border:none;color:#000;
+      font-size:14px;font-weight:800;cursor:pointer;
+      font-family:'DM Sans',sans-serif;
+    ">Entrar</button>
+  </div>
+</div>
+
 <div class="shell">
 
   <!-- ══ HEADER ══════════════════════════════════════════════════════════ -->
@@ -998,6 +1092,16 @@
     <div class="assert-items" id="assertItems">
       <span class="assert-loading">Carregando histórico...</span>
     </div>
+  </div>
+
+  <!-- ══ JOGOS AO VIVO ═══════════════════════════════════════════════════ -->
+  <div class="live-section" id="liveSectionWrap">
+    <div class="live-section-header">
+      <span class="live-dot"></span>
+      <span class="live-section-title">Jogos ao Vivo</span>
+      <span class="live-section-count" id="liveCount">0</span>
+    </div>
+    <div id="liveGamesList"></div>
   </div>
 
   <!-- ══ HERO ════════════════════════════════════════════════════════════ -->
@@ -2194,6 +2298,8 @@ function renderTicket(){
       <div class="ticket-confidence">Confiança geral: ${escapeHtml(probabilityToTier(avgProb))}</div>
       <div class="ticket-hint">Bilhete montado automaticamente com base no radar ativo.</div>
     </div>`;
+  // Aplica indicadores ao vivo se já tiver dados
+  if (liveState.data.size > 0) updateLiveIndicators();
 }
 
 /* ── RENDER RADAR ─────────────────────────────────────────────────── */
@@ -2240,6 +2346,8 @@ function renderRadar(){
   list.querySelectorAll(".radar-item").forEach(el=>{
     el.addEventListener("click",()=>openAnalysis(el.dataset.matchId));
   });
+  // Aplica indicadores ao vivo se já tiver dados
+  if (liveState.data.size > 0) updateLiveIndicators();
 }
 
 /* ── COMPETITIONS ─────────────────────────────────────────────────── */
@@ -2354,6 +2462,62 @@ function backToCompetitions(){
   document.getElementById("gamesGrid")?.classList.remove("hidden");
 }
 
+function renderLiveSection() {
+  const wrap = document.getElementById("liveSectionWrap");
+  const list = document.getElementById("liveGamesList");
+  const countEl = document.getElementById("liveCount");
+  if (!wrap || !list) return;
+
+  // Filtra jogos ao vivo que temos no state
+  const liveMatches = (state.matches || []).filter(m => {
+    const live = liveState.data.get(String(m.id));
+    return live?.isLive || live?.isFinished;
+  }).sort((a, b) => {
+    const la = liveState.data.get(String(a.id));
+    const lb = liveState.data.get(String(b.id));
+    // Ao vivo primeiro, depois encerrados
+    if (la?.isLive && !lb?.isLive) return -1;
+    if (!la?.isLive && lb?.isLive) return 1;
+    return 0;
+  });
+
+  if (!liveMatches.length) {
+    wrap.classList.remove("has-live");
+    return;
+  }
+
+  wrap.classList.add("has-live");
+  if (countEl) countEl.textContent = liveMatches.filter(m => liveState.data.get(String(m.id))?.isLive).length;
+
+  list.innerHTML = liveMatches.map(match => {
+    const live = liveState.data.get(String(match.id));
+    const pick = getPrimaryPick(match);
+    const hasPick = pick && pick !== "Mercado em revisão";
+
+    const scoreBlock = live?.isLive
+      ? `<div class="live-game-score-block">
+           <div class="live-game-score">${live.homeScore} — ${live.awayScore}</div>
+           <div class="live-game-minute">${live.minute ? live.minute+"'" : "AO VIVO"}</div>
+         </div>`
+      : `<div class="live-game-score-block">
+           <div class="live-game-score" style="color:var(--text-3)">${live?.homeScore ?? 0} — ${live?.awayScore ?? 0}</div>
+           <div style="font-size:9px;color:var(--text-3);margin-top:2px">FIM</div>
+         </div>`;
+
+    return `<div class="live-game-row" onclick="openAnalysis('${escapeHtml(String(match.id))}')">
+      <div class="live-game-teams">
+        <div class="live-game-match">${escapeHtml(match.home_team)} × ${escapeHtml(match.away_team)}</div>
+        <div class="live-game-meta">
+          ${getLeagueBadge(match.league, match.country||"")}
+          ${escapeHtml(getLeagueDisplay(match.league))}
+        </div>
+      </div>
+      ${scoreBlock}
+      ${hasPick ? `<div class="live-game-pick" title="${escapeHtml(pick)}">📌 ${escapeHtml(pick)}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+
 /* ── LIVE SCORE MODULE ────────────────────────────────────────────── */
 const liveState = {
   data: new Map(),        // matchId → { score, minute, status, stats }
@@ -2438,6 +2602,8 @@ async function refreshLiveData() {
 
   // Re-render indicators nos cards
   updateLiveIndicators();
+  // Atualiza seção ao vivo na tela principal
+  renderLiveSection();
 
   // Se modal aberto for um jogo ao vivo, atualiza stats
   if (liveState.activeModalId) {
@@ -2492,10 +2658,15 @@ function buildLiveIndicatorHtml(live) {
   const score = `<span class="live-score">${live.homeScore} — ${live.awayScore}</span>`;
   if (live.isLive) {
     const min = live.minute ? `<span class="live-minute">${live.minute}'</span>` : "";
-    return `<span class="live-badge"><span class="live-dot"></span>AO VIVO</span> ${score} ${min}`;
+    return `
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span class="live-badge"><span class="live-dot"></span>AO VIVO</span>
+        ${score} ${min}
+      </div>
+      <div style="font-size:9px;color:var(--text-3);margin-top:2px">↻ atualiza a cada 15 min</div>`;
   }
   if (live.isFinished) {
-    return `<span class="finished-badge">⏱ FIM</span> ${score}`;
+    return `<div style="display:flex;align-items:center;gap:8px"><span class="finished-badge">⏱ FIM</span> ${score}</div>`;
   }
   return "";
 }
@@ -2541,15 +2712,28 @@ async function refreshModalLiveStats(matchId) {
   ];
 
   const minLabel = live?.minute ? ` · ${live.minute}'` : "";
+  const match = (state.matches||[]).find(m => String(m.id) === String(matchId));
+  const homeName = match?.home_team || statsData[0]?.team?.name || "Casa";
+  const awayName = match?.away_team || statsData[1]?.team?.name || "Fora";
+
   section.innerHTML = `
     <div class="live-stats-section">
       <div class="live-stats-title">
         <span class="live-dot"></span>
-        STATS AO VIVO${minLabel}
+        AO VIVO${minLabel}
+        <span style="font-size:9px;color:var(--text-3);font-weight:400;margin-left:auto">↻ atualiza a cada 15 min</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;font-size:9px;color:var(--text-3);text-align:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)">
-        <div>${escapeHtml(homeName)}</div>
-        <div>${escapeHtml(awayName)}</div>
+      <div style="text-align:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+        <div style="display:flex;align-items:center;justify-content:center;gap:12px">
+          <div style="font-size:12px;color:var(--text-2);font-weight:600;text-align:right;max-width:100px">${escapeHtml(homeName)}</div>
+          <div style="font-family:var(--font-mono);font-size:28px;font-weight:800;color:var(--text);letter-spacing:.04em">${live?.homeScore ?? 0} — ${live?.awayScore ?? 0}</div>
+          <div style="font-size:12px;color:var(--text-2);font-weight:600;text-align:left;max-width:100px">${escapeHtml(awayName)}</div>
+        </div>
+        ${live?.minute ? `<div style="font-size:11px;color:var(--text-3);margin-top:4px">${live.minute}' jogados</div>` : ""}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;font-size:9px;color:var(--text-3);text-align:center;margin-bottom:10px">
+        <div style="color:var(--green)">CASA</div>
+        <div style="color:var(--blue)">FORA</div>
       </div>
       ${statRow("Escanteios", corners[0], corners[1])}
       ${statRow("Finalizações", shots[0], shots[1])}
@@ -2613,7 +2797,48 @@ function startLiveModule() {
   liveState.interval = setInterval(refreshLiveData, LIVE_REFRESH_MS);
 }
 
-/* ── DATA LOADING ─────────────────────────────────────────────────── */
+/* ── ACCESS GATE ──────────────────────────────────────────────────── */
+const ACCESS_KEY = "scoutly_access";
+const ACCESS_CODE = "2026scoutly";
+
+function checkAccess() {
+  const input = document.getElementById("accessInput");
+  const error = document.getElementById("accessError");
+  if (!input) return;
+  if (input.value.trim() === ACCESS_CODE) {
+    localStorage.setItem(ACCESS_KEY, "1");
+    unlockApp();
+  } else {
+    error.textContent = "Código inválido. Tente novamente.";
+    input.value = "";
+    input.focus();
+  }
+}
+
+function unlockApp() {
+  const gate = document.getElementById("accessGate");
+  if (gate) {
+    gate.style.opacity = "0";
+    gate.style.transition = "opacity 0.3s";
+    setTimeout(() => gate.remove(), 300);
+  }
+  initialize();
+}
+
+function bootApp() {
+  if (localStorage.getItem(ACCESS_KEY) === "1") {
+    const gate = document.getElementById("accessGate");
+    if (gate) gate.remove();
+    initialize();
+  } else {
+    // Foca no input automaticamente
+    setTimeout(() => document.getElementById("accessInput")?.focus(), 100);
+  }
+}
+
+document.addEventListener("DOMContentLoaded", bootApp);
+
+/* ── INITIALIZE ───────────────────────────────────────────────────── */
 function renderLoadError(errorMap={}){
   const msg=Object.entries(errorMap).map(([k,v])=>`${k}: ${v}`).join("\n")||"Erro desconhecido";
   setStatus("Erro ao carregar dados.",false);
@@ -3107,7 +3332,6 @@ function bindStaticEvents(){
 }
 
 async function initialize(){ bindStaticEvents();const ok=await refreshAllData(false);if(!ok)return;loadAssertiveness();startLiveModule();startAutoRefresh(); }
-document.addEventListener("DOMContentLoaded",initialize);
 </script>
 </body>
 </html>
