@@ -644,6 +644,16 @@
     .h2h-score-pill.win  { background: rgba(0,200,83,0.14); border-color: rgba(0,200,83,0.25); color: var(--green); }
     .h2h-score-pill.draw { background: rgba(245,166,35,0.12); border-color: rgba(245,166,35,0.22); color: var(--amber); }
     .h2h-score-pill.loss { background: rgba(255,71,87,0.12); border-color: rgba(255,71,87,0.22); color: var(--red); }
+
+    .result-dots { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; margin-top: 6px; }
+    .result-dot {
+      width: 22px; height: 22px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: 800; flex-shrink: 0;
+    }
+    .result-dot.win  { background: rgba(0,200,83,0.18); color: var(--green); border: 1px solid rgba(0,200,83,0.3); }
+    .result-dot.draw { background: rgba(245,166,35,0.15); color: var(--amber); border: 1px solid rgba(245,166,35,0.3); }
+    .result-dot.loss { background: rgba(255,71,87,0.15); color: var(--red); border: 1px solid rgba(255,71,87,0.3); }
     .h2h-no-data {
       font-size: 11px; color: var(--text-3); text-align: center;
       padding: 12px 0; font-style: italic;
@@ -1636,6 +1646,15 @@ function openAnalysis(matchId){
         </div>` : ""}`;
   }
 
+  function resultDotsHtml(scores) {
+    if (!scores || !scores.length) return "";
+    return `<div class="result-dots">${scores.map(s => {
+      const cls = scorePillClass(s);
+      const label = cls === "win" ? "V" : cls === "draw" ? "E" : "D";
+      return `<div class="result-dot ${cls}" title="${escapeHtml(s)}">${label}</div>`;
+    }).join("")}</div>`;
+  }
+
   function renderFormTab(hForm, aForm) {
     const h = hForm || {};
     const a = aForm || {};
@@ -1654,7 +1673,7 @@ function openAnalysis(matchId){
             ${hStreak?`<span class="h2h-streak ${streakClass(hStreak)}">${escapeHtml(hStreak)}</span>`:`<span class="h2h-streak irr">sem dados</span>`}
           </div>
           <div style="font-size:9px;color:var(--text-3);text-align:center;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Últimos resultados</div>
-          ${hScores.length?`<div class="h2h-scores" style="justify-content:center">${hScores.map(s=>`<span class="h2h-score-pill">${escapeHtml(s)}</span>`).join("")}</div>`:`<div class="h2h-no-data">—</div>`}
+          ${hScores.length ? resultDotsHtml(hScores) + scorePillsHtml(hScores,"center") : `<div class="h2h-no-data">—</div>`}
           ${h.matches?`<div style="font-size:9px;color:var(--text-3);text-align:center;margin-top:6px">${h.matches} jogo(s) analisado(s)</div>`:""}
         </div>
         <div>
@@ -1663,7 +1682,7 @@ function openAnalysis(matchId){
             ${aStreak?`<span class="h2h-streak ${streakClass(aStreak)}">${escapeHtml(aStreak)}</span>`:`<span class="h2h-streak irr">sem dados</span>`}
           </div>
           <div style="font-size:9px;color:var(--text-3);text-align:center;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Últimos resultados</div>
-          ${aScores.length?`<div class="h2h-scores" style="justify-content:center">${aScores.map(s=>`<span class="h2h-score-pill">${escapeHtml(s)}</span>`).join("")}</div>`:`<div class="h2h-no-data">—</div>`}
+          ${aScores.length ? resultDotsHtml(aScores) + scorePillsHtml(aScores,"center") : `<div class="h2h-no-data">—</div>`}
           ${a.matches?`<div style="font-size:9px;color:var(--text-3);text-align:center;margin-top:6px">${a.matches} jogo(s) analisado(s)</div>`:""}
         </div>
       </div>`;
