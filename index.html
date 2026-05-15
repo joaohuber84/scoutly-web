@@ -2837,6 +2837,10 @@ function bootApp() {
 }
 
 document.addEventListener("DOMContentLoaded", bootApp);
+// Fallback: se DOMContentLoaded já disparou, chama direto
+if (document.readyState === "complete" || document.readyState === "interactive") {
+  bootApp();
+}
 
 /* ── INITIALIZE ───────────────────────────────────────────────────── */
 function renderLoadError(errorMap={}){
