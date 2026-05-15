@@ -2700,9 +2700,6 @@ async function refreshModalLiveStats(matchId) {
   const section = document.getElementById("liveStatsSection");
   if (!section) return;
 
-  const homeName = statsData[0]?.team?.name || "Casa";
-  const awayName = statsData[1]?.team?.name || "Fora";
-
   function statRow(label, hVal, aVal) {
     const h = Number(hVal) || 0;
     const a = Number(aVal) || 0;
