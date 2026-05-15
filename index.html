@@ -650,10 +650,12 @@
       width: 22px; height: 22px; border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-size: 9px; font-weight: 800; flex-shrink: 0;
+      background: var(--surface-3); color: var(--text-3);
+      border: 1px solid var(--border);
     }
-    .result-dot.win  { background: rgba(0,200,83,0.18); color: var(--green); border: 1px solid rgba(0,200,83,0.3); }
-    .result-dot.draw { background: rgba(245,166,35,0.15); color: var(--amber); border: 1px solid rgba(245,166,35,0.3); }
-    .result-dot.loss { background: rgba(255,71,87,0.15); color: var(--red); border: 1px solid rgba(255,71,87,0.3); }
+    .result-dot.win  { background: rgba(0,200,83,0.22) !important; color: #00c853 !important; border-color: rgba(0,200,83,0.4) !important; }
+    .result-dot.draw { background: rgba(245,166,35,0.20) !important; color: #f5a623 !important; border-color: rgba(245,166,35,0.4) !important; }
+    .result-dot.loss { background: rgba(255,71,87,0.18) !important; color: #ff4757 !important; border-color: rgba(255,71,87,0.4) !important; }
     .h2h-no-data {
       font-size: 11px; color: var(--text-3); text-align: center;
       padding: 12px 0; font-style: italic;
@@ -1043,43 +1045,110 @@ const LEAGUE_ALIASES = {
   "Conference League":"UEFA Conference League",
   "Bundesliga":"Bundesliga","German Bundesliga":"Bundesliga","1. Bundesliga":"Bundesliga",
   "Belgian Pro League":"Belgian Pro League","Jupiler Pro League":"Belgian Pro League",
-  "CONMEBOL Libertadores":"CONMEBOL Libertadores","CONMEBOL Sudamericana":"CONMEBOL Sudamericana"
+  "CONMEBOL Libertadores":"Libertadores","Copa Libertadores":"Libertadores",
+  "CONMEBOL Sudamericana":"Sul-Americana","Copa Sudamericana":"Sul-Americana",
+  "Copa America":"Copa América",
+  "Scottish Premiership":"Scottish Premiership",
 };
 
 const leagueMeta = {
-  "FIFA World Cup":{ label:"Copa do Mundo", sort:1 },
-  "FIFA Club World Cup":{ label:"Mundial de Clubes", sort:2 },
-  "UEFA European Championship":{ label:"Eurocopa", sort:3 },
-  "Copa America":{ label:"Copa América", sort:4 },
-  "UEFA Nations League":{ label:"Nations League", sort:5 },
-  "Nations League":{ label:"Nations League", sort:5 },
-  "International Friendlies":{ label:"Amistosos Internacionais", sort:6 },
-  "Amistosos Internacionais":{ label:"Amistosos Internacionais", sort:6 },
-  "UEFA Champions League":{ label:"Champions League", sort:10 },
-  "CONMEBOL Libertadores":{ label:"Libertadores", sort:11 },
-  "UEFA Europa League":{ label:"Europa League", sort:12 },
-  "UEFA Conference League":{ label:"Conference League", sort:13 },
-  "CONMEBOL Sudamericana":{ label:"Sul-Americana", sort:14 },
-  "Copa do Brasil":{ label:"Copa do Brasil", sort:20 },
-  "Brasileirão Série A":{ label:"Brasileirão Série A", sort:21 },
-  "Brasileirão Série B":{ label:"Brasileirão Série B", sort:22 },
-  "Copa do Nordeste":{ label:"Copa do Nordeste", sort:24 },
-  "Liga Argentina":{ label:"Liga Argentina", sort:30 },
-  "Serie A":{ label:"Serie A", sort:32 },
-  "La Liga":{ label:"La Liga", sort:33 },
-  "Premier League":{ label:"Premier League", sort:34 },
-  "Bundesliga":{ label:"Bundesliga", sort:35 },
-  "Ligue 1":{ label:"Ligue 1", sort:37 },
-  "Eredivisie":{ label:"Eredivisie", sort:38 },
-  "Liga MX":{ label:"Liga MX", sort:39 },
-  "Primeira Liga":{ label:"Primeira Liga", sort:40 },
-  "MLS":{ label:"MLS", sort:41 },
-  "Austrian Bundesliga":{ label:"Austrian Bundesliga", sort:42 },
-  "Belgian Pro League":{ label:"Liga Belga", sort:43 },
-  "Superliga":{ label:"Superliga", sort:45 },
-  "Super League Greece":{ label:"Super League Greece", sort:46 },
-  "Super Lig":{ label:"Super Lig", sort:47 },
-  "Saudi Pro League":{ label:"Saudi Pro League", sort:48 }
+  // GLOBAL
+  "FIFA World Cup":{ label:"Copa do Mundo", sort:1, cup:true },
+  "FIFA Club World Cup":{ label:"Mundial de Clubes", sort:2, cup:true },
+  "UEFA European Championship":{ label:"Eurocopa", sort:3, cup:true },
+  "Copa America":{ label:"Copa América", sort:4, cup:true },
+  "UEFA Nations League":{ label:"Nations League", sort:5, cup:true },
+  "Nations League":{ label:"Nations League", sort:5, cup:true },
+  "International Friendlies":{ label:"Amistosos Internacionais", sort:6, cup:false },
+  "Amistosos Internacionais":{ label:"Amistosos Internacionais", sort:6, cup:false },
+  "Copa Africana":{ label:"Copa Africana de Nações", sort:7, cup:true },
+  "Copa Asiática":{ label:"Copa Asiática", sort:8, cup:true },
+  // UEFA / CONMEBOL CLUBE
+  "UEFA Champions League":{ label:"Champions League", sort:10, cup:true },
+  "Libertadores":{ label:"Libertadores", sort:11, cup:true },
+  "UEFA Europa League":{ label:"Europa League", sort:12, cup:true },
+  "UEFA Conference League":{ label:"Conference League", sort:13, cup:true },
+  "Sul-Americana":{ label:"Sul-Americana", sort:14, cup:true },
+  "Recopa Sul-Americana":{ label:"Recopa Sul-Americana", sort:15, cup:true },
+  "CONCACAF Champions Cup":{ label:"CONCACAF Champions", sort:16, cup:true },
+  // BRASIL (sort 20-29)
+  "Copa do Brasil":{ label:"Copa do Brasil", sort:20, cup:true },
+  "Brasileirão Série A":{ label:"Brasileirão Série A", sort:21, cup:false },
+  "Brasileirão Série B":{ label:"Brasileirão Série B", sort:22, cup:false },
+  "Copa do Nordeste":{ label:"Copa do Nordeste", sort:24, cup:true },
+  "Copa Verde":{ label:"Copa Verde", sort:25, cup:true },
+  "Copa Sul-Sudeste":{ label:"Copa Sul-Sudeste", sort:26, cup:true },
+  // ARGENTINA (sort 30-34)
+  "Liga Argentina":{ label:"Liga Argentina", sort:30, cup:false },
+  "Copa Argentina":{ label:"Copa Argentina", sort:31, cup:true },
+  "Supercopa Argentina":{ label:"Supercopa Argentina", sort:32, cup:true },
+  // CHILE (sort 35-36)
+  "Liga Chilena":{ label:"Liga Chilena", sort:35, cup:false },
+  "Copa Chile":{ label:"Copa Chile", sort:36, cup:true },
+  // COLÔMBIA (sort 37-38)
+  "Liga Colombiana":{ label:"Liga Colombiana", sort:37, cup:false },
+  "Copa Colombia":{ label:"Copa Colômbia", sort:38, cup:true },
+  // PERU / URUGUAI (sort 39-40)
+  "Liga Peruana":{ label:"Liga Peruana", sort:39, cup:false },
+  "Liga Uruguaia":{ label:"Liga Uruguaia", sort:40, cup:false },
+  // ELIMINATÓRIAS (sort 41-46)
+  "Eliminatórias Sul-Americanas":{ label:"Eliminatórias Sul-Americanas", sort:41, cup:false },
+  "Eliminatórias Europeias":{ label:"Eliminatórias Europeias", sort:42, cup:false },
+  "Eliminatórias Africanas":{ label:"Eliminatórias Africanas", sort:43, cup:false },
+  "Eliminatórias Asiáticas":{ label:"Eliminatórias Asiáticas", sort:44, cup:false },
+  "Eliminatórias CONCACAF":{ label:"Eliminatórias CONCACAF", sort:45, cup:false },
+  "Eliminatórias da Euro":{ label:"Eliminatórias da Euro", sort:46, cup:false },
+  // INGLATERRA (sort 50-54)
+  "Premier League":{ label:"Premier League", sort:50, cup:false },
+  "FA Cup":{ label:"FA Cup", sort:51, cup:true },
+  "EFL Cup":{ label:"EFL Cup", sort:52, cup:true },
+  "Championship":{ label:"Championship", sort:53, cup:false },
+  // ESPANHA (sort 55-57)
+  "La Liga":{ label:"La Liga", sort:55, cup:false },
+  "Copa del Rey":{ label:"Copa del Rey", sort:56, cup:true },
+  // ITÁLIA (sort 58-60)
+  "Serie A":{ label:"Serie A", sort:58, cup:false },
+  "Coppa Italia":{ label:"Coppa Italia", sort:59, cup:true },
+  // ALEMANHA (sort 61-63)
+  "Bundesliga":{ label:"Bundesliga", sort:61, cup:false },
+  "DFB-Pokal":{ label:"DFB-Pokal", sort:62, cup:true },
+  // FRANÇA (sort 64-66)
+  "Ligue 1":{ label:"Ligue 1", sort:64, cup:false },
+  "Coupe de France":{ label:"Coupe de France", sort:65, cup:true },
+  // HOLANDA (sort 67-68)
+  "Eredivisie":{ label:"Eredivisie", sort:67, cup:false },
+  "KNVB Cup":{ label:"KNVB Cup", sort:68, cup:true },
+  // PORTUGAL (sort 69-71)
+  "Primeira Liga":{ label:"Primeira Liga", sort:69, cup:false },
+  "Taça de Portugal":{ label:"Taça de Portugal", sort:70, cup:true },
+  "Taça da Liga":{ label:"Taça da Liga", sort:71, cup:true },
+  // BÉLGICA (sort 72-73)
+  "Belgian Pro League":{ label:"Liga Belga", sort:72, cup:false },
+  "Copa da Bélgica":{ label:"Copa da Bélgica", sort:73, cup:true },
+  // ÁUSTRIA (sort 74-75)
+  "Austrian Bundesliga":{ label:"Austrian Bundesliga", sort:74, cup:false },
+  "Copa da Áustria":{ label:"Copa da Áustria", sort:75, cup:true },
+  // TURQUIA (sort 76-77)
+  "Super Lig":{ label:"Super Lig", sort:76, cup:false },
+  "Copa da Turquia":{ label:"Copa da Turquia", sort:77, cup:true },
+  // GRÉCIA (sort 78-79)
+  "Super League Greece":{ label:"Super League Greece", sort:78, cup:false },
+  "Copa da Grécia":{ label:"Copa da Grécia", sort:79, cup:true },
+  // DINAMARCA (sort 80-81)
+  "Superliga":{ label:"Superliga", sort:80, cup:false },
+  "Copa da Dinamarca":{ label:"Copa da Dinamarca", sort:81, cup:true },
+  // ESCÓCIA (sort 82-83)
+  "Scottish Premiership":{ label:"Scottish Premiership", sort:82, cup:false },
+  "Scottish Cup":{ label:"Scottish Cup", sort:83, cup:true },
+  // SUÉCIA / NORUEGA (sort 84-85)
+  "Allsvenskan":{ label:"Allsvenskan", sort:84, cup:false },
+  "Eliteserien":{ label:"Eliteserien", sort:85, cup:false },
+  // OUTROS (sort 86+)
+  "Saudi Pro League":{ label:"Saudi Pro League", sort:86, cup:false },
+  "MLS":{ label:"MLS", sort:87, cup:false },
+  "Leagues Cup":{ label:"Leagues Cup", sort:88, cup:true },
+  "Liga MX":{ label:"Liga MX", sort:89, cup:false },
+  "Copa MX":{ label:"Copa MX", sort:90, cup:true },
 };
 
 /* ── HELPERS ──────────────────────────────────────────────────────── */
@@ -1148,40 +1217,95 @@ function setStatus(text,ok=true){
 function inferCountryFromLeague(league){
   const n=normalizeLeagueName(league);
   const map={
-    "Brasileirão Série A":"Brazil","Brasileirão Série B":"Brazil","Copa do Brasil":"Brazil","Copa do Nordeste":"Brazil",
-    "Liga Argentina":"Argentina","Serie A":"Italy","La Liga":"Spain","Premier League":"England",
-    "Bundesliga":"Germany","Ligue 1":"France","Eredivisie":"Netherlands","Liga MX":"Mexico",
-    "Primeira Liga":"Portugal","MLS":"USA","Austrian Bundesliga":"Austria","Belgian Pro League":"Belgium",
-    "Superliga":"Denmark","Super League Greece":"Greece","Super Lig":"Turkey","Saudi Pro League":"Saudi Arabia",
+    "Brasileirão Série A":"Brazil","Brasileirão Série B":"Brazil","Copa do Brasil":"Brazil",
+    "Copa do Nordeste":"Brazil","Copa Verde":"Brazil","Copa Sul-Sudeste":"Brazil",
+    "Liga Argentina":"Argentina","Copa Argentina":"Argentina","Supercopa Argentina":"Argentina",
+    "Liga Chilena":"Chile","Copa Chile":"Chile",
+    "Liga Colombiana":"Colombia","Copa Colombia":"Colombia",
+    "Liga Peruana":"Peru","Liga Uruguaia":"Uruguay",
+    "Serie A":"Italy","Coppa Italia":"Italy",
+    "La Liga":"Spain","Copa del Rey":"Spain",
+    "Premier League":"England","FA Cup":"England","EFL Cup":"England","Championship":"England",
+    "Bundesliga":"Germany","DFB-Pokal":"Germany",
+    "Ligue 1":"France","Coupe de France":"France",
+    "Eredivisie":"Netherlands","KNVB Cup":"Netherlands",
+    "Primeira Liga":"Portugal","Taça de Portugal":"Portugal","Taça da Liga":"Portugal",
+    "Belgian Pro League":"Belgium","Copa da Bélgica":"Belgium",
+    "Austrian Bundesliga":"Austria","Copa da Áustria":"Austria",
+    "Super Lig":"Turkey","Copa da Turquia":"Turkey",
+    "Super League Greece":"Greece","Copa da Grécia":"Greece",
+    "Superliga":"Denmark","Copa da Dinamarca":"Denmark",
+    "Scottish Premiership":"Scotland","Scottish Cup":"Scotland",
+    "Allsvenskan":"Sweden","Eliteserien":"Norway",
+    "Liga MX":"Mexico","Copa MX":"Mexico",
+    "MLS":"USA","Leagues Cup":"USA",
+    "Saudi Pro League":"Saudi Arabia",
     "UEFA Champions League":"World","UEFA Europa League":"World","UEFA Conference League":"World",
-    "CONMEBOL Libertadores":"World","CONMEBOL Sudamericana":"World","Nations League":"World",
-    "International Friendlies":"World","Amistosos Internacionais":"World"
+    "Libertadores":"World","Sul-Americana":"World","Recopa Sul-Americana":"World",
+    "Nations League":"World","International Friendlies":"World","Amistosos Internacionais":"World",
+    "Eliminatórias Sul-Americanas":"World","Eliminatórias Europeias":"World",
+    "Eliminatórias Africanas":"World","Eliminatórias Asiáticas":"World",
+    "Eliminatórias CONCACAF":"World","Copa do Mundo":"World",
+    "Eurocopa":"World","Copa América":"World","Copa Africana":"World","Copa Asiática":"World",
+    "CONCACAF Champions Cup":"World","Mundial de Clubes":"World",
   };
   return map[n]||null;
 }
 
 function getFlag(country,league=""){
   const n=normalizeLeagueName(league);
+  // Overrides por liga específica
   if(n==="Saudi Pro League")return "SA";
   if(n==="Bundesliga")return "DE";
   if(n==="Belgian Pro League")return "BE";
-  if(["UEFA Conference League","UEFA Europa League","UEFA Champions League","CONMEBOL Libertadores","CONMEBOL Sudamericana"].includes(n))return null;
+  if(n==="Scottish Premiership"||n==="Scottish Cup")return "GB";
+  if(n==="Allsvenskan")return "SE";
+  if(n==="Eliteserien")return "NO";
+  // Copas internacionais sem bandeira
+  const intlCups=["UEFA Conference League","UEFA Europa League","UEFA Champions League",
+    "Libertadores","Sul-Americana","Recopa Sul-Americana","Nations League",
+    "Copa do Mundo","Eurocopa","Copa América","Copa Africana","Copa Asiática",
+    "CONCACAF Champions Cup","Mundial de Clubes","Amistosos Internacionais",
+    "International Friendlies","Eliminatórias Sul-Americanas","Eliminatórias Europeias",
+    "Eliminatórias Africanas","Eliminatórias Asiáticas","Eliminatórias CONCACAF","Eliminatórias da Euro"];
+  if(intlCups.includes(n))return null;
   const flags={
     Brazil:"BR",Brasil:"BR",England:"GB",Inglaterra:"GB",Spain:"ES",Espanha:"ES",
     Italy:"IT","Itália":"IT",Germany:"DE",Alemanha:"DE",France:"FR","França":"FR",
     Portugal:"PT",Netherlands:"NL",Holanda:"NL",Belgium:"BE","Bélgica":"BE",
     USA:"US","United States":"US","Estados Unidos":"US",Argentina:"AR",
     Mexico:"MX","México":"MX",Turkey:"TR",Turquia:"TR",Greece:"GR","Grécia":"GR",
-    Switzerland:"CH","Suíça":"CH",Denmark:"DK",Dinamarca:"DK",Austria:"AT",
-    "Áustria":"AT","Saudi Arabia":"SA","Arábia Saudita":"SA",World:null,Mundo:null
+    Switzerland:"CH","Suíça":"CH",Denmark:"DK",Dinamarca:"DK",Austria:"AT","Áustria":"AT",
+    "Saudi Arabia":"SA","Arábia Saudita":"SA",
+    Chile:"CL",Colombia:"CO",Peru:"PE",Uruguay:"UY",
+    Scotland:"GB",Sweden:"SE",Norway:"NO",Russia:"RU",
+    World:null,Mundo:null
   };
   return flags[String(country||"").trim()]??null;
 }
 
-function getLeagueBadge(league,country=""){
-  const flagCode=getFlag(country||inferCountryFromLeague(normalizeLeagueName(league)),league);
-  if(flagCode)return `<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="16" style="border-radius:2px;vertical-align:middle;">`;
+function isCupLeague(league) {
+  const n = normalizeLeagueName(league);
+  return leagueMeta[n]?.cup === true;
+}
+
+function getLeagueBadge(league, country=""){
+  const flagCode = getFlag(country||inferCountryFromLeague(normalizeLeagueName(league)), league);
+  if (flagCode) {
+    return `<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="16" style="border-radius:2px;vertical-align:middle;">`;
+  }
+  // Copa sem bandeira → troféu
+  if (isCupLeague(league)) return `🏆`;
   return "";
+}
+
+function getCompetitionBadge(league, country="") {
+  const flagCode = getFlag(country||inferCountryFromLeague(normalizeLeagueName(league)), league);
+  if (flagCode) {
+    return `<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="28" alt="${escapeHtml(country||"")}" style="border-radius:3px;">`;
+  }
+  if (isCupLeague(league)) return `<span style="font-size:20px">🏆</span>`;
+  return `<span style="font-size:20px">⚽</span>`;
 }
 
 function shouldHideLeague(l){
@@ -1989,7 +2113,7 @@ function renderRadar(){
 /* ── COMPETITIONS ─────────────────────────────────────────────────── */
 function buildCompetitions(){
   const map=new Map();
-  state.matches.filter(m=>isCompetitionVisible(m.kickoff)&&!shouldHideLeague(m.league)).forEach(match=>{
+  state.matches.filter(m=>isCompetitionVisible(m.kickoff)&&!shouldHideLeague(m.league)&&getPrimaryPick(m)!=="Mercado em revisão").forEach(match=>{
     const league=normalizeLeagueName(match.league||"");const country=match.country||inferCountryFromLeague(league);
     if(!map.has(league))map.set(league,{league,country,count:0,matches:[],kickoff:match.kickoff});
     const item=map.get(league);
@@ -2005,11 +2129,10 @@ function renderCompetitions(){
   const grid=document.getElementById("competitionsGrid"); if(!grid)return;
   if(!state.competitions.length){grid.innerHTML=`<div class="empty-state">Nenhuma competição encontrada.</div>`;return;}
   grid.innerHTML=state.competitions.map(comp=>{
-    const flagCode=getFlag(comp.country,comp.league);
-    const flag=flagCode?`<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="24" alt="${escapeHtml(comp.country||"")}">`:getLeagueBadge(comp.league,comp.country)||"🏆";
+    const badge = getCompetitionBadge(comp.league, comp.country);
     return `<div class="competition-card" data-league="${encodeURIComponent(comp.league)}" role="button" tabindex="0">
       <div class="comp-top">
-        <div class="comp-flag">${flag}</div>
+        <div class="comp-flag">${badge}</div>
         <div class="comp-count">${comp.count} jogo(s)</div>
       </div>
       <div class="comp-name">${escapeHtml(getLeagueDisplay(comp.league))}</div>
@@ -2029,7 +2152,9 @@ function renderCompetitions(){
 function openCompetition(league){
   state.selectedLeague=league;
   const comp=state.competitions.find(c=>c.league===league);
-  const matches=(comp?.matches||[]).filter(m=>isCompetitionVisible(m.kickoff)&&!shouldHideLeague(m.league))
+  const matches=(comp?.matches||[])
+    .filter(m=>isCompetitionVisible(m.kickoff)&&!shouldHideLeague(m.league))
+    .filter(m=>getPrimaryPick(m)!=="Mercado em revisão") // filtra jogos sem análise
     .sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
 
   document.getElementById("competitionsWrap")?.classList.add("hidden");
