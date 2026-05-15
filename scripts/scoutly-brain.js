@@ -30,37 +30,93 @@ const RADAR_SIZE = 15
 const TICKET_MIN_SIZE = 2
 const TICKET_MAX_SIZE = 3
 
-// [1] HIERARQUIA DE LIGAS
+// [1] HIERARQUIA DE LIGAS — baseada em visibilidade e relevância global
 const LEAGUE_TIER = {
-  // Tier 1 — Elite (peso 1000)
-  "UEFA Champions League":1,"Libertadores":1,"Copa do Mundo":1,"Eurocopa":1,
-  "Copa América":1,"Brasileirão Série A":1,"Premier League":1,"La Liga":1,
-  "Serie A":1,"Bundesliga":1,"Ligue 1":1,"Nations League":1,"Copa do Brasil":1,
-  // Tier 2 — Premium (peso 500)
-  "UEFA Europa League":2,"Sul-Americana":2,"Eredivisie":2,"MLS":2,"Liga Argentina":2,
-  "Primeira Liga":2,"Brasileirão Série B":2,"UEFA Conference League":2,"Liga MX":2,
-  "Super Lig":2,"Belgian Pro League":2,"Saudi Pro League":2,"Championship":2,
-  "Eliminatórias Sul-Americanas":2,"Eliminatórias Europeias":2,"Mundial de Clubes":2,
+  // ── TIER 1 — Elite absoluta ──────────────────────────────────────────
+  // Quem abre o Scoutly tem que reconhecer esses jogos
+  "UEFA Champions League":1,
+  "Libertadores":1,
+  "Copa do Mundo":1,
+  "Eurocopa":1,
+  "Copa América":1,
+  "Nations League":1,
+  "Mundial de Clubes":1,
+  "Brasileirão Série A":1,
+  "Copa do Brasil":1,
+  "Premier League":1,
+  "La Liga":1,
+  "Serie A":1,
+  "Bundesliga":1,
+  "Ligue 1":1,
+  "Eliminatórias Sul-Americanas":1,
+
+  // ── TIER 2 — Premium ─────────────────────────────────────────────────
+  "UEFA Europa League":2,
+  "UEFA Conference League":2,
+  "Sul-Americana":2,
+  "Liga Argentina":2,
+  "Primeira Liga":2,       // Portugal
+  "Eredivisie":2,          // Holanda
+  "Super Lig":2,           // Turquia
+  "Belgian Pro League":2,  // Bélgica
+  "Saudi Pro League":2,    // Arábia Saudita
+  "Liga MX":2,             // México
+  "MLS":2,                 // EUA
+  "Championship":2,        // Inglaterra 2ª div
+  "Brasileirão Série B":2,
+  "Eliminatórias Europeias":2,
+  "Eliminatórias Africanas":2,
+  "Eliminatórias Asiáticas":2,
+  "Eliminatórias CONCACAF":2,
   "CONCACAF Champions Cup":2,
-  // Tier 3 — Bom (peso 200)
-  "Copa del Rey":3,"Coppa Italia":3,"DFB-Pokal":3,"FA Cup":3,"Coupe de France":3,
-  "Austrian Bundesliga":3,"Super League Greece":3,"Superliga":3,"Copa Argentina":3,
-  "Amistosos Internacionais":3,"Scottish Premiership":3,"Allsvenskan":3,"Eliteserien":3,
-  "Liga Chilena":3,"Liga Colombiana":3,"Liga Peruana":3,"Liga Uruguaia":3,
-  "Copa Africana":3,"EFL Cup":3,"KNVB Cup":3,
-  // Tier 4 — Preenche (peso 50)
-  "Taça de Portugal":4,"Taça da Liga":4,"Copa da Turquia":4,"Copa da Bélgica":4,
-  "Copa da Áustria":4,"Copa da Grécia":4,"Copa da Dinamarca":4,"Scottish Cup":4,
-  "Copa Chile":4,"Copa Colombia":4,"Copa MX":4,"Leagues Cup":4,
-  "Copa Verde":4,"Copa do Nordeste":4,"Recopa Sul-Americana":4,
+
+  // ── TIER 3 — Relevante ───────────────────────────────────────────────
+  "Austrian Bundesliga":3,    // Áustria
+  "Super League Greece":3,    // Grécia
+  "Superliga":3,              // Dinamarca
+  "Copa del Rey":3,
+  "Coppa Italia":3,
+  "DFB-Pokal":3,
+  "FA Cup":3,
+  "Coupe de France":3,
+  "Copa Argentina":3,
+  "Copa Africa":3,
+  "Liga Colombiana":3,
+  "Liga Chilena":3,
+  "Liga Peruana":3,
+  "Liga Uruguaia":3,
+  "Amistosos Internacionais":3,
+  "EFL Cup":3,
+  "KNVB Cup":3,
+  "Taça de Portugal":3,
+
+  // ── TIER 4 — Só preenche se não tiver nada melhor ────────────────────
+  "Scottish Premiership":4,   // Escócia
+  "Allsvenskan":4,            // Suécia
+  "Eliteserien":4,            // Noruega
+  "Taça da Liga":4,
+  "Copa da Turquia":4,
+  "Copa da Bélgica":4,
+  "Copa da Áustria":4,
+  "Copa da Grécia":4,
+  "Copa da Dinamarca":4,
+  "Scottish Cup":4,
+  "Copa Chile":4,
+  "Copa Colombia":4,
+  "Copa MX":4,
+  "Leagues Cup":4,
+  "Copa Verde":4,
+  "Copa do Nordeste":4,
+  "Recopa Sul-Americana":4,
 }
 
-// [5] RADAR_BLACKLIST — nunca aparecem no radar
+// [5] RADAR_BLACKLIST — copas menores nunca aparecem no radar
+// Ligas nacionais (Escócia, Suécia, Noruega) ficam em Tier 4 mas podem aparecer se faltar picks
 const RADAR_BLACKLIST = new Set([
-  "Copa da Escócia","Scottish Cup","Copa da Turquia","Copa da Bélgica",
-  "Copa da Áustria","Copa da Grécia","Copa da Dinamarca","KNVB Cup",
-  "Taça da Liga","Copa Chile","Copa Colombia","Copa MX","Leagues Cup",
-  "Copa Verde","Copa Sul-Sudeste","Recopa Sul-Americana",
+  "Copa da Turquia","Copa da Bélgica","Copa da Áustria","Copa da Grécia",
+  "Copa da Dinamarca","Scottish Cup","Copa Chile","Copa Colombia",
+  "Copa MX","Leagues Cup","Copa Verde","Copa Sul-Sudeste","Recopa Sul-Americana",
+  "Taça da Liga",
 ])
 
 function getLeagueTierScore(league) {
@@ -614,22 +670,28 @@ function chooseRadar(analyses) {
   const today = active.filter((item) => getDayOffsetFromToday(item.kickoff) <= 0)
   const future = active.filter((item) => getDayOffsetFromToday(item.kickoff) > 0)
 
-  // [1] Sort combinado: tier da liga + score
-  function sortWithTier(arr) {
+  // Sort: horário primeiro → tier da liga → score
+  // Jogos do mesmo slot de tempo entram na ordem das ligas mais importantes
+  function sortPoolProperly(arr) {
     return [...arr].sort((a, b) => {
+      const ta = getKickoffMs(a.kickoff)
+      const tb = getKickoffMs(b.kickoff)
+      // Agrupa por bloco de 30 minutos para não separar jogos do mesmo horário
+      const blockA = Math.floor(ta / (30 * 60 * 1000))
+      const blockB = Math.floor(tb / (30 * 60 * 1000))
+      if (blockA !== blockB) return blockA - blockB
+      // Mesmo bloco de horário → liga mais importante primeiro
       const tierA = getLeagueTierScore(a.league)
       const tierB = getLeagueTierScore(b.league)
-      // Score ponderado: tier tem peso alto, score tem peso secundário
-      const compositeA = tierA + a.main_score * 100
-      const compositeB = tierB + b.main_score * 100
-      if (Math.abs(compositeB - compositeA) > 1) return compositeB - compositeA
-      return compareByKickoff(a, b)
+      if (tierA !== tierB) return tierB - tierA
+      // Mesmo tier → melhor score primeiro
+      return b.main_score - a.main_score
     })
   }
 
   const pool = [
-    ...sortWithTier(today),
-    ...sortWithTier(future),
+    ...sortPoolProperly(today),
+    ...sortPoolProperly(future),
   ]
 
   const radar = []
