@@ -35,9 +35,49 @@ const MIN_REQUIRED_RECENT_MATCHES = 3
 const MIN_REQUIRED_STATS_MATCHES = 2
 const MAX_DAILY_PICKS = 20
 const MAX_SAME_MARKET_IN_DAILY = 2
-const MAX_SAME_LEAGUE_IN_DAILY = 4
+const MAX_SAME_LEAGUE_IN_DAILY = 2  // era 4 — máximo 2 jogos por liga no radar
 const MAX_INTERNATIONAL_IN_DAILY = 8
 const MAX_BRAZIL_IN_DAILY = 6
+
+// TIER DE LIGAS — define prioridade no radar
+// Tier 1 = elite, Tier 2 = premium, Tier 3 = bom, Tier 4 = preenche espaço
+const LEAGUE_TIER = {
+  // Tier 1 — sempre aparecem primeiro
+  "UEFA Champions League":1,"Libertadores":1,"Copa do Mundo":1,"Eurocopa":1,
+  "Copa América":1,"Brasileirão Série A":1,"Premier League":1,"La Liga":1,
+  "Serie A":1,"Bundesliga":1,"Ligue 1":1,"Nations League":1,"Copa do Brasil":1,
+  // Tier 2 — premium
+  "UEFA Europa League":2,"Sul-Americana":2,"Eredivisie":2,"MLS":2,"Liga Argentina":2,
+  "Primeira Liga":2,"Brasileirão Série B":2,"UEFA Conference League":2,"Liga MX":2,
+  "Super Lig":2,"Belgian Pro League":2,"Saudi Pro League":2,"Eliminatórias Sul-Americanas":2,
+  "Eliminatórias Europeias":2,"Mundial de Clubes":2,"CONCACAF Champions Cup":2,
+  // Tier 3 — bom
+  "Copa del Rey":3,"Coppa Italia":3,"DFB-Pokal":3,"FA Cup":3,"Coupe de France":3,
+  "Austrian Bundesliga":3,"Super League Greece":3,"Superliga":3,"Copa Argentina":3,
+  "Amistosos Internacionais":3,"Championship":3,"Scottish Premiership":3,
+  "Allsvenskan":3,"Eliteserien":3,"Liga Chilena":3,"Liga Colombiana":3,
+  "Liga Peruana":3,"Liga Uruguaia":3,"Copa Africana":3,
+  // Tier 4 — só entram se radar não completou
+  "EFL Cup":4,"KNVB Cup":4,"Taça de Portugal":4,"Taça da Liga":4,
+  "Copa da Turquia":4,"Copa da Bélgica":4,"Copa da Áustria":4,"Copa da Grécia":4,
+  "Copa da Dinamarca":4,"Scottish Cup":4,"Copa Chile":4,"Copa Colombia":4,
+  "Copa MX":4,"Leagues Cup":4,"Copa Verde":4,"Copa do Nordeste":4,
+  "Copa Sul-Sudeste":4,"Recopa Sul-Americana":4,"Copa Asiática":4,"Copa da Escócia":4,
+}
+
+// Ligas excluídas do radar (mas aparecem em Competições)
+const RADAR_BLACKLIST = new Set([
+  "Copa da Escócia","Copa da Turquia","Copa da Bélgica","Copa da Áustria",
+  "Copa da Grécia","Copa da Dinamarca","KNVB Cup","Taça da Liga",
+  "Copa Chile","Copa Colombia","Copa MX","Leagues Cup","Copa Sul-Sudeste",
+  "Copa Verde","Recopa Sul-Americana","Copa Asiática","Copa da Escócia",
+])
+
+function getLeagueTierScore(league) {
+  const tier = LEAGUE_TIER[String(league||"")] || 4
+  // Tier 1 = 1000 pts, Tier 2 = 500 pts, Tier 3 = 200 pts, Tier 4 = 50 pts
+  return tier === 1 ? 1000 : tier === 2 ? 500 : tier === 3 ? 200 : 50
+}
 const MIN_PROBABILITY_GENERAL = 0.68
 const MIN_PROBABILITY_EQUILIBRADO = 0.72
 const MIN_PROBABILITY_DEFENSIVO = 0.72
@@ -972,28 +1012,57 @@ async function buildAndStoreMatches(fixtureLists) {
 
 async function rebuildDailyPicks(matches) {
   if(!matches.length)return 0
-  const sorted=[...matches].filter(m=>m.id&&m.pick&&m.metrics&&safeNumber(m.metrics.goals,0)>0).sort((a,b)=>{ const pa=safeNumber(a.probability,0),pb=safeNumber(b.probability,0); if(pb!==pa)return pb-pa; return safeNumber(b.priority,0)-safeNumber(a.priority,0) })
+
+  // Ordena por: tier da liga (peso alto) + probabilidade
+  const sorted=[...matches]
+    .filter(m=>m.id&&m.pick&&m.metrics&&safeNumber(m.metrics.goals,0)>0)
+    .filter(m=>!RADAR_BLACKLIST.has(String(m.league||""))) // exclui ligas do radar
+    .map(m=>({ ...m, _tierScore: getLeagueTierScore(m.league) }))
+    .sort((a,b)=>{
+      // Score combinado: tier + probabilidade ponderada
+      const scoreA = a._tierScore + safeNumber(a.probability,0)*100
+      const scoreB = b._tierScore + safeNumber(b.probability,0)*100
+      if(scoreB!==scoreA)return scoreB-scoreA
+      return safeNumber(b.priority,0)-safeNumber(a.priority,0)
+    })
+
   const selected=[]; const marketCount={},leagueCount={},familyCount={},regionCount={}
   const detectFamily=market=>{ const m=normalizeText(market); if(m.includes("escanteio"))return"escanteios"; if(m.includes("finalizacoes")||m.includes("finalizações"))return"shots"; if(m.includes("no gol"))return"sot"; if(m.includes("cart"))return"cards"; if(m.includes("ambas"))return"ambas"; if(m.includes("dupla chance"))return"dupla_chance"; if(m.includes("vitoria")||m.includes("vitória")||m.includes("empate"))return"resultado"; if(m.includes("gol"))return"gols"; return"outro" }
+
   for(const match of sorted){
     const market=String(match.pick||""); const league=String(match.league||""); const family=detectFamily(market); const region=String(match.region||"general"); const gameProfile=String(match.game_profile||"")
     marketCount[market]=marketCount[market]||0; leagueCount[league]=leagueCount[league]||0; familyCount[family]=familyCount[family]||0; regionCount[region]=regionCount[region]||0
+
+    // Thresholds de probabilidade
     if(safeNumber(match.probability,0)<MIN_PROBABILITY_GENERAL)continue
     if(gameProfile==="defensivo"&&safeNumber(match.probability,0)<MIN_PROBABILITY_DEFENSIVO)continue
     if(gameProfile==="equilibrado"&&safeNumber(match.probability,0)<MIN_PROBABILITY_EQUILIBRADO)continue
     if(region==="international"&&safeNumber(match.probability,0)<MIN_PROBABILITY_INTERNATIONAL)continue
+
+    // Tier 4: só entra se radar ainda não completou metade
+    if(LEAGUE_TIER[league]===4&&selected.length>=MAX_DAILY_PICKS/2)continue
+
+    // Limites de repetição
     if(marketCount[market]>=MAX_SAME_MARKET_IN_DAILY)continue
     if(leagueCount[league]>=MAX_SAME_LEAGUE_IN_DAILY)continue
+
+    // Diversidade de mercados — mais restrita
+    if(family==="gols"&&familyCount[family]>=4)continue
     if(family==="escanteios"&&familyCount[family]>=3)continue
-    if(family==="shots"&&familyCount[family]>=3)continue
-    if(family==="sot"&&familyCount[family]>=3)continue
-    if(family==="cards"&&familyCount[family]>=3)continue
-    if(family==="gols"&&familyCount[family]>=5)continue
+    if(family==="shots"&&familyCount[family]>=2)continue
+    if(family==="sot"&&familyCount[family]>=2)continue
+    if(family==="cards"&&familyCount[family]>=2)continue
+    if(family==="ambas"&&familyCount[family]>=2)continue
+    if(family==="dupla_chance"&&familyCount[family]>=3)continue
+    if(family==="resultado"&&familyCount[family]>=2)continue
+
     if(region==="international"&&regionCount[region]>=MAX_INTERNATIONAL_IN_DAILY)continue
     if(region==="brazil"&&regionCount[region]>=MAX_BRAZIL_IN_DAILY)continue
+
     selected.push(match); marketCount[market]+=1; leagueCount[league]+=1; familyCount[family]+=1; regionCount[region]+=1
     if(selected.length>=MAX_DAILY_PICKS)break
   }
+
   const rows=selected.map((m,index)=>({ rank:index+1,match_id:m.id,league:m.league,home_team:m.home_team,away_team:m.away_team,market:m.pick,probability:round(m.probability),kickoff:m.kickoff,is_opportunity:false,home_logo:m.home_logo||null,away_logo:m.away_logo||null,created_at:new Date().toISOString() }))
   if(!rows.length)return 0
   const{error}=await supabase.from("daily_picks").insert(rows)
@@ -1002,8 +1071,8 @@ async function rebuildDailyPicks(matches) {
 }
 
 async function run() {
-  console.log("🚀 Scoutly Sync V13.4 iniciado")
-  console.log("📈 [1] H2H histórico real [2] Ligas expandidas [3] Novos países")
+  console.log("🚀 Scoutly Sync V13.5 iniciado")
+  console.log("📈 [1] H2H real [2] Hierarquia de ligas [3] Diversidade de mercados [4] Blacklist radar")
   const{start,end}=getSyncWindowRange()
   console.log(`📆 Janela ativa: ${start.toISOString()} -> ${end.toISOString()}`)
   const competitions=await resolveTargetCompetitions()
