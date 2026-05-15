@@ -243,11 +243,22 @@ function isExactTargetLeague(target, rawName, country) {
   const raw = normalizeText(rawName)
   const c = normalizeText(country || target.country || "")
   if (hasForbiddenMarker(raw)) return false
-  if (target.country === "Germany" && target.display === "Bundesliga") return c === "germany" && raw === "bundesliga"
+  // Exclusões explícitas por país
+  if (target.country === "France" && target.display === "Ligue 1") {
+    if (raw.includes("ligue 2") || raw.includes("national") || raw.includes("b") ) return false
+    return c === "france" && (raw === "ligue 1" || raw === "ligue 1 uber eats" || raw === "ligue 1 mcdonald's")
+  }
+  if (target.country === "Germany" && target.display === "Bundesliga") return c === "germany" && (raw === "bundesliga" || raw === "1. bundesliga")
   if (target.country === "Belgium" && target.display === "Belgian Pro League") return c === "belgium" && (raw === "pro league" || raw === "jupiler pro league")
   if (target.country === "Mexico" && target.display === "Liga MX") return c === "mexico" && (raw === "liga mx" || raw === "liga bbva mx")
   if (target.country === "Netherlands" && target.display === "Eredivisie") return c === "netherlands" && raw === "eredivisie"
   if (target.country === "Austria" && target.display === "Austrian Bundesliga") return c === "austria" && raw === "bundesliga"
+  if (target.country === "England" && target.display === "Premier League") return c === "england" && raw === "premier league"
+  if (target.country === "Spain" && target.display === "La Liga") return c === "spain" && (raw === "la liga" || raw === "laliga")
+  if (target.country === "Italy" && target.display === "Serie A") return c === "italy" && raw === "serie a"
+  if (target.country === "Turkey" && target.display === "Super Lig") return c === "turkey" && (raw === "süper lig" || raw === "super lig")
+  if (target.country === "Greece" && target.display === "Super League Greece") return c === "greece" && (raw === "super league 1" || raw === "super league" || raw === "super league greece")
+  if (target.country === "Scotland" && target.display === "Scottish Premiership") return c === "scotland" && (raw === "premiership" || raw === "scottish premiership")
   return null
 }
 
@@ -371,6 +382,16 @@ async function resolveCountryCompetitions(target) {
     if (target.type && leagueType !== target.type) return false
     if (hasForbiddenMarker(rawName)) return false
     if (target.country === "Italy" && normalizeText(rawName).includes("women")) return false
+    // Bloqueia explicitamente segundas divisões que podem vazar
+    const rawNorm = normalizeText(rawName)
+    if (target.type === "league") {
+      if (rawNorm.includes("ligue 2")) return false
+      if (rawNorm.includes("serie b") && target.country !== "Brazil") return false
+      if (rawNorm.includes("2. bundesliga") || rawNorm.includes("bundesliga 2")) return false
+      if (rawNorm.includes("segunda") && !["Argentina","Spain","Mexico"].includes(target.country)) return false
+      if (rawNorm.includes("segunda division") && target.country === "Spain") return false
+      if (rawNorm.includes("championship") && target.country !== "England") return false
+    }
     const exactDecision = isExactTargetLeague(target, rawName, item.country?.name || target.country)
     if (exactDecision !== null) return exactDecision
     return Array.from(normalizedNames).some(n => normalizeText(rawName) === n)
