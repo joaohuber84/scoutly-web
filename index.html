@@ -243,6 +243,93 @@
       max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
+    /* ── BETA BANNER ──────────────────────────────────────────────────── */
+    .beta-banner {
+      background: linear-gradient(135deg, rgba(0,200,83,0.08), rgba(77,159,255,0.08));
+      border: 1px solid rgba(0,200,83,0.2);
+      border-radius: var(--radius-lg); padding: 10px 16px;
+      margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+    }
+    .beta-banner-text {
+      font-size: 12px; color: var(--text-2); line-height: 1.4;
+    }
+    .beta-banner-text strong { color: var(--green); }
+    .beta-banner-actions {
+      display: flex; gap: 8px; flex-shrink: 0;
+    }
+    .btn-share {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #25D366; border: none; border-radius: 8px;
+      padding: 7px 14px; color: #fff; font-size: 12px; font-weight: 700;
+      cursor: pointer; font-family: var(--font-body);
+      transition: opacity 0.15s;
+    }
+    .btn-share:hover { opacity: 0.88; }
+
+    /* ── FEEDBACK BUTTON ──────────────────────────────────────────────── */
+    .feedback-btn {
+      position: fixed; bottom: 24px; right: 20px; z-index: 8000;
+      background: var(--surface); border: 1px solid var(--border-2);
+      border-radius: 50px; padding: 10px 16px;
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: 700; color: var(--text-2);
+      cursor: pointer; box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      transition: all 0.2s; font-family: var(--font-body);
+    }
+    .feedback-btn:hover { border-color: var(--green); color: var(--green); transform: translateY(-2px); }
+
+    /* ── FEEDBACK MODAL ───────────────────────────────────────────────── */
+    .feedback-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      z-index: 8500; display: flex; align-items: flex-end; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .feedback-overlay.open { opacity: 1; pointer-events: all; }
+    .feedback-modal {
+      background: var(--surface); border: 1px solid var(--border-2);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      width: 100%; max-width: 520px; padding: 24px 20px;
+      transform: translateY(100%); transition: transform 0.25s ease;
+    }
+    .feedback-overlay.open .feedback-modal { transform: translateY(0); }
+    .feedback-modal-title {
+      font-family: var(--font-title); font-size: 16px; font-weight: 800;
+      color: var(--text); margin-bottom: 6px;
+    }
+    .feedback-modal-desc {
+      font-size: 12px; color: var(--text-3); margin-bottom: 14px;
+    }
+    .feedback-textarea {
+      width: 100%; box-sizing: border-box;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 12px 14px;
+      color: var(--text); font-size: 13px; font-family: var(--font-body);
+      resize: none; outline: none; height: 100px;
+      transition: border-color 0.15s;
+    }
+    .feedback-textarea:focus { border-color: var(--green); }
+    .feedback-actions {
+      display: flex; gap: 8px; margin-top: 10px;
+    }
+    .btn-feedback-send {
+      flex: 1; padding: 11px; border-radius: var(--radius);
+      background: var(--green); border: none; color: #000;
+      font-size: 13px; font-weight: 800; cursor: pointer;
+      font-family: var(--font-body);
+    }
+    .btn-feedback-cancel {
+      padding: 11px 18px; border-radius: var(--radius);
+      background: var(--surface-3); border: 1px solid var(--border);
+      color: var(--text-2); font-size: 13px; cursor: pointer;
+      font-family: var(--font-body);
+    }
+    .feedback-success {
+      text-align: center; padding: 20px 0;
+      font-size: 14px; color: var(--green); font-weight: 700;
+    }
+
     /* ─── ASSERTIVENESS BAR ──────────────────────────────────────────── */
     .assert-bar {
       background: var(--surface);
@@ -1102,64 +1189,6 @@
 </head>
 <body>
 
-<!-- GATE DE ACESSO - standalone, não depende de nenhum outro script -->
-<div id="accessGate" style="position:fixed;inset:0;background:#080b12;z-index:99999;display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;">
-  <div style="background:#0e1219;border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:32px 28px;width:100%;max-width:340px;text-align:center;">
-    <img src="logo-icon.png" alt="Scoutly" style="width:56px;height:56px;margin-bottom:16px" onerror="this.style.display='none'">
-    <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:4px">Scoutly</div>
-    <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-bottom:24px">Radar Inteligente de Oportunidades</div>
-    <input id="accessInput" type="password" placeholder="Código de acesso"
-      style="width:100%;box-sizing:border-box;background:#161b26;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px 16px;color:#fff;font-size:14px;outline:none;margin-bottom:10px;font-family:'DM Sans',sans-serif;"
-    >
-    <div id="accessError" style="font-size:11px;color:#ff4757;margin-bottom:10px;min-height:16px;"></div>
-    <button id="accessBtn" style="width:100%;padding:12px;border-radius:10px;background:#00c853;border:none;color:#000;font-size:14px;font-weight:800;cursor:pointer;font-family:'DM Sans',sans-serif;">
-      Entrar
-    </button>
-  </div>
-</div>
-
-<script>
-(function() {
-  var KEY = "scoutly_access";
-  var CODE = "2026scoutly";
-
-  function tryUnlock() {
-    var input = document.getElementById("accessInput");
-    var error = document.getElementById("accessError");
-    var val = input ? input.value.trim() : "";
-    if (val === CODE) {
-      try { localStorage.setItem(KEY, "1"); } catch(e) {}
-      var gate = document.getElementById("accessGate");
-      if (gate) gate.style.display = "none";
-    } else {
-      if (error) error.textContent = "Código inválido. Tente novamente.";
-      if (input) { input.value = ""; input.focus(); }
-    }
-  }
-
-  // Verifica se já tem acesso salvo
-  try {
-    if (localStorage.getItem(KEY) === "1") {
-      var gate = document.getElementById("accessGate");
-      if (gate) gate.style.display = "none";
-    }
-  } catch(e) {}
-
-  // Binds
-  window.addEventListener("DOMContentLoaded", function() {
-    var btn = document.getElementById("accessBtn");
-    var input = document.getElementById("accessInput");
-    if (btn) btn.addEventListener("click", tryUnlock);
-    if (input) input.addEventListener("keydown", function(e) {
-      if (e.key === "Enter") tryUnlock();
-    });
-    // Foca no input se gate estiver visível
-    var gate = document.getElementById("accessGate");
-    if (gate && gate.style.display !== "none" && input) input.focus();
-  });
-})();
-</script>
-
 <div class="shell">
 
   <!-- ══ HEADER ══════════════════════════════════════════════════════════ -->
@@ -1176,6 +1205,19 @@
     <div class="status-pill" id="statusChip">
       <span class="status-dot"></span>
       <span id="statusText">Conectando...</span>
+    </div>
+  </div>
+
+  <!-- ══ BETA BANNER ══════════════════════════════════════════════════════ -->
+  <div class="beta-banner">
+    <div class="beta-banner-text">
+      🚀 <strong>Scoutly Beta</strong> — Acesso gratuito por tempo limitado. Experimente e compartilhe com quem curte futebol!
+    </div>
+    <div class="beta-banner-actions">
+      <button class="btn-share" onclick="shareScoutly()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.104.546 4.084 1.5 5.803L0 24l6.354-1.477A11.952 11.952 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.653-.51-5.173-1.4l-.37-.22-3.773.877.907-3.67-.242-.383A9.944 9.944 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+        Compartilhar
+      </button>
     </div>
   </div>
 
@@ -1289,6 +1331,29 @@
   </div>
 
 </div><!-- /shell -->
+
+<!-- BOTÃO FLUTUANTE DE SUGESTÃO -->
+<button class="feedback-btn" onclick="openFeedback()">
+  💬 Sugestão
+</button>
+
+<!-- MODAL DE SUGESTÃO -->
+<div class="feedback-overlay" id="feedbackOverlay" onclick="closeFeedbackIfOutside(event)">
+  <div class="feedback-modal">
+    <div class="feedback-modal-title">💬 Deixe sua sugestão</div>
+    <div class="feedback-modal-desc">O Scoutly está em beta. Sua opinião ajuda a melhorar o produto!</div>
+    <div id="feedbackForm">
+      <textarea class="feedback-textarea" id="feedbackText" placeholder="O que você achou? O que podemos melhorar?"></textarea>
+      <div class="feedback-actions">
+        <button class="btn-feedback-cancel" onclick="closeFeedback()">Cancelar</button>
+        <button class="btn-feedback-send" onclick="sendFeedback()">Enviar sugestão ✓</button>
+      </div>
+    </div>
+    <div id="feedbackSuccess" style="display:none" class="feedback-success">
+      ✅ Obrigado pelo feedback! Vamos melhorar sempre.
+    </div>
+  </div>
+</div>
 
 <!-- MINI PAINEL DO TIME -->
 <div class="team-panel-overlay" id="teamPanelOverlay" onclick="closeTeamPanel(event)">
@@ -3006,6 +3071,49 @@ function startLiveModule() {
   refreshLiveData();
   if (liveState.interval) clearInterval(liveState.interval);
   liveState.interval = setInterval(refreshLiveData, LIVE_REFRESH_MS);
+}
+
+/* ── SHARE + FEEDBACK ─────────────────────────────────────────────── */
+function shareScoutly() {
+  const msg = encodeURIComponent(
+    "🎯 Conhece o Scoutly? É um radar inteligente de apostas esportivas — analisa jogos, gera picks com estatística real e mostra ao vivo o que está acontecendo nos jogos.\n\nAcesse grátis: https://scoutlypro.app"
+  );
+  window.open(`https://wa.me/?text=${msg}`, "_blank");
+}
+
+function openFeedback() {
+  document.getElementById("feedbackOverlay").classList.add("open");
+  document.getElementById("feedbackText").focus();
+}
+
+function closeFeedback() {
+  document.getElementById("feedbackOverlay").classList.remove("open");
+  document.getElementById("feedbackText").value = "";
+  document.getElementById("feedbackForm").style.display = "block";
+  document.getElementById("feedbackSuccess").style.display = "none";
+}
+
+function closeFeedbackIfOutside(e) {
+  if (e.target === document.getElementById("feedbackOverlay")) closeFeedback();
+}
+
+async function sendFeedback() {
+  const text = document.getElementById("feedbackText")?.value?.trim();
+  if (!text) return;
+
+  try {
+    await supabaseClient.from("feedback").insert({
+      message: text,
+      page: window.location.href,
+      created_at: new Date().toISOString(),
+    });
+  } catch(e) {
+    console.error("Feedback error:", e);
+  }
+
+  document.getElementById("feedbackForm").style.display = "none";
+  document.getElementById("feedbackSuccess").style.display = "block";
+  setTimeout(() => closeFeedback(), 2500);
 }
 
 /* ── ACCESS GATE ──────────────────────────────────────────────────── */
