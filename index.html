@@ -130,8 +130,9 @@
       margin-bottom: 0; cursor: pointer; padding: 14px 16px;
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius-lg); transition: border-color 0.15s;
+      border-left: 3px solid var(--green);
     }
-    .agenda-header:hover { border-color: var(--border-2); }
+    .agenda-header:hover { border-color: var(--green); }
     .agenda-header.open { border-radius: var(--radius-lg) var(--radius-lg) 0 0; border-bottom-color: transparent; }
     .agenda-header-left { display: flex; align-items: center; gap: 10px; }
     .agenda-title {
@@ -2693,9 +2694,9 @@ function renderAgenda() {
       if (shouldHideLeague(m.league)) return false;
       // Exclui jogos ao vivo (já aparecem na seção acima)
       if (liveIds.has(String(m.id))) return false;
-      // Exclui jogos já encerrados (110 min após kickoff)
-      const finishedCutoff = new Date(d.getTime() + 110 * 60 * 1000);
-      if (finishedCutoff < now) return false;
+      // Exclui jogos que já começaram pelo horário (mesmo sem dado ao vivo)
+      const d2 = parseDateSafe(m.kickoff);
+      if (d2 && (now - d2) / 60000 >= 0) return false;
       return true;
     })
     .sort((a, b) => new Date(a.kickoff) - new Date(b.kickoff));
@@ -3037,7 +3038,9 @@ async function refreshLiveData() {
   relevant.forEach(m => {
     const id = Number(m.id);
     const fixture = liveMap.get(id);
+
     if (fixture) {
+      // Jogo encontrado na API ao vivo
       const short = fixture.fixture?.status?.short || "";
       liveState.data.set(String(id), {
         homeScore: safeNum(fixture.goals?.home),
@@ -3047,20 +3050,48 @@ async function refreshLiveData() {
         isLive: LIVE_STATUSES.includes(short),
         isFinished: FINISHED_STATUSES.includes(short),
       });
+    } else {
+      // Jogo não retornado pela API — usa horário como fallback
+      const d = parseDateSafe(m.kickoff);
+      if (!d) return;
+      const now = new Date();
+      const elapsed = (now - d) / 60000; // minutos desde o kickoff
+      const existingData = liveState.data.get(String(id));
+
+      if (elapsed >= 0 && elapsed <= 110) {
+        // Jogo deveria estar ao vivo — mantém dados existentes ou cria placeholder
+        if (!existingData) {
+          liveState.data.set(String(id), {
+            homeScore: 0, awayScore: 0,
+            minute: Math.min(Math.round(elapsed), 90),
+            status: "LIVE",
+            isLive: true,
+            isFinished: false,
+            fromKickoff: true, // marcador de que veio do fallback
+          });
+        }
+      } else if (elapsed > 110 && elapsed <= 150) {
+        // Provável que terminou — marca como encerrado
+        if (!existingData || existingData.isLive) {
+          liveState.data.set(String(id), {
+            ...(existingData || { homeScore:0, awayScore:0 }),
+            isLive: false,
+            isFinished: true,
+            status: "FT",
+          });
+        }
+      }
     }
   });
 
-  // Re-render indicators nos cards
+  // Re-render
   updateLiveIndicators();
-  // Atualiza seção ao vivo na tela principal
   renderLiveSection();
 
-  // Se modal aberto for um jogo ao vivo, atualiza stats
+  // Atualiza stats do modal se aberto
   if (liveState.activeModalId) {
     const live = liveState.data.get(String(liveState.activeModalId));
-    if (live?.isLive) {
-      await refreshModalLiveStats(liveState.activeModalId);
-    }
+    if (live?.isLive) await refreshModalLiveStats(liveState.activeModalId);
   }
 }
 
