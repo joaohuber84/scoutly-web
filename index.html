@@ -206,18 +206,14 @@
 
     /* ── SEÇÃO AO VIVO ────────────────────────────────────────────────── */
     .live-section {
-      display: none;
-      margin-bottom: 18px;
-      background: var(--surface);
-      border: 1px solid rgba(255,71,87,0.25);
-      border-radius: var(--radius-lg);
-      overflow: hidden;
+      display: none; margin-bottom: 18px;
+      background: var(--surface); border: 1px solid rgba(255,71,87,0.25);
+      border-radius: var(--radius-lg); overflow: hidden;
     }
     .live-section.has-live { display: block; }
     .live-section-header {
       display: flex; align-items: center; gap: 8px;
-      padding: 12px 16px 10px;
-      border-bottom: 1px solid rgba(255,71,87,0.15);
+      padding: 11px 16px; border-bottom: 1px solid rgba(255,71,87,0.15);
     }
     .live-section-title {
       font-family: var(--font-title); font-size: 13px; font-weight: 800;
@@ -228,38 +224,78 @@
       border-radius: 20px; padding: 2px 8px;
       font-size: 10px; font-weight: 700; margin-left: auto;
     }
+
+    /* TV-style game row */
     .live-game-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 16px; cursor: pointer;
+      padding: 10px 14px; cursor: pointer;
       border-bottom: 1px solid var(--border);
       transition: background 0.15s;
     }
     .live-game-row:last-child { border-bottom: none; }
-    .live-game-row:hover { background: rgba(255,71,87,0.05); }
-    .live-game-teams { flex: 1; min-width: 0; }
-    .live-game-match {
+    .live-game-row:hover { background: rgba(255,71,87,0.04); }
+
+    /* Linha principal: logo · nome · placar · nome · logo */
+    .live-game-scoreline {
+      display: flex; align-items: center; gap: 8px;
+      justify-content: space-between;
+    }
+    .live-team-block {
+      display: flex; align-items: center; gap: 6px;
+      flex: 1; min-width: 0;
+    }
+    .live-team-block.away { flex-direction: row-reverse; }
+    .live-team-logo {
+      width: 22px; height: 22px; object-fit: contain; flex-shrink: 0;
+      border-radius: 3px;
+    }
+    .live-team-logo-fallback {
+      width: 22px; height: 22px; background: var(--surface-3);
+      border-radius: 3px; flex-shrink: 0;
+    }
+    .live-team-name {
       font-size: 13px; font-weight: 700; color: var(--text);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .live-game-meta {
-      font-size: 10px; color: var(--text-3); margin-top: 2px;
-      display: flex; align-items: center; gap: 5px;
+    .live-team-block.away .live-team-name { text-align: right; }
+
+    .live-center-score {
+      display: flex; flex-direction: column; align-items: center;
+      flex-shrink: 0; gap: 1px;
     }
-    .live-game-score-block { text-align: center; flex-shrink: 0; }
-    .live-game-score {
-      font-family: var(--font-mono); font-size: 18px; font-weight: 800;
-      color: var(--text); line-height: 1;
+    .live-scoreboard {
+      font-family: var(--font-mono); font-size: 20px; font-weight: 900;
+      color: var(--text); letter-spacing: .04em; line-height: 1;
+      white-space: nowrap;
     }
-    .live-game-minute {
-      font-size: 10px; color: #ff4757; font-weight: 700;
-      font-family: var(--font-mono); margin-top: 2px;
+    .live-minute-badge {
+      font-size: 9px; font-weight: 800; color: #ff4757;
+      font-family: var(--font-mono);
+    }
+
+    /* Linha secundária: liga + pick */
+    .live-game-subline {
+      display: flex; align-items: center; gap: 8px; margin-top: 5px;
+      flex-wrap: wrap;
+    }
+    .live-league-tag {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 10px; color: var(--text-3);
     }
     .live-game-pick {
       font-size: 10px; color: var(--green); font-weight: 700;
       background: var(--green-dim); border: 1px solid rgba(0,200,83,0.2);
-      border-radius: 5px; padding: 3px 7px; flex-shrink: 0;
-      max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      border-radius: 5px; padding: 2px 7px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: 180px;
     }
+    .live-show-more {
+      width: 100%; padding: 9px; text-align: center;
+      font-size: 12px; font-weight: 700; color: #ff4757;
+      background: rgba(255,71,87,0.06); border: none;
+      cursor: pointer; font-family: var(--font-body);
+      transition: background 0.15s;
+    }
+    .live-show-more:hover { background: rgba(255,71,87,0.1); }
 
     /* ── BETA BANNER ──────────────────────────────────────────────────── */
     .beta-banner {
@@ -2840,55 +2876,97 @@ function renderLiveSection() {
   const countEl = document.getElementById("liveCount");
   if (!wrap || !list) return;
 
-  // Filtra jogos ao vivo que temos no state
   const liveMatches = (state.matches || []).filter(m => {
     const live = liveState.data.get(String(m.id));
     return live?.isLive || live?.isFinished;
   }).sort((a, b) => {
     const la = liveState.data.get(String(a.id));
     const lb = liveState.data.get(String(b.id));
-    // Ao vivo primeiro, depois encerrados
+    // Ao vivo primeiro, depois por tier
     if (la?.isLive && !lb?.isLive) return -1;
     if (!la?.isLive && lb?.isLive) return 1;
-    return 0;
+    // Mesmo status → liga mais importante primeiro
+    const tierA = LIVE_TIER[String(a.league||"")] ?? 4;
+    const tierB = LIVE_TIER[String(b.league||"")] ?? 4;
+    return tierA - tierB;
   });
 
-  if (!liveMatches.length) {
-    wrap.classList.remove("has-live");
-    return;
+  if (!liveMatches.length) { wrap.classList.remove("has-live"); return; }
+  wrap.classList.add("has-live");
+
+  const liveCount = liveMatches.filter(m => liveState.data.get(String(m.id))?.isLive).length;
+  if (countEl) countEl.textContent = liveCount;
+
+  const MAX_VISIBLE = 5;
+  const showAll = wrap.dataset.expanded === "1";
+  const visible = showAll ? liveMatches : liveMatches.slice(0, MAX_VISIBLE);
+  const hidden = liveMatches.length - MAX_VISIBLE;
+
+  function teamLogoHtml(logo, name) {
+    if (logo) return `<img class="live-team-logo" src="${escapeHtml(logo)}" alt="${escapeHtml(name)}" onerror="this.outerHTML='<div class=live-team-logo-fallback></div>'">`;
+    return `<div class="live-team-logo-fallback"></div>`;
   }
 
-  wrap.classList.add("has-live");
-  if (countEl) countEl.textContent = liveMatches.filter(m => liveState.data.get(String(m.id))?.isLive).length;
-
-  list.innerHTML = liveMatches.map(match => {
+  list.innerHTML = visible.map(match => {
     const live = liveState.data.get(String(match.id));
     const pick = getPrimaryPick(match);
     const hasPick = pick && pick !== "Mercado em revisão";
-
-    const scoreBlock = live?.isLive
-      ? `<div class="live-game-score-block">
-           <div class="live-game-score">${live.homeScore} — ${live.awayScore}</div>
-           <div class="live-game-minute">${live.minute ? live.minute+"'" : "AO VIVO"}</div>
-         </div>`
-      : `<div class="live-game-score-block">
-           <div class="live-game-score" style="color:var(--text-3)">${live?.homeScore ?? 0} — ${live?.awayScore ?? 0}</div>
-           <div style="font-size:9px;color:var(--text-3);margin-top:2px">FIM</div>
-         </div>`;
+    const badge = getLeagueBadge(match.league, match.country || inferCountryFromLeague(match.league));
+    const homeName = normalizeTeamName(match.home_team);
+    const awayName = normalizeTeamName(match.away_team);
+    const scoreHtml = live?.isLive
+      ? `<span class="live-scoreboard">${live.homeScore} — ${live.awayScore}</span>
+         <span class="live-minute-badge">${live.minute ? live.minute+"'" : "AO VIVO"}</span>`
+      : `<span class="live-scoreboard" style="color:var(--text-3)">${live?.homeScore??0} — ${live?.awayScore??0}</span>
+         <span class="live-minute-badge" style="color:var(--text-3)">FIM</span>`;
 
     return `<div class="live-game-row" onclick="openAnalysis('${escapeHtml(String(match.id))}')">
-      <div class="live-game-teams">
-        <div class="live-game-match">${escapeHtml(match.home_team)} × ${escapeHtml(match.away_team)}</div>
-        <div class="live-game-meta">
-          ${getLeagueBadge(match.league, match.country||"")}
-          ${escapeHtml(getLeagueDisplay(match.league))}
+      <div class="live-game-scoreline">
+        <div class="live-team-block home">
+          ${teamLogoHtml(match.home_logo, homeName)}
+          <span class="live-team-name">${escapeHtml(homeName)}</span>
+        </div>
+        <div class="live-center-score">${scoreHtml}</div>
+        <div class="live-team-block away">
+          ${teamLogoHtml(match.away_logo, awayName)}
+          <span class="live-team-name">${escapeHtml(awayName)}</span>
         </div>
       </div>
-      ${scoreBlock}
-      ${hasPick ? `<div class="live-game-pick" title="${escapeHtml(pick)}">📌 ${escapeHtml(pick)}</div>` : ""}
+      <div class="live-game-subline">
+        <span class="live-league-tag">${badge} ${escapeHtml(getLeagueDisplay(match.league))}</span>
+        ${hasPick ? `<span class="live-game-pick">📌 ${escapeHtml(pick)}</span>` : ""}
+      </div>
     </div>`;
   }).join("");
+
+  // Botão "Ver mais / Ver menos"
+  if (!showAll && hidden > 0) {
+    list.innerHTML += `<button class="live-show-more" onclick="toggleLiveExpand()">Ver mais ${hidden} jogo${hidden!==1?"s":""} ao vivo ↓</button>`;
+  } else if (showAll && liveMatches.length > MAX_VISIBLE) {
+    list.innerHTML += `<button class="live-show-more" onclick="toggleLiveExpand()">Ver menos ↑</button>`;
+  }
 }
+
+function toggleLiveExpand() {
+  const wrap = document.getElementById("liveSectionWrap");
+  if (!wrap) return;
+  wrap.dataset.expanded = wrap.dataset.expanded === "1" ? "0" : "1";
+  renderLiveSection();
+}
+
+// Tier para ordenar ao vivo (mesmo do Brain)
+const LIVE_TIER = {
+  "UEFA Champions League":1,"Libertadores":1,"Copa do Mundo":1,"Eurocopa":1,
+  "Copa América":1,"Brasileirão Série A":1,"Premier League":1,"La Liga":1,
+  "Serie A":1,"Bundesliga":1,"Ligue 1":1,"Nations League":1,"Copa do Brasil":1,
+  "UEFA Europa League":2,"Sul-Americana":2,"Eredivisie":2,"MLS":2,"Liga Argentina":2,
+  "Primeira Liga":2,"Brasileirão Série B":2,"UEFA Conference League":2,"Liga MX":2,
+  "Super Lig":2,"Belgian Pro League":2,"Saudi Pro League":2,"Championship":2,
+  "Austrian Bundesliga":3,"Super League Greece":3,"Superliga":3,"Copa del Rey":3,
+  "Coppa Italia":3,"DFB-Pokal":3,"FA Cup":3,"Coupe de France":3,"Copa Argentina":3,
+  "Liga Colombiana":3,"Liga Chilena":3,"Liga Peruana":3,"Liga Uruguaia":3,
+  "Scottish Premiership":4,"Allsvenskan":4,"Eliteserien":4,
+};
 
 /* ── LIVE SCORE MODULE ────────────────────────────────────────────── */
 const liveState = {
