@@ -268,6 +268,53 @@
     }
     .btn-share:hover { opacity: 0.88; }
 
+    /* ── SHARE MENU ───────────────────────────────────────────────────── */
+    .share-menu-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      z-index: 8200; display: flex; align-items: flex-end; justify-content: center;
+      opacity: 0; pointer-events: none; transition: opacity 0.2s;
+    }
+    .share-menu-overlay.open { opacity: 1; pointer-events: all; }
+    .share-menu {
+      background: var(--surface); border: 1px solid var(--border-2);
+      border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      width: 100%; max-width: 520px; padding: 20px;
+      transform: translateY(100%); transition: transform 0.25s ease;
+    }
+    .share-menu-overlay.open .share-menu { transform: translateY(0); }
+    .share-menu-title {
+      font-family: var(--font-title); font-size: 15px; font-weight: 800;
+      color: var(--text); margin-bottom: 16px; text-align: center;
+    }
+    .share-options {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+      margin-bottom: 14px;
+    }
+    .share-option {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 14px 8px; border-radius: var(--radius);
+      border: 1px solid var(--border); background: var(--surface-2);
+      cursor: pointer; transition: all 0.15s; text-decoration: none;
+    }
+    .share-option:hover { border-color: var(--border-2); background: var(--surface-3); }
+    .share-option-icon { font-size: 24px; line-height: 1; }
+    .share-option-label { font-size: 10px; font-weight: 700; color: var(--text-3); }
+    .share-copy-btn {
+      width: 100%; padding: 11px; border-radius: var(--radius);
+      background: var(--surface-3); border: 1px solid var(--border);
+      color: var(--text-2); font-size: 13px; font-weight: 700;
+      cursor: pointer; font-family: var(--font-body);
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      transition: all 0.15s;
+    }
+    .share-copy-btn:hover { border-color: var(--green); color: var(--green); }
+    .share-close-btn {
+      width: 100%; padding: 10px; border-radius: var(--radius);
+      background: transparent; border: none;
+      color: var(--text-3); font-size: 12px; cursor: pointer;
+      font-family: var(--font-body); margin-top: 6px;
+    }
+
     /* ── FEEDBACK BUTTON ──────────────────────────────────────────────── */
     .feedback-btn {
       position: fixed; bottom: 24px; right: 20px; z-index: 8000;
@@ -1214,8 +1261,8 @@
       🚀 <strong>Scoutly Beta</strong> — Acesso gratuito por tempo limitado. Experimente e compartilhe com quem curte futebol!
     </div>
     <div class="beta-banner-actions">
-      <button class="btn-share" onclick="shareScoutly()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.104.546 4.084 1.5 5.803L0 24l6.354-1.477A11.952 11.952 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.885 0-3.653-.51-5.173-1.4l-.37-.22-3.773.877.907-3.67-.242-.383A9.944 9.944 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+      <button class="btn-share" onclick="openShareMenu()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
         Compartilhar
       </button>
     </div>
@@ -1331,6 +1378,35 @@
   </div>
 
 </div><!-- /shell -->
+
+<!-- MODAL DE COMPARTILHAMENTO -->
+<div class="share-menu-overlay" id="shareMenuOverlay" onclick="closeShareIfOutside(event)">
+  <div class="share-menu">
+    <div class="share-menu-title">Compartilhar Scoutly</div>
+    <div class="share-options">
+      <a class="share-option" onclick="shareTo('whatsapp')" href="javascript:void(0)">
+        <span class="share-option-icon">💬</span>
+        <span class="share-option-label">WhatsApp</span>
+      </a>
+      <a class="share-option" onclick="shareTo('telegram')" href="javascript:void(0)">
+        <span class="share-option-icon">✈️</span>
+        <span class="share-option-label">Telegram</span>
+      </a>
+      <a class="share-option" onclick="shareTo('twitter')" href="javascript:void(0)">
+        <span class="share-option-icon">🐦</span>
+        <span class="share-option-label">Twitter/X</span>
+      </a>
+      <a class="share-option" onclick="shareTo('instagram')" href="javascript:void(0)">
+        <span class="share-option-icon">📸</span>
+        <span class="share-option-label">Instagram</span>
+      </a>
+    </div>
+    <button class="share-copy-btn" onclick="shareTo('copy')" id="copyLinkBtn">
+      🔗 Copiar link
+    </button>
+    <button class="share-close-btn" onclick="closeShareMenu()">Fechar</button>
+  </div>
+</div>
 
 <!-- BOTÃO FLUTUANTE DE SUGESTÃO -->
 <button class="feedback-btn" onclick="openFeedback()">
@@ -3074,11 +3150,60 @@ function startLiveModule() {
 }
 
 /* ── SHARE + FEEDBACK ─────────────────────────────────────────────── */
-function shareScoutly() {
-  const msg = encodeURIComponent(
-    "🎯 Conhece o Scoutly? É um radar inteligente de apostas esportivas — analisa jogos, gera picks com estatística real e mostra ao vivo o que está acontecendo nos jogos.\n\nAcesse grátis: https://scoutlypro.app"
-  );
-  window.open(`https://wa.me/?text=${msg}`, "_blank");
+const SHARE_URL = "https://scoutlypro.app";
+const SHARE_TEXT = "🎯 Conhece o Scoutly? Radar inteligente de apostas esportivas — analisa jogos, gera picks com estatística real e mostra ao vivo o que está rolando. Acesse grátis!";
+
+function openShareMenu() {
+  document.getElementById("shareMenuOverlay").classList.add("open");
+}
+
+function closeShareMenu() {
+  document.getElementById("shareMenuOverlay").classList.remove("open");
+}
+
+function closeShareIfOutside(e) {
+  if (e.target === document.getElementById("shareMenuOverlay")) closeShareMenu();
+}
+
+function shareTo(platform) {
+  const url = encodeURIComponent(SHARE_URL);
+  const text = encodeURIComponent(SHARE_TEXT);
+
+  const links = {
+    whatsapp: `https://wa.me/?text=${text}%20${url}`,
+    telegram: `https://t.me/share/url?url=${url}&text=${text}`,
+    twitter:  `https://twitter.com/intent/tweet?text=${text}&url=${url}`,
+    instagram: null, // Instagram não suporta compartilhamento direto por URL
+  };
+
+  if (platform === "copy") {
+    navigator.clipboard.writeText(`${SHARE_TEXT} ${SHARE_URL}`).then(() => {
+      const btn = document.getElementById("copyLinkBtn");
+      if (btn) { btn.textContent = "✅ Link copiado!"; setTimeout(() => { btn.textContent = "🔗 Copiar link"; }, 2000); }
+    }).catch(() => {
+      // Fallback para browsers sem clipboard API
+      const el = document.createElement("textarea");
+      el.value = `${SHARE_TEXT} ${SHARE_URL}`;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+      const btn = document.getElementById("copyLinkBtn");
+      if (btn) { btn.textContent = "✅ Copiado!"; setTimeout(() => { btn.textContent = "🔗 Copiar link"; }, 2000); }
+    });
+    return;
+  }
+
+  if (platform === "instagram") {
+    // Instagram não tem URL de compartilhamento — copia o link e orienta
+    navigator.clipboard.writeText(SHARE_URL).catch(() => {});
+    const btn = document.querySelector(`.share-option[onclick="shareTo('instagram')"] .share-option-label`);
+    if (btn) { btn.textContent = "Link copiado!"; setTimeout(() => { btn.textContent = "Instagram"; }, 2000); }
+    return;
+  }
+
+  if (links[platform]) window.open(links[platform], "_blank");
+  closeShareMenu();
 }
 
 function openFeedback() {
