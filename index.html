@@ -127,10 +127,15 @@
     }
     .agenda-header {
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 14px;
+      margin-bottom: 0; cursor: pointer; padding: 14px 16px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); transition: border-color 0.15s;
     }
+    .agenda-header:hover { border-color: var(--border-2); }
+    .agenda-header.open { border-radius: var(--radius-lg) var(--radius-lg) 0 0; border-bottom-color: transparent; }
+    .agenda-header-left { display: flex; align-items: center; gap: 10px; }
     .agenda-title {
-      font-family: var(--font-title); font-size: 18px; font-weight: 800;
+      font-family: var(--font-title); font-size: 16px; font-weight: 800;
       color: var(--text);
     }
     .agenda-count {
@@ -138,6 +143,19 @@
       background: var(--surface-2); border: 1px solid var(--border);
       border-radius: 20px; padding: 3px 10px;
     }
+    .agenda-toggle {
+      font-size: 12px; color: var(--text-3); font-weight: 700;
+      display: flex; align-items: center; gap: 4px; flex-shrink: 0;
+    }
+    .agenda-toggle-icon { transition: transform 0.2s; display: inline-block; }
+    .agenda-body {
+      display: none;
+      background: var(--surface); border: 1px solid var(--border);
+      border-top: none; border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+      padding: 14px 14px 8px;
+      max-height: 600px; overflow-y: auto;
+    }
+    .agenda-body.open { display: block; }
     .agenda-hour-group { margin-bottom: 16px; }
     .agenda-hour-label {
       font-family: var(--font-mono); font-size: 12px; font-weight: 700;
@@ -1320,15 +1338,18 @@
   </div>
 
   <!-- ══ AGENDA DO DIA ════════════════════════════════════════════════════ -->
-  <div class="section">
-    <div class="section-card">
-      <div class="agenda-header">
+  <div class="agenda-section">
+    <div class="agenda-header" id="agendaHeader" onclick="toggleAgenda()">
+      <div class="agenda-header-left">
         <div class="agenda-title">📅 Jogos de Hoje</div>
         <span class="agenda-count" id="agendaCount">0 jogos</span>
       </div>
-      <div id="agendaList">
-        <div class="loading-state">Carregando jogos...</div>
+      <div class="agenda-toggle">
+        Ver todos <span class="agenda-toggle-icon" id="agendaToggleIcon">▼</span>
       </div>
+    </div>
+    <div class="agenda-body" id="agendaList">
+      <div class="loading-state">Carregando jogos...</div>
     </div>
   </div>
 
@@ -2599,6 +2620,17 @@ function renderRadar(){
 }
 
 /* ── AGENDA DO DIA ────────────────────────────────────────────────── */
+function toggleAgenda() {
+  const header = document.getElementById("agendaHeader");
+  const body = document.getElementById("agendaList");
+  const icon = document.getElementById("agendaToggleIcon");
+  if (!header || !body) return;
+  const isOpen = body.classList.contains("open");
+  body.classList.toggle("open", !isOpen);
+  header.classList.toggle("open", !isOpen);
+  if (icon) icon.style.transform = isOpen ? "" : "rotate(180deg)";
+}
+
 function renderAgenda() {
   const list = document.getElementById("agendaList");
   const countEl = document.getElementById("agendaCount");
@@ -2608,8 +2640,14 @@ function renderAgenda() {
   const todayStart = startOfDay(now);
   const todayEnd = endOfDay(now);
 
-  // Todos os jogos de hoje que ainda vão acontecer ou estão ao vivo
-  // Jogos já encerrados não aparecem
+  // IDs dos jogos ao vivo — não duplicar na agenda
+  const liveIds = new Set(
+    Array.from(liveState.data.entries())
+      .filter(([, v]) => v.isLive)
+      .map(([id]) => String(id))
+  );
+
+  // Todos os jogos de hoje que ainda vão acontecer — excluindo ao vivo e encerrados
   const todayMatches = (state.matches || [])
     .filter(m => {
       if (!m.kickoff) return false;
@@ -2617,7 +2655,9 @@ function renderAgenda() {
       if (!d) return false;
       if (d < todayStart || d > todayEnd) return false;
       if (shouldHideLeague(m.league)) return false;
-      // Remove jogos que já terminaram (com grace de 110 minutos — duração média de um jogo)
+      // Exclui jogos ao vivo (já aparecem na seção acima)
+      if (liveIds.has(String(m.id))) return false;
+      // Exclui jogos já encerrados (110 min após kickoff)
       const finishedCutoff = new Date(d.getTime() + 110 * 60 * 1000);
       if (finishedCutoff < now) return false;
       return true;
@@ -2627,7 +2667,7 @@ function renderAgenda() {
   if (countEl) countEl.textContent = `${todayMatches.length} jogo${todayMatches.length !== 1 ? "s" : ""}`;
 
   if (!todayMatches.length) {
-    list.innerHTML = `<div class="agenda-empty">Nenhum jogo encontrado para hoje.</div>`;
+    list.innerHTML = `<div class="agenda-empty">Nenhum jogo pendente para hoje.</div>`;
     return;
   }
 
@@ -2643,38 +2683,18 @@ function renderAgenda() {
     const rows = matches.map(match => {
       const pick = getPrimaryPick(match);
       const hasPick = pick && pick !== "Mercado em revisão";
-      const live = liveState.data.get(String(match.id));
-      const isLive = live?.isLive;
-      const isFinished = live?.isFinished;
-
       const badge = getLeagueBadge(
         match.league,
         match.country || inferCountryFromLeague(match.league)
       );
-
-      // Score ao vivo
-      let liveHtml = "";
-      if (isLive) {
-        liveHtml = `
-          <span class="agenda-live-badge">
-            <span class="live-dot" style="width:5px;height:5px"></span>
-            ${live.minute ? live.minute+"'" : "AO VIVO"}
-          </span>
-          <span class="agenda-score">${live.homeScore}–${live.awayScore}</span>`;
-      } else if (isFinished) {
-        liveHtml = `<span class="agenda-score" style="color:var(--text-3)">${live.homeScore}–${live.awayScore}</span>`;
-      }
-
-      const rowClass = isLive ? "agenda-row is-live" : hasPick ? "agenda-row has-pick" : "agenda-row";
-
+      const rowClass = hasPick ? "agenda-row has-pick" : "agenda-row";
       return `<div class="${rowClass}" onclick="openAnalysis('${escapeHtml(String(match.id))}')">
         <div class="agenda-league-badge">${badge}</div>
         <div class="agenda-teams">
           ${escapeHtml(normalizeTeamName(match.home_team))} × ${escapeHtml(normalizeTeamName(match.away_team))}
           <div style="font-size:10px;color:var(--text-3);margin-top:1px">${escapeHtml(getLeagueDisplay(match.league))}</div>
         </div>
-        ${liveHtml}
-        ${hasPick && !isLive ? `<div class="agenda-pick" title="${escapeHtml(pick)}">📌 ${escapeHtml(pick)}</div>` : ""}
+        ${hasPick ? `<div class="agenda-pick" title="${escapeHtml(pick)}">📌 ${escapeHtml(pick)}</div>` : ""}
       </div>`;
     }).join("");
 
@@ -2683,9 +2703,6 @@ function renderAgenda() {
       ${rows}
     </div>`;
   }).join("");
-
-  // Bind ao vivo nos rows da agenda
-  if (liveState.data.size > 0) updateAgendaLiveIndicators();
 }
 
 function updateAgendaLiveIndicators() {
