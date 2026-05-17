@@ -1977,12 +1977,15 @@ function chipMarkup(tier){
 }
 function marketFamily(market){
   const m=String(market||"").trim().toLowerCase();
-  if(!m)return"outro"; if(m.includes("escanteio"))return"escanteios";
-  if(m.includes("finalizações")||m.includes("finalizacoes"))return"shots";
-  if(m.includes("no gol"))return"sot"; if(m.includes("cart"))return"cards";
+  if(!m)return"outro";
+  if(m.includes("escanteio"))return"escanteios";
+  if(m.includes("no gol")||m.includes("finalizações no gol")||m.includes("finalizacoes no gol"))return"sot";
+  if(m.includes("finaliz"))return"shots";
+  if(m.includes("cart"))return"cards";
   if(m.includes("ambas"))return"btts";
   if(m.includes("dupla chance")||m.includes("empate")||m.includes("vitória")||m.includes("vitoria"))return"resultado";
-  if(m.includes("gol"))return"gols"; return"outro";
+  if(m.includes("gol"))return"gols";
+  return"outro";
 }
 function marketFamilyLabel(f){
   return({gols:"Gols",btts:"BTTS",escanteios:"Escanteios",shots:"Finalizações",sot:"No Gol",cards:"Cartões",resultado:"Resultado",outro:"Mercado"})[f]||"Mercado";
@@ -2007,10 +2010,10 @@ function formatMarketDisplay(market, numClass, labelClass) {
   if (line !== null && dir !== null) {
     const dirLabel = dir === "over" ? "Mais de" : "Menos de";
     let typeLabel = "";
-    if (lower.includes("gol")) typeLabel = "Gols";
-    else if (lower.includes("escanteio")) typeLabel = "Escanteios";
-    else if (lower.includes("no gol")) typeLabel = "Finalizações no gol";
+    if (lower.includes("no gol")) typeLabel = "Finalizações no gol";
     else if (lower.includes("finaliz")) typeLabel = "Finalizações";
+    else if (lower.includes("escanteio")) typeLabel = "Escanteios";
+    else if (lower.includes("gol")) typeLabel = "Gols";
     else if (lower.includes("cart")) typeLabel = "Cartões";
     else typeLabel = m.replace(/[\d.,]+/g,"").replace(/mais de|menos de/gi,"").trim();
 
