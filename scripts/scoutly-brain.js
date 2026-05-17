@@ -15,13 +15,13 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 })
 
 /**
- * SCOUTLY BRAIN V4
- * Mudanças sobre V3:
- * [1] LEAGUE_TIER — hierarquia de ligas no chooseRadar (tier influencia o sort)
- * [2] leagueCount >= 2 — máx 2 jogos por liga no radar (era 3)
- * [3] avgGoals >= 2.0 para "Mais de 1.5 gols" (era 1.6 — muito permissivo)
- * [4] Removida penalidade de shots/sot no FAMILY_SCORE_WEIGHT
- * [5] RADAR_BLACKLIST — ligas menores nunca entram no radar principal
+ * SCOUTLY BRAIN V4.1
+ * Mudanças sobre V4:
+ * [FIX 1] chooseBestAndAlternatives — removido usedFamilies: alternativas
+ *         podem ter a mesma família do pick principal (mercados diferentes)
+ *         → best_pick_2 e best_pick_3 agora aparecem em muito mais jogos
+ * [FIX 2] buildMarketCandidates — thresholds relaxed 0.52→0.50 / 0.53→0.50
+ *         → fallback mais permissivo quando dados são escassos
  */
 
 const TIMEZONE = "America/Sao_Paulo"
@@ -30,10 +30,7 @@ const RADAR_SIZE = 15
 const TICKET_MIN_SIZE = 2
 const TICKET_MAX_SIZE = 3
 
-// [1] HIERARQUIA DE LIGAS — baseada em visibilidade e relevância global
 const LEAGUE_TIER = {
-  // ── TIER 1 — Elite absoluta ──────────────────────────────────────────
-  // Quem abre o Scoutly tem que reconhecer esses jogos
   "UEFA Champions League":1,
   "Libertadores":1,
   "Copa do Mundo":1,
@@ -49,31 +46,27 @@ const LEAGUE_TIER = {
   "Bundesliga":1,
   "Ligue 1":1,
   "Eliminatórias Sul-Americanas":1,
-
-  // ── TIER 2 — Premium ─────────────────────────────────────────────────
   "UEFA Europa League":2,
   "UEFA Conference League":2,
   "Sul-Americana":2,
   "Liga Argentina":2,
-  "Primeira Liga":2,       // Portugal
-  "Eredivisie":2,          // Holanda
-  "Super Lig":2,           // Turquia
-  "Belgian Pro League":2,  // Bélgica
-  "Saudi Pro League":2,    // Arábia Saudita
-  "Liga MX":2,             // México
-  "MLS":2,                 // EUA
-  "Championship":2,        // Inglaterra 2ª div
+  "Primeira Liga":2,
+  "Eredivisie":2,
+  "Super Lig":2,
+  "Belgian Pro League":2,
+  "Saudi Pro League":2,
+  "Liga MX":2,
+  "MLS":2,
+  "Championship":2,
   "Brasileirão Série B":2,
   "Eliminatórias Europeias":2,
   "Eliminatórias Africanas":2,
   "Eliminatórias Asiáticas":2,
   "Eliminatórias CONCACAF":2,
   "CONCACAF Champions Cup":2,
-
-  // ── TIER 3 — Relevante ───────────────────────────────────────────────
-  "Austrian Bundesliga":3,    // Áustria
-  "Super League Greece":3,    // Grécia
-  "Superliga":3,              // Dinamarca
+  "Austrian Bundesliga":3,
+  "Super League Greece":3,
+  "Superliga":3,
   "Copa del Rey":3,
   "Coppa Italia":3,
   "DFB-Pokal":3,
@@ -89,11 +82,9 @@ const LEAGUE_TIER = {
   "EFL Cup":3,
   "KNVB Cup":3,
   "Taça de Portugal":3,
-
-  // ── TIER 4 — Só preenche se não tiver nada melhor ────────────────────
-  "Scottish Premiership":4,   // Escócia
-  "Allsvenskan":4,            // Suécia
-  "Eliteserien":4,            // Noruega
+  "Scottish Premiership":4,
+  "Allsvenskan":4,
+  "Eliteserien":4,
   "Taça da Liga":4,
   "Copa da Turquia":4,
   "Copa da Bélgica":4,
@@ -110,8 +101,6 @@ const LEAGUE_TIER = {
   "Recopa Sul-Americana":4,
 }
 
-// [5] RADAR_BLACKLIST — copas menores nunca aparecem no radar
-// Ligas nacionais (Escócia, Suécia, Noruega) ficam em Tier 4 mas podem aparecer se faltar picks
 const RADAR_BLACKLIST = new Set([
   "Copa da Turquia","Copa da Bélgica","Copa da Áustria","Copa da Grécia",
   "Copa da Dinamarca","Scottish Cup","Copa Chile","Copa Colombia",
@@ -124,15 +113,14 @@ function getLeagueTierScore(league) {
   return tier === 1 ? 1000 : tier === 2 ? 500 : tier === 3 ? 200 : 50
 }
 
-// [4] FAMILY_SCORE_WEIGHT — removida penalidade de shots/sot
 const FAMILY_SCORE_WEIGHT = {
   gols: 1.0,
   resultado: 0.98,
   escanteios: 0.97,
   cards: 0.95,
   btts: 0.92,
-  sot: 0.91,   // era penalizado depois no map — removido
-  shots: 0.88, // era penalizado depois no map — removido
+  sot: 0.91,
+  shots: 0.88,
   outro: 0.7,
 }
 
@@ -494,8 +482,6 @@ function buildGoalsCandidates(row) {
   function add(market, probability, score, subfamily, macro) {
     pushCandidate(candidates, { market, probability, score, family:"gols", subfamily, macro })
   }
-
-  // [3] avgGoals >= 2.0 para "Mais de 1.5 gols" (era 1.6)
   if (avgGoals >= 2.0) {
     const prob = clamp(over25 + 0.18, 0.62, 0.92)
     add("Mais de 1.5 gols", prob, prob, "gols_over15", "ofensivo")
@@ -548,6 +534,7 @@ function buildResultCandidates(row, profile) {
   return candidates
 }
 
+// ✅ FIX 2 — thresholds relaxed mais permissivos (era 0.52/0.53)
 function buildMarketCandidates(row, options = {}) {
   const relaxed = options.relaxed === true
   const profile = getGameProfile(row)
@@ -562,12 +549,10 @@ function buildMarketCandidates(row, options = {}) {
 
   candidates = candidates.map((item) => {
     let score = toNumber(item.score)
-    // Boost por família — [4] shots/sot não são mais penalizados
     if (item.family === "gols") score += 0.03
     if (item.family === "resultado") score += 0.025
     if (item.family === "escanteios") score += 0.02
     if (item.family === "cards") score += 0.015
-    // Boost por profile
     if (profile === "ofensivo" && item.macro === "ofensivo") score += 0.02
     if (profile === "defensivo" && item.macro === "defensivo") score += 0.02
     if (profile === "estatistico" && item.family === "escanteios") score += 0.02
@@ -578,30 +563,35 @@ function buildMarketCandidates(row, options = {}) {
     return { ...item, score: clamp(score, 0, 1) }
   })
 
-  const minProbability = relaxed ? 0.52 : 0.56
-  const minScore = relaxed ? 0.53 : 0.58
+  // ✅ FIX: era 0.52/0.53 — agora 0.50/0.50 para gerar mais alternativas
+  const minProbability = relaxed ? 0.50 : 0.56
+  const minScore = relaxed ? 0.50 : 0.58
 
   return candidates
     .filter((c) => c.probability >= minProbability && c.score >= minScore)
     .sort((a, b) => b.score - a.score)
 }
 
+// ✅ FIX 1 — removido usedFamilies: alternativas podem ter mesma família
 function chooseBestAndAlternatives(candidates, row) {
   if (!candidates.length) return { best: null, alternatives: [] }
   const sorted = [...candidates].sort((a, b) => b.score - a.score)
   const best = sorted[0]
   const alternatives = []
   const usedMarkets = new Set([best.market])
-  const usedFamilies = new Set([best.family])
+
+  // Removido: const usedFamilies = new Set([best.family])
+  // Agora só bloqueia o mercado exato — não a família inteira
+  // Ex: best="Mais de 1.5 gols" → alt="Menos de 3.5 gols" agora é permitido
   for (const item of sorted.slice(1)) {
     if (!item?.market) continue
     if (usedMarkets.has(item.market)) continue
-    if (usedFamilies.has(item.family)) continue
     alternatives.push(item)
     usedMarkets.add(item.market)
-    usedFamilies.add(item.family)
     if (alternatives.length >= 2) break
   }
+
+  // Fallback relaxado se ainda faltam alternativas
   if (alternatives.length < 2 && row) {
     const relaxed = buildMarketCandidates(row, { relaxed: true })
     for (const item of relaxed) {
@@ -612,6 +602,7 @@ function chooseBestAndAlternatives(candidates, row) {
       if (alternatives.length >= 2) break
     }
   }
+
   return { best, alternatives }
 }
 
@@ -654,8 +645,6 @@ function buildAnalysisFromRow(row) {
   }
 }
 
-// [1] chooseRadar COM HIERARQUIA DE LIGAS
-// [2] leagueCount >= 2
 function chooseRadar(analyses) {
   const now = Date.now()
 
@@ -664,27 +653,21 @@ function chooseRadar(analyses) {
       const kickoffMs = getKickoffMs(item.kickoff)
       return kickoffMs >= now - PAST_GRACE_HOURS * 60 * 60 * 1000
     })
-    // [5] Remove ligas da blacklist
     .filter((item) => !RADAR_BLACKLIST.has(String(item.league || "")))
 
   const today = active.filter((item) => getDayOffsetFromToday(item.kickoff) <= 0)
   const future = active.filter((item) => getDayOffsetFromToday(item.kickoff) > 0)
 
-  // Sort: horário primeiro → tier da liga → score
-  // Jogos do mesmo slot de tempo entram na ordem das ligas mais importantes
   function sortPoolProperly(arr) {
     return [...arr].sort((a, b) => {
       const ta = getKickoffMs(a.kickoff)
       const tb = getKickoffMs(b.kickoff)
-      // Agrupa por bloco de 30 minutos para não separar jogos do mesmo horário
       const blockA = Math.floor(ta / (30 * 60 * 1000))
       const blockB = Math.floor(tb / (30 * 60 * 1000))
       if (blockA !== blockB) return blockA - blockB
-      // Mesmo bloco de horário → liga mais importante primeiro
       const tierA = getLeagueTierScore(a.league)
       const tierB = getLeagueTierScore(b.league)
       if (tierA !== tierB) return tierB - tierA
-      // Mesmo tier → melhor score primeiro
       return b.main_score - a.main_score
     })
   }
@@ -706,11 +689,11 @@ function chooseRadar(analyses) {
 
     const exactMarketCount = usedExactMarkets[item.main_pick] || 0
     const familyCount = usedFamilies[item.main_family] || 0
-    const leagueCount = usedLeagues[item.league] || 0 // [2] max 2 por liga
+    const leagueCount = usedLeagues[item.league] || 0
     const tier = LEAGUE_TIER[String(item.league||"")] ?? 4
 
     if (exactMarketCount >= 2) continue
-    if (leagueCount >= 2) continue // [2] era 3, agora 2
+    if (leagueCount >= 2) continue
 
     if (item.main_family === "gols" && familyCount >= 4) continue
     if (item.main_family === "resultado" && familyCount >= 3) continue
@@ -720,7 +703,6 @@ function chooseRadar(analyses) {
     if (item.main_family === "shots" && familyCount >= 2) continue
     if (item.main_family === "sot" && familyCount >= 2) continue
 
-    // [1] Tier 4 só entra se radar não completou metade
     if (tier === 4 && radar.length >= Math.floor(RADAR_SIZE / 2)) continue
 
     radar.push(item)
@@ -733,7 +715,6 @@ function chooseRadar(analyses) {
     if (radar.length === RADAR_SIZE) break
   }
 
-  // Fallback sem blacklist se radar incompleto
   if (radar.length < RADAR_SIZE) {
     const backup = [...active].sort(compareByScoreThenKickoff)
     for (const item of backup) {
@@ -806,8 +787,9 @@ async function rebuildDailyPicks(radar, ticket) {
 }
 
 async function runScoutlyBrain() {
-  console.log("🧠 Scoutly Brain V4 iniciado...")
-  console.log("📈 [1] Hierarquia de ligas [2] Max 2/liga [3] Gols threshold elevado [4] Shots/SOT sem penalidade [5] Blacklist")
+  console.log("🧠 Scoutly Brain V4.1 iniciado...")
+  console.log("✅ [FIX 1] Alternativas sem bloqueio de família")
+  console.log("✅ [FIX 2] Thresholds relaxed 0.52→0.50 / 0.53→0.50")
 
   const matches = await loadActiveMatches()
   console.log(`📦 Jogos ativos carregados: ${matches.length}`)
@@ -828,7 +810,9 @@ async function runScoutlyBrain() {
   console.log("🎯 RADAR FINAL:")
   radar.forEach((item, index) => {
     const tier = LEAGUE_TIER[item.league] ?? 4
-    console.log(`  ${index+1}. [T${tier}] ${buildMatchLabel(item)} → ${item.main_pick} | ${item.main_family} | score:${item.main_score} | ${item.kickoff}`)
+    const alt2 = item.best_pick_2 ? ` | alt2: ${item.best_pick_2}` : " | alt2: NULL"
+    const alt3 = item.best_pick_3 ? ` | alt3: ${item.best_pick_3}` : ""
+    console.log(`  ${index+1}. [T${tier}] ${buildMatchLabel(item)} → ${item.main_pick}${alt2}${alt3} | score:${item.main_score}`)
   })
 
   console.log("🎟️ BILHETE FINAL:")
@@ -838,11 +822,11 @@ async function runScoutlyBrain() {
 
   await rebuildDailyPicks(radar, ticket)
 
-  console.log("✅ Scoutly Brain V4 finalizado.")
+  console.log("✅ Scoutly Brain V4.1 finalizado.")
   console.log(`📡 Radar: ${radar.length} jogo(s) | 🎫 Bilhete: ${ticket.length} jogo(s)`)
 }
 
 runScoutlyBrain().catch((error) => {
-  console.error("❌ Erro no Scoutly Brain V4:", error)
+  console.error("❌ Erro no Scoutly Brain V4.1:", error)
   process.exit(1)
 })
