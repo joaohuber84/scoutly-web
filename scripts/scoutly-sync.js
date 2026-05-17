@@ -17,10 +17,12 @@ const API = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
 
 /**
- * SCOUTLY SYNC V13.4
- * [1] H2H histórico real - endpoint /fixtures/headtohead (blend 25% H2H / 75% form)
- * [2] Ligas, copas e torneios expandidos com nomes alternativos
- * [3] Novos países: Chile, Colômbia, Peru, Uruguai, Escócia, Suécia, Noruega
+ * SCOUTLY SYNC V13.6
+ * [FIX] clearFutureWindow: daily_picks agora só apaga picks com kickoff futuro
+ *       Picks de jogos já acontecidos ficam preservados para o verify.js processar
+ *       → histórico de assertividade cresce corretamente a cada rodada
+ *       Antes: .delete().neq("id", 0) apagava TUDO
+ *       Agora: .delete().gte("kickoff", now) preserva jogos passados
  */
 
 const WINDOW_HOURS = 168
@@ -35,29 +37,23 @@ const MIN_REQUIRED_RECENT_MATCHES = 3
 const MIN_REQUIRED_STATS_MATCHES = 2
 const MAX_DAILY_PICKS = 20
 const MAX_SAME_MARKET_IN_DAILY = 2
-const MAX_SAME_LEAGUE_IN_DAILY = 2  // era 4 — máximo 2 jogos por liga no radar
+const MAX_SAME_LEAGUE_IN_DAILY = 2
 const MAX_INTERNATIONAL_IN_DAILY = 8
 const MAX_BRAZIL_IN_DAILY = 6
 
-// TIER DE LIGAS — define prioridade no radar
-// Tier 1 = elite, Tier 2 = premium, Tier 3 = bom, Tier 4 = preenche espaço
 const LEAGUE_TIER = {
-  // Tier 1 — sempre aparecem primeiro
   "UEFA Champions League":1,"Libertadores":1,"Copa do Mundo":1,"Eurocopa":1,
   "Copa América":1,"Brasileirão Série A":1,"Premier League":1,"La Liga":1,
   "Serie A":1,"Bundesliga":1,"Ligue 1":1,"Nations League":1,"Copa do Brasil":1,
-  // Tier 2 — premium
   "UEFA Europa League":2,"Sul-Americana":2,"Eredivisie":2,"MLS":2,"Liga Argentina":2,
   "Primeira Liga":2,"Brasileirão Série B":2,"UEFA Conference League":2,"Liga MX":2,
   "Super Lig":2,"Belgian Pro League":2,"Saudi Pro League":2,"Eliminatórias Sul-Americanas":2,
   "Eliminatórias Europeias":2,"Mundial de Clubes":2,"CONCACAF Champions Cup":2,
-  // Tier 3 — bom
   "Copa del Rey":3,"Coppa Italia":3,"DFB-Pokal":3,"FA Cup":3,"Coupe de France":3,
   "Austrian Bundesliga":3,"Super League Greece":3,"Superliga":3,"Copa Argentina":3,
   "Amistosos Internacionais":3,"Championship":3,"Scottish Premiership":3,
   "Allsvenskan":3,"Eliteserien":3,"Liga Chilena":3,"Liga Colombiana":3,
   "Liga Peruana":3,"Liga Uruguaia":3,"Copa Africana":3,
-  // Tier 4 — só entram se radar não completou
   "EFL Cup":4,"KNVB Cup":4,"Taça de Portugal":4,"Taça da Liga":4,
   "Copa da Turquia":4,"Copa da Bélgica":4,"Copa da Áustria":4,"Copa da Grécia":4,
   "Copa da Dinamarca":4,"Scottish Cup":4,"Copa Chile":4,"Copa Colombia":4,
@@ -65,13 +61,11 @@ const LEAGUE_TIER = {
   "Copa Sul-Sudeste":4,"Recopa Sul-Americana":4,"Copa Asiática":4,"Copa da Escócia":4,
 }
 
-// Ligas excluídas do radar (mas aparecem em Competições)
 const RADAR_BLACKLIST = new Set([
   "Copa da Escócia","Copa da Turquia","Copa da Bélgica","Copa da Áustria",
   "Copa da Grécia","Copa da Dinamarca","KNVB Cup","Taça da Liga",
   "Copa Chile","Copa Colombia","Copa MX","Leagues Cup","Copa Sul-Sudeste",
   "Copa Verde","Recopa Sul-Americana","Copa Asiática","Copa da Escócia",
-  // Copas de ligas menores — sem mercado relevante nas casas brasileiras
   "Copa do Chile","Copa da Colômbia","Copa BetPlay","Copa MX",
   "Copa por México","Copa da Noruega","Copa da Suécia","Copa da Finlândia",
   "Copa da Polônia","Copa da Romênia","Copa da Sérvia","Copa da Croácia",
@@ -79,7 +73,6 @@ const RADAR_BLACKLIST = new Set([
 
 function getLeagueTierScore(league) {
   const tier = LEAGUE_TIER[String(league||"")] || 4
-  // Tier 1 = 1000 pts, Tier 2 = 500 pts, Tier 3 = 200 pts, Tier 4 = 50 pts
   return tier === 1 ? 1000 : tier === 2 ? 500 : tier === 3 ? 200 : 50
 }
 const MIN_PROBABILITY_GENERAL = 0.68
@@ -98,86 +91,60 @@ const competitionFixturesCache = new Map()
 const h2hCache = new Map()
 
 const TARGET_COMPETITIONS = [
-  // BRASIL
   { mode:"country", country:"Brazil", type:"league", names:["Serie A","Brasileirão Série A","Campeonato Brasileiro Série A","Brasileiro Série A"], display:"Brasileirão Série A", region:"brazil", priority:94 },
   { mode:"country", country:"Brazil", type:"league", names:["Serie B","Brasileirão Série B","Campeonato Brasileiro Série B","Brasileiro Série B"], display:"Brasileirão Série B", region:"brazil", priority:88 },
   { mode:"country", country:"Brazil", type:"cup", names:["Copa do Brasil","Copa Do Brasil"], display:"Copa do Brasil", region:"brazil", priority:91 },
   { mode:"country", country:"Brazil", type:"cup", names:["Copa do Nordeste","Copa Nordeste","Nordeste"], display:"Copa do Nordeste", region:"brazil", priority:82 },
   { mode:"country", country:"Brazil", type:"cup", names:["Copa Verde"], display:"Copa Verde", region:"brazil", priority:75 },
-  // ARGENTINA
   { mode:"country", country:"Argentina", type:"league", names:["Liga Profesional Argentina","Liga Profesional","Primera División","Primera Division","Superliga"], display:"Liga Argentina", region:"general", priority:84 },
   { mode:"country", country:"Argentina", type:"cup", names:["Copa Argentina","Copa de la Liga Profesional","Copa de la Liga"], display:"Copa Argentina", region:"general", priority:76 },
-  // CHILE
   { mode:"country", country:"Chile", type:"league", names:["Primera División","Primera Division","Primera B"], display:"Liga Chilena", region:"general", priority:76 },
-  // COLÔMBIA
   { mode:"country", country:"Colombia", type:"league", names:["Liga BetPlay Dimayor","Primera A","Categoría Primera A","Liga Dimayor"], display:"Liga Colombiana", region:"general", priority:76 },
-  // PERU
   { mode:"country", country:"Peru", type:"league", names:["Liga 1","Liga 1 Betsson"], display:"Liga Peruana", region:"general", priority:74 },
-  // URUGUAI
   { mode:"country", country:"Uruguay", type:"league", names:["Primera División","Primera Division"], display:"Liga Uruguaia", region:"general", priority:74 },
-  // INGLATERRA
   { mode:"country", country:"England", type:"league", names:["Premier League"], display:"Premier League", region:"general", priority:100 },
   { mode:"country", country:"England", type:"cup", names:["FA Cup","Emirates FA Cup"], display:"FA Cup", region:"general", priority:78 },
   { mode:"country", country:"England", type:"cup", names:["EFL Cup","League Cup","Carabao Cup"], display:"EFL Cup", region:"general", priority:74 },
   { mode:"country", country:"England", type:"league", names:["Championship"], display:"Championship", region:"general", priority:80 },
-  // ESPANHA
   { mode:"country", country:"Spain", type:"league", names:["La Liga","LaLiga"], display:"La Liga", region:"general", priority:98 },
   { mode:"country", country:"Spain", type:"cup", names:["Copa del Rey","Copa Del Rey"], display:"Copa del Rey", region:"general", priority:76 },
-  // ITÁLIA
   { mode:"country", country:"Italy", type:"league", names:["Serie A"], display:"Serie A", region:"general", priority:97 },
   { mode:"country", country:"Italy", type:"cup", names:["Coppa Italia","Coppa Italia Frecciarossa"], display:"Coppa Italia", region:"general", priority:76 },
-  // ALEMANHA
   { mode:"country", country:"Germany", type:"league", names:["Bundesliga","1. Bundesliga"], display:"Bundesliga", region:"general", priority:96 },
   { mode:"country", country:"Germany", type:"cup", names:["DFB Pokal","DFB-Pokal","DFB Cup"], display:"DFB-Pokal", region:"general", priority:76 },
-  // FRANÇA
   { mode:"country", country:"France", type:"league", names:["Ligue 1","Ligue 1 Uber Eats"], display:"Ligue 1", region:"general", priority:95 },
   { mode:"country", country:"France", type:"cup", names:["Coupe de France","Coupe De France"], display:"Coupe de France", region:"general", priority:74 },
-  // HOLANDA
   { mode:"country", country:"Netherlands", type:"league", names:["Eredivisie"], display:"Eredivisie", region:"general", priority:90 },
   { mode:"country", country:"Netherlands", type:"cup", names:["KNVB Cup","KNVB Beker"], display:"KNVB Cup", region:"general", priority:72 },
-  // PORTUGAL
   { mode:"country", country:"Portugal", type:"league", names:["Primeira Liga","Liga Portugal Betclic","Liga NOS","Liga Portugal"], display:"Primeira Liga", region:"general", priority:89 },
   { mode:"country", country:"Portugal", type:"cup", names:["Taça de Portugal","Taca de Portugal","Portuguese Cup"], display:"Taça de Portugal", region:"general", priority:72 },
   { mode:"country", country:"Portugal", type:"cup", names:["Taça da Liga","Taca da Liga"], display:"Taça da Liga", region:"general", priority:70 },
-  // TURQUIA
   { mode:"country", country:"Turkey", type:"league", names:["Süper Lig","Super Lig"], display:"Super Lig", region:"general", priority:78 },
   { mode:"country", country:"Turkey", type:"cup", names:["Turkish Cup","Ziraat Türkiye Kupası"], display:"Copa da Turquia", region:"general", priority:70 },
-  // DINAMARCA
   { mode:"country", country:"Denmark", type:"league", names:["Superliga","Superligaen","3F Superliga"], display:"Superliga", region:"general", priority:75 },
-  // GRÉCIA
   { mode:"country", country:"Greece", type:"league", names:["Super League 1","Super League","Super League Greece"], display:"Super League Greece", region:"general", priority:74 },
-  // BÉLGICA
   { mode:"country", country:"Belgium", type:"league", names:["Pro League","Jupiler Pro League","Belgian Pro League"], display:"Belgian Pro League", region:"general", priority:85 },
   { mode:"country", country:"Belgium", type:"cup", names:["Belgian Cup","Croky Cup"], display:"Copa da Bélgica", region:"general", priority:70 },
-  // ÁUSTRIA
   { mode:"country", country:"Austria", type:"league", names:["Bundesliga","Austrian Bundesliga"], display:"Austrian Bundesliga", region:"general", priority:84 },
-  // ESCÓCIA
   { mode:"country", country:"Scotland", type:"league", names:["Premiership","Scottish Premiership"], display:"Scottish Premiership", region:"general", priority:78 },
   { mode:"country", country:"Scotland", type:"cup", names:["Scottish Cup","Scottish FA Cup"], display:"Scottish Cup", region:"general", priority:70 },
-  // SUÉCIA
   { mode:"country", country:"Sweden", type:"league", names:["Allsvenskan"], display:"Allsvenskan", region:"general", priority:74 },
-  // NORUEGA
   { mode:"country", country:"Norway", type:"league", names:["Eliteserien"], display:"Eliteserien", region:"general", priority:74 },
-  // SAUDI
   { mode:"search", search:"Saudi", display:"Saudi Pro League", region:"general", priority:85 },
-  // AMÉRICAS
   { mode:"country", country:"USA", type:"league", names:["Major League Soccer","MLS"], display:"MLS", region:"america", priority:90 },
   { mode:"country", country:"USA", type:"cup", names:["Leagues Cup"], display:"Leagues Cup", region:"america", priority:76 },
   { mode:"country", country:"Mexico", type:"league", names:["Liga MX","Liga BBVA MX"], display:"Liga MX", region:"general", priority:79 },
   { mode:"country", country:"Mexico", type:"cup", names:["Copa MX","Copa por México"], display:"Copa MX", region:"general", priority:70 },
   { mode:"search", search:"CONCACAF Champions", display:"CONCACAF Champions Cup", region:"america", priority:88 },
-  // UEFA
   { mode:"search", search:"UEFA Champions League", display:"UEFA Champions League", region:"general", priority:98 },
   { mode:"search", search:"UEFA Europa League", display:"UEFA Europa League", region:"general", priority:93 },
   { mode:"search", search:"UEFA Europa Conference League", display:"UEFA Conference League", region:"general", priority:88 },
   { mode:"search", search:"Conference League", display:"UEFA Conference League", region:"general", priority:88 },
-  // CONMEBOL
   { mode:"search", search:"CONMEBOL Libertadores", display:"Libertadores", region:"brazil", priority:92 },
   { mode:"search", search:"Copa Libertadores", display:"Libertadores", region:"brazil", priority:92 },
   { mode:"search", search:"CONMEBOL Sudamericana", display:"Sul-Americana", region:"brazil", priority:86 },
   { mode:"search", search:"Copa Sudamericana", display:"Sul-Americana", region:"brazil", priority:86 },
   { mode:"search", search:"CONMEBOL Recopa", display:"Recopa Sul-Americana", region:"brazil", priority:80 },
-  // SELEÇÕES
   { mode:"search", search:"UEFA Nations League", display:"Nations League", region:"international", priority:95 },
   { mode:"search", search:"International Friendlies", display:"Amistosos Internacionais", region:"international", priority:90 },
   { mode:"search", search:"Friendlies", display:"Amistosos Internacionais", region:"international", priority:88 },
@@ -194,7 +161,6 @@ const TARGET_COMPETITIONS = [
   { mode:"search", search:"Africa Cup of Nations", display:"Copa Africana", region:"international", priority:90 },
 ]
 
-// UTILS
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
 function safeNumber(v, fb = 0) { const n = Number(v); return Number.isFinite(n) ? n : fb }
 function round(v, d = 2) { return Number(Number(v || 0).toFixed(d)) }
@@ -245,7 +211,6 @@ function isExactTargetLeague(target, rawName, country) {
   const raw = normalizeText(rawName)
   const c = normalizeText(country || target.country || "")
   if (hasForbiddenMarker(raw)) return false
-  // Exclusões explícitas por país
   if (target.country === "France" && target.display === "Ligue 1") {
     if (raw.includes("ligue 2") || raw.includes("national") || raw.includes("b") ) return false
     return c === "france" && (raw === "ligue 1" || raw === "ligue 1 uber eats" || raw === "ligue 1 mcdonald's")
@@ -297,7 +262,6 @@ function normalizeCompetitionName(country, rawName, fallbackDisplay) {
   const name = String(rawName || "").trim()
   const c = String(country || "").trim()
   const norm = normalizeText(name)
-
   if (c === "Brazil") {
     if (name === "Serie A") return "Brasileirão Série A"
     if (name === "Serie B") return "Brasileirão Série B"
@@ -311,8 +275,8 @@ function normalizeCompetitionName(country, rawName, fallbackDisplay) {
     if (["Liga Profesional Argentina","Liga Profesional","Primera División","Primera Division","Superliga"].includes(name)) return "Liga Argentina"
     if (norm.includes("copa argentina") || norm.includes("copa de la liga")) return "Copa Argentina"
   }
-  if (c === "Chile") { if (norm.includes("primera")) return "Liga Chilena"; if (norm.includes("copa chile")) return "Copa Chile" }
-  if (c === "Colombia") { if (norm.includes("liga") || norm.includes("primera")) return "Liga Colombiana"; if (norm.includes("copa")) return "Copa Colombia" }
+  if (c === "Chile") { if (norm.includes("primeira")) return "Liga Chilena"; if (norm.includes("copa chile")) return "Copa Chile" }
+  if (c === "Colombia") { if (norm.includes("liga") || norm.includes("primeira")) return "Liga Colombiana"; if (norm.includes("copa")) return "Copa Colombia" }
   if (c === "Peru") return "Liga Peruana"
   if (c === "Uruguay") return "Liga Uruguaia"
   if (c === "England") {
@@ -384,7 +348,6 @@ async function resolveCountryCompetitions(target) {
     if (target.type && leagueType !== target.type) return false
     if (hasForbiddenMarker(rawName)) return false
     if (target.country === "Italy" && normalizeText(rawName).includes("women")) return false
-    // Bloqueia explicitamente segundas divisões que podem vazar
     const rawNorm = normalizeText(rawName)
     if (target.type === "league") {
       if (rawNorm.includes("ligue 2")) return false
@@ -507,7 +470,6 @@ async function fetchRecentFinishedFixtures(teamId, limit = MAX_RECENT_FIXTURES_F
   }
 }
 
-// [1] H2H REAL
 async function fetchH2HFixtures(homeTeamId, awayTeamId) {
   const cacheKey = `h2h:${homeTeamId}:${awayTeamId}`
   if (h2hCache.has(cacheKey)) return h2hCache.get(cacheKey)
@@ -745,7 +707,7 @@ function extractLine(market="") {
   return match?Number(match[1]):null
 }
 
-function buildCornerCandidates(metrics) {
+function buildCornerCandidatesSync(metrics) {
   const candidates=[]; const c=safeNumber(metrics.expectedCorners,0); const shots=safeNumber(metrics.expectedShots,0)
   const add=(market,prob)=>{ if(!market)return; candidates.push({market,probability:round(prob),score:lineScore(prob,"escanteios",market),family:"escanteios"}) }
   if(c>=6.5)add("Mais de 6.5 escanteios",clamp((c-5.5)/2.0+(shots>=20?0.02:0),0.60,0.90))
@@ -757,25 +719,21 @@ function buildCornerCandidates(metrics) {
   return candidates.sort((a,b)=>b.score-a.score)
 }
 
-function buildShotsCandidates(metrics, probs) {
+function buildShotsCandidatesSync(metrics, probs) {
   const candidates=[]; const shots=safeNumber(metrics.expectedShots,0); const base=safeNumber(probs.shots,0)
   const add=(market,prob)=>{ if(!market)return; candidates.push({market,probability:round(prob),score:lineScore(prob,"shots",market),family:"shots"}) }
   if(shots>=18.5)add("Mais de 17.5 finalizações",clamp(Math.max(base,0.61)+(shots-18.5)*0.02,0.61,0.90))
   if(shots>=20.0)add("Mais de 19.5 finalizações",clamp(Math.max(base-0.01,0.58)+(shots-20.0)*0.02,0.58,0.87))
   if(shots>=22.0)add("Mais de 21.5 finalizações",clamp(Math.max(base-0.03,0.55)+(shots-22.0)*0.02,0.55,0.83))
-  if(shots<=28.0)add("Menos de 29.5 finalizações",clamp(0.62+(28.0-shots)*0.018,0.62,0.89))
-  if(shots<=25.0)add("Menos de 26.5 finalizações",clamp(0.58+(25.0-shots)*0.018,0.58,0.85))
   return candidates.sort((a,b)=>b.score-a.score)
 }
 
-function buildSOTCandidates(metrics, probs) {
+function buildSOTCandidatesSync(metrics, probs) {
   const candidates=[]; const sot=safeNumber(metrics.expectedSOT,0); const base=safeNumber(probs.sot,0)
   const add=(market,prob)=>{ if(!market)return; candidates.push({market,probability:round(prob),score:lineScore(prob,"sot",market),family:"sot"}) }
   if(sot>=5.8)add("Mais de 5.5 finalizações no gol",clamp(Math.max(base,0.61)+(sot-5.8)*0.03,0.61,0.91))
   if(sot>=6.8)add("Mais de 6.5 finalizações no gol",clamp(Math.max(base-0.01,0.58)+(sot-6.8)*0.03,0.58,0.88))
   if(sot>=7.8)add("Mais de 7.5 finalizações no gol",clamp(Math.max(base-0.03,0.55)+(sot-7.8)*0.03,0.55,0.84))
-  if(sot<=10.0)add("Menos de 10.5 finalizações no gol",clamp(0.61+(10.0-sot)*0.022,0.61,0.89))
-  if(sot<=8.8)add("Menos de 9.5 finalizações no gol",clamp(0.58+(8.8-sot)*0.022,0.58,0.85))
   return candidates.sort((a,b)=>b.score-a.score)
 }
 
@@ -800,14 +758,12 @@ function buildTeamCornerCandidates(payload) {
   return candidates.sort((a,b)=>b.score-a.score)
 }
 
-function buildCardsCandidates(metrics, probs) {
+function buildCardsCandidatesSync(metrics, probs) {
   const candidates=[]; const cards=safeNumber(metrics.expectedCards,0); const base=safeNumber(probs.cards,0)
   const add=(market,prob)=>{ if(!market)return; candidates.push({market,probability:round(prob),score:lineScore(prob,"cards",market),family:"cards"}) }
   if(cards>=2.8)add("Mais de 2.5 cartões",clamp(Math.max(base,0.60)+(cards-2.8)*0.03,0.60,0.90))
   if(cards>=3.6)add("Mais de 3.5 cartões",clamp(Math.max(base-0.01,0.57)+(cards-3.6)*0.03,0.57,0.87))
   if(cards>=4.6)add("Mais de 4.5 cartões",clamp(Math.max(base-0.03,0.54)+(cards-4.6)*0.03,0.54,0.83))
-  if(cards<=5.8)add("Menos de 6.5 cartões",clamp(0.62+(5.8-cards)*0.02,0.62,0.88))
-  if(cards<=4.8)add("Menos de 5.5 cartões",clamp(0.58+(4.8-cards)*0.02,0.58,0.84))
   return candidates.sort((a,b)=>b.score-a.score)
 }
 
@@ -824,10 +780,10 @@ function buildCandidateMarkets(payload) {
   if(probabilities.under35>=0.80)add("Menos de 3.5 gols",probabilities.under35,"gols")
   if(probabilities.btts>=0.63)add("Ambas marcam",probabilities.btts,"ambas")
   if(bttsNo>=0.72)add("Ambas não marcam",bttsNo,"ambas")
-  buildShotsCandidates(metrics,probabilities).forEach(i=>candidates.push(i))
-  buildSOTCandidates(metrics,probabilities).forEach(i=>candidates.push(i))
-  buildCardsCandidates(metrics,probabilities).forEach(i=>candidates.push(i))
-  buildCornerCandidates(metrics).forEach(i=>candidates.push(i))
+  buildShotsCandidatesSync(metrics,probabilities).forEach(i=>candidates.push(i))
+  buildSOTCandidatesSync(metrics,probabilities).forEach(i=>candidates.push(i))
+  buildCardsCandidatesSync(metrics,probabilities).forEach(i=>candidates.push(i))
+  buildCornerCandidatesSync(metrics).forEach(i=>candidates.push(i))
   buildTeamCornerCandidates({homeTeam,awayTeam,metrics}).forEach(i=>candidates.push(i))
   const mismatch=Math.abs(homeProb-awayProb)
   if(homeProb>=0.62)add("Vitória do mandante",homeProb,"resultado")
@@ -894,7 +850,7 @@ function buildGameProfile(metrics, probabilities) {
   return"equilibrado"
 }
 
-function buildInsight(mainPick, metrics, profile) {
+function buildInsightSync(mainPick, metrics, profile) {
   const goals=round(metrics.expectedGoals,1),corners=round(metrics.expectedCorners,1),shots=Math.round(metrics.expectedShots),sot=Math.round(metrics.expectedSOT),cards=round(metrics.expectedCards,1)
   if(mainPick==="Mais de 2.5 gols")return`A leitura Scoutly projeta um jogo mais aberto, com produção ofensiva suficiente para 3 ou mais gols. O cenário combina ${goals} gols esperados e ${shots} finalizações projetadas.`
   if(mainPick==="Mais de 1.5 gols")return`A leitura Scoutly projeta um confronto com boa chance de pelo menos 2 gols. A média esperada está em ${goals} gols, com cenário ofensivo sustentável.`
@@ -926,29 +882,48 @@ function hasMinimumMatchData(homeContext, awayContext) {
          isUsableTeamProfile(buildSideProfile(awayContext,"away"),awayContext.general)
 }
 
+// ✅ FIX — clearFutureWindow: só apaga daily_picks com kickoff futuro
+// Picks de jogos já acontecidos ficam preservados para o verify.js processar
 async function clearFutureWindow() {
-  const now=new Date().toISOString(); const{start,end}=getSyncWindowRange()
-  const{error:dailyError}=await supabase.from("daily_picks").delete().neq("id",0)
-  if(dailyError)throw new Error(`Supabase delete daily_picks: ${dailyError.message}`)
-  const{data:oldRows,error:oldError}=await supabase.from("matches").select("id").lte("kickoff",now)
-  if(oldError)throw new Error(`Supabase select old matches: ${oldError.message}`)
-  const oldIds=(oldRows||[]).map(x=>x.id)
-  if(oldIds.length){
-    await supabase.from("match_stats").delete().in("match_id",oldIds)
-    await supabase.from("match_analysis").delete().in("match_id",oldIds)
-    const{error}=await supabase.from("matches").delete().in("id",oldIds)
-    if(error)throw new Error(`Supabase delete old matches: ${error.message}`)
+  const now = new Date().toISOString()
+  const { start, end } = getSyncWindowRange()
+
+  // Antes: .delete().neq("id", 0) → apagava TODOS os picks
+  // Agora: .delete().gte("kickoff", now) → preserva picks de jogos passados
+  const { error: dailyError } = await supabase
+    .from("daily_picks")
+    .delete()
+    .gte("kickoff", now)
+
+  if (dailyError) throw new Error(`Supabase delete daily_picks: ${dailyError.message}`)
+
+  // Remove matches antigos (já aconteceram)
+  const { data: oldRows, error: oldError } = await supabase
+    .from("matches").select("id").lte("kickoff", now)
+  if (oldError) throw new Error(`Supabase select old matches: ${oldError.message}`)
+
+  const oldIds = (oldRows || []).map(x => x.id)
+  if (oldIds.length) {
+    await supabase.from("match_stats").delete().in("match_id", oldIds)
+    await supabase.from("match_analysis").delete().in("match_id", oldIds)
+    const { error } = await supabase.from("matches").delete().in("id", oldIds)
+    if (error) throw new Error(`Supabase delete old matches: ${error.message}`)
   }
-  const{data:futureRows,error:futureError}=await supabase.from("matches").select("id").gte("kickoff",start.toISOString()).lte("kickoff",end.toISOString())
-  if(futureError)throw new Error(`Supabase select future matches: ${futureError.message}`)
-  const futureIds=(futureRows||[]).map(x=>x.id)
-  if(futureIds.length){
-    await supabase.from("match_stats").delete().in("match_id",futureIds)
-    await supabase.from("match_analysis").delete().in("match_id",futureIds)
-    const{error}=await supabase.from("matches").delete().in("id",futureIds)
-    if(error)throw new Error(`Supabase delete future matches: ${error.message}`)
+
+  // Remove matches futuros dentro da janela (para reconstruir limpo)
+  const { data: futureRows, error: futureError } = await supabase
+    .from("matches").select("id").gte("kickoff", start.toISOString()).lte("kickoff", end.toISOString())
+  if (futureError) throw new Error(`Supabase select future matches: ${futureError.message}`)
+
+  const futureIds = (futureRows || []).map(x => x.id)
+  if (futureIds.length) {
+    await supabase.from("match_stats").delete().in("match_id", futureIds)
+    await supabase.from("match_analysis").delete().in("match_id", futureIds)
+    const { error } = await supabase.from("matches").delete().in("id", futureIds)
+    if (error) throw new Error(`Supabase delete future matches: ${error.message}`)
   }
-  return oldIds.length+futureIds.length
+
+  return oldIds.length + futureIds.length
 }
 
 async function upsertMatch(match) {
@@ -1010,7 +985,7 @@ async function buildAndStoreMatches(fixtureLists) {
       const extraPicks=chooseExtraPicks(candidates,mainPick)
       const pick2=extraPicks[0]?.market||null; const pick3=extraPicks[1]?.market||null
       const gameProfile=buildGameProfile(metricsExp,probabilities)
-      const insight=buildInsight(mainPick.market,metricsExp,gameProfile)
+      const insight=buildInsightSync(mainPick.market,metricsExp,gameProfile)
       const analyzedMatchPayload={...baseMatchPayload,probabilities:{home:probabilities.home,draw:probabilities.draw,away:probabilities.away},markets,metrics,pick:mainPick.market,probability:mainPick.probability,insight}
       await upsertMatch(analyzedMatchPayload)
       await upsertMatchStats({ match_id:analyzedMatchPayload.id,home_shots:Math.round(metricsExp.expectedHomeShots),home_shots_on_target:Math.round(metricsExp.expectedHomeSOT),home_corners:Math.max(1,Math.round(homeProfile.avgCorners)),home_yellow_cards:Math.max(0,Math.round(homeProfile.avgCards)),away_shots:Math.round(metricsExp.expectedAwayShots),away_shots_on_target:Math.round(metricsExp.expectedAwaySOT),away_corners:Math.max(1,Math.round(awayProfile.avgCorners)),away_yellow_cards:Math.max(0,Math.round(awayProfile.avgCards)) })
@@ -1036,13 +1011,11 @@ async function buildAndStoreMatches(fixtureLists) {
 async function rebuildDailyPicks(matches) {
   if(!matches.length)return 0
 
-  // Ordena por: tier da liga (peso alto) + probabilidade
   const sorted=[...matches]
     .filter(m=>m.id&&m.pick&&m.metrics&&safeNumber(m.metrics.goals,0)>0)
-    .filter(m=>!RADAR_BLACKLIST.has(String(m.league||""))) // exclui ligas do radar
+    .filter(m=>!RADAR_BLACKLIST.has(String(m.league||"")))
     .map(m=>({ ...m, _tierScore: getLeagueTierScore(m.league) }))
     .sort((a,b)=>{
-      // Score combinado: tier + probabilidade ponderada
       const scoreA = a._tierScore + safeNumber(a.probability,0)*100
       const scoreB = b._tierScore + safeNumber(b.probability,0)*100
       if(scoreB!==scoreA)return scoreB-scoreA
@@ -1056,20 +1029,16 @@ async function rebuildDailyPicks(matches) {
     const market=String(match.pick||""); const league=String(match.league||""); const family=detectFamily(market); const region=String(match.region||"general"); const gameProfile=String(match.game_profile||"")
     marketCount[market]=marketCount[market]||0; leagueCount[league]=leagueCount[league]||0; familyCount[family]=familyCount[family]||0; regionCount[region]=regionCount[region]||0
 
-    // Thresholds de probabilidade
     if(safeNumber(match.probability,0)<MIN_PROBABILITY_GENERAL)continue
     if(gameProfile==="defensivo"&&safeNumber(match.probability,0)<MIN_PROBABILITY_DEFENSIVO)continue
     if(gameProfile==="equilibrado"&&safeNumber(match.probability,0)<MIN_PROBABILITY_EQUILIBRADO)continue
     if(region==="international"&&safeNumber(match.probability,0)<MIN_PROBABILITY_INTERNATIONAL)continue
 
-    // Tier 4: só entra se radar ainda não completou metade
     if(LEAGUE_TIER[league]===4&&selected.length>=MAX_DAILY_PICKS/2)continue
 
-    // Limites de repetição
     if(marketCount[market]>=MAX_SAME_MARKET_IN_DAILY)continue
     if(leagueCount[league]>=MAX_SAME_LEAGUE_IN_DAILY)continue
 
-    // Diversidade de mercados — mais restrita
     if(family==="gols"&&familyCount[family]>=4)continue
     if(family==="escanteios"&&familyCount[family]>=3)continue
     if(family==="shots"&&familyCount[family]>=2)continue
@@ -1094,8 +1063,8 @@ async function rebuildDailyPicks(matches) {
 }
 
 async function run() {
-  console.log("🚀 Scoutly Sync V13.5 iniciado")
-  console.log("📈 [1] H2H real [2] Hierarquia de ligas [3] Diversidade de mercados [4] Blacklist radar")
+  console.log("🚀 Scoutly Sync V13.6 iniciado")
+  console.log("✅ [FIX] clearFutureWindow: daily_picks preserva jogos passados para o verify")
   const{start,end}=getSyncWindowRange()
   console.log(`📆 Janela ativa: ${start.toISOString()} -> ${end.toISOString()}`)
   const competitions=await resolveTargetCompetitions()
@@ -1111,7 +1080,7 @@ async function run() {
   console.log(`\n📊 Resumo final:`)
   console.log(`   Matches gravados: ${storedMatches.length}`)
   console.log(`   Daily picks gerados: ${picksCount}`)
-  console.log("✅ Scoutly Sync V13.4 concluído")
+  console.log("✅ Scoutly Sync V13.6 concluído")
 }
 
-run().catch(err=>{ console.error("❌ Erro fatal no Scoutly Sync V13.4:",err); process.exit(1) })
+run().catch(err=>{ console.error("❌ Erro fatal no Scoutly Sync V13.6:",err); process.exit(1) })
