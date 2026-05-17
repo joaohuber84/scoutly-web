@@ -239,7 +239,7 @@
     .live-game-scoreline {
       display: grid;
       grid-template-columns: 1fr auto 1fr;
-      align-items: center; gap: 10px;
+      align-items: center; gap: 6px;
     }
     .live-team-block {
       display: flex; align-items: center; gap: 6px; min-width: 0;
@@ -2724,12 +2724,16 @@ function renderAgenda() {
         match.league,
         match.country || inferCountryFromLeague(match.league)
       );
+      const homeLogo = match.home_logo ? `<img src="${escapeHtml(match.home_logo)}" style="width:18px;height:18px;object-fit:contain;border-radius:2px;flex-shrink:0" onerror="this.style.display='none'">` : "";
+      const awayLogo = match.away_logo ? `<img src="${escapeHtml(match.away_logo)}" style="width:18px;height:18px;object-fit:contain;border-radius:2px;flex-shrink:0" onerror="this.style.display='none'">` : "";
       const rowClass = hasPick ? "agenda-row has-pick" : "agenda-row";
       return `<div class="${rowClass}" onclick="openAnalysis('${escapeHtml(String(match.id))}')">
         <div class="agenda-league-badge">${badge}</div>
-        <div class="agenda-teams">
-          ${escapeHtml(normalizeTeamName(match.home_team))} × ${escapeHtml(normalizeTeamName(match.away_team))}
-          <div style="font-size:10px;color:var(--text-3);margin-top:1px">${escapeHtml(getLeagueDisplay(match.league))}</div>
+        <div class="agenda-teams" style="display:flex;align-items:center;gap:5px">
+          ${homeLogo}
+          <span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(normalizeTeamName(match.home_team))} × ${escapeHtml(normalizeTeamName(match.away_team))}</span>
+          ${awayLogo}
+          <div style="font-size:10px;color:var(--text-3);margin-top:1px;white-space:nowrap">${escapeHtml(getLeagueDisplay(match.league))}</div>
         </div>
         ${hasPick ? `<div class="agenda-pick" title="${escapeHtml(pick)}">📌 ${escapeHtml(pick)}</div>` : ""}
       </div>`;
@@ -3266,10 +3270,7 @@ function injectLiveStatsInModal(matchId) {
 }
 
 function startLiveModule() {
-  // Só ativa se houver jogos na janela ao vivo
-  const hasLiveWindow = (state.matches || []).some(m => isMatchLive(m.kickoff));
-  if (!hasLiveWindow) return;
-
+  // Roda imediatamente e a cada 15 min — sempre verifica se há jogos na janela
   refreshLiveData();
   if (liveState.interval) clearInterval(liveState.interval);
   liveState.interval = setInterval(refreshLiveData, LIVE_REFRESH_MS);
