@@ -30,61 +30,95 @@ const RADAR_SIZE = 15
 const TICKET_MIN_SIZE = 2
 const TICKET_MAX_SIZE = 3
 
+/**
+ * HIERARQUIA DE PRIORIDADE DO RADAR — V4.1
+ *
+ * TIER 1 — Ligas principais (João): sempre aparecem primeiro no radar
+ *   Brasileirão A/B, La Liga, Serie A, Bundesliga, Ligue 1, Premier League,
+ *   Liga Argentina, Liga MX, MLS, Saudi Pro League, Primeira Liga + suas copas
+ *
+ * TIER 2 — Competições internacionais de clubes / seleções top
+ *   Champions, Libertadores, Europa League, Conference, Sul-Americana,
+ *   Copa do Mundo, Eurocopa, Copa América, Nations League, Eliminatórias
+ *
+ * TIER 3 — Ligas secundárias relevantes
+ *   Eredivisie, Super Lig, Belgian Pro League, Austrian Bundesliga,
+ *   Superliga, Super League Greece, Scottish Premiership, Allsvenskan,
+ *   Eliteserien, CONCACAF Champions, ligas sul-americanas menores
+ *
+ * TIER 4 — Só preenche se radar ainda incompleto
+ *   Copas de ligas menores, torneios regionais
+ *
+ * Regra: Tier 3 só entra se radar tiver < RADAR_SIZE jogos de Tier 1+2
+ *        Tier 4 nunca entra (blacklist)
+ */
 const LEAGUE_TIER = {
-  "UEFA Champions League":1,
-  "Libertadores":1,
-  "Copa do Mundo":1,
-  "Eurocopa":1,
-  "Copa América":1,
-  "Nations League":1,
-  "Mundial de Clubes":1,
+  // ── TIER 1 — Ligas principais João ────────────────────────────────
   "Brasileirão Série A":1,
+  "Brasileirão Série B":1,
   "Copa do Brasil":1,
   "Premier League":1,
+  "FA Cup":1,
+  "EFL Cup":1,
+  "Championship":1,
   "La Liga":1,
+  "Copa del Rey":1,
   "Serie A":1,
+  "Coppa Italia":1,
   "Bundesliga":1,
+  "DFB-Pokal":1,
   "Ligue 1":1,
-  "Eliminatórias Sul-Americanas":1,
+  "Coupe de France":1,
+  "Liga Argentina":1,
+  "Copa Argentina":1,
+  "Primeira Liga":1,
+  "Taça de Portugal":1,
+  "Liga MX":1,
+  "Copa MX":1,
+  "MLS":1,
+  "Saudi Pro League":1,
+
+  // ── TIER 2 — Internacionais de clubes + seleções ──────────────────
+  "UEFA Champions League":2,
   "UEFA Europa League":2,
   "UEFA Conference League":2,
+  "Libertadores":2,
   "Sul-Americana":2,
-  "Liga Argentina":2,
-  "Primeira Liga":2,
-  "Eredivisie":2,
-  "Super Lig":2,
-  "Belgian Pro League":2,
-  "Saudi Pro League":2,
-  "Liga MX":2,
-  "MLS":2,
-  "Championship":2,
-  "Brasileirão Série B":2,
+  "Copa do Mundo":2,
+  "Eurocopa":2,
+  "Copa América":2,
+  "Nations League":2,
+  "Mundial de Clubes":2,
+  "CONCACAF Champions Cup":2,
+  "Eliminatórias Sul-Americanas":2,
   "Eliminatórias Europeias":2,
   "Eliminatórias Africanas":2,
   "Eliminatórias Asiáticas":2,
   "Eliminatórias CONCACAF":2,
-  "CONCACAF Champions Cup":2,
+  "Copa Africana":2,
+
+  // ── TIER 3 — Ligas secundárias (só entram se faltar Tier 1+2) ─────
+  "Eredivisie":3,
+  "KNVB Cup":3,
+  "Super Lig":3,
+  "Belgian Pro League":3,
   "Austrian Bundesliga":3,
-  "Super League Greece":3,
   "Superliga":3,
-  "Copa del Rey":3,
-  "Coppa Italia":3,
-  "DFB-Pokal":3,
-  "FA Cup":3,
-  "Coupe de France":3,
-  "Copa Argentina":3,
-  "Copa Africa":3,
-  "Liga Colombiana":3,
+  "Super League Greece":3,
+  "Scottish Premiership":3,
+  "Allsvenskan":3,
+  "Eliteserien":3,
+  "Amistosos Internacionais":3,
   "Liga Chilena":3,
+  "Liga Colombiana":3,
   "Liga Peruana":3,
   "Liga Uruguaia":3,
-  "Amistosos Internacionais":3,
-  "EFL Cup":3,
-  "KNVB Cup":3,
-  "Taça de Portugal":3,
-  "Scottish Premiership":4,
-  "Allsvenskan":4,
-  "Eliteserien":4,
+  "Copa do Nordeste":3,
+  "Copa Verde":3,
+  "Recopa Sul-Americana":3,
+  "Supercopa Argentina":3,
+
+  // ── TIER 4 — Blacklist (nunca aparecem no radar) ──────────────────
   "Taça da Liga":4,
   "Copa da Turquia":4,
   "Copa da Bélgica":4,
@@ -94,18 +128,15 @@ const LEAGUE_TIER = {
   "Scottish Cup":4,
   "Copa Chile":4,
   "Copa Colombia":4,
-  "Copa MX":4,
   "Leagues Cup":4,
-  "Copa Verde":4,
-  "Copa do Nordeste":4,
-  "Recopa Sul-Americana":4,
+  "Copa Sul-Sudeste":4,
 }
 
+// Tier 4 = nunca aparece no radar
 const RADAR_BLACKLIST = new Set([
-  "Copa da Turquia","Copa da Bélgica","Copa da Áustria","Copa da Grécia",
-  "Copa da Dinamarca","Scottish Cup","Copa Chile","Copa Colombia",
-  "Copa MX","Leagues Cup","Copa Verde","Copa Sul-Sudeste","Recopa Sul-Americana",
-  "Taça da Liga",
+  "Taça da Liga","Copa da Turquia","Copa da Bélgica","Copa da Áustria",
+  "Copa da Grécia","Copa da Dinamarca","Scottish Cup","Copa Chile",
+  "Copa Colombia","Leagues Cup","Copa Sul-Sudeste",
 ])
 
 function getLeagueTierScore(league) {
@@ -648,6 +679,7 @@ function buildAnalysisFromRow(row) {
 function chooseRadar(analyses) {
   const now = Date.now()
 
+  // Remove blacklist e jogos expirados
   const active = analyses
     .filter((item) => {
       const kickoffMs = getKickoffMs(item.kickoff)
@@ -658,74 +690,110 @@ function chooseRadar(analyses) {
   const today = active.filter((item) => getDayOffsetFromToday(item.kickoff) <= 0)
   const future = active.filter((item) => getDayOffsetFromToday(item.kickoff) > 0)
 
-  function sortPoolProperly(arr) {
+  // Ordena: dentro do mesmo bloco de 30min → tier mais alto → melhor score
+  function sortPool(arr) {
     return [...arr].sort((a, b) => {
       const ta = getKickoffMs(a.kickoff)
       const tb = getKickoffMs(b.kickoff)
       const blockA = Math.floor(ta / (30 * 60 * 1000))
       const blockB = Math.floor(tb / (30 * 60 * 1000))
       if (blockA !== blockB) return blockA - blockB
-      const tierA = getLeagueTierScore(a.league)
-      const tierB = getLeagueTierScore(b.league)
-      if (tierA !== tierB) return tierB - tierA
+      const tierA = LEAGUE_TIER[String(a.league||"")] ?? 4
+      const tierB = LEAGUE_TIER[String(b.league||"")] ?? 4
+      if (tierA !== tierB) return tierA - tierB  // menor tier = maior prioridade
       return b.main_score - a.main_score
     })
   }
 
-  const pool = [
-    ...sortPoolProperly(today),
-    ...sortPoolProperly(future),
-  ]
+  const pool = [...sortPool(today), ...sortPool(future)]
 
-  const radar = []
-  const usedMatchIds = new Set()
-  const usedExactMarkets = {}
-  const usedFamilies = {}
-  const usedLeagues = {}
-  const tierCount = { 1:0, 2:0, 3:0, 4:0 }
+  // Passa 1 e 2: somente Tier 1 e Tier 2
+  // Passa 3: Tier 3 só preenche slots restantes
+  function buildRadarPass(pool, allowedTiers, currentRadar, currentUsed) {
+    const radar = [...currentRadar]
+    const usedMatchIds = new Set(currentUsed.matchIds)
+    const usedExactMarkets = { ...currentUsed.exactMarkets }
+    const usedFamilies = { ...currentUsed.families }
+    const usedLeagues = { ...currentUsed.leagues }
 
-  for (const item of pool) {
-    if (usedMatchIds.has(item.match_id)) continue
-
-    const exactMarketCount = usedExactMarkets[item.main_pick] || 0
-    const familyCount = usedFamilies[item.main_family] || 0
-    const leagueCount = usedLeagues[item.league] || 0
-    const tier = LEAGUE_TIER[String(item.league||"")] ?? 4
-
-    if (exactMarketCount >= 2) continue
-    if (leagueCount >= 2) continue
-
-    if (item.main_family === "gols" && familyCount >= 4) continue
-    if (item.main_family === "resultado" && familyCount >= 3) continue
-    if (item.main_family === "escanteios" && familyCount >= 3) continue
-    if (item.main_family === "cards" && familyCount >= 3) continue
-    if (item.main_family === "btts" && familyCount >= 2) continue
-    if (item.main_family === "shots" && familyCount >= 2) continue
-    if (item.main_family === "sot" && familyCount >= 2) continue
-
-    if (tier === 4 && radar.length >= Math.floor(RADAR_SIZE / 2)) continue
-
-    radar.push(item)
-    usedMatchIds.add(item.match_id)
-    usedExactMarkets[item.main_pick] = exactMarketCount + 1
-    usedFamilies[item.main_family] = familyCount + 1
-    usedLeagues[item.league] = leagueCount + 1
-    tierCount[tier] = (tierCount[tier] || 0) + 1
-
-    if (radar.length === RADAR_SIZE) break
-  }
-
-  if (radar.length < RADAR_SIZE) {
-    const backup = [...active].sort(compareByScoreThenKickoff)
-    for (const item of backup) {
+    for (const item of pool) {
+      if (radar.length >= RADAR_SIZE) break
       if (usedMatchIds.has(item.match_id)) continue
+
+      const tier = LEAGUE_TIER[String(item.league||"")] ?? 4
+      if (!allowedTiers.includes(tier)) continue
+
+      const exactMarketCount = usedExactMarkets[item.main_pick] || 0
+      const familyCount = usedFamilies[item.main_family] || 0
+      const leagueCount = usedLeagues[item.league] || 0
+
+      if (exactMarketCount >= 2) continue
+      if (leagueCount >= 2) continue
+      if (item.main_family === "gols" && familyCount >= 4) continue
+      if (item.main_family === "resultado" && familyCount >= 3) continue
+      if (item.main_family === "escanteios" && familyCount >= 3) continue
+      if (item.main_family === "cards" && familyCount >= 3) continue
+      if (item.main_family === "btts" && familyCount >= 2) continue
+      if (item.main_family === "shots" && familyCount >= 2) continue
+      if (item.main_family === "sot" && familyCount >= 2) continue
+
       radar.push(item)
       usedMatchIds.add(item.match_id)
-      if (radar.length === RADAR_SIZE) break
+      usedExactMarkets[item.main_pick] = exactMarketCount + 1
+      usedFamilies[item.main_family] = familyCount + 1
+      usedLeagues[item.league] = leagueCount + 1
+    }
+
+    return {
+      radar,
+      used: {
+        matchIds: Array.from(usedMatchIds),
+        exactMarkets: usedExactMarkets,
+        families: usedFamilies,
+        leagues: usedLeagues,
+      }
     }
   }
 
+  // PASS 1: só Tier 1 (ligas principais João)
+  const pass1 = buildRadarPass(pool, [1], [], {
+    matchIds: [], exactMarkets: {}, families: {}, leagues: {}
+  })
+
+  // PASS 2: adiciona Tier 2 (internacionais) se radar ainda incompleto
+  const pass2 = pass1.radar.length < RADAR_SIZE
+    ? buildRadarPass(pool, [2], pass1.radar, pass1.used)
+    : pass1
+
+  // PASS 3: adiciona Tier 3 (secundárias) SOMENTE se ainda faltam slots
+  const pass3 = pass2.radar.length < RADAR_SIZE
+    ? buildRadarPass(pool, [3], pass2.radar, pass2.used)
+    : pass2
+
+  let radar = pass3.radar
+
+  // Fallback geral sem restrição de tier se ainda incompleto
+  if (radar.length < RADAR_SIZE) {
+    const usedIds = new Set(pass3.used.matchIds)
+    const backup = [...active].sort(compareByScoreThenKickoff)
+    for (const item of backup) {
+      if (radar.length >= RADAR_SIZE) break
+      if (usedIds.has(item.match_id)) continue
+      radar.push(item)
+      usedIds.add(item.match_id)
+    }
+  }
+
+  // Conta por tier para log
+  const tierCount = { 1:0, 2:0, 3:0, 4:0 }
+  radar.forEach(item => {
+    const t = LEAGUE_TIER[String(item.league||"")] ?? 4
+    tierCount[t] = (tierCount[t] || 0) + 1
+  })
+
   console.log(`📊 Distribuição por tier: T1=${tierCount[1]||0} T2=${tierCount[2]||0} T3=${tierCount[3]||0} T4=${tierCount[4]||0}`)
+  console.log(`🏆 Pass1 (ligas principais): ${pass1.radar.length} | Pass2 (+internacionais): ${pass2.radar.length} | Pass3 (+secundárias): ${pass3.radar.length}`)
+
   return radar.sort(compareByKickoff)
 }
 
