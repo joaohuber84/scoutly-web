@@ -1,8 +1,15 @@
+
 name: Verify Picks
 
 on:
   schedule:
-    - cron: '0 9 * * *'
+    # Roda 3x por dia (horário UTC = Brasília + 3h)
+    # 09h Brasília = 12h UTC → pega jogos da manhã
+    - cron: '0 12 * * *'
+    # 17h Brasília = 20h UTC → pega jogos da tarde
+    - cron: '0 20 * * *'
+    # 23h Brasília = 02h UTC → pega jogos da noite
+    - cron: '0 2 * * *'
   workflow_dispatch:
 
 jobs:
