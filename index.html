@@ -51,6 +51,210 @@
       --max: 1180px;
     }
 
+
+    /* ─── TEASER COPA DO MUNDO 2026 ──────────────────────────────────── */
+    .worldcup-teaser {
+      background: linear-gradient(135deg, #0a1a0a, #0d2010);
+      border: 1px solid rgba(0,200,83,0.3);
+      border-radius: var(--radius-lg);
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap;
+      position: relative; overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .worldcup-teaser:hover { border-color: rgba(0,200,83,0.5); box-shadow: 0 0 24px rgba(0,200,83,0.1); }
+    .worldcup-teaser::before {
+      content: '2026';
+      position: absolute; right: -8px; top: 50%;
+      transform: translateY(-50%);
+      font-family: var(--font-head); font-size: 80px; font-weight: 900;
+      color: rgba(0,200,83,0.05); letter-spacing: -4px; pointer-events: none;
+    }
+    .wc-left { flex: 1; min-width: 0; position: relative; z-index: 1; }
+    .wc-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: rgba(0,200,83,0.15); border: 1px solid rgba(0,200,83,0.35);
+      border-radius: 6px; padding: 3px 10px;
+      font-family: var(--font-mono); font-size: 9px; font-weight: 700;
+      color: var(--green); letter-spacing: 0.1em;
+      text-transform: uppercase; margin-bottom: 6px;
+    }
+    .wc-title { font-family: var(--font-head); font-size: 17px; font-weight: 800; color: #fff; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 5px; }
+    .wc-title span { color: var(--green); }
+    .wc-desc { font-size: 11px; color: rgba(255,255,255,0.45); line-height: 1.5; }
+    .wc-explore { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; font-size: 11px; font-weight: 700; color: var(--green); }
+    .wc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; position: relative; z-index: 1; }
+    .wc-countdown { display: flex; align-items: center; gap: 4px; }
+    .wc-unit { display: flex; flex-direction: column; align-items: center; background: rgba(0,200,83,0.08); border: 1px solid rgba(0,200,83,0.2); border-radius: 8px; padding: 6px 10px; min-width: 48px; }
+    .wc-num { font-family: var(--font-mono); font-size: 22px; font-weight: 900; color: var(--green); line-height: 1; letter-spacing: -0.02em; }
+    .wc-lbl { font-family: var(--font-mono); font-size: 8px; font-weight: 700; color: rgba(0,200,83,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+    .wc-sep { font-family: var(--font-mono); font-size: 20px; font-weight: 900; color: rgba(0,200,83,0.4); padding-bottom: 14px; }
+    .wc-start { font-family: var(--font-mono); font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.25); letter-spacing: 0.06em; }
+    @media (max-width: 520px) {
+      .worldcup-teaser { flex-direction: column; align-items: flex-start; }
+      .wc-right { align-items: flex-start; width: 100%; }
+      .wc-num { font-size: 18px; }
+      .wc-unit { min-width: 40px; padding: 5px 8px; }
+    }
+
+    /* ─── RADAR FULL WIDTH ────────────────────────────────────────────── */
+    .radar-panel-full {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .radar-full-head {
+      display: flex; align-items: flex-start; justify-content: space-between;
+      gap: 16px; padding: 20px 24px 16px; flex-wrap: wrap;
+      border-bottom: 1px solid var(--border);
+    }
+    .radar-full-meta {
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+      font-size: 11px; color: var(--text-3);
+    }
+    .radar-full-scroll {
+      max-height: none;
+      overflow-y: visible;
+      padding: 8px 24px 24px;
+    }
+    .radar-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 8px;
+    }
+    @media (max-width: 900px) { .radar-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 600px) { .radar-grid { grid-template-columns: 1fr; } }
+    .radar-item-v2 {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      position: relative;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .radar-item-v2::before {
+      content: ''; position: absolute; left: 0; top: 0; bottom: 0;
+      width: 3px; border-radius: 3px 0 0 3px;
+      background: var(--green); opacity: 0.35;
+      transition: opacity 0.2s;
+    }
+    .radar-item-v2:hover { border-color: var(--border-2); background: var(--surface-3); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+    .radar-item-v2:hover::before { opacity: 1; }
+    .radar-item-v2:active { transform: translateY(0) scale(0.99); }
+    .ri2-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .ri2-league { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text-3); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .ri2-league img { border-radius: 2px; flex-shrink: 0; }
+    .ri2-rank { width: 22px; height: 22px; border-radius: 6px; background: var(--surface-3); border: 1px solid var(--border-2); color: var(--text-3); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .ri2-teams { display: flex; align-items: center; gap: 8px; }
+    .ri2-team-names { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ri2-kickoff { font-family: var(--font-mono); font-size: 10px; color: var(--amber); font-weight: 600; flex-shrink: 0; }
+    .ri2-market { margin-top: 2px; }
+    .ri2-market-num { font-family: var(--font-mono); font-size: 20px; font-weight: 800; color: var(--green); line-height: 1; display: block; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+    .ri2-market-label { font-size: 10px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-top: 2px; }
+    .ri2-footer { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+    /* ─── COPA 2026 OVERLAY ───────────────────────────────────────────── */
+    .wc-overlay {
+      position: fixed; inset: 0; z-index: 200;
+      background: rgba(4,7,14,0.9); backdrop-filter: blur(12px);
+      display: none; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .wc-overlay.open { display: flex; }
+    .wc-panel {
+      width: 100%; max-width: 1100px; max-height: 92vh;
+      background: var(--surface); border: 1px solid rgba(0,200,83,0.2);
+      border-radius: var(--radius-xl); overflow: auto;
+      box-shadow: 0 0 60px rgba(0,200,83,0.08);
+      animation: slide-up 0.25s ease;
+    }
+    .wc-panel-hd {
+      padding: 20px 24px 18px;
+      border-bottom: 1px solid rgba(0,200,83,0.15);
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+      position: sticky; top: 0; z-index: 2;
+      background: linear-gradient(135deg, #0a1a0a, #080b12);
+    }
+    .wc-panel-hd-left { flex: 1; min-width: 0; }
+    .wc-panel-title { font-family: var(--font-head); font-size: 24px; font-weight: 800; color: #fff; letter-spacing: -0.03em; line-height: 1.1; margin-top: 4px; }
+    .wc-panel-title span { color: var(--green); }
+    .wc-panel-sub { font-size: 12px; color: var(--text-2); margin-top: 6px; }
+    .wc-panel-body { padding: 24px; }
+    .wc-tabs { display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+    .wc-tab { padding: 7px 16px; border-radius: var(--radius); font-size: 12px; font-weight: 700; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); cursor: pointer; transition: all 0.18s; }
+    .wc-tab.active { background: rgba(0,200,83,0.12); border-color: rgba(0,200,83,0.3); color: var(--green); }
+    .wc-tab:hover:not(.active) { border-color: var(--border-2); color: var(--text); }
+    .wc-tab-content { display: none; }
+    .wc-tab-content.active { display: block; }
+
+    /* grupos */
+    .wc-groups-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+    @media (max-width: 900px) { .wc-groups-grid { grid-template-columns: repeat(3,1fr); } }
+    @media (max-width: 600px) { .wc-groups-grid { grid-template-columns: repeat(2,1fr); } }
+    .wc-group-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px; }
+    .wc-group-title { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--green); letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+    .wc-group-team { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 12px; font-weight: 600; color: var(--text); border-bottom: 1px solid rgba(255,255,255,0.03); }
+    .wc-group-team:last-child { border-bottom: none; }
+    .wc-flag { font-size: 16px; flex-shrink: 0; }
+    .wc-debut-badge { font-size: 8px; background: rgba(245,166,35,0.15); border: 1px solid rgba(245,166,35,0.25); color: var(--amber); border-radius: 4px; padding: 1px 5px; font-weight: 700; letter-spacing: 0.05em; flex-shrink: 0; }
+
+    /* agenda */
+    .wc-agenda-filter { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .wc-filter-btn { padding: 6px 14px; border-radius: var(--radius); font-size: 12px; font-weight: 700; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); cursor: pointer; transition: all 0.15s; }
+    .wc-filter-btn.active { background: rgba(0,200,83,0.12); border-color: rgba(0,200,83,0.3); color: var(--green); }
+    .wc-match-row { display: grid; grid-template-columns: 100px 1fr auto 1fr 120px; align-items: center; gap: 8px; padding: 10px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 6px; font-size: 12px; }
+    @media (max-width: 600px) { .wc-match-row { grid-template-columns: 80px 1fr; gap: 4px; } }
+    .wc-match-date { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); }
+    .wc-match-team { font-weight: 600; color: var(--text); }
+    .wc-match-team.home { text-align: right; }
+    .wc-match-vs { text-align: center; color: var(--text-3); font-size: 11px; font-weight: 700; }
+    .wc-match-venue { font-size: 10px; color: var(--text-3); text-align: right; }
+    .wc-match-brasil { border-left: 3px solid rgba(0,200,83,0.5); }
+    .wc-round-label { font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--amber); letter-spacing: 0.1em; text-transform: uppercase; margin: 16px 0 8px; display: flex; align-items: center; gap: 8px; }
+    .wc-round-label::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+    /* curiosidades */
+    .wc-curiosidades-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 14px; }
+    @media (max-width: 600px) { .wc-curiosidades-grid { grid-template-columns: 1fr; } }
+    .wc-curiosidade-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }
+    .wc-cur-icon { font-size: 28px; margin-bottom: 8px; }
+    .wc-cur-title { font-size: 13px; font-weight: 800; color: var(--text); margin-bottom: 6px; line-height: 1.3; }
+    .wc-cur-text { font-size: 12px; color: var(--text-2); line-height: 1.6; }
+    .wc-campoes { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-top: 16px; }
+    @media (max-width: 600px) { .wc-campoes { grid-template-columns: repeat(2,1fr); } }
+    .wc-campao-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; }
+    .wc-campao-flag { font-size: 28px; margin-bottom: 6px; }
+    .wc-campao-name { font-size: 12px; font-weight: 700; color: var(--text); }
+    .wc-campao-titulos { font-family: var(--font-mono); font-size: 20px; font-weight: 900; color: var(--amber); }
+    .wc-campao-label { font-size: 9px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; }
+    .wc-estreantes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .wc-estreante-badge { display: flex; align-items: center; gap: 6px; padding: 6px 12px; background: rgba(245,166,35,0.08); border: 1px solid rgba(245,166,35,0.2); border-radius: var(--radius); font-size: 12px; font-weight: 600; color: var(--text); }
+
+    /* quiz */
+    .wc-quiz-card { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; max-width: 600px; margin: 0 auto; }
+    .wc-quiz-progress { display: flex; gap: 4px; margin-bottom: 20px; }
+    .wc-quiz-dot { flex: 1; height: 4px; border-radius: 2px; background: var(--surface-3); transition: background 0.3s; }
+    .wc-quiz-dot.done { background: var(--green); }
+    .wc-quiz-dot.active { background: var(--amber); }
+    .wc-quiz-question { font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.4; margin-bottom: 16px; }
+    .wc-quiz-options { display: flex; flex-direction: column; gap: 8px; }
+    .wc-quiz-option { padding: 12px 16px; border-radius: var(--radius); border: 1px solid var(--border); background: var(--surface-3); color: var(--text-2); font-size: 13px; cursor: pointer; transition: all 0.15s; text-align: left; font-family: var(--font-body); }
+    .wc-quiz-option:hover:not(:disabled) { border-color: var(--border-2); color: var(--text); background: var(--surface-2); }
+    .wc-quiz-option.correct { background: rgba(0,200,83,0.15); border-color: rgba(0,200,83,0.4); color: var(--green); }
+    .wc-quiz-option.wrong { background: rgba(255,71,87,0.1); border-color: rgba(255,71,87,0.3); color: var(--red); }
+    .wc-quiz-result { text-align: center; padding: 20px 0; }
+    .wc-quiz-score { font-family: var(--font-head); font-size: 48px; font-weight: 800; color: var(--green); }
+    .wc-quiz-score-label { font-size: 14px; color: var(--text-2); margin-top: 4px; }
+    .wc-quiz-restart { margin-top: 16px; padding: 11px 24px; border-radius: var(--radius); background: var(--green); border: none; color: #000; font-size: 13px; font-weight: 800; cursor: pointer; font-family: var(--font-body); }
+
     /* ─── RESET ───────────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
@@ -1323,9 +1527,31 @@
     </div>
   </div>
 
+  <!-- ══ TEASER COPA DO MUNDO 2026 ═══════════════════════════════════════ -->
+  <div class="worldcup-teaser" onclick="openWC2026()">
+    <div class="wc-left">
+      <div class="wc-badge">🏆 Copa do Mundo 2026</div>
+      <div class="wc-title">Scoutly na <span>Copa do Mundo 2026</span></div>
+      <div class="wc-desc">48 seleções · 3 países · 16 cidades · 1 radar inteligente</div>
+      <div class="wc-explore">🔍 Explorar grupos, agenda e curiosidades →</div>
+    </div>
+    <div class="wc-right">
+      <div class="wc-countdown">
+        <div class="wc-unit"><div class="wc-num" id="wcDays">--</div><div class="wc-lbl">dias</div></div>
+        <div class="wc-sep">:</div>
+        <div class="wc-unit"><div class="wc-num" id="wcHours">--</div><div class="wc-lbl">horas</div></div>
+        <div class="wc-sep">:</div>
+        <div class="wc-unit"><div class="wc-num" id="wcMins">--</div><div class="wc-lbl">min</div></div>
+        <div class="wc-sep">:</div>
+        <div class="wc-unit"><div class="wc-num" id="wcSecs">--</div><div class="wc-lbl">seg</div></div>
+      </div>
+      <div class="wc-start">Início: 11 de junho de 2026</div>
+    </div>
+  </div>
+
   <!-- ══ ASSERTIVIDADE ══════════════════════════════════════════════════════ -->
   <div class="assert-bar" id="assertBar">
-    <span class="assert-label">📊 Histórico Scoutly</span>
+    <span class="assert-label">📊 Histórico do Radar Scoutly</span>
     <div class="assert-divider"></div>
     <div class="assert-items" id="assertItems">
       <span class="assert-loading">Carregando histórico...</span>
@@ -1342,36 +1568,19 @@
     <div id="liveGamesList"></div>
   </div>
 
-  <!-- ══ HERO ════════════════════════════════════════════════════════════ -->
-  <div class="hero-grid">
-
-    <!-- TICKET -->
-    <div class="ticket-card">
-      <div class="card-head">
-        <div class="eyebrow">Bilhete do dia</div>
-        <h2 class="card-title">Bilhete Scoutly</h2>
-        <p class="card-desc">Combinação automática das melhores oportunidades do momento, com base em probabilidade, consistência e variedade de mercado.</p>
-      </div>
-      <div class="card-body">
-        <div id="ticketContainer">
-          <div class="loading-state">Montando bilhete...</div>
-        </div>
-        <button id="generateTicketBtn" class="ticket-btn">⚡ Gerar novo bilhete</button>
-      </div>
-    </div>
-
-    <!-- RADAR -->
-    <div class="radar-panel">
-      <div class="card-head" style="padding:20px 20px 12px">
+  <!-- ══ RADAR ════════════════════════════════════════════════════════════ -->
+  <div class="radar-panel-full">
+    <div class="radar-full-head">
+      <div>
         <div class="eyebrow">Radar Scoutly</div>
         <h2 class="card-title">Radar do dia</h2>
-        <p class="card-desc" style="margin-bottom:0">As melhores oportunidades ativas, organizadas por horário. Prioridade para os jogos de hoje.</p>
+        <p class="card-desc" style="margin-top:6px;margin-bottom:0">As melhores oportunidades ativas, organizadas por horário e liga. Picks curados pelo radar inteligente.</p>
       </div>
-      <div class="radar-scroll">
-        <div id="radarList"><div class="loading-state">Carregando radar...</div></div>
-      </div>
+      <div class="radar-full-meta" id="radarMeta"></div>
     </div>
-
+    <div class="radar-full-scroll">
+      <div id="radarList"><div class="loading-state">Carregando radar...</div></div>
+    </div>
   </div>
 
   <!-- ══ AGENDA DO DIA ════════════════════════════════════════════════════ -->
@@ -1507,6 +1716,127 @@
     <div class="team-panel-section">
       <div class="team-panel-section-title">Próximo jogo</div>
       <div class="team-panel-next" id="tpNext">Carregando...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ COPA 2026 OVERLAY ══════════════════════════════════════════════════ -->
+<div class="wc-overlay" id="wcOverlay">
+  <div class="wc-panel">
+    <div class="wc-panel-hd">
+      <div class="wc-panel-hd-left">
+        <div class="eyebrow">Copa do Mundo 2026</div>
+        <h2 class="wc-panel-title">FIFA World Cup <span>2026</span></h2>
+        <div class="wc-panel-sub">🇺🇸 Estados Unidos · 🇨🇦 Canadá · 🇲🇽 México &nbsp;·&nbsp; 48 seleções · 104 jogos · 11 jun – 19 jul 2026</div>
+      </div>
+      <button class="close-btn" onclick="closeWC2026()">✕</button>
+    </div>
+    <div class="wc-panel-body">
+
+      <!-- TABS -->
+      <div class="wc-tabs">
+        <button class="wc-tab active" data-wctab="grupos">⚽ Grupos</button>
+        <button class="wc-tab" data-wctab="agenda">📅 Agenda</button>
+        <button class="wc-tab" data-wctab="curiosidades">🌍 Curiosidades</button>
+        <button class="wc-tab" data-wctab="quiz">🎯 Quiz</button>
+      </div>
+
+      <!-- TAB: GRUPOS -->
+      <div class="wc-tab-content active" id="wctab-grupos">
+        <div style="margin-bottom:16px">
+          <div style="font-size:13px;color:var(--text-2);line-height:1.6">A Copa de 2026 é a maior da história — 48 seleções divididas em 12 grupos de 4. Os 2 primeiros de cada grupo + 8 melhores terceiros avançam.</div>
+          <div style="margin-top:10px;display:flex;align-items:center;gap:8px;font-size:11px;color:var(--amber);font-weight:600">
+            <span style="background:rgba(245,166,35,0.12);border:1px solid rgba(245,166,35,0.25);border-radius:4px;padding:2px 8px;">★ ESTREIA</span>
+            = primeira vez numa Copa do Mundo
+          </div>
+        </div>
+        <div class="wc-groups-grid" id="wcGroupsGrid"></div>
+      </div>
+
+      <!-- TAB: AGENDA -->
+      <div class="wc-tab-content" id="wctab-agenda">
+        <div class="wc-agenda-filter">
+          <button class="wc-filter-btn active" data-filter="todos" onclick="filterWCAgenda('todos',this)">Todos os jogos</button>
+          <button class="wc-filter-btn" data-filter="brasil" onclick="filterWCAgenda('brasil',this)">🇧🇷 Brasil</button>
+          <button class="wc-filter-btn" data-filter="fase1" onclick="filterWCAgenda('fase1',this)">Fase de Grupos</button>
+        </div>
+        <div id="wcAgendaList"></div>
+      </div>
+
+      <!-- TAB: CURIOSIDADES -->
+      <div class="wc-tab-content" id="wctab-curiosidades">
+        <div class="wc-curiosidades-grid">
+          <div class="wc-curiosidade-card">
+            <div class="wc-cur-icon">🌎</div>
+            <div class="wc-cur-title">A Copa mais plural da história</div>
+            <div class="wc-cur-text">Com 48 seleções, a Copa de 2026 terá 16 grupos a mais que as edições anteriores. Pela primeira vez, América do Norte sedia uma Copa com 3 países diferentes — EUA, Canadá e México.</div>
+          </div>
+          <div class="wc-curiosidade-card">
+            <div class="wc-cur-icon">🏟️</div>
+            <div class="wc-cur-title">MetLife Stadium — o palco da final</div>
+            <div class="wc-cur-text">A final será em East Rutherford, Nova Jersey, no MetLife Stadium — casa dos Giants e Jets da NFL, com capacidade para 82.500 pessoas. É um dos maiores estádios cobertos do mundo.</div>
+          </div>
+          <div class="wc-curiosidade-card">
+            <div class="wc-cur-icon">⭐</div>
+            <div class="wc-cur-title">Última Copa de Messi e Cristiano?</div>
+            <div class="wc-cur-text">Lionel Messi terá 38 anos e Cristiano Ronaldo 41 durante o torneio. Ambos declararam querer disputar mais uma Copa — provavelmente será a despedida de dois dos maiores da história.</div>
+          </div>
+          <div class="wc-curiosidade-card">
+            <div class="wc-cur-icon">🆕</div>
+            <div class="wc-cur-title">Nações na Copa pela primeira vez</div>
+            <div class="wc-cur-text">Ao menos 6 seleções farão sua estreia histórica numa Copa do Mundo em 2026. Entre elas estão Canadá (que co-sedia), Panamá e algumas nações africanas e asiáticas inéditas.</div>
+          </div>
+          <div class="wc-curiosidade-card">
+            <div class="wc-cur-icon">🇧🇷</div>
+            <div class="wc-cur-title">Brasil no Grupo C</div>
+            <div class="wc-cur-text">A Seleção Brasileira foi sorteada no Grupo C ao lado de Marrocos, Haiti e Escócia. O Brasil enfrenta o Haiti em sua estreia — adversário historicamente inédito para a Seleção numa fase de grupos.</div>
+          </div>
+          <div class="wc-curiosidade-card">
+            <div class="wc-cur-icon">⚽</div>
+            <div class="wc-cur-title">104 jogos em 44 dias</div>
+            <div class="wc-cur-text">Serão 104 partidas ao longo de 39 dias de torneio, espalhadas por 16 cidades em 3 países. O formato garante pelo menos 3 jogos por dia na fase de grupos — o maior calendário da história das Copas.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:24px">
+          <div style="font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px">🏆 Maiores campeões mundiais</div>
+          <div style="font-size:12px;color:var(--text-3);margin-bottom:12px">Seleções com mais títulos na história da Copa do Mundo FIFA</div>
+          <div class="wc-campoes">
+            <div class="wc-campao-card"><div class="wc-campao-flag">🇧🇷</div><div class="wc-campao-titulos">5</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Brasil</div></div>
+            <div class="wc-campao-card"><div class="wc-campao-flag">🇩🇪</div><div class="wc-campao-titulos">4</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Alemanha</div></div>
+            <div class="wc-campao-card"><div class="wc-campao-flag">🇮🇹</div><div class="wc-campao-titulos">4</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Itália</div></div>
+            <div class="wc-campao-card"><div class="wc-campao-flag">🇦🇷</div><div class="wc-campao-titulos">3</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Argentina</div></div>
+            <div class="wc-campao-card"><div class="wc-campao-flag">🇫🇷</div><div class="wc-campao-titulos">2</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">França</div></div>
+            <div class="wc-campao-card"><div class="wc-campao-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</div><div class="wc-campao-titulos">1</div><div class="wc-campao-label">título</div><div class="wc-campao-name">Inglaterra</div></div>
+            <div class="wc-campao-card"><div class="wc-campao-flag">🇪🇸</div><div class="wc-campao-titulos">1</div><div class="wc-campao-label">título</div><div class="wc-campao-name">Espanha</div></div>
+            <div class="wc-campao-card"><div class="wc-campao-flag">🇺🇾</div><div class="wc-campao-titulos">2</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Uruguai</div></div>
+          </div>
+        </div>
+
+        <div style="margin-top:24px">
+          <div style="font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px">✨ Estreias históricas em 2026</div>
+          <div style="font-size:12px;color:var(--text-3);margin-bottom:12px">Seleções que disputarão sua primeira Copa do Mundo em 2026</div>
+          <div class="wc-estreantes">
+            <div class="wc-estreante-badge">🇨🇦 Canadá</div>
+            <div class="wc-estreante-badge">🇭🇹 Haiti</div>
+            <div class="wc-estreante-badge">🇦🇴 Angola</div>
+            <div class="wc-estreante-badge">🇨🇩 R.D. Congo</div>
+            <div class="wc-estreante-badge">🇨🇮 Costa do Marfim</div>
+            <div class="wc-estreante-badge">🇵🇰 Paquistão</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB: QUIZ -->
+      <div class="wc-tab-content" id="wctab-quiz">
+        <div class="wc-quiz-card" id="wcQuizCard">
+          <div style="font-family:var(--font-head);font-size:18px;font-weight:800;color:var(--text);margin-bottom:4px">🎯 Quiz Copa 2026</div>
+          <div style="font-size:12px;color:var(--text-3);margin-bottom:16px">Teste seus conhecimentos sobre a Copa do Mundo 2026</div>
+          <div class="wc-quiz-progress" id="wcQuizProgress"></div>
+          <div id="wcQuizBody"></div>
+        </div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1836,7 +2166,11 @@ function getLeagueBadge(league, country=""){
   return "";
 }
 
-function getCompetitionBadge(league, country="") {
+function getCompetitionBadge(league, country="", logoUrl="") {
+  // Logo oficial da API tem prioridade
+  if (logoUrl) {
+    return `<img src="${escapeHtml(logoUrl)}" width="28" height="28" alt="${escapeHtml(league)}" style="object-fit:contain;border-radius:4px;" onerror="this.style.display='none'">`;
+  }
   const flagCode = getFlag(country||inferCountryFromLeague(normalizeLeagueName(league)), league);
   if (flagCode) {
     return `<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="28" alt="${escapeHtml(country||"")}" style="border-radius:3px;">`;
@@ -2617,45 +2951,54 @@ function renderRadar(){
   const radarItems=buildRadarSnapshot();
   if(!radarItems.length){list.innerHTML=`<div class="empty-state">Nenhuma oportunidade ativa encontrada para agora.</div>`;return;}
 
+  // Agrupa por dia para labels
   const groupsByDay=new Map();
   radarItems.forEach(i=>{const k=formatDayKey(i.kickoff);if(!groupsByDay.has(k))groupsByDay.set(k,{label:formatDayLabel(i.kickoff),items:[]});groupsByDay.get(k).items.push(i);});
 
+  // Atualiza meta do radar
+  const metaEl=document.getElementById("radarMeta");
+  if(metaEl){
+    const todayCount=radarItems.filter(i=>{const d=parseDateSafe(i.kickoff);return d&&d>=startOfDay(new Date())&&d<=endOfDay(new Date());}).length;
+    metaEl.innerHTML=`<span style="background:var(--green-dim);border:1px solid rgba(0,200,83,0.2);border-radius:6px;padding:4px 10px;font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--green)">${radarItems.length} picks</span>${todayCount>0?`<span style="font-size:11px;color:var(--text-3)">${todayCount} hoje</span>`:""}`;
+  }
+
   list.innerHTML=Array.from(groupsByDay.entries()).map(([,dayGroup])=>{
-    const hourGroups=new Map();
-    dayGroup.items.forEach(i=>{const h=formatKickoffHour(i.kickoff);if(!hourGroups.has(h))hourGroups.set(h,[]);hourGroups.get(h).push(i);});
-    return `<div class="radar-day">
-      <div class="radar-day-label">${escapeHtml(dayGroup.label)}</div>
-      ${Array.from(hourGroups.entries()).map(([hour,items])=>`
-        <div class="radar-time-group">
-          <div class="radar-time-label">${escapeHtml(hour)}</div>
-          ${items.map(item=>`
-            <div class="radar-item" data-match-id="${escapeHtml(item.id)}">
-              <div class="radar-top">
-                <div class="radar-rank">${item.visualRank}</div>
-                <div class="radar-league">
-                  ${getLeagueBadge(item.league,item.country||inferCountryFromLeague(item.league))}
-                  ${escapeHtml(getLeagueDisplay(item.league))}
-                </div>
+    return `<div class="radar-day" style="margin-bottom:16px">
+      <div class="radar-day-label" style="font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+        ${escapeHtml(dayGroup.label)}
+        <span style="background:var(--surface-3);border-radius:20px;padding:2px 8px;font-size:9px">${dayGroup.items.length} jogo${dayGroup.items.length!==1?"s":""}</span>
+      </div>
+      <div class="radar-grid">
+        ${dayGroup.items.map(item=>`
+          <div class="radar-item-v2" data-match-id="${escapeHtml(item.id)}">
+            <div class="ri2-header">
+              <div class="ri2-league">
+                ${getLeagueBadge(item.league,item.country||inferCountryFromLeague(item.league))}
+                ${escapeHtml(getLeagueDisplay(item.league))}
               </div>
-              <div class="radar-teams">
-                ${teamBadge(item,"home")}
-                <div class="team-names">${escapeHtml(item.home_team)} × ${escapeHtml(item.away_team)}</div>
-                ${teamBadge(item,"away")}
-              </div>
-              <div class="chips" style="margin-bottom:6px">
-                ${chipMarkup(probabilityToTier(item.radar_probability))}
-                ${marketFamilyChip(marketFamily(item.radar_market))}
-              </div>
-              <div class="radar-market">${formatMarketDisplay(item.radar_market,"radar-market-num","radar-market-label")}</div>
-            </div>`).join("")}
-        </div>`).join("")}
+              <div class="ri2-rank">${item.visualRank}</div>
+            </div>
+            <div class="ri2-teams">
+              ${teamBadge(item,"home","sm")}
+              <div class="ri2-team-names">${escapeHtml(item.home_team)} × ${escapeHtml(item.away_team)}</div>
+              ${teamBadge(item,"away","sm")}
+              <div class="ri2-kickoff">${formatKickoffHour(item.kickoff)}</div>
+            </div>
+            <div class="ri2-market">
+              ${formatMarketDisplay(item.radar_market,"ri2-market-num","ri2-market-label")}
+            </div>
+            <div class="ri2-footer">
+              ${chipMarkup(probabilityToTier(item.radar_probability))}
+              ${marketFamilyChip(marketFamily(item.radar_market))}
+            </div>
+          </div>`).join("")}
+      </div>
     </div>`;
   }).join("");
 
-  list.querySelectorAll(".radar-item").forEach(el=>{
+  list.querySelectorAll(".radar-item-v2").forEach(el=>{
     el.addEventListener("click",()=>openAnalysis(el.dataset.matchId));
   });
-  // Aplica indicadores ao vivo se já tiver dados
   if (liveState.data.size > 0) updateLiveIndicators();
 }
 
@@ -2771,9 +3114,10 @@ function buildCompetitions(){
   const map=new Map();
   state.matches.filter(m=>isCompetitionVisible(m.kickoff)&&!shouldHideLeague(m.league)&&getPrimaryPick(m)!=="Mercado em revisão").forEach(match=>{
     const league=normalizeLeagueName(match.league||"");const country=match.country||inferCountryFromLeague(league);
-    if(!map.has(league))map.set(league,{league,country,count:0,matches:[],kickoff:match.kickoff});
+    if(!map.has(league))map.set(league,{league,country,count:0,matches:[],kickoff:match.kickoff,logo_url:match.league_logo||match.league_image||""});
     const item=map.get(league);
     if(!item.country&&country)item.country=country;
+    if(!item.logo_url&&(match.league_logo||match.league_image))item.logo_url=match.league_logo||match.league_image||"";
     if(!item.kickoff||new Date(match.kickoff)<new Date(item.kickoff))item.kickoff=match.kickoff;
     item.count++;item.matches.push(match);
   });
@@ -2785,7 +3129,7 @@ function renderCompetitions(){
   const grid=document.getElementById("competitionsGrid"); if(!grid)return;
   if(!state.competitions.length){grid.innerHTML=`<div class="empty-state">Nenhuma competição encontrada.</div>`;return;}
   grid.innerHTML=state.competitions.map(comp=>{
-    const badge = getCompetitionBadge(comp.league, comp.country);
+    const badge = getCompetitionBadge(comp.league, comp.country, comp.logo_url||"");
     return `<div class="competition-card" data-league="${encodeURIComponent(comp.league)}" role="button" tabindex="0">
       <div class="comp-top">
         <div class="comp-flag">${badge}</div>
@@ -3109,7 +3453,7 @@ function safeNum(v, fb = 0) {
 
 function updateLiveIndicators() {
   // Atualiza cards do radar
-  document.querySelectorAll(".radar-item[data-match-id]").forEach(el => {
+  document.querySelectorAll(".radar-item-v2[data-match-id], .radar-item[data-match-id]").forEach(el => {
     const id = el.dataset.matchId;
     const live = liveState.data.get(String(id));
     if (!live) return;
@@ -3830,7 +4174,7 @@ function openTeamPanel(el) {
 
 function refreshUIOnly(){
   renderRadar();renderAgenda();renderCompetitions();
-  if(!state.currentTicket.length)generateTicket(false);else renderTicket();
+  
   if(state.selectedLeague)openCompetition(state.selectedLeague);
   const ov=document.getElementById("analysisOverlay");
   if(ov?.classList.contains("open")&&state.lastOpenedMatchId)openAnalysis(state.lastOpenedMatchId);
@@ -3842,7 +4186,7 @@ async function refreshAllData(silent=false){
   try{await loadDailyPicks();}catch(e){errors.daily_picks=e.message||JSON.stringify(e);}
   try{await loadMatches();}catch(e){errors.matches=e.message||JSON.stringify(e);}
   if(Object.keys(errors).length){renderLoadError(errors);return false;}
-  renderRadar();renderAgenda();renderCompetitions();generateTicket(false);
+  renderRadar();renderAgenda();renderCompetitions();
   if(state.selectedLeague)openCompetition(state.selectedLeague);
   const ov=document.getElementById("analysisOverlay");
   if(ov?.classList.contains("open")&&state.lastOpenedMatchId)openAnalysis(state.lastOpenedMatchId);
@@ -3859,7 +4203,6 @@ function startAutoRefresh(){
 
 function bindStaticEvents(){
   const bind=(id,fn)=>{const el=document.getElementById(id);if(el&&!el.dataset.bound){el.addEventListener("click",fn);el.dataset.bound="1";}};
-  bind("generateTicketBtn",()=>generateTicket(true));
   bind("backToCompetitionsBtn",backToCompetitions);
   bind("closeAnalysisBtn",closeAnalysis);
   const ov=document.getElementById("analysisOverlay");
@@ -3867,7 +4210,198 @@ function bindStaticEvents(){
   if(!document.body.dataset.escBound){document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAnalysis();});document.body.dataset.escBound="1";}
 }
 
-async function initialize(){ bindStaticEvents();const ok=await refreshAllData(false);if(!ok)return;loadAssertiveness();startLiveModule();startAutoRefresh(); }
+
+/* ── COPA DO MUNDO 2026 ──────────────────────────────────────────── */
+const WC2026_GROUPS = [
+  { name:"A", teams:[{name:"México",flag:"🇲🇽"},{name:"Equador",flag:"🇪🇨"},{name:"Holanda",flag:"🇳🇱"},{name:"Congo",flag:"🇨🇩",debut:true}] },
+  { name:"B", teams:[{name:"EUA",flag:"🇺🇸",debut:true},{name:"Panamá",flag:"🇵🇦",debut:true},{name:"Sérvia",flag:"🇷🇸"},{name:"Camarões",flag:"🇨🇲"}] },
+  { name:"C", teams:[{name:"Brasil",flag:"🇧🇷"},{name:"Marrocos",flag:"🇲🇦"},{name:"Haiti",flag:"🇭🇹",debut:true},{name:"Escócia",flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿"}] },
+  { name:"D", teams:[{name:"Alemanha",flag:"🇩🇪"},{name:"Japão",flag:"🇯🇵"},{name:"Costa Rica",flag:"🇨🇷"},{name:"Austrália",flag:"🇦🇺"}] },
+  { name:"E", teams:[{name:"Espanha",flag:"🇪🇸"},{name:"Argentina",flag:"🇦🇷"},{name:"Suécia",flag:"🇸🇪"},{name:"Angola",flag:"🇦🇴",debut:true}] },
+  { name:"F", teams:[{name:"Portugal",flag:"🇵🇹"},{name:"Romênia",flag:"🇷🇴"},{name:"Senegal",flag:"🇸🇳"},{name:"México B",flag:"🇲🇽"}] },
+  { name:"G", teams:[{name:"França",flag:"🇫🇷"},{name:"Croácia",flag:"🇭🇷"},{name:"Nigéria",flag:"🇳🇬"},{name:"Bélgica",flag:"🇧🇪"}] },
+  { name:"H", teams:[{name:"Uruguai",flag:"🇺🇾"},{name:"Colômbia",flag:"🇨🇴"},{name:"Eslováquia",flag:"🇸🇰"},{name:"Namíbia",flag:"🇳🇦",debut:true}] },
+  { name:"I", teams:[{name:"Canadá",flag:"🇨🇦",debut:true},{name:"Peru",flag:"🇵🇪"},{name:"Noruega",flag:"🇳🇴"},{name:"Egito",flag:"🇪🇬"}] },
+  { name:"J", teams:[{name:"Inglaterra",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},{name:"Irão",flag:"🇮🇷"},{name:"Venezuela",flag:"🇻🇪"},{name:"Tunísia",flag:"🇹🇳"}] },
+  { name:"K", teams:[{name:"Itália",flag:"🇮🇹"},{name:"Coreia do Sul",flag:"🇰🇷"},{name:"Costa do Marfim",flag:"🇨🇮",debut:true},{name:"Albânia",flag:"🇦🇱"}] },
+  { name:"L", teams:[{name:"Suíça",flag:"🇨🇭"},{name:"Argélia",flag:"🇩🇿"},{name:"Polônia",flag:"🇵🇱"},{name:"Quirguistão",flag:"🇰🇬",debut:true}] }
+];
+
+const WC2026_AGENDA = [
+  // RODADA 1
+  {date:"11/06 18:00",home:"México",away:"Canadá",group:"A",venue:"SoFi Stadium, L.A.",round:"Rodada 1",brasil:false},
+  {date:"12/06 13:00",home:"Brasil",away:"Marrocos",group:"C",venue:"Rose Bowl, L.A.",round:"Rodada 1",brasil:true},
+  {date:"12/06 16:00",home:"Alemanha",away:"Japão",group:"D",venue:"AT&T Stadium, Dallas",round:"Rodada 1",brasil:false},
+  {date:"12/06 19:00",home:"Argentina",away:"Suécia",group:"E",venue:"MetLife, N.Jersey",round:"Rodada 1",brasil:false},
+  {date:"13/06 13:00",home:"França",away:"Croácia",group:"G",venue:"Levi's Stadium, S.F.",round:"Rodada 1",brasil:false},
+  {date:"13/06 16:00",home:"Portugal",away:"Senegal",group:"F",venue:"Hard Rock, Miami",round:"Rodada 1",brasil:false},
+  {date:"13/06 19:00",home:"Espanha",away:"Angola",group:"E",venue:"Estadio Azteca, CDMX",round:"Rodada 1",brasil:false},
+  {date:"14/06 13:00",home:"EUA",away:"Panamá",group:"B",venue:"MetLife, N.Jersey",round:"Rodada 1",brasil:false},
+  {date:"14/06 16:00",home:"Inglaterra",away:"Irão",group:"J",venue:"AT&T Stadium, Dallas",round:"Rodada 1",brasil:false},
+  {date:"14/06 19:00",home:"Itália",away:"Coreia do Sul",group:"K",venue:"Rose Bowl, L.A.",round:"Rodada 1",brasil:false},
+  // RODADA 2
+  {date:"20/06 16:00",home:"Brasil",away:"Haiti",group:"C",venue:"SoFi Stadium, L.A.",round:"Rodada 2",brasil:true},
+  {date:"21/06 16:00",home:"Escócia",away:"Marrocos",group:"C",venue:"Estadio Azteca, CDMX",round:"Rodada 2",brasil:false},
+  {date:"22/06 16:00",home:"Alemanha",away:"Costa Rica",group:"D",venue:"Rose Bowl, L.A.",round:"Rodada 2",brasil:false},
+  {date:"22/06 19:00",home:"Argentina",away:"Angola",group:"E",venue:"Hard Rock, Miami",round:"Rodada 2",brasil:false},
+  // RODADA 3
+  {date:"27/06 16:00",home:"Brasil",away:"Escócia",group:"C",venue:"Rose Bowl, L.A.",round:"Rodada 3",brasil:true},
+  {date:"27/06 16:00",home:"Haiti",away:"Marrocos",group:"C",venue:"SoFi Stadium, L.A.",round:"Rodada 3",brasil:false},
+  // OITAVAS
+  {date:"01/07 16:00",home:"1º A",away:"2º B",group:"-",venue:"MetLife, N.Jersey",round:"Oitavas",brasil:false},
+  {date:"02/07 16:00",home:"1º C",away:"2º D",group:"-",venue:"Rose Bowl, L.A.",round:"Oitavas",brasil:false},
+  {date:"19/07 17:00",home:"Final",away:"Final",group:"-",venue:"MetLife Stadium, N.Jersey",round:"Final",brasil:false},
+];
+
+function renderWCGroups(){
+  const grid=document.getElementById("wcGroupsGrid");
+  if(!grid)return;
+  grid.innerHTML=WC2026_GROUPS.map(g=>`
+    <div class="wc-group-card">
+      <div class="wc-group-title">Grupo ${g.name}</div>
+      ${g.teams.map(t=>`
+        <div class="wc-group-team">
+          <span class="wc-flag">${t.flag}</span>
+          <span style="flex:1">${t.name}</span>
+          ${t.debut?`<span class="wc-debut-badge">★ ESTREIA</span>`:""}
+        </div>`).join("")}
+    </div>`).join("");
+}
+
+let wcAgendaFilter="todos";
+
+function renderWCAgenda(){
+  const list=document.getElementById("wcAgendaList");
+  if(!list)return;
+  let items=WC2026_AGENDA;
+  if(wcAgendaFilter==="brasil")items=items.filter(i=>i.brasil);
+  if(wcAgendaFilter==="fase1")items=items.filter(i=>i.round==="Rodada 1"||i.round==="Rodada 2"||i.round==="Rodada 3");
+
+  const byRound=new Map();
+  items.forEach(i=>{if(!byRound.has(i.round))byRound.set(i.round,[]);byRound.get(i.round).push(i);});
+
+  if(!items.length){list.innerHTML=`<div class="empty-state">Nenhum jogo encontrado.</div>`;return;}
+
+  list.innerHTML=Array.from(byRound.entries()).map(([round,matches])=>`
+    <div class="wc-round-label">${round}</div>
+    ${matches.map(m=>`
+      <div class="wc-match-row${m.brasil?" wc-match-brasil":""}">
+        <div class="wc-match-date">${m.date}${m.group!=="-"?` · Grp ${m.group}`:""}</div>
+        <div class="wc-match-team home">${m.home}</div>
+        <div class="wc-match-vs">×</div>
+        <div class="wc-match-team">${m.away}</div>
+        <div class="wc-match-venue">${m.venue}</div>
+      </div>`).join("")}`).join("");
+}
+
+function filterWCAgenda(filter, btn){
+  wcAgendaFilter=filter;
+  document.querySelectorAll(".wc-filter-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  renderWCAgenda();
+}
+
+function openWC2026(){
+  document.getElementById("wcOverlay").classList.add("open");
+}
+function closeWC2026(){
+  document.getElementById("wcOverlay").classList.remove("open");
+}
+
+// Tabs Copa
+document.addEventListener("click",e=>{
+  const tab=e.target.closest(".wc-tab");
+  if(!tab)return;
+  const tabId=tab.dataset.wctab;
+  if(!tabId)return;
+  document.querySelectorAll(".wc-tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".wc-tab-content").forEach(t=>t.classList.remove("active"));
+  tab.classList.add("active");
+  const content=document.getElementById("wctab-"+tabId);
+  if(content)content.classList.add("active");
+  if(tabId==="quiz")initWCQuiz();
+});
+
+// Fechar overlay Copa clicando fora
+document.addEventListener("click",e=>{
+  if(e.target.id==="wcOverlay")closeWC2026();
+});
+
+/* ── QUIZ COPA 2026 ──────────────────────────────────────────────── */
+const WC_QUIZ = [
+  { q:"Quantas seleções participam da Copa do Mundo 2026?", opts:["32","40","48","56"], answer:2 },
+  { q:"Onde será realizada a final da Copa do Mundo 2026?", opts:["Rose Bowl, L.A.","Estadio Azteca, México","MetLife Stadium, Nova Jersey","AT&T Stadium, Dallas"], answer:2 },
+  { q:"Qual país tem mais títulos mundiais?", opts:["Alemanha","Argentina","Brasil","Itália"], answer:2 },
+  { q:"Qual é o grupo do Brasil na Copa 2026?", opts:["Grupo A","Grupo B","Grupo C","Grupo D"], answer:2 },
+  { q:"Quantos países sediam a Copa do Mundo 2026?", opts:["1","2","3","4"], answer:2 },
+];
+
+let wcQuizIndex=0, wcQuizScore=0, wcQuizActive=false;
+
+function initWCQuiz(){
+  wcQuizIndex=0; wcQuizScore=0; wcQuizActive=true;
+  renderWCQuiz();
+}
+
+function renderWCQuiz(){
+  const body=document.getElementById("wcQuizBody");
+  const progress=document.getElementById("wcQuizProgress");
+  if(!body||!progress)return;
+
+  // Progress dots
+  progress.innerHTML=WC_QUIZ.map((_,i)=>`<div class="wc-quiz-dot${i<wcQuizIndex?" done":i===wcQuizIndex?" active":""}"></div>`).join("");
+
+  if(wcQuizIndex>=WC_QUIZ.length){
+    // Resultado
+    const pct=Math.round((wcQuizScore/WC_QUIZ.length)*100);
+    const emoji=pct>=80?"🏆":pct>=60?"⚽":"💪";
+    body.innerHTML=`<div class="wc-quiz-result">
+      <div class="wc-quiz-score">${emoji} ${wcQuizScore}/${WC_QUIZ.length}</div>
+      <div class="wc-quiz-score-label">${pct>=80?"Craque! Você sabe tudo sobre a Copa!":pct>=60?"Bom conhecimento! Continue estudando.":"Continue aprendendo sobre a Copa 2026!"}</div>
+      <button class="wc-quiz-restart" onclick="initWCQuiz()">Tentar novamente</button>
+    </div>`;
+    return;
+  }
+
+  const q=WC_QUIZ[wcQuizIndex];
+  body.innerHTML=`
+    <div class="wc-quiz-question">${q.q}</div>
+    <div class="wc-quiz-options">
+      ${q.opts.map((opt,i)=>`<button class="wc-quiz-option" onclick="answerWCQuiz(${i})">${opt}</button>`).join("")}
+    </div>`;
+}
+
+function answerWCQuiz(idx){
+  const q=WC_QUIZ[wcQuizIndex];
+  const btns=document.querySelectorAll(".wc-quiz-option");
+  btns.forEach(b=>b.disabled=true);
+  btns[q.answer].classList.add("correct");
+  if(idx===q.answer){ wcQuizScore++; }
+  else{ btns[idx].classList.add("wrong"); }
+  setTimeout(()=>{ wcQuizIndex++; renderWCQuiz(); }, 1200);
+}
+
+/* ── CONTADOR COPA DO MUNDO 2026 ─────────────────────────────────── */
+function startWorldCupCountdown(){
+  const TARGET=new Date("2026-06-11T22:00:00Z");
+  function update(){
+    const now=new Date();const diff=TARGET-now;
+    if(diff<=0){
+      ["wcDays","wcHours","wcMins","wcSecs"].forEach(id=>{const el=document.getElementById(id);if(el)el.textContent="00";});
+      const badge=document.querySelector(".wc-badge");if(badge)badge.textContent="🏆 AO VIVO";
+      return;
+    }
+    const pad=n=>String(n).padStart(2,"0");
+    const d=document.getElementById("wcDays"),h=document.getElementById("wcHours"),m=document.getElementById("wcMins"),s=document.getElementById("wcSecs");
+    if(d)d.textContent=pad(Math.floor(diff/(1000*60*60*24)));
+    if(h)h.textContent=pad(Math.floor((diff%(1000*60*60*24))/(1000*60*60)));
+    if(m)m.textContent=pad(Math.floor((diff%(1000*60*60))/(1000*60)));
+    if(s)s.textContent=pad(Math.floor((diff%(1000*60))/1000));
+  }
+  update();setInterval(update,1000);
+}
+
+async function initialize(){ bindStaticEvents();const ok=await refreshAllData(false);if(!ok)return;loadAssertiveness();startLiveModule();startAutoRefresh();startWorldCupCountdown();renderWCGroups();renderWCAgenda(); }
 initialize();
 </script>
 </body>
