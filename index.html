@@ -3,7 +3,23 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Scoutly — Radar Inteligente</title>
+  <title>Scoutly — Radar Inteligente de Apostas Esportivas</title>
+  <meta name="description" content="Radar inteligente que analisa dados reais de futebol para identificar as melhores oportunidades de apostas. Picks curados com estatística real, ao vivo e histórico verificado.">
+  <meta name="keywords" content="apostas esportivas, picks futebol, radar apostas, estatísticas futebol, análise jogo, escanteios, gols, probabilidades">
+  <meta name="author" content="Scoutly">
+  <link rel="canonical" href="https://scoutlypro.app">
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://scoutlypro.app">
+  <meta property="og:title" content="Scoutly — Radar Inteligente de Apostas">
+  <meta property="og:description" content="Picks curados com estatística real. Análise de gols, escanteios, finalizações e mais. Acesso gratuito.">
+  <meta property="og:image" content="https://scoutlypro.app/og-image.png">
+  <meta property="og:locale" content="pt_BR">
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Scoutly — Radar Inteligente de Apostas">
+  <meta name="twitter:description" content="Picks curados com estatística real. Acesso gratuito em scoutlypro.app">
+  <meta name="twitter:image" content="https://scoutlypro.app/og-image.png">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -635,43 +651,93 @@
     }
 
     /* ─── ASSERTIVENESS BAR ──────────────────────────────────────────── */
+    /* ── HISTÓRICO DO RADAR ──────────────────────────────────────────── */
     .assert-bar {
-      background: var(--surface);
-      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(0,200,83,0.06), rgba(0,200,83,0.02));
+      border: 1px solid rgba(0,200,83,0.18);
       border-radius: var(--radius-lg);
-      padding: 12px 18px;
+      padding: 16px 20px;
       margin-bottom: 18px;
-      display: flex; align-items: center; gap: 8px;
-      flex-wrap: wrap;
+    }
+    .assert-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 14px; flex-wrap: wrap; gap: 8px;
     }
     .assert-label {
-      font-size: 11px; font-weight: 700; color: var(--text-3);
-      letter-spacing: 0.08em; text-transform: uppercase;
-      flex-shrink: 0;
+      font-size: 11px; font-weight: 700; color: var(--green);
+      letter-spacing: 0.1em; text-transform: uppercase;
     }
-    .assert-divider {
-      width: 1px; height: 16px; background: var(--border);
-      flex-shrink: 0;
+    .assert-total-badge {
+      font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+      color: var(--text-3); background: var(--surface-2);
+      border: 1px solid var(--border); border-radius: 20px;
+      padding: 3px 10px;
     }
-    .assert-items {
+    .assert-hero {
+      display: flex; align-items: center; gap: 20px;
+      margin-bottom: 14px; flex-wrap: wrap;
+    }
+    .assert-big-num {
+      display: flex; flex-direction: column; align-items: center;
+      background: var(--surface-2); border: 1px solid rgba(0,200,83,0.2);
+      border-radius: var(--radius-lg); padding: 14px 20px; flex-shrink: 0;
+    }
+    .assert-big-pct {
+      font-family: var(--font-head); font-size: 42px; font-weight: 900;
+      color: var(--green); line-height: 1; letter-spacing: -0.04em;
+    }
+    .assert-big-label {
+      font-size: 9px; font-weight: 700; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: 0.1em; margin-top: 3px;
+    }
+    .assert-big-sub {
+      font-size: 9px; color: rgba(0,200,83,0.6); margin-top: 2px;
+    }
+    .assert-stats {
+      display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0;
+    }
+    .assert-stat-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 8px;
+    }
+    .assert-stat-label {
+      font-size: 11px; color: var(--text-3); font-weight: 500;
+    }
+    .assert-stat-val {
+      font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+      color: var(--text);
+    }
+    .assert-stat-bar {
+      flex: 1; height: 4px; background: var(--surface-3);
+      border-radius: 2px; overflow: hidden; max-width: 80px;
+    }
+    .assert-stat-fill { height: 100%; border-radius: 2px; background: var(--green); transition: width 0.6s ease; }
+    .assert-stat-fill.amber { background: var(--amber); }
+    .assert-stat-fill.blue { background: var(--blue); }
+    .assert-divider { width: 100%; height: 1px; background: rgba(0,200,83,0.1); margin: 4px 0; }
+    .assert-markets {
       display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
     }
-    .assert-item {
+    .assert-market-chip {
       display: inline-flex; align-items: center; gap: 5px;
       padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700;
-      background: var(--surface-2); border: 1px solid var(--border);
-      color: var(--text-2);
+      background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2);
     }
-    .assert-item .assert-pct {
-      font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+    .assert-market-chip .mpct {
+      font-family: var(--font-mono); font-size: 11px; font-weight: 800;
     }
+    .assert-market-chip.good { background: var(--green-dim); border-color: rgba(0,200,83,0.2); }
+    .assert-market-chip.good .mpct { color: var(--green); }
+    .assert-market-chip.ok { background: var(--amber-dim); border-color: rgba(245,166,35,0.18); }
+    .assert-market-chip.ok .mpct { color: var(--amber); }
+    .assert-market-chip.low .mpct { color: var(--text-3); }
+    .assert-loading { font-size: 11px; color: var(--text-3); font-style: italic; }
+    /* Compat */
+    .assert-items { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .assert-item { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; background: var(--surface-2); border: 1px solid var(--border); color: var(--text-2); }
+    .assert-item .assert-pct { font-family: var(--font-mono); font-size: 12px; font-weight: 700; }
     .assert-item.good { background: var(--green-dim); border-color: rgba(0,200,83,0.2); }
     .assert-item.good .assert-pct { color: var(--green); }
-    .assert-item.ok { background: var(--amber-dim); border-color: rgba(245,166,35,0.18); }
-    .assert-item.ok .assert-pct { color: var(--amber); }
-    .assert-item.low { background: var(--surface-2); border-color: var(--border); }
-    .assert-item.low .assert-pct { color: var(--text-2); }
-    .assert-loading { font-size: 11px; color: var(--text-3); font-style: italic; }
 
     /* ── AO VIVO ──────────────────────────────────────────────────────── */
     .live-badge {
@@ -1569,10 +1635,12 @@
 
   <!-- ══ ASSERTIVIDADE ══════════════════════════════════════════════════════ -->
   <div class="assert-bar" id="assertBar">
-    <span class="assert-label">📊 Histórico do Radar Scoutly</span>
-    <div class="assert-divider"></div>
-    <div class="assert-items" id="assertItems">
-      <span class="assert-loading">Carregando histórico...</span>
+    <div class="assert-header">
+      <span class="assert-label">📊 Histórico do Radar Scoutly</span>
+      <span class="assert-total-badge" id="assertTotalBadge">carregando...</span>
+    </div>
+    <div id="assertHeroSection">
+      <div class="assert-loading">Carregando histórico...</div>
     </div>
   </div>
 
@@ -2460,6 +2528,106 @@ function buildFallbackInsight(match){
 }
 function getInsight(match){ return match.analysis_text||match.insight||buildFallbackInsight(match); }
 
+
+/* ── MERCADOS INDIVIDUAIS POR TIME ───────────────────────────────── */
+function getIndividualMarkets(match) {
+  const m = getMetrics(match);
+  const picks = [];
+
+  // Thresholds de confiança — só gera pick individual se diferença for significativa
+  const HOME_THRESH = 1.3; // casa pelo menos 30% maior que visitante
+  const AWAY_THRESH = 0.77; // visitante menor
+
+  // ── ESCANTEIOS POR TIME ──
+  if (m.homeCorners !== null && m.awayCorners !== null) {
+    const hc = m.homeCorners, ac = m.awayCorners;
+    if (hc > 0 && ac > 0) {
+      const ratio = hc / ac;
+      if (ratio >= HOME_THRESH && hc >= 4.5) {
+        const line = hc >= 6 ? 5.5 : 4.5;
+        picks.push({
+          market: `Mais de ${line} Escanteios (Casa)`,
+          family: "escanteios",
+          direction: "individual",
+          value: hc,
+          confidence: Math.min(0.75, 0.55 + (ratio - HOME_THRESH) * 0.1),
+          chip: "🚩 Casa"
+        });
+      } else if (ratio <= AWAY_THRESH && ac >= 4.5) {
+        const line = ac >= 6 ? 5.5 : 4.5;
+        picks.push({
+          market: `Mais de ${line} Escanteios (Fora)`,
+          family: "escanteios",
+          direction: "individual",
+          value: ac,
+          confidence: Math.min(0.75, 0.55 + (AWAY_THRESH - ratio) * 0.1),
+          chip: "🚩 Fora"
+        });
+      }
+    }
+  }
+
+  // ── CHUTES TOTAIS POR TIME ──
+  if (m.homeShots !== null && m.awayShots !== null) {
+    const hs = m.homeShots, as_ = m.awayShots;
+    if (hs > 0 && as_ > 0) {
+      const ratio = hs / as_;
+      if (ratio >= HOME_THRESH && hs >= 6) {
+        const line = hs >= 9 ? 8.5 : 5.5;
+        picks.push({
+          market: `Mais de ${line} Chutes (Casa)`,
+          family: "shots",
+          direction: "individual",
+          value: hs,
+          confidence: Math.min(0.72, 0.55 + (ratio - HOME_THRESH) * 0.08),
+          chip: "🎯 Casa"
+        });
+      } else if (ratio <= AWAY_THRESH && as_ >= 6) {
+        const line = as_ >= 9 ? 8.5 : 5.5;
+        picks.push({
+          market: `Mais de ${line} Chutes (Fora)`,
+          family: "shots",
+          direction: "individual",
+          value: as_,
+          confidence: Math.min(0.72, 0.55 + (AWAY_THRESH - ratio) * 0.08),
+          chip: "🎯 Fora"
+        });
+      }
+    }
+  }
+
+  // ── CHUTES NO GOL POR TIME ──
+  if (m.homeSOT !== null && m.awaySOT !== null) {
+    const hst = m.homeSOT, ast = m.awaySOT;
+    if (hst > 0 && ast > 0) {
+      const ratio = hst / ast;
+      if (ratio >= HOME_THRESH && hst >= 3) {
+        const line = hst >= 5 ? 4.5 : 2.5;
+        picks.push({
+          market: `Mais de ${line} Chutes no Gol (Casa)`,
+          family: "sot",
+          direction: "individual",
+          value: hst,
+          confidence: Math.min(0.70, 0.55 + (ratio - HOME_THRESH) * 0.08),
+          chip: "🥅 Casa"
+        });
+      } else if (ratio <= AWAY_THRESH && ast >= 3) {
+        const line = ast >= 5 ? 4.5 : 2.5;
+        picks.push({
+          market: `Mais de ${line} Chutes no Gol (Fora)`,
+          family: "sot",
+          direction: "individual",
+          value: ast,
+          confidence: Math.min(0.70, 0.55 + (AWAY_THRESH - ratio) * 0.08),
+          chip: "🥅 Fora"
+        });
+      }
+    }
+  }
+
+  return picks.sort((a, b) => b.confidence - a.confidence);
+}
+
 /* ── SECONDARY PICKS ──────────────────────────────────────────────── */
 function getSecondaryPicks(match){
   const primary=String(getPrimaryPick(match)||"").trim();
@@ -2494,10 +2662,24 @@ function buildAlternativeCopy(match,market){
   return `Alternativa consistente dentro da leitura central do jogo.`;
 }
 function getDetectedMarkets(match){
-  const alts=getSecondaryPicks(match); const items=[];
+  const alts=getSecondaryPicks(match);
+  const individuals=getIndividualMarkets(match);
+  const items=[];
+
+  // Picks alternativos dos campos do banco
   if(alts[0])items.push({market:alts[0],tier:"Boa",family:marketFamily(alts[0]),copy:buildAlternativeCopy(match,alts[0])});
   if(alts[1])items.push({market:alts[1],tier:"Moderada",family:marketFamily(alts[1]),copy:buildAlternativeCopy(match,alts[1])});
-  return items;
+
+  // Mercados individuais por time (quando há desequilíbrio estatístico)
+  for(const ind of individuals.slice(0,2)){
+    // Não duplica se já tem mercado da mesma família
+    if(items.some(i=>marketFamily(i.market)===ind.family&&!ind.market.includes("Casa")&&!ind.market.includes("Fora")))continue;
+    const tier=probabilityToTier(ind.confidence);
+    const copy=`Projeção: ${formatDecimal(ind.value,1)} para este time. Desequilíbrio estatístico favorável.`;
+    items.push({market:ind.market,tier,family:ind.family,copy,chip:ind.chip,individual:true});
+  }
+
+  return items.slice(0,3);
 }
 
 /* ── STATS MARKUP ─────────────────────────────────────────────────── */
@@ -2617,7 +2799,11 @@ function openAnalysis(matchId){
           <div class="markets-list">
             ${detectedMarkets.length?detectedMarkets.map(i=>`
               <div class="market-line">
-                <div class="chips">${chipMarkup(i.tier)}${marketFamilyChip(i.family)}</div>
+                <div class="chips">
+                  ${chipMarkup(i.tier)}
+                  ${marketFamilyChip(i.family)}
+                  ${i.chip?`<span class="chip chip-extra" style="font-size:10px">${escapeHtml(i.chip)}</span>`:""}
+                </div>
                 <div class="market-line-name">${formatMarketDisplay(i.market,"market-line-num","market-line-sublabel")}</div>
                 <div class="market-line-copy">${escapeHtml(i.copy)}</div>
               </div>`).join(""):`<div class="empty-state">Nenhuma alternativa encontrada para este jogo.</div>`}
@@ -3878,7 +4064,20 @@ const LEAGUE_ID_MAP = {
   "UEFA Europa League": 3,
   "UEFA Conference League": 848,
   "CONMEBOL Libertadores": 13,
-  "CONMEBOL Sudamericana": 11
+  "CONMEBOL Sudamericana": 11,
+  "Libertadores": 13,
+  "Sul-Americana": 11,
+  "Copa do Brasil": 73,
+  "Copa do Nordeste": 75,
+  "Recopa Sul-Americana": 14,
+  "Liga Argentina": 128,
+  "Copa Argentina": 130,
+  "Liga Chilena": 265,
+  "Liga Colombiana": 239,
+  "Scottish Premiership": 179,
+  "Allsvenskan": 113,
+  "Eliteserien": 103,
+  "Championship": 40
 };
 
 // Logos oficiais API-Football (https://media.api-sports.io/football/leagues/{id}.png)
@@ -3980,8 +4179,14 @@ function getZoneRules(leagueId) {
     253: { cl:[1,8],   el:[],      rel:[],      clLabel:"Playoffs" },
     // MEXICO
     262: { cl:[1,8],   el:[],      rel:[17,18], clLabel:"Playoffs" },
+    // CONMEBOL COPAS
+    13:  { cl:[1,2],   el:[],      rel:[],      clLabel:"Oitavas de Final" },
+    11:  { cl:[1,2],   el:[],      rel:[],      clLabel:"Próxima Fase" },
+    14:  { cl:[1,1],   el:[],      rel:[],      clLabel:"Final" },
+    73:  { cl:[1,8],   el:[],      rel:[],      clLabel:"Próxima Fase" },
+    75:  { cl:[1,4],   el:[],      rel:[],      clLabel:"Semifinal" },
   };
-  return zones[leagueId] || { cl:[1,4], el:[], rel:[] };
+  return zones[leagueId] || { cl:[1,2], el:[], rel:[] };
 }
 
 function getPosZoneClass(pos, leagueId) {
@@ -4163,8 +4368,9 @@ function toggleStandings(league) {
 
 /* ── ASSERTIVENESS ────────────────────────────────────────────────── */
 async function loadAssertiveness() {
-  const el = document.getElementById("assertItems");
-  if (!el) return;
+  const heroEl = document.getElementById("assertHeroSection");
+  const badgeEl = document.getElementById("assertTotalBadge");
+  if (!heroEl) return;
 
   try {
     const { data, error } = await supabaseClient
@@ -4175,7 +4381,7 @@ async function loadAssertiveness() {
 
     if (error) throw error;
     if (!data || !data.length) {
-      el.innerHTML = `<span class="assert-item"><span class="assert-pct" style="color:var(--text-3)">Sem histórico ainda</span></span>`;
+      heroEl.innerHTML = `<div class="assert-loading">Sem histórico registrado ainda.</div>`;
       return;
     }
 
@@ -4186,70 +4392,84 @@ async function loadAssertiveness() {
     function calcRate(items) {
       if (!items.length) return null;
       const correct = items.filter(i => i.correct === true).length;
-      return Math.round((correct / items.length) * 100);
+      return { pct: Math.round((correct / items.length) * 100), correct, total: items.length };
     }
 
-    function itemClass(pct) {
+    function chipClass(pct) {
       if (pct === null) return "low";
       if (pct >= 65) return "good";
       if (pct >= 55) return "ok";
       return "low";
     }
 
-    function itemHtml(label, pct, count) {
-      if (pct === null) return "";
-      const cls = itemClass(pct);
-      return `<div class="assert-item ${cls}">
-        <span style="color:var(--text-3)">${label}</span>
-        <span class="assert-pct">${pct}%</span>
-        <span style="font-size:9px;color:var(--text-3)">(${count})</span>
+    const weekData  = data.filter(i => new Date(i.created_at) >= weekAgo);
+    const monthData = data.filter(i => new Date(i.created_at) >= monthAgo);
+    const totalRes  = calcRate(data);
+    const weekRes   = calcRate(weekData);
+    const monthRes  = calcRate(monthData);
+
+    // ROI simulado (stake flat +1 unit por acerto, -1 por erro)
+    const roiUnits = data.reduce((acc, i) => acc + (i.correct ? 1 : -1), 0);
+    const roiPct   = Math.round((roiUnits / data.length) * 100);
+
+    // Atualiza badge total
+    if (badgeEl) badgeEl.textContent = `${data.length} picks avaliados`;
+
+    // Mercados
+    const families = {
+      "⚽ Gols":        monthData.filter(i => { const m=String(i.market||"").toLowerCase(); return(m.includes("gol")&&!m.includes("escanteio"))||m.includes("ambas"); }),
+      "🚩 Escanteios":  monthData.filter(i => String(i.market||"").toLowerCase().includes("escanteio")),
+      "🎯 Finalizações":monthData.filter(i => { const m=String(i.market||"").toLowerCase(); return m.includes("finaliz")||m.includes("no gol"); }),
+      "🟨 Cartões":     monthData.filter(i => String(i.market||"").toLowerCase().includes("cart")),
+    };
+
+    // Barra de progresso
+    function bar(pct, cls="") {
+      return `<div class="assert-stat-bar"><div class="assert-stat-fill${cls?" "+cls:""}" style="width:${Math.min(pct,100)}%"></div></div>`;
+    }
+
+    // Linha de stat
+    function statRow(label, res, barCls="") {
+      if (!res) return "";
+      return `<div class="assert-stat-row">
+        <span class="assert-stat-label">${label}</span>
+        ${bar(res.pct, barCls)}
+        <span class="assert-stat-val">${res.pct}% <span style="font-size:9px;color:var(--text-3)">(${res.correct}/${res.total})</span></span>
       </div>`;
     }
 
-    // Por período
-    const weekData = data.filter(i => new Date(i.created_at) >= weekAgo);
-    const monthData = data.filter(i => new Date(i.created_at) >= monthAgo);
-    const weekRate = calcRate(weekData);
-    const monthRate = calcRate(monthData);
-    const totalRate = calcRate(data);
+    // Hero com número grande = total geral
+    heroEl.innerHTML = `
+      <div class="assert-hero">
+        <div class="assert-big-num">
+          <div class="assert-big-pct">${totalRes.pct}%</div>
+          <div class="assert-big-label">Taxa de acerto</div>
+          <div class="assert-big-sub">vs ~50% mercado</div>
+        </div>
+        <div class="assert-stats">
+          ${statRow("Esta semana", weekRes)}
+          ${statRow("Este mês", monthRes, "")}
+          <div class="assert-stat-row">
+            <span class="assert-stat-label">ROI simulado</span>
+            <span class="assert-stat-val" style="color:${roiPct>=0?"var(--green)":"var(--red)"}">${roiPct>=0?"+":""}${roiPct}%</span>
+          </div>
+        </div>
+      </div>
+      <div class="assert-divider"></div>
+      <div class="assert-markets" style="margin-top:10px">
+        ${Object.entries(families)
+          .filter(([,items]) => items.length >= 3)
+          .map(([label, items]) => {
+            const r = calcRate(items);
+            if (!r) return "";
+            const cls = chipClass(r.pct);
+            return `<div class="assert-market-chip ${cls}">${label} <span class="mpct">${r.pct}%</span> <span style="font-size:9px;color:var(--text-3)">(${r.total})</span></div>`;
+          }).join("")}
+      </div>`;
 
-    // Por mercado (nos últimos 30 dias)
-    const families = {
-      "Gols": monthData.filter(i => {
-        const m = String(i.market||"").toLowerCase();
-        return (m.includes("gol") && !m.includes("escanteio")) || m.includes("ambas");
-      }),
-      "Escanteios": monthData.filter(i => String(i.market||"").toLowerCase().includes("escanteio")),
-      "Finalizações": monthData.filter(i => {
-        const m = String(i.market||"").toLowerCase();
-        return m.includes("finaliz") || m.includes("no gol");
-      }),
-      "Cartões": monthData.filter(i => String(i.market||"").toLowerCase().includes("cart")),
-    };
-
-    let html = "";
-    if (weekRate !== null) html += itemHtml("Esta semana", weekRate, weekData.length);
-    if (monthRate !== null) html += itemHtml("Este mês", monthRate, monthData.length);
-
-    // Separador de mercados
-    const familyItems = Object.entries(families)
-      .filter(([,items]) => items.length >= 3)
-      .map(([label, items]) => itemHtml(label, calcRate(items), items.length))
-      .join("");
-
-    if (familyItems) {
-      html += `<div class="assert-divider" style="margin:0 4px"></div>${familyItems}`;
-    }
-
-    if (!html) {
-      html = `<span class="assert-item"><span class="assert-pct" style="color:var(--text-3)">Total: ${totalRate ?? "—"}% (${data.length} picks)</span></span>`;
-    }
-
-    el.innerHTML = html;
   } catch(e) {
     console.error("Erro ao carregar assertividade:", e);
-    const el2 = document.getElementById("assertItems");
-    if (el2) el2.innerHTML = `<span class="assert-loading">Histórico indisponível</span>`;
+    if (heroEl) heroEl.innerHTML = `<div class="assert-loading">Histórico indisponível</div>`;
   }
 }
 
