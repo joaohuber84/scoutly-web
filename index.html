@@ -1008,29 +1008,44 @@
     }
     .back-btn:hover { border-color: var(--border-2); color: var(--text); }
 
-    /* ─── COMPETITION CARDS ───────────────────────────────────────────── */
-    .competitions-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+    /* ─── COMPETIÇÕES ACCORDION ──────────────────────────────────────── */
+    .comp-accordion {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 24px;
+      border-left: 3px solid var(--blue);
+    }
+    .comp-accordion-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; cursor: pointer;
+      transition: background 0.15s;
+    }
+    .comp-accordion-header:hover { background: var(--surface-2); }
+    .comp-accordion-header.open { border-bottom: 1px solid var(--border); }
+    .comp-accordion-left { display: flex; align-items: center; gap: 10px; }
+    .comp-accordion-title { font-size: 16px; font-weight: 800; color: var(--text); }
+    .comp-accordion-count { font-size: 11px; color: var(--text-3); background: var(--surface-2); border: 1px solid var(--border); border-radius: 20px; padding: 3px 10px; }
+    .comp-accordion-toggle { font-size: 12px; color: var(--text-3); font-weight: 700; display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+    .comp-accordion-body { display: none; padding: 14px; }
+    .comp-accordion-body.open { display: block; }
+    .competitions-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
+    @media (min-width: 640px) { .competitions-grid { grid-template-columns: repeat(3,1fr); } }
+    @media (min-width: 900px) { .competitions-grid { grid-template-columns: repeat(4,1fr); } }
+    @media (max-width: 480px) { .competitions-grid { grid-template-columns: 1fr 1fr; } }
 
     .competition-card {
       background: var(--surface-2); border: 1px solid var(--border);
-      border-radius: var(--radius-lg); padding: 14px;
-      cursor: pointer; transition: border-color 0.2s, background 0.2s;
-      position: relative; overflow: hidden;
+      border-radius: var(--radius-lg); padding: 12px;
+      cursor: pointer; transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;
     }
-    .competition-card:hover { border-color: var(--border-2); background: var(--surface-3); }
-    .comp-top {
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 10px; margin-bottom: 8px;
-    }
-    .comp-flag { font-size: 20px; display: flex; align-items: center; }
-    .comp-flag img { border-radius: 3px; }
-    .comp-count {
-      font-size: 11px; color: var(--text-3);
-      background: var(--surface-3); border: 1px solid var(--border);
-      padding: 4px 9px; border-radius: 6px; font-weight: 600;
-    }
-    .comp-name { font-size: 14px; font-weight: 700; color: var(--text); line-height: 1.3; }
-    .comp-hint { font-size: 11px; color: var(--text-3); margin-top: 5px; }
+    .competition-card:hover { border-color: var(--border-2); background: var(--surface-3); transform: translateY(-2px); }
+    .comp-top { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 100%; }
+    .comp-logo { width: 40px; height: 40px; object-fit: contain; border-radius: 6px; }
+    .comp-flag { font-size: 20px; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; }
+    .comp-flag img { border-radius: 4px; width: 36px; height: 27px; object-fit: cover; }
+    .comp-count { font-size: 10px; color: var(--text-3); background: var(--surface-3); border: 1px solid var(--border); padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+    .comp-name { font-size: 12px; font-weight: 700; color: var(--text); line-height: 1.3; }
+    .comp-hint { font-size: 10px; color: var(--green); margin-top: 2px; }
 
     /* ─── GAME CARDS ──────────────────────────────────────────────────── */
     .games-grid { display: grid; gap: 8px; margin-top: 14px; }
@@ -1598,27 +1613,29 @@
   </div>
 
   <!-- ══ COMPETIÇÕES ══════════════════════════════════════════════════════ -->
-  <div class="section">
-    <div class="section-card">
-      <div class="section-head">
-        <div>
-          <h2 class="section-title">🌍 Competições em destaque</h2>
-          <p class="section-desc">Principais ligas e copas com jogos nos próximos 7 dias.</p>
-        </div>
-        <button class="back-btn hidden" id="backToCompetitionsBtn">← Voltar</button>
+  <div class="comp-accordion" id="compAccordion">
+    <div class="comp-accordion-header" id="compAccordionHeader" onclick="toggleCompAccordion()">
+      <div class="comp-accordion-left">
+        <div class="comp-accordion-title">🌍 Competições em destaque</div>
+        <span class="comp-accordion-count" id="compCount">carregando...</span>
       </div>
-
+      <div class="comp-accordion-toggle">
+        Ver todas <span id="compToggleIcon" style="transition:transform 0.2s;display:inline-block">▼</span>
+      </div>
+    </div>
+    <div class="comp-accordion-body" id="compAccordionBody">
       <div id="competitionsWrap">
         <div id="competitionsGrid" class="competitions-grid">
           <div class="loading-state">Carregando competições...</div>
         </div>
       </div>
 
-      <div id="gamesWrap" class="hidden">
-        <div class="section-head" style="margin-top:8px">
+      <div id="gamesWrap" class="hidden" style="margin-top:14px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap">
           <div>
-            <h3 class="section-title" id="selectedCompetitionTitle">Jogos</h3>
-            <p class="section-desc" id="selectedCompetitionCopy"></p>
+            <button class="back-btn" id="backToCompetitionsBtn" onclick="backToCompetitions()" style="margin-bottom:8px">← Voltar</button>
+            <h3 style="font-family:var(--font-head);font-size:17px;font-weight:800;letter-spacing:-0.02em" id="selectedCompetitionTitle">Jogos</h3>
+            <p style="font-size:12px;color:var(--text-2);margin-top:4px" id="selectedCompetitionCopy"></p>
           </div>
           <button class="standings-toggle-btn hidden" id="standingsToggleBtn">📊 Ver classificação</button>
         </div>
@@ -1722,10 +1739,13 @@
 <div class="wc-overlay" id="wcOverlay">
   <div class="wc-panel">
     <div class="wc-panel-hd">
-      <div class="wc-panel-hd-left">
+      <div class="wc-panel-hd-left" style="display:flex;align-items:flex-start;gap:14px">
+        <img src="https://media.api-sports.io/football/leagues/1.png" width="48" height="48" style="object-fit:contain;flex-shrink:0;margin-top:6px;border-radius:6px" onerror="this.style.display='none'">
+        <div>
         <div class="eyebrow">Copa do Mundo 2026</div>
         <h2 class="wc-panel-title">FIFA World Cup <span>2026</span></h2>
-        <div class="wc-panel-sub">🇺🇸 Estados Unidos · 🇨🇦 Canadá · 🇲🇽 México &nbsp;·&nbsp; 48 seleções · 104 jogos · 11 jun – 19 jul 2026</div>
+        <div class="wc-panel-sub" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><img src="https://flagcdn.com/w40/us.png" width="18" style="border-radius:2px"> Estados Unidos · <img src="https://flagcdn.com/w40/ca.png" width="18" style="border-radius:2px"> Canadá · <img src="https://flagcdn.com/w40/mx.png" width="18" style="border-radius:2px"> México &nbsp;·&nbsp; 48 seleções · 104 jogos · 11 jun – 19 jul 2026</div>
+        </div>
       </div>
       <button class="close-btn" onclick="closeWC2026()">✕</button>
     </div>
@@ -1755,7 +1775,7 @@
       <div class="wc-tab-content" id="wctab-agenda">
         <div class="wc-agenda-filter">
           <button class="wc-filter-btn active" data-filter="todos" onclick="filterWCAgenda('todos',this)">Todos os jogos</button>
-          <button class="wc-filter-btn" data-filter="brasil" onclick="filterWCAgenda('brasil',this)">🇧🇷 Brasil</button>
+          <button class="wc-filter-btn" data-filter="brasil" onclick="filterWCAgenda('brasil',this)" style="display:flex;align-items:center;gap:5px"><img src="https://flagcdn.com/w40/br.png" width="16" style="border-radius:2px"> Brasil</button>
           <button class="wc-filter-btn" data-filter="fase1" onclick="filterWCAgenda('fase1',this)">Fase de Grupos</button>
         </div>
         <div id="wcAgendaList"></div>
@@ -1776,8 +1796,8 @@
           </div>
           <div class="wc-curiosidade-card">
             <div class="wc-cur-icon">⭐</div>
-            <div class="wc-cur-title">Última Copa de Messi e Cristiano?</div>
-            <div class="wc-cur-text">Lionel Messi terá 38 anos e Cristiano Ronaldo 41 durante o torneio. Ambos declararam querer disputar mais uma Copa — provavelmente será a despedida de dois dos maiores da história.</div>
+            <div class="wc-cur-title">Últimas Copas de ídolos</div>
+            <div class="wc-cur-text">Messi (38 anos) e Cristiano Ronaldo (41) vivem provavelmente sua última Copa. E o Brasil leva Neymar Jr (34) — convocado nos 45 do segundo tempo após longa lesão. Sua 4ª Copa e último capítulo no Mundial.</div>
           </div>
           <div class="wc-curiosidade-card">
             <div class="wc-cur-icon">🆕</div>
@@ -1785,7 +1805,7 @@
             <div class="wc-cur-text">Ao menos 6 seleções farão sua estreia histórica numa Copa do Mundo em 2026. Entre elas estão Canadá (que co-sedia), Panamá e algumas nações africanas e asiáticas inéditas.</div>
           </div>
           <div class="wc-curiosidade-card">
-            <div class="wc-cur-icon">🇧🇷</div>
+            <div class="wc-cur-icon"><img src="https://flagcdn.com/w40/br.png" width="32" style="border-radius:4px"></div>
             <div class="wc-cur-title">Brasil no Grupo C</div>
             <div class="wc-cur-text">A Seleção Brasileira foi sorteada no Grupo C ao lado de Marrocos, Haiti e Escócia. O Brasil enfrenta o Haiti em sua estreia — adversário historicamente inédito para a Seleção numa fase de grupos.</div>
           </div>
@@ -2216,16 +2236,23 @@ function getLeagueBadge(league, country=""){
 }
 
 function getCompetitionBadge(league, country="", logoUrl="") {
-  // Logo oficial da API tem prioridade
-  if (logoUrl) {
-    return `<img src="${escapeHtml(logoUrl)}" width="28" height="28" alt="${escapeHtml(league)}" style="object-fit:contain;border-radius:4px;" onerror="this.style.display='none'">`;
+  // 1. Logo oficial da API-Football (mapa local)
+  const mappedLogo = getLeagueLogoUrl(league);
+  if (mappedLogo) {
+    return `<img src="${escapeHtml(mappedLogo)}" width="32" height="32" alt="${escapeHtml(league)}" style="object-fit:contain;border-radius:4px;" onerror="this.src=''">`;
   }
+  // 2. Logo vindo do banco
+  if (logoUrl) {
+    return `<img src="${escapeHtml(logoUrl)}" width="32" height="32" alt="${escapeHtml(league)}" style="object-fit:contain;border-radius:4px;" onerror="this.src=''">`;
+  }
+  // 3. Bandeira do país
   const flagCode = getFlag(country||inferCountryFromLeague(normalizeLeagueName(league)), league);
   if (flagCode) {
     return `<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="28" alt="${escapeHtml(country||"")}" style="border-radius:3px;">`;
   }
-  if (isCupLeague(league)) return `<span style="font-size:20px">🏆</span>`;
-  return `<span style="font-size:20px">⚽</span>`;
+  // 4. Emoji troféu/bola
+  if (isCupLeague(league)) return `<span style="font-size:24px">🏆</span>`;
+  return `<span style="font-size:24px">⚽</span>`;
 }
 
 function shouldHideLeague(l){
@@ -3178,16 +3205,19 @@ function buildCompetitions(){
 function renderCompetitions(){
   buildCompetitions();
   const grid=document.getElementById("competitionsGrid"); if(!grid)return;
+  // Atualiza contador no accordion
+  const countEl=document.getElementById("compCount");
+  if(countEl)countEl.textContent=`${state.competitions.length} liga${state.competitions.length!==1?"s":""}`;
   if(!state.competitions.length){grid.innerHTML=`<div class="empty-state">Nenhuma competição encontrada.</div>`;return;}
   grid.innerHTML=state.competitions.map(comp=>{
     const badge = getCompetitionBadge(comp.league, comp.country, comp.logo_url||"");
     return `<div class="competition-card" data-league="${encodeURIComponent(comp.league)}" role="button" tabindex="0">
       <div class="comp-top">
         <div class="comp-flag">${badge}</div>
-        <div class="comp-count">${comp.count} jogo(s)</div>
+        <div class="comp-count">${comp.count} jogo${comp.count!==1?"s":""}</div>
       </div>
       <div class="comp-name">${escapeHtml(getLeagueDisplay(comp.league))}</div>
-      <div class="comp-hint">Ver jogos desta competição →</div>
+      <div class="comp-hint">↗ ver jogos</div>
     </div>`;
   }).join("");
 
@@ -3200,6 +3230,17 @@ function renderCompetitions(){
   grid.onclick=handler; grid.onkeydown=handler;
 }
 
+function toggleCompAccordion(){
+  const body=document.getElementById("compAccordionBody");
+  const header=document.getElementById("compAccordionHeader");
+  const icon=document.getElementById("compToggleIcon");
+  if(!body)return;
+  const isOpen=body.classList.contains("open");
+  body.classList.toggle("open",!isOpen);
+  header.classList.toggle("open",!isOpen);
+  if(icon)icon.style.transform=isOpen?"":"rotate(180deg)";
+}
+
 function openCompetition(league){
   state.selectedLeague=league;
   const comp=state.competitions.find(c=>c.league===league);
@@ -3210,7 +3251,6 @@ function openCompetition(league){
 
   document.getElementById("competitionsWrap")?.classList.add("hidden");
   document.getElementById("gamesWrap")?.classList.remove("hidden");
-  document.getElementById("backToCompetitionsBtn")?.classList.remove("hidden");
 
   // Reset standings state
   standingsVisible = false;
@@ -3267,7 +3307,6 @@ function backToCompetitions(){
   standingsVisible=false;
   document.getElementById("competitionsWrap")?.classList.remove("hidden");
   document.getElementById("gamesWrap")?.classList.add("hidden");
-  document.getElementById("backToCompetitionsBtn")?.classList.add("hidden");
   document.getElementById("standingsToggleBtn")?.classList.add("hidden");
   document.getElementById("standingsWrap")?.classList.add("hidden");
   document.getElementById("gamesGrid")?.classList.remove("hidden");
@@ -3831,6 +3870,47 @@ const LEAGUE_ID_MAP = {
   "CONMEBOL Sudamericana": 11
 };
 
+// Logos oficiais API-Football (https://media.api-sports.io/football/leagues/{id}.png)
+const LEAGUE_LOGO_MAP = {
+  "Brasileirão Série A": "https://media.api-sports.io/football/leagues/71.png",
+  "Brasileirão Série B": "https://media.api-sports.io/football/leagues/72.png",
+  "Premier League": "https://media.api-sports.io/football/leagues/39.png",
+  "La Liga": "https://media.api-sports.io/football/leagues/140.png",
+  "Serie A": "https://media.api-sports.io/football/leagues/135.png",
+  "Bundesliga": "https://media.api-sports.io/football/leagues/78.png",
+  "Ligue 1": "https://media.api-sports.io/football/leagues/61.png",
+  "Eredivisie": "https://media.api-sports.io/football/leagues/88.png",
+  "Liga MX": "https://media.api-sports.io/football/leagues/262.png",
+  "MLS": "https://media.api-sports.io/football/leagues/253.png",
+  "Primeira Liga": "https://media.api-sports.io/football/leagues/94.png",
+  "Austrian Bundesliga": "https://media.api-sports.io/football/leagues/218.png",
+  "Belgian Pro League": "https://media.api-sports.io/football/leagues/144.png",
+  "Superliga": "https://media.api-sports.io/football/leagues/119.png",
+  "Super League Greece": "https://media.api-sports.io/football/leagues/197.png",
+  "Super Lig": "https://media.api-sports.io/football/leagues/203.png",
+  "Saudi Pro League": "https://media.api-sports.io/football/leagues/307.png",
+  "Liga Argentina": "https://media.api-sports.io/football/leagues/128.png",
+  "UEFA Champions League": "https://media.api-sports.io/football/leagues/2.png",
+  "UEFA Europa League": "https://media.api-sports.io/football/leagues/3.png",
+  "UEFA Conference League": "https://media.api-sports.io/football/leagues/848.png",
+  "Libertadores": "https://media.api-sports.io/football/leagues/13.png",
+  "Sul-Americana": "https://media.api-sports.io/football/leagues/11.png",
+  "Championship": "https://media.api-sports.io/football/leagues/40.png",
+  "Copa del Rey": "https://media.api-sports.io/football/leagues/143.png",
+  "DFB-Pokal": "https://media.api-sports.io/football/leagues/81.png",
+  "FA Cup": "https://media.api-sports.io/football/leagues/45.png",
+  "Coppa Italia": "https://media.api-sports.io/football/leagues/137.png",
+  "Coupe de France": "https://media.api-sports.io/football/leagues/66.png",
+  "Scottish Premiership": "https://media.api-sports.io/football/leagues/179.png",
+  "Allsvenskan": "https://media.api-sports.io/football/leagues/113.png",
+  "Eliteserien": "https://media.api-sports.io/football/leagues/103.png",
+};
+
+function getLeagueLogoUrl(league) {
+  const n = normalizeLeagueName(league);
+  return LEAGUE_LOGO_MAP[n] || "";
+}
+
 const CURRENT_SEASON = new Date().getFullYear();
 const API_FOOTBALL_KEY = "705f52b4ec1295f3c369365c2d71cb71";
 
@@ -4254,7 +4334,7 @@ function startAutoRefresh(){
 
 function bindStaticEvents(){
   const bind=(id,fn)=>{const el=document.getElementById(id);if(el&&!el.dataset.bound){el.addEventListener("click",fn);el.dataset.bound="1";}};
-  bind("backToCompetitionsBtn",backToCompetitions);
+  // backToCompetitionsBtn tem onclick no HTML
   bind("closeAnalysisBtn",closeAnalysis);
   const ov=document.getElementById("analysisOverlay");
   if(ov&&!ov.dataset.bound){ov.addEventListener("click",e=>{if(e.target.id==="analysisOverlay")closeAnalysis();});ov.dataset.bound="1";}
