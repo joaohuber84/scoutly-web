@@ -122,44 +122,42 @@
       overflow-y: visible;
       padding: 8px 24px 24px;
     }
-    .radar-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 8px;
-    }
-    @media (max-width: 900px) { .radar-grid { grid-template-columns: repeat(2,1fr); } }
-    @media (max-width: 600px) { .radar-grid { grid-template-columns: 1fr; } }
+    /* Radar lista por hora — clean e organizado */
+    .radar-grid { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
     .radar-item-v2 {
       background: var(--surface-2);
       border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 14px 16px;
+      border-radius: var(--radius);
+      padding: 12px 16px;
       cursor: pointer;
-      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+      transition: border-color 0.2s, background 0.2s, transform 0.12s;
       position: relative;
-      display: flex; flex-direction: column; gap: 8px;
+      display: grid;
+      grid-template-columns: 28px 1fr auto;
+      align-items: center;
+      gap: 12px;
     }
     .radar-item-v2::before {
       content: ''; position: absolute; left: 0; top: 0; bottom: 0;
       width: 3px; border-radius: 3px 0 0 3px;
-      background: var(--green); opacity: 0.35;
+      background: var(--green); opacity: 0.3;
       transition: opacity 0.2s;
     }
-    .radar-item-v2:hover { border-color: var(--border-2); background: var(--surface-3); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.2); }
+    .radar-item-v2:hover { border-color: var(--border-2); background: var(--surface-3); transform: translateX(3px); }
     .radar-item-v2:hover::before { opacity: 1; }
-    .radar-item-v2:active { transform: translateY(0) scale(0.99); }
-    .ri2-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .ri2-league { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text-3); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+    .radar-item-v2:active { transform: translateX(3px) scale(0.99); }
+    .ri2-rank { width: 26px; height: 26px; border-radius: 8px; background: var(--surface-3); border: 1px solid var(--border-2); color: var(--text-3); font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .ri2-main { min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .ri2-header { display: flex; align-items: center; gap: 6px; }
+    .ri2-league { display: flex; align-items: center; gap: 5px; font-size: 10px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ri2-league img { border-radius: 2px; flex-shrink: 0; }
-    .ri2-rank { width: 22px; height: 22px; border-radius: 6px; background: var(--surface-3); border: 1px solid var(--border-2); color: var(--text-3); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-    .ri2-teams { display: flex; align-items: center; gap: 8px; }
-    .ri2-team-names { font-size: 13px; font-weight: 700; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .ri2-kickoff { font-family: var(--font-mono); font-size: 10px; color: var(--amber); font-weight: 600; flex-shrink: 0; }
-    .ri2-market { margin-top: 2px; }
-    .ri2-market-num { font-family: var(--font-mono); font-size: 20px; font-weight: 800; color: var(--green); line-height: 1; display: block; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
-    .ri2-market-label { font-size: 10px; font-weight: 600; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-top: 2px; }
-    .ri2-footer { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .ri2-teams { display: flex; align-items: center; gap: 7px; }
+    .ri2-team-names { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ri2-kickoff { font-family: var(--font-mono); font-size: 10px; color: var(--amber); font-weight: 700; flex-shrink: 0; margin-left: auto; }
+    .ri2-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+    .ri2-market-num { font-family: var(--font-mono); font-size: 16px; font-weight: 800; color: var(--green); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; white-space: nowrap; }
+    .ri2-market-label { font-size: 9px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+    .ri2-chips { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
 
     /* ─── COPA 2026 OVERLAY ───────────────────────────────────────────── */
     .wc-overlay {
@@ -1802,14 +1800,14 @@
           <div style="font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px">🏆 Maiores campeões mundiais</div>
           <div style="font-size:12px;color:var(--text-3);margin-bottom:12px">Seleções com mais títulos na história da Copa do Mundo FIFA</div>
           <div class="wc-campoes">
-            <div class="wc-campao-card"><div class="wc-campao-flag">🇧🇷</div><div class="wc-campao-titulos">5</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Brasil</div></div>
-            <div class="wc-campao-card"><div class="wc-campao-flag">🇩🇪</div><div class="wc-campao-titulos">4</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Alemanha</div></div>
-            <div class="wc-campao-card"><div class="wc-campao-flag">🇮🇹</div><div class="wc-campao-titulos">4</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Itália</div></div>
-            <div class="wc-campao-card"><div class="wc-campao-flag">🇦🇷</div><div class="wc-campao-titulos">3</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Argentina</div></div>
-            <div class="wc-campao-card"><div class="wc-campao-flag">🇫🇷</div><div class="wc-campao-titulos">2</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">França</div></div>
-            <div class="wc-campao-card"><div class="wc-campao-flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</div><div class="wc-campao-titulos">1</div><div class="wc-campao-label">título</div><div class="wc-campao-name">Inglaterra</div></div>
-            <div class="wc-campao-card"><div class="wc-campao-flag">🇪🇸</div><div class="wc-campao-titulos">1</div><div class="wc-campao-label">título</div><div class="wc-campao-name">Espanha</div></div>
-            <div class="wc-campao-card"><div class="wc-campao-flag">🇺🇾</div><div class="wc-campao-titulos">2</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Uruguai</div></div>
+            <div class="wc-campao-card"><div class="wc-campao-flag"><img src="https://flagcdn.com/w40/br.png" width="28" height="21" style="border-radius:3px;object-fit:cover"></div><div class="wc-campao-titulos">5</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Brasil</div></div>
+            <div class="wc-campao-card"><div class="wc-campao-flag"><img src="https://flagcdn.com/w40/de.png" width="28" height="21" style="border-radius:3px;object-fit:cover"></div><div class="wc-campao-titulos">4</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Alemanha</div></div>
+            <div class="wc-campao-card"><div class="wc-campao-flag"><img src="https://flagcdn.com/w40/it.png" width="28" height="21" style="border-radius:3px;object-fit:cover"></div><div class="wc-campao-titulos">4</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Itália</div></div>
+            <div class="wc-campao-card"><div class="wc-campao-flag"><img src="https://flagcdn.com/w40/ar.png" width="28" height="21" style="border-radius:3px;object-fit:cover"></div><div class="wc-campao-titulos">3</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Argentina</div></div>
+            <div class="wc-campao-card"><div class="wc-campao-flag"><img src="https://flagcdn.com/w40/fr.png" width="28" height="21" style="border-radius:3px;object-fit:cover"></div><div class="wc-campao-titulos">2</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">França</div></div>
+            <div class="wc-campao-card"><div class="wc-campao-flag"><img src="https://flagcdn.com/w40/gb-eng.png" width="28" height="21" style="border-radius:3px;object-fit:cover"></div><div class="wc-campao-titulos">1</div><div class="wc-campao-label">título</div><div class="wc-campao-name">Inglaterra</div></div>
+            <div class="wc-campao-card"><div class="wc-campao-flag"><img src="https://flagcdn.com/w40/es.png" width="28" height="21" style="border-radius:3px;object-fit:cover"></div><div class="wc-campao-titulos">1</div><div class="wc-campao-label">título</div><div class="wc-campao-name">Espanha</div></div>
+            <div class="wc-campao-card"><div class="wc-campao-flag"><img src="https://flagcdn.com/w40/uy.png" width="28" height="21" style="border-radius:3px;object-fit:cover"></div><div class="wc-campao-titulos">2</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Uruguai</div></div>
           </div>
         </div>
 
@@ -1817,12 +1815,63 @@
           <div style="font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px">✨ Estreias históricas em 2026</div>
           <div style="font-size:12px;color:var(--text-3);margin-bottom:12px">Seleções que disputarão sua primeira Copa do Mundo em 2026</div>
           <div class="wc-estreantes">
-            <div class="wc-estreante-badge">🇨🇦 Canadá</div>
-            <div class="wc-estreante-badge">🇭🇹 Haiti</div>
-            <div class="wc-estreante-badge">🇦🇴 Angola</div>
-            <div class="wc-estreante-badge">🇨🇩 R.D. Congo</div>
-            <div class="wc-estreante-badge">🇨🇮 Costa do Marfim</div>
-            <div class="wc-estreante-badge">🇵🇰 Paquistão</div>
+            <div class="wc-estreante-badge"><img src="https://flagcdn.com/w40/ca.png" width="18" height="13" style="border-radius:2px;object-fit:cover"> Canadá</div>
+            <div class="wc-estreante-badge"><img src="https://flagcdn.com/w40/ht.png" width="18" height="13" style="border-radius:2px;object-fit:cover"> Haiti</div>
+            <div class="wc-estreante-badge"><img src="https://flagcdn.com/w40/ao.png" width="18" height="13" style="border-radius:2px;object-fit:cover"> Angola</div>
+            <div class="wc-estreante-badge"><img src="https://flagcdn.com/w40/cd.png" width="18" height="13" style="border-radius:2px;object-fit:cover"> R.D. Congo</div>
+            <div class="wc-estreante-badge"><img src="https://flagcdn.com/w40/ci.png" width="18" height="13" style="border-radius:2px;object-fit:cover"> Costa do Marfim</div>
+            <div class="wc-estreante-badge"><img src="https://flagcdn.com/w40/na.png" width="18" height="13" style="border-radius:2px;object-fit:cover"> Namíbia</div>
+          </div>
+        </div>
+
+        <div style="margin-top:24px">
+          <div style="font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px">🌟 Últimas Copas de ídolos</div>
+          <div style="font-size:12px;color:var(--text-3);margin-bottom:12px">Craques que podem dizer adeus ao Mundial em 2026</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;align-items:center;gap:12px">
+              <img src="https://flagcdn.com/w40/ar.png" width="28" style="border-radius:3px;flex-shrink:0">
+              <div><div style="font-size:13px;font-weight:800;color:var(--text)">Lionel Messi — 38 anos</div><div style="font-size:11px;color:var(--text-2);margin-top:3px">Campeão no Catar em 2022. Provavelmente sua última Copa — quer defender o título com a Argentina.</div></div>
+            </div>
+            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;align-items:center;gap:12px">
+              <img src="https://flagcdn.com/w40/pt.png" width="28" style="border-radius:3px;flex-shrink:0">
+              <div><div style="font-size:13px;font-weight:800;color:var(--text)">Cristiano Ronaldo — 41 anos</div><div style="font-size:11px;color:var(--text-2);margin-top:3px">Será o jogador mais velho da Copa. Sua 6ª Copa consecutiva — recorde absoluto na história do futebol.</div></div>
+            </div>
+            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;align-items:center;gap:12px">
+              <img src="https://flagcdn.com/w40/br.png" width="28" style="border-radius:3px;flex-shrink:0">
+              <div><div style="font-size:13px;font-weight:800;color:var(--text)">Neymar Jr — 34 anos</div><div style="font-size:11px;color:var(--text-2);margin-top:3px">Convocado nos 45 do segundo tempo após longa recuperação. Sua 4ª Copa e a última chance de conquistar o título que falta na carreira do camisa 10.</div></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:24px">
+          <div style="font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text);margin-bottom:4px">⚽ Maiores artilheiros das Copas</div>
+          <div style="font-size:12px;color:var(--text-3);margin-bottom:12px">Top 5 goleadores de todos os tempos em Copas do Mundo FIFA</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="background:var(--surface-2);border:1px solid rgba(245,166,35,0.3);border-radius:var(--radius);padding:12px 16px;display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:12px">
+              <div style="font-family:var(--font-mono);font-size:16px;font-weight:900;color:var(--amber)">1º</div>
+              <div><div style="font-size:13px;font-weight:700;color:var(--text)">Miroslav Klose</div><div style="font-size:10px;color:var(--text-3);display:flex;align-items:center;gap:4px;margin-top:2px"><img src="https://flagcdn.com/w40/de.png" width="14" style="border-radius:2px"> Alemanha</div></div>
+              <div style="font-family:var(--font-mono);font-size:24px;font-weight:900;color:var(--amber)">16</div>
+            </div>
+            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:12px">
+              <div style="font-family:var(--font-mono);font-size:16px;font-weight:900;color:var(--text-3)">2º</div>
+              <div><div style="font-size:13px;font-weight:700;color:var(--text)">Ronaldo Fenômeno</div><div style="font-size:10px;color:var(--text-3);display:flex;align-items:center;gap:4px;margin-top:2px"><img src="https://flagcdn.com/w40/br.png" width="14" style="border-radius:2px"> Brasil</div></div>
+              <div style="font-family:var(--font-mono);font-size:24px;font-weight:900;color:var(--green)">15</div>
+            </div>
+            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:12px">
+              <div style="font-family:var(--font-mono);font-size:16px;font-weight:900;color:var(--text-3)">3º</div>
+              <div><div style="font-size:13px;font-weight:700;color:var(--text)">Gerd Müller</div><div style="font-size:10px;color:var(--text-3);display:flex;align-items:center;gap:4px;margin-top:2px"><img src="https://flagcdn.com/w40/de.png" width="14" style="border-radius:2px"> Alemanha</div></div>
+              <div style="font-family:var(--font-mono);font-size:24px;font-weight:900;color:var(--text-2)">14</div>
+            </div>
+            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:12px">
+              <div style="font-family:var(--font-mono);font-size:16px;font-weight:900;color:var(--text-3)">4º</div>
+              <div><div style="font-size:13px;font-weight:700;color:var(--text)">Lionel Messi</div><div style="font-size:10px;color:var(--text-3);display:flex;align-items:center;gap:4px;margin-top:2px"><img src="https://flagcdn.com/w40/ar.png" width="14" style="border-radius:2px"> Argentina</div></div>
+              <div style="font-family:var(--font-mono);font-size:24px;font-weight:900;color:var(--text-2)">13</div>
+            </div>
+            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:12px">
+              <div style="font-family:var(--font-mono);font-size:16px;font-weight:900;color:var(--text-3)">4º</div>
+              <div><div style="font-size:13px;font-weight:700;color:var(--text)">Just Fontaine</div><div style="font-size:10px;color:var(--text-3);display:flex;align-items:center;gap:4px;margin-top:2px"><img src="https://flagcdn.com/w40/fr.png" width="14" style="border-radius:2px"> França</div></div>
+              <div style="font-family:var(--font-mono);font-size:24px;font-weight:900;color:var(--text-2)">13</div>
+            </div>
           </div>
         </div>
       </div>
@@ -2963,33 +3012,35 @@ function renderRadar(){
   }
 
   list.innerHTML=Array.from(groupsByDay.entries()).map(([,dayGroup])=>{
-    return `<div class="radar-day" style="margin-bottom:16px">
-      <div class="radar-day-label" style="font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+    return `<div class="radar-day" style="margin-bottom:20px">
+      <div style="font-size:10px;font-weight:700;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
         ${escapeHtml(dayGroup.label)}
-        <span style="background:var(--surface-3);border-radius:20px;padding:2px 8px;font-size:9px">${dayGroup.items.length} jogo${dayGroup.items.length!==1?"s":""}</span>
+        <span style="background:var(--surface-3);border-radius:20px;padding:2px 8px;font-size:9px;color:var(--text-3)">${dayGroup.items.length} pick${dayGroup.items.length!==1?"s":""}</span>
       </div>
       <div class="radar-grid">
         ${dayGroup.items.map(item=>`
           <div class="radar-item-v2" data-match-id="${escapeHtml(item.id)}">
-            <div class="ri2-header">
-              <div class="ri2-league">
-                ${getLeagueBadge(item.league,item.country||inferCountryFromLeague(item.league))}
-                ${escapeHtml(getLeagueDisplay(item.league))}
+            <div class="ri2-rank">${item.visualRank}</div>
+            <div class="ri2-main">
+              <div class="ri2-header">
+                <div class="ri2-league">
+                  ${getLeagueBadge(item.league,item.country||inferCountryFromLeague(item.league))}
+                  ${escapeHtml(getLeagueDisplay(item.league))}
+                </div>
+                <div class="ri2-kickoff">${formatKickoffHour(item.kickoff)}</div>
               </div>
-              <div class="ri2-rank">${item.visualRank}</div>
+              <div class="ri2-teams">
+                ${teamBadge(item,"home","sm")}
+                <div class="ri2-team-names">${escapeHtml(item.home_team)} × ${escapeHtml(item.away_team)}</div>
+                ${teamBadge(item,"away","sm")}
+              </div>
             </div>
-            <div class="ri2-teams">
-              ${teamBadge(item,"home","sm")}
-              <div class="ri2-team-names">${escapeHtml(item.home_team)} × ${escapeHtml(item.away_team)}</div>
-              ${teamBadge(item,"away","sm")}
-              <div class="ri2-kickoff">${formatKickoffHour(item.kickoff)}</div>
-            </div>
-            <div class="ri2-market">
-              ${formatMarketDisplay(item.radar_market,"ri2-market-num","ri2-market-label")}
-            </div>
-            <div class="ri2-footer">
-              ${chipMarkup(probabilityToTier(item.radar_probability))}
-              ${marketFamilyChip(marketFamily(item.radar_market))}
+            <div class="ri2-right">
+              <div>${formatMarketDisplay(item.radar_market,"ri2-market-num","ri2-market-label")}</div>
+              <div class="ri2-chips">
+                ${chipMarkup(probabilityToTier(item.radar_probability))}
+                ${marketFamilyChip(marketFamily(item.radar_market))}
+              </div>
             </div>
           </div>`).join("")}
       </div>
@@ -4213,44 +4264,103 @@ function bindStaticEvents(){
 
 /* ── COPA DO MUNDO 2026 ──────────────────────────────────────────── */
 const WC2026_GROUPS = [
-  { name:"A", teams:[{name:"México",flag:"🇲🇽"},{name:"Equador",flag:"🇪🇨"},{name:"Holanda",flag:"🇳🇱"},{name:"Congo",flag:"🇨🇩",debut:true}] },
-  { name:"B", teams:[{name:"EUA",flag:"🇺🇸",debut:true},{name:"Panamá",flag:"🇵🇦",debut:true},{name:"Sérvia",flag:"🇷🇸"},{name:"Camarões",flag:"🇨🇲"}] },
-  { name:"C", teams:[{name:"Brasil",flag:"🇧🇷"},{name:"Marrocos",flag:"🇲🇦"},{name:"Haiti",flag:"🇭🇹",debut:true},{name:"Escócia",flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿"}] },
-  { name:"D", teams:[{name:"Alemanha",flag:"🇩🇪"},{name:"Japão",flag:"🇯🇵"},{name:"Costa Rica",flag:"🇨🇷"},{name:"Austrália",flag:"🇦🇺"}] },
-  { name:"E", teams:[{name:"Espanha",flag:"🇪🇸"},{name:"Argentina",flag:"🇦🇷"},{name:"Suécia",flag:"🇸🇪"},{name:"Angola",flag:"🇦🇴",debut:true}] },
-  { name:"F", teams:[{name:"Portugal",flag:"🇵🇹"},{name:"Romênia",flag:"🇷🇴"},{name:"Senegal",flag:"🇸🇳"},{name:"México B",flag:"🇲🇽"}] },
-  { name:"G", teams:[{name:"França",flag:"🇫🇷"},{name:"Croácia",flag:"🇭🇷"},{name:"Nigéria",flag:"🇳🇬"},{name:"Bélgica",flag:"🇧🇪"}] },
-  { name:"H", teams:[{name:"Uruguai",flag:"🇺🇾"},{name:"Colômbia",flag:"🇨🇴"},{name:"Eslováquia",flag:"🇸🇰"},{name:"Namíbia",flag:"🇳🇦",debut:true}] },
-  { name:"I", teams:[{name:"Canadá",flag:"🇨🇦",debut:true},{name:"Peru",flag:"🇵🇪"},{name:"Noruega",flag:"🇳🇴"},{name:"Egito",flag:"🇪🇬"}] },
-  { name:"J", teams:[{name:"Inglaterra",flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿"},{name:"Irão",flag:"🇮🇷"},{name:"Venezuela",flag:"🇻🇪"},{name:"Tunísia",flag:"🇹🇳"}] },
-  { name:"K", teams:[{name:"Itália",flag:"🇮🇹"},{name:"Coreia do Sul",flag:"🇰🇷"},{name:"Costa do Marfim",flag:"🇨🇮",debut:true},{name:"Albânia",flag:"🇦🇱"}] },
-  { name:"L", teams:[{name:"Suíça",flag:"🇨🇭"},{name:"Argélia",flag:"🇩🇿"},{name:"Polônia",flag:"🇵🇱"},{name:"Quirguistão",flag:"🇰🇬",debut:true}] }
+  { name:"A", teams:[{name:"México",fc:"mx"},{name:"Equador",fc:"ec"},{name:"Holanda",fc:"nl"},{name:"Congo",fc:"cd",debut:true}] },
+  { name:"B", teams:[{name:"EUA",fc:"us",debut:true},{name:"Panamá",fc:"pa",debut:true},{name:"Sérvia",fc:"rs"},{name:"Camarões",fc:"cm"}] },
+  { name:"C", teams:[{name:"Brasil",fc:"br"},{name:"Marrocos",fc:"ma"},{name:"Haiti",fc:"ht",debut:true},{name:"Escócia",fc:"gb-sct"}] },
+  { name:"D", teams:[{name:"Alemanha",fc:"de"},{name:"Japão",fc:"jp"},{name:"Costa Rica",fc:"cr"},{name:"Austrália",fc:"au"}] },
+  { name:"E", teams:[{name:"Espanha",fc:"es"},{name:"Argentina",fc:"ar"},{name:"Suécia",fc:"se"},{name:"Angola",fc:"ao",debut:true}] },
+  { name:"F", teams:[{name:"Portugal",fc:"pt"},{name:"Romênia",fc:"ro"},{name:"Senegal",fc:"sn"},{name:"México",fc:"mx"}] },
+  { name:"G", teams:[{name:"França",fc:"fr"},{name:"Croácia",fc:"hr"},{name:"Nigéria",fc:"ng"},{name:"Bélgica",fc:"be"}] },
+  { name:"H", teams:[{name:"Uruguai",fc:"uy"},{name:"Colômbia",fc:"co"},{name:"Eslováquia",fc:"sk"},{name:"Namíbia",fc:"na",debut:true}] },
+  { name:"I", teams:[{name:"Canadá",fc:"ca",debut:true},{name:"Peru",fc:"pe"},{name:"Noruega",fc:"no"},{name:"Egito",fc:"eg"}] },
+  { name:"J", teams:[{name:"Inglaterra",fc:"gb-eng"},{name:"Irão",fc:"ir"},{name:"Venezuela",fc:"ve"},{name:"Tunísia",fc:"tn"}] },
+  { name:"K", teams:[{name:"Itália",fc:"it"},{name:"Coreia do Sul",fc:"kr"},{name:"Costa do Marfim",fc:"ci",debut:true},{name:"Albânia",fc:"al"}] },
+  { name:"L", teams:[{name:"Suíça",fc:"ch"},{name:"Argélia",fc:"dz"},{name:"Polônia",fc:"pl"},{name:"Quirguistão",fc:"kg",debut:true}] }
 ];
+function wcFlag(fc,name=""){
+  return `<img src="https://flagcdn.com/w40/${fc.toLowerCase()}.png" width="18" height="13" style="border-radius:2px;object-fit:cover;flex-shrink:0" alt="${name}">`;
+}
 
 const WC2026_AGENDA = [
-  // RODADA 1
-  {date:"11/06 18:00",home:"México",away:"Canadá",group:"A",venue:"SoFi Stadium, L.A.",round:"Rodada 1",brasil:false},
-  {date:"12/06 13:00",home:"Brasil",away:"Marrocos",group:"C",venue:"Rose Bowl, L.A.",round:"Rodada 1",brasil:true},
-  {date:"12/06 16:00",home:"Alemanha",away:"Japão",group:"D",venue:"AT&T Stadium, Dallas",round:"Rodada 1",brasil:false},
-  {date:"12/06 19:00",home:"Argentina",away:"Suécia",group:"E",venue:"MetLife, N.Jersey",round:"Rodada 1",brasil:false},
-  {date:"13/06 13:00",home:"França",away:"Croácia",group:"G",venue:"Levi's Stadium, S.F.",round:"Rodada 1",brasil:false},
-  {date:"13/06 16:00",home:"Portugal",away:"Senegal",group:"F",venue:"Hard Rock, Miami",round:"Rodada 1",brasil:false},
-  {date:"13/06 19:00",home:"Espanha",away:"Angola",group:"E",venue:"Estadio Azteca, CDMX",round:"Rodada 1",brasil:false},
-  {date:"14/06 13:00",home:"EUA",away:"Panamá",group:"B",venue:"MetLife, N.Jersey",round:"Rodada 1",brasil:false},
-  {date:"14/06 16:00",home:"Inglaterra",away:"Irão",group:"J",venue:"AT&T Stadium, Dallas",round:"Rodada 1",brasil:false},
-  {date:"14/06 19:00",home:"Itália",away:"Coreia do Sul",group:"K",venue:"Rose Bowl, L.A.",round:"Rodada 1",brasil:false},
-  // RODADA 2
-  {date:"20/06 16:00",home:"Brasil",away:"Haiti",group:"C",venue:"SoFi Stadium, L.A.",round:"Rodada 2",brasil:true},
-  {date:"21/06 16:00",home:"Escócia",away:"Marrocos",group:"C",venue:"Estadio Azteca, CDMX",round:"Rodada 2",brasil:false},
-  {date:"22/06 16:00",home:"Alemanha",away:"Costa Rica",group:"D",venue:"Rose Bowl, L.A.",round:"Rodada 2",brasil:false},
-  {date:"22/06 19:00",home:"Argentina",away:"Angola",group:"E",venue:"Hard Rock, Miami",round:"Rodada 2",brasil:false},
-  // RODADA 3
-  {date:"27/06 16:00",home:"Brasil",away:"Escócia",group:"C",venue:"Rose Bowl, L.A.",round:"Rodada 3",brasil:true},
-  {date:"27/06 16:00",home:"Haiti",away:"Marrocos",group:"C",venue:"SoFi Stadium, L.A.",round:"Rodada 3",brasil:false},
-  // OITAVAS
-  {date:"01/07 16:00",home:"1º A",away:"2º B",group:"-",venue:"MetLife, N.Jersey",round:"Oitavas",brasil:false},
-  {date:"02/07 16:00",home:"1º C",away:"2º D",group:"-",venue:"Rose Bowl, L.A.",round:"Oitavas",brasil:false},
-  {date:"19/07 17:00",home:"Final",away:"Final",group:"-",venue:"MetLife Stadium, N.Jersey",round:"Final",brasil:false},
+  // ── RODADA 1 ──
+  {date:"11/06 19:00",home:"México",homeFc:"mx",away:"Canadá",awayFc:"ca",group:"A",venue:"Azteca, México",round:"Rodada 1",brasil:false},
+  {date:"12/06 13:00",home:"EUA",homeFc:"us",away:"Panamá",awayFc:"pa",group:"B",venue:"MetLife, N.Jersey",round:"Rodada 1",brasil:false},
+  {date:"12/06 16:00",home:"Brasil",homeFc:"br",away:"Marrocos",awayFc:"ma",group:"C",venue:"Rose Bowl, L.A.",round:"Rodada 1",brasil:true},
+  {date:"12/06 19:00",home:"Alemanha",homeFc:"de",away:"Japão",awayFc:"jp",group:"D",venue:"AT&T, Dallas",round:"Rodada 1",brasil:false},
+  {date:"13/06 13:00",home:"Espanha",homeFc:"es",away:"Angola",awayFc:"ao",group:"E",venue:"Levi's, S.F.",round:"Rodada 1",brasil:false},
+  {date:"13/06 16:00",home:"Portugal",homeFc:"pt",away:"Senegal",awayFc:"sn",group:"F",venue:"Hard Rock, Miami",round:"Rodada 1",brasil:false},
+  {date:"13/06 19:00",home:"França",homeFc:"fr",away:"Croácia",awayFc:"hr",group:"G",venue:"SoFi, L.A.",round:"Rodada 1",brasil:false},
+  {date:"14/06 13:00",home:"Uruguai",homeFc:"uy",away:"Colômbia",awayFc:"co",group:"H",venue:"Gillette, Boston",round:"Rodada 1",brasil:false},
+  {date:"14/06 16:00",home:"Canadá",homeFc:"ca",away:"Peru",awayFc:"pe",group:"I",venue:"BC Place, Vancouver",round:"Rodada 1",brasil:false},
+  {date:"14/06 19:00",home:"Inglaterra",homeFc:"gb-eng",away:"Irão",awayFc:"ir",group:"J",venue:"AT&T, Dallas",round:"Rodada 1",brasil:false},
+  {date:"15/06 13:00",home:"Itália",homeFc:"it",away:"Coreia do Sul",awayFc:"kr",group:"K",venue:"Rose Bowl, L.A.",round:"Rodada 1",brasil:false},
+  {date:"15/06 16:00",home:"Suíça",homeFc:"ch",away:"Argélia",awayFc:"dz",group:"L",venue:"MetLife, N.Jersey",round:"Rodada 1",brasil:false},
+  {date:"15/06 19:00",home:"Equador",homeFc:"ec",away:"Holanda",awayFc:"nl",group:"A",venue:"Lumen Field, Seattle",round:"Rodada 1",brasil:false},
+  {date:"16/06 13:00",home:"Sérvia",homeFc:"rs",away:"Camarões",awayFc:"cm",group:"B",venue:"Arrowhead, Kansas City",round:"Rodada 1",brasil:false},
+  {date:"16/06 16:00",home:"Haiti",homeFc:"ht",away:"Escócia",awayFc:"gb-sct",group:"C",venue:"Estadio BBVA, Monterrey",round:"Rodada 1",brasil:false},
+  {date:"16/06 19:00",home:"Costa Rica",homeFc:"cr",away:"Austrália",awayFc:"au",group:"D",venue:"SoFi, L.A.",round:"Rodada 1",brasil:false},
+  {date:"17/06 13:00",home:"Argentina",homeFc:"ar",away:"Suécia",awayFc:"se",group:"E",venue:"Hard Rock, Miami",round:"Rodada 1",brasil:false},
+  {date:"17/06 16:00",home:"Romênia",homeFc:"ro",away:"México",awayFc:"mx",group:"F",venue:"Arrowhead, Kansas City",round:"Rodada 1",brasil:false},
+  {date:"17/06 19:00",home:"Nigéria",homeFc:"ng",away:"Bélgica",awayFc:"be",group:"G",venue:"Estadio BBVA, Monterrey",round:"Rodada 1",brasil:false},
+  {date:"18/06 13:00",home:"Eslováquia",homeFc:"sk",away:"Namíbia",awayFc:"na",group:"H",venue:"Lincoln Financial, Philad.",round:"Rodada 1",brasil:false},
+  {date:"18/06 16:00",home:"Noruega",homeFc:"no",away:"Egito",awayFc:"eg",group:"I",venue:"Estadio Azteca, CDMX",round:"Rodada 1",brasil:false},
+  {date:"18/06 19:00",home:"Venezuela",homeFc:"ve",away:"Tunísia",awayFc:"tn",group:"J",venue:"Allegiant, Las Vegas",round:"Rodada 1",brasil:false},
+  {date:"19/06 13:00",home:"Costa do Marfim",homeFc:"ci",away:"Albânia",awayFc:"al",group:"K",venue:"Gillette, Boston",round:"Rodada 1",brasil:false},
+  {date:"19/06 16:00",home:"Polônia",homeFc:"pl",away:"Quirguistão",awayFc:"kg",group:"L",venue:"Lumen Field, Seattle",round:"Rodada 1",brasil:false},
+  // ── RODADA 2 ──
+  {date:"20/06 13:00",home:"Canadá",homeFc:"ca",away:"Congo",awayFc:"cd",group:"A",venue:"Estadio BBVA, Monterrey",round:"Rodada 2",brasil:false},
+  {date:"20/06 16:00",home:"Panamá",homeFc:"pa",away:"Camarões",awayFc:"cm",group:"B",venue:"SoFi, L.A.",round:"Rodada 2",brasil:false},
+  {date:"20/06 19:00",home:"Brasil",homeFc:"br",away:"Haiti",awayFc:"ht",group:"C",venue:"Rose Bowl, L.A.",round:"Rodada 2",brasil:true},
+  {date:"21/06 13:00",home:"Japão",homeFc:"jp",away:"Costa Rica",awayFc:"cr",group:"D",venue:"MetLife, N.Jersey",round:"Rodada 2",brasil:false},
+  {date:"21/06 16:00",home:"Angola",homeFc:"ao",away:"Argentina",awayFc:"ar",group:"E",venue:"AT&T, Dallas",round:"Rodada 2",brasil:false},
+  {date:"21/06 19:00",home:"Senegal",homeFc:"sn",away:"Romênia",awayFc:"ro",group:"F",venue:"Levi's, S.F.",round:"Rodada 2",brasil:false},
+  {date:"22/06 13:00",home:"Croácia",homeFc:"hr",away:"Nigéria",awayFc:"ng",group:"G",venue:"Arrowhead, Kansas City",round:"Rodada 2",brasil:false},
+  {date:"22/06 16:00",home:"Colômbia",homeFc:"co",away:"Eslováquia",awayFc:"sk",group:"H",venue:"Hard Rock, Miami",round:"Rodada 2",brasil:false},
+  {date:"22/06 19:00",home:"Peru",homeFc:"pe",away:"Noruega",awayFc:"no",group:"I",venue:"BC Place, Vancouver",round:"Rodada 2",brasil:false},
+  {date:"23/06 13:00",home:"Irão",homeFc:"ir",away:"Venezuela",awayFc:"ve",group:"J",venue:"Lincoln Financial, Philad.",round:"Rodada 2",brasil:false},
+  {date:"23/06 16:00",home:"Coreia do Sul",homeFc:"kr",away:"Costa do Marfim",awayFc:"ci",group:"K",venue:"Estadio BBVA, Monterrey",round:"Rodada 2",brasil:false},
+  {date:"23/06 19:00",home:"Argélia",homeFc:"dz",away:"Polônia",awayFc:"pl",group:"L",venue:"Allegiant, Las Vegas",round:"Rodada 2",brasil:false},
+  {date:"24/06 13:00",home:"México",homeFc:"mx",away:"Equador",awayFc:"ec",group:"A",venue:"Estadio Azteca, CDMX",round:"Rodada 2",brasil:false},
+  {date:"24/06 16:00",home:"EUA",homeFc:"us",away:"Sérvia",awayFc:"rs",group:"B",venue:"Lumen Field, Seattle",round:"Rodada 2",brasil:false},
+  {date:"24/06 19:00",home:"Marrocos",homeFc:"ma",away:"Escócia",awayFc:"gb-sct",group:"C",venue:"Gillette, Boston",round:"Rodada 2",brasil:false},
+  {date:"25/06 13:00",home:"Alemanha",homeFc:"de",away:"Austrália",awayFc:"au",group:"D",venue:"SoFi, L.A.",round:"Rodada 2",brasil:false},
+  {date:"25/06 16:00",home:"Espanha",homeFc:"es",away:"Suécia",awayFc:"se",group:"E",venue:"MetLife, N.Jersey",round:"Rodada 2",brasil:false},
+  {date:"25/06 19:00",home:"Portugal",homeFc:"pt",away:"México",awayFc:"mx",group:"F",venue:"AT&T, Dallas",round:"Rodada 2",brasil:false},
+  {date:"26/06 13:00",home:"França",homeFc:"fr",away:"Bélgica",awayFc:"be",group:"G",venue:"Hard Rock, Miami",round:"Rodada 2",brasil:false},
+  {date:"26/06 16:00",home:"Uruguai",homeFc:"uy",away:"Namíbia",awayFc:"na",group:"H",venue:"Rose Bowl, L.A.",round:"Rodada 2",brasil:false},
+  {date:"26/06 19:00",home:"Canadá",homeFc:"ca",away:"Egito",awayFc:"eg",group:"I",venue:"Estadio Azteca, CDMX",round:"Rodada 2",brasil:false},
+  {date:"27/06 13:00",home:"Inglaterra",homeFc:"gb-eng",away:"Tunísia",awayFc:"tn",group:"J",venue:"Levi's, S.F.",round:"Rodada 2",brasil:false},
+  {date:"27/06 16:00",home:"Itália",homeFc:"it",away:"Albânia",awayFc:"al",group:"K",venue:"Arrowhead, Kansas City",round:"Rodada 2",brasil:false},
+  {date:"27/06 19:00",home:"Suíça",homeFc:"ch",away:"Quirguistão",awayFc:"kg",group:"L",venue:"Lincoln Financial, Philad.",round:"Rodada 2",brasil:false},
+  // ── RODADA 3 ──
+  {date:"29/06 16:00",home:"Congo",homeFc:"cd",away:"Holanda",awayFc:"nl",group:"A",venue:"SoFi, L.A.",round:"Rodada 3",brasil:false},
+  {date:"29/06 16:00",home:"México",homeFc:"mx",away:"Canadá",awayFc:"ca",group:"A",venue:"Estadio Azteca, CDMX",round:"Rodada 3",brasil:false},
+  {date:"29/06 19:00",home:"Panamá",homeFc:"pa",away:"EUA",awayFc:"us",group:"B",venue:"MetLife, N.Jersey",round:"Rodada 3",brasil:false},
+  {date:"29/06 19:00",home:"Camarões",homeFc:"cm",away:"Sérvia",awayFc:"rs",group:"B",venue:"Lumen Field, Seattle",round:"Rodada 3",brasil:false},
+  {date:"30/06 16:00",home:"Brasil",homeFc:"br",away:"Escócia",awayFc:"gb-sct",group:"C",venue:"Rose Bowl, L.A.",round:"Rodada 3",brasil:true},
+  {date:"30/06 16:00",home:"Marrocos",homeFc:"ma",away:"Haiti",awayFc:"ht",group:"C",venue:"Gillette, Boston",round:"Rodada 3",brasil:false},
+  {date:"01/07 16:00",home:"Japão",homeFc:"jp",away:"Alemanha",awayFc:"de",group:"D",venue:"AT&T, Dallas",round:"Rodada 3",brasil:false},
+  {date:"01/07 16:00",home:"Austrália",homeFc:"au",away:"Costa Rica",awayFc:"cr",group:"D",venue:"Hard Rock, Miami",round:"Rodada 3",brasil:false},
+  {date:"02/07 16:00",home:"Argentina",homeFc:"ar",away:"Espanha",awayFc:"es",group:"E",venue:"MetLife, N.Jersey",round:"Rodada 3",brasil:false},
+  {date:"02/07 16:00",home:"Suécia",homeFc:"se",away:"Angola",awayFc:"ao",group:"E",venue:"Levi's, S.F.",round:"Rodada 3",brasil:false},
+  {date:"03/07 16:00",home:"México",homeFc:"mx",away:"Portugal",awayFc:"pt",group:"F",venue:"SoFi, L.A.",round:"Rodada 3",brasil:false},
+  {date:"03/07 16:00",home:"Romênia",homeFc:"ro",away:"Senegal",awayFc:"sn",group:"F",venue:"Arrowhead, Kansas City",round:"Rodada 3",brasil:false},
+  {date:"04/07 16:00",home:"Nigéria",homeFc:"ng",away:"França",awayFc:"fr",group:"G",venue:"AT&T, Dallas",round:"Rodada 3",brasil:false},
+  {date:"04/07 16:00",home:"Bélgica",homeFc:"be",away:"Croácia",awayFc:"hr",group:"G",venue:"Rose Bowl, L.A.",round:"Rodada 3",brasil:false},
+  {date:"05/07 16:00",home:"Eslováquia",homeFc:"sk",away:"Uruguai",awayFc:"uy",group:"H",venue:"Hard Rock, Miami",round:"Rodada 3",brasil:false},
+  {date:"05/07 16:00",home:"Namíbia",homeFc:"na",away:"Colômbia",awayFc:"co",group:"H",venue:"Lincoln Financial, Philad.",round:"Rodada 3",brasil:false},
+  {date:"06/07 16:00",home:"Egito",homeFc:"eg",away:"Peru",awayFc:"pe",group:"I",venue:"Estadio Azteca, CDMX",round:"Rodada 3",brasil:false},
+  {date:"06/07 16:00",home:"Noruega",homeFc:"no",away:"Canadá",awayFc:"ca",group:"I",venue:"BC Place, Vancouver",round:"Rodada 3",brasil:false},
+  {date:"07/07 16:00",home:"Tunísia",homeFc:"tn",away:"Inglaterra",awayFc:"gb-eng",group:"J",venue:"Gillette, Boston",round:"Rodada 3",brasil:false},
+  {date:"07/07 16:00",home:"Venezuela",homeFc:"ve",away:"Irão",awayFc:"ir",group:"J",venue:"Allegiant, Las Vegas",round:"Rodada 3",brasil:false},
+  {date:"08/07 16:00",home:"Albânia",homeFc:"al",away:"Coreia do Sul",awayFc:"kr",group:"K",venue:"SoFi, L.A.",round:"Rodada 3",brasil:false},
+  {date:"08/07 16:00",home:"Costa do Marfim",homeFc:"ci",away:"Itália",awayFc:"it",group:"K",venue:"Lumen Field, Seattle",round:"Rodada 3",brasil:false},
+  {date:"09/07 16:00",home:"Polônia",homeFc:"pl",away:"Suíça",awayFc:"ch",group:"L",venue:"AT&T, Dallas",round:"Rodada 3",brasil:false},
+  {date:"09/07 16:00",home:"Quirguistão",homeFc:"kg",away:"Argélia",awayFc:"dz",group:"L",venue:"MetLife, N.Jersey",round:"Rodada 3",brasil:false},
+  // ── FASES FINAIS ──
+  {date:"11/07 16:00",home:"1º A/B",homeFc:"us",away:"2º C/D",awayFc:"de",group:"-",venue:"MetLife, N.Jersey",round:"Oitavas",brasil:false},
+  {date:"12/07 16:00",home:"1º C/D",homeFc:"br",away:"2º A/B",awayFc:"mx",group:"-",venue:"Rose Bowl, L.A.",round:"Oitavas",brasil:false},
+  {date:"19/07 17:00",home:"Finalista 1",homeFc:"br",away:"Finalista 2",awayFc:"ar",group:"-",venue:"MetLife Stadium, N.Jersey",round:"🏆 Final",brasil:false},
 ];
 
 function renderWCGroups(){
@@ -4261,7 +4371,7 @@ function renderWCGroups(){
       <div class="wc-group-title">Grupo ${g.name}</div>
       ${g.teams.map(t=>`
         <div class="wc-group-team">
-          <span class="wc-flag">${t.flag}</span>
+          ${wcFlag(t.fc,t.name)}
           <span style="flex:1">${t.name}</span>
           ${t.debut?`<span class="wc-debut-badge">★ ESTREIA</span>`:""}
         </div>`).join("")}
@@ -4287,9 +4397,9 @@ function renderWCAgenda(){
     ${matches.map(m=>`
       <div class="wc-match-row${m.brasil?" wc-match-brasil":""}">
         <div class="wc-match-date">${m.date}${m.group!=="-"?` · Grp ${m.group}`:""}</div>
-        <div class="wc-match-team home">${m.home}</div>
+        <div class="wc-match-team home" style="display:flex;align-items:center;justify-content:flex-end;gap:5px">${m.home} ${wcFlag(m.homeFc||'us',m.home)}</div>
         <div class="wc-match-vs">×</div>
-        <div class="wc-match-team">${m.away}</div>
+        <div class="wc-match-team" style="display:flex;align-items:center;gap:5px">${wcFlag(m.awayFc||'br',m.away)} ${m.away}</div>
         <div class="wc-match-venue">${m.venue}</div>
       </div>`).join("")}`).join("");
 }
