@@ -1542,11 +1542,16 @@
 
   <!-- ══ TEASER COPA DO MUNDO 2026 ═══════════════════════════════════════ -->
   <div class="worldcup-teaser" onclick="openWC2026()">
-    <div class="wc-left">
-      <div class="wc-badge">🏆 Copa do Mundo 2026</div>
-      <div class="wc-title">Scoutly na <span>Copa do Mundo 2026</span></div>
-      <div class="wc-desc">48 seleções · 3 países · 16 cidades · 1 radar inteligente</div>
-      <div class="wc-explore">🔍 Explorar grupos, agenda e curiosidades →</div>
+    <div class="wc-left" style="display:flex;align-items:center;gap:14px">
+      <img src="https://media.api-sports.io/football/leagues/1.png" width="52" height="52"
+        style="object-fit:contain;flex-shrink:0;border-radius:8px;filter:drop-shadow(0 0 10px rgba(0,200,83,0.3))"
+        onerror="this.style.display='none'">
+      <div>
+        <div class="wc-badge">🏆 Copa do Mundo 2026</div>
+        <div class="wc-title">Scoutly na <span>Copa do Mundo 2026</span></div>
+        <div class="wc-desc">48 seleções · 3 países · 16 cidades · 1 radar inteligente</div>
+        <div class="wc-explore">🔍 Explorar grupos, agenda e curiosidades →</div>
+      </div>
     </div>
     <div class="wc-right">
       <div class="wc-countdown">
@@ -1787,7 +1792,7 @@
           <div class="wc-curiosidade-card">
             <div class="wc-cur-icon">🌎</div>
             <div class="wc-cur-title">A Copa mais plural da história</div>
-            <div class="wc-cur-text">Com 48 seleções, a Copa de 2026 terá 16 grupos a mais que as edições anteriores. Pela primeira vez, América do Norte sedia uma Copa com 3 países diferentes — EUA, Canadá e México.</div>
+            <div class="wc-cur-text">Com 48 seleções, a Copa de 2026 terá 16 grupos a mais que as edições anteriores (eram 32 seleções e 8 grupos). Pela primeira vez, América do Norte sedia uma Copa com 3 países diferentes — EUA (que já sediou em 1994), Canadá e México (que sediou em 1970 e 1986).</div>
           </div>
           <div class="wc-curiosidade-card">
             <div class="wc-cur-icon">🏟️</div>
@@ -1802,7 +1807,7 @@
           <div class="wc-curiosidade-card">
             <div class="wc-cur-icon">🆕</div>
             <div class="wc-cur-title">Nações na Copa pela primeira vez</div>
-            <div class="wc-cur-text">Ao menos 6 seleções farão sua estreia histórica numa Copa do Mundo em 2026. Entre elas estão Canadá (que co-sedia), Panamá e algumas nações africanas e asiáticas inéditas.</div>
+            <div class="wc-cur-text">Seis seleções fazem sua estreia histórica em 2026: Curaçao, Bósnia Herzegovina, Cabo Verde, Jordânia, Uzbequistão e Iraque. Vale lembrar que o Canadá, apesar de co-sediar, já participou de Copas anteriores (1986).</div>
           </div>
           <div class="wc-curiosidade-card">
             <div class="wc-cur-icon"><img src="https://flagcdn.com/w40/br.png" width="32" style="border-radius:4px"></div>
@@ -4350,18 +4355,18 @@ function bindStaticEvents(){
 
 /* ── COPA DO MUNDO 2026 ──────────────────────────────────────────── */
 const WC2026_GROUPS = [
-  { name:"A", teams:[{name:"México",fc:"mx"},{name:"Equador",fc:"ec"},{name:"Holanda",fc:"nl"},{name:"Congo",fc:"cd",debut:true}] },
-  { name:"B", teams:[{name:"EUA",fc:"us",debut:true},{name:"Panamá",fc:"pa",debut:true},{name:"Sérvia",fc:"rs"},{name:"Camarões",fc:"cm"}] },
-  { name:"C", teams:[{name:"Brasil",fc:"br"},{name:"Marrocos",fc:"ma"},{name:"Haiti",fc:"ht",debut:true},{name:"Escócia",fc:"gb-sct"}] },
-  { name:"D", teams:[{name:"Alemanha",fc:"de"},{name:"Japão",fc:"jp"},{name:"Costa Rica",fc:"cr"},{name:"Austrália",fc:"au"}] },
-  { name:"E", teams:[{name:"Espanha",fc:"es"},{name:"Argentina",fc:"ar"},{name:"Suécia",fc:"se"},{name:"Angola",fc:"ao",debut:true}] },
-  { name:"F", teams:[{name:"Portugal",fc:"pt"},{name:"Romênia",fc:"ro"},{name:"Senegal",fc:"sn"},{name:"México",fc:"mx"}] },
-  { name:"G", teams:[{name:"França",fc:"fr"},{name:"Croácia",fc:"hr"},{name:"Nigéria",fc:"ng"},{name:"Bélgica",fc:"be"}] },
-  { name:"H", teams:[{name:"Uruguai",fc:"uy"},{name:"Colômbia",fc:"co"},{name:"Eslováquia",fc:"sk"},{name:"Namíbia",fc:"na",debut:true}] },
-  { name:"I", teams:[{name:"Canadá",fc:"ca",debut:true},{name:"Peru",fc:"pe"},{name:"Noruega",fc:"no"},{name:"Egito",fc:"eg"}] },
-  { name:"J", teams:[{name:"Inglaterra",fc:"gb-eng"},{name:"Irão",fc:"ir"},{name:"Venezuela",fc:"ve"},{name:"Tunísia",fc:"tn"}] },
-  { name:"K", teams:[{name:"Itália",fc:"it"},{name:"Coreia do Sul",fc:"kr"},{name:"Costa do Marfim",fc:"ci",debut:true},{name:"Albânia",fc:"al"}] },
-  { name:"L", teams:[{name:"Suíça",fc:"ch"},{name:"Argélia",fc:"dz"},{name:"Polônia",fc:"pl"},{name:"Quirguistão",fc:"kg",debut:true}] }
+  { name:"A", teams:[{name:"México",fc:"mx"},{name:"Coreia do Sul",fc:"kr"},{name:"República Tcheca",fc:"cz"},{name:"África do Sul",fc:"za"}] },
+  { name:"B", teams:[{name:"Canadá",fc:"ca"},{name:"Suíça",fc:"ch"},{name:"Catar",fc:"qa"},{name:"Bósnia",fc:"ba",debut:true}] },
+  { name:"C", teams:[{name:"Brasil",fc:"br"},{name:"Marrocos",fc:"ma"},{name:"Escócia",fc:"gb-sct"},{name:"Haiti",fc:"ht",debut:true}] },
+  { name:"D", teams:[{name:"Estados Unidos",fc:"us"},{name:"Paraguai",fc:"py"},{name:"Turquia",fc:"tr"},{name:"Austrália",fc:"au"}] },
+  { name:"E", teams:[{name:"Alemanha",fc:"de"},{name:"Equador",fc:"ec"},{name:"Costa do Marfim",fc:"ci"},{name:"Curaçao",fc:"cw",debut:true}] },
+  { name:"F", teams:[{name:"Holanda",fc:"nl"},{name:"Japão",fc:"jp"},{name:"Tunísia",fc:"tn"},{name:"Suécia",fc:"se"}] },
+  { name:"G", teams:[{name:"Bélgica",fc:"be"},{name:"Irã",fc:"ir"},{name:"Egito",fc:"eg"},{name:"Nova Zelândia",fc:"nz"}] },
+  { name:"H", teams:[{name:"Espanha",fc:"es"},{name:"Uruguai",fc:"uy"},{name:"Arábia Saudita",fc:"sa"},{name:"Cabo Verde",fc:"cv",debut:true}] },
+  { name:"I", teams:[{name:"França",fc:"fr"},{name:"Senegal",fc:"sn"},{name:"Noruega",fc:"no"},{name:"Iraque",fc:"iq",debut:true}] },
+  { name:"J", teams:[{name:"Argentina",fc:"ar"},{name:"Áustria",fc:"at"},{name:"Argélia",fc:"dz"},{name:"Jordânia",fc:"jo",debut:true}] },
+  { name:"K", teams:[{name:"Portugal",fc:"pt"},{name:"Colômbia",fc:"co"},{name:"Uzbequistão",fc:"uz",debut:true},{name:"RD Congo",fc:"cd"}] },
+  { name:"L", teams:[{name:"Inglaterra",fc:"gb-eng"},{name:"Croácia",fc:"hr"},{name:"Gana",fc:"gh"},{name:"Panamá",fc:"pa"}] }
 ];
 function wcFlag(fc,name=""){
   return `<img src="https://flagcdn.com/w40/${fc.toLowerCase()}.png" width="18" height="13" style="border-radius:2px;object-fit:cover;flex-shrink:0" alt="${name}">`;
