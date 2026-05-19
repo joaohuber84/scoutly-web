@@ -2533,10 +2533,14 @@ function getInsight(match){ return match.analysis_text||match.insight||buildFall
 function getIndividualMarkets(match) {
   const m = getMetrics(match);
   const picks = [];
+  const home = normalizeTeamName(match.home_team);
+  const away = normalizeTeamName(match.away_team);
+  // Nomes curtos para o pick (máx 12 chars)
+  const hName = home.length > 12 ? home.slice(0,12) : home;
+  const aName = away.length > 12 ? away.slice(0,12) : away;
 
-  // Thresholds de confiança — só gera pick individual se diferença for significativa
-  const HOME_THRESH = 1.3; // casa pelo menos 30% maior que visitante
-  const AWAY_THRESH = 0.77; // visitante menor
+  const HOME_THRESH = 1.3;
+  const AWAY_THRESH = 0.77;
 
   // ── ESCANTEIOS POR TIME ──
   if (m.homeCorners !== null && m.awayCorners !== null) {
@@ -2546,22 +2550,22 @@ function getIndividualMarkets(match) {
       if (ratio >= HOME_THRESH && hc >= 4.5) {
         const line = hc >= 6 ? 5.5 : 4.5;
         picks.push({
-          market: `Mais de ${line} Escanteios (Casa)`,
+          market: `Mais de ${line} Escanteios — ${hName}`,
           family: "escanteios",
           direction: "individual",
           value: hc,
           confidence: Math.min(0.75, 0.55 + (ratio - HOME_THRESH) * 0.1),
-          chip: "🚩 Casa"
+          chip: "🚩 Escanteios"
         });
       } else if (ratio <= AWAY_THRESH && ac >= 4.5) {
         const line = ac >= 6 ? 5.5 : 4.5;
         picks.push({
-          market: `Mais de ${line} Escanteios (Fora)`,
+          market: `Mais de ${line} Escanteios — ${aName}`,
           family: "escanteios",
           direction: "individual",
           value: ac,
           confidence: Math.min(0.75, 0.55 + (AWAY_THRESH - ratio) * 0.1),
-          chip: "🚩 Fora"
+          chip: "🚩 Escanteios"
         });
       }
     }
@@ -2575,22 +2579,22 @@ function getIndividualMarkets(match) {
       if (ratio >= HOME_THRESH && hs >= 6) {
         const line = hs >= 9 ? 8.5 : 5.5;
         picks.push({
-          market: `Mais de ${line} Chutes (Casa)`,
+          market: `Mais de ${line} Chutes — ${hName}`,
           family: "shots",
           direction: "individual",
           value: hs,
           confidence: Math.min(0.72, 0.55 + (ratio - HOME_THRESH) * 0.08),
-          chip: "🎯 Casa"
+          chip: "🎯 Finalizações"
         });
       } else if (ratio <= AWAY_THRESH && as_ >= 6) {
         const line = as_ >= 9 ? 8.5 : 5.5;
         picks.push({
-          market: `Mais de ${line} Chutes (Fora)`,
+          market: `Mais de ${line} Chutes — ${aName}`,
           family: "shots",
           direction: "individual",
           value: as_,
           confidence: Math.min(0.72, 0.55 + (AWAY_THRESH - ratio) * 0.08),
-          chip: "🎯 Fora"
+          chip: "🎯 Finalizações"
         });
       }
     }
@@ -2604,22 +2608,22 @@ function getIndividualMarkets(match) {
       if (ratio >= HOME_THRESH && hst >= 3) {
         const line = hst >= 5 ? 4.5 : 2.5;
         picks.push({
-          market: `Mais de ${line} Chutes no Gol (Casa)`,
+          market: `Mais de ${line} Chutes no Gol — ${hName}`,
           family: "sot",
           direction: "individual",
           value: hst,
           confidence: Math.min(0.70, 0.55 + (ratio - HOME_THRESH) * 0.08),
-          chip: "🥅 Casa"
+          chip: "🥅 No Gol"
         });
       } else if (ratio <= AWAY_THRESH && ast >= 3) {
         const line = ast >= 5 ? 4.5 : 2.5;
         picks.push({
-          market: `Mais de ${line} Chutes no Gol (Fora)`,
+          market: `Mais de ${line} Chutes no Gol — ${aName}`,
           family: "sot",
           direction: "individual",
           value: ast,
           confidence: Math.min(0.70, 0.55 + (AWAY_THRESH - ratio) * 0.08),
-          chip: "🥅 Fora"
+          chip: "🥅 No Gol"
         });
       }
     }
@@ -2666,20 +2670,23 @@ function getDetectedMarkets(match){
   const individuals=getIndividualMarkets(match);
   const items=[];
 
-  // Picks alternativos dos campos do banco
+  // Picks alternativos dos campos do banco (máx 2)
   if(alts[0])items.push({market:alts[0],tier:"Boa",family:marketFamily(alts[0]),copy:buildAlternativeCopy(match,alts[0])});
   if(alts[1])items.push({market:alts[1],tier:"Moderada",family:marketFamily(alts[1]),copy:buildAlternativeCopy(match,alts[1])});
 
-  // Mercados individuais por time (quando há desequilíbrio estatístico)
-  for(const ind of individuals.slice(0,2)){
-    // Não duplica se já tem mercado da mesma família
-    if(items.some(i=>marketFamily(i.market)===ind.family&&!ind.market.includes("Casa")&&!ind.market.includes("Fora")))continue;
-    const tier=probabilityToTier(ind.confidence);
-    const copy=`Projeção: ${formatDecimal(ind.value,1)} para este time. Desequilíbrio estatístico favorável.`;
-    items.push({market:ind.market,tier,family:ind.family,copy,chip:ind.chip,individual:true});
+  // Se não chegou a 2 alternativas, tenta completar com mercado individual por time
+  if(items.length < 2){
+    for(const ind of individuals){
+      if(items.length >= 2)break;
+      // Não duplica mesma família que já existe
+      if(items.some(i=>i.family===ind.family))continue;
+      const tier=probabilityToTier(ind.confidence);
+      const copy=`Projeção de ${formatDecimal(ind.value,1)} para este time — desequilíbrio estatístico favorável.`;
+      items.push({market:ind.market,tier,family:ind.family,copy,chip:ind.chip,individual:true});
+    }
   }
 
-  return items.slice(0,3);
+  return items.slice(0,2); // sempre máx 2 alternativas
 }
 
 /* ── STATS MARKUP ─────────────────────────────────────────────────── */
@@ -2895,6 +2902,7 @@ function openAnalysis(matchId){
       [formatDecimal(h.avgGoalsFor,1), formatDecimal(a.avgGoalsFor,1), "Gols marcados"],
       [formatDecimal(h.avgGoalsAgainst,1), formatDecimal(a.avgGoalsAgainst,1), "Gols sofridos"],
       [formatDecimal(h.avgShots,0), formatDecimal(a.avgShots,0), "Finalizações"],
+      [formatDecimal(h.avgSOT||h.avgShotsOnTarget,0), formatDecimal(a.avgSOT||a.avgShotsOnTarget,0), "No gol"],
       [formatDecimal(h.avgCorners,1), formatDecimal(a.avgCorners,1), "Escanteios"],
       [formatDecimal(h.avgCards,1), formatDecimal(a.avgCards,1), "Cartões"],
     ];
