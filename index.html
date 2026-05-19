@@ -2723,7 +2723,11 @@ function openAnalysis(matchId){
 
   // H2H bar
   function h2hBar(hv,av,label){
-    const h=parseFloat(hv)||0,a=parseFloat(av)||0,tot=h+a||1;
+    // Se ambos forem "—" ou vazios, não renderiza a linha
+    const hNum=parseFloat(hv), aNum=parseFloat(av);
+    if(isNaN(hNum)&&isNaN(aNum))return "";
+    const h=isNaN(hNum)?0:hNum, a=isNaN(aNum)?0:aNum;
+    const tot=h+a||1;
     const hp=Math.round(h/tot*100),ap=100-hp;
     return `<div class="h2h-row">
       <div class="h2h-row-label">${label}</div>
@@ -2902,7 +2906,7 @@ function openAnalysis(matchId){
       [formatDecimal(h.avgGoalsFor,1), formatDecimal(a.avgGoalsFor,1), "Gols marcados"],
       [formatDecimal(h.avgGoalsAgainst,1), formatDecimal(a.avgGoalsAgainst,1), "Gols sofridos"],
       [formatDecimal(h.avgShots,0), formatDecimal(a.avgShots,0), "Finalizações"],
-      [formatDecimal(h.avgSOT||h.avgShotsOnTarget,0), formatDecimal(a.avgSOT||a.avgShotsOnTarget,0), "No gol"],
+      [formatDecimal(h.avgShotsOnTarget??h.avgSOT??h.sot,0), formatDecimal(a.avgShotsOnTarget??a.avgSOT??a.sot,0), "No gol"],
       [formatDecimal(h.avgCorners,1), formatDecimal(a.avgCorners,1), "Escanteios"],
       [formatDecimal(h.avgCards,1), formatDecimal(a.avgCards,1), "Cartões"],
     ];
@@ -3211,7 +3215,7 @@ function ticketLegMarkup(item,index){
 }
 
 function renderTicket(){
-  const el=document.getElementById("ticketContainer"); if(!el)return;
+  const el=document.getElementById("ticketContainer"); if(!el)return; // removido do HTML — sem efeito
   if(!state.currentTicket.length){el.innerHTML=`<div class="loading-state">Montando bilhete...</div>`;return;}
   const avgProb=state.currentTicket.reduce((a,i)=>a+Number(i.probability||0),0)/state.currentTicket.length;
   el.innerHTML=`
@@ -4017,7 +4021,7 @@ async function sendFeedback() {
 function renderLoadError(errorMap={}){
   const msg=Object.entries(errorMap).map(([k,v])=>`${k}: ${v}`).join("\n")||"Erro desconhecido";
   setStatus("Erro ao carregar dados.",false);
-  ["radarList","competitionsGrid","ticketContainer"].forEach(id=>{
+  ["radarList","competitionsGrid"].forEach(id=>{
     const el=document.getElementById(id);if(el)el.innerHTML=`<div class="error-state">${escapeHtml(msg)}</div>`;
   });
 }
@@ -4544,7 +4548,7 @@ function openTeamPanel(el) {
 
 function refreshUIOnly(){
   renderRadar();renderAgenda();renderCompetitions();
-  
+  if(liveState.data.size>0)renderLiveSection(); // mantém ao vivo no refresh periódico
   if(state.selectedLeague)openCompetition(state.selectedLeague);
   const ov=document.getElementById("analysisOverlay");
   if(ov?.classList.contains("open")&&state.lastOpenedMatchId)openAnalysis(state.lastOpenedMatchId);
@@ -4557,6 +4561,7 @@ async function refreshAllData(silent=false){
   try{await loadMatches();}catch(e){errors.matches=e.message||JSON.stringify(e);}
   if(Object.keys(errors).length){renderLoadError(errors);return false;}
   renderRadar();renderAgenda();renderCompetitions();
+  if(liveState.data.size>0)renderLiveSection(); // re-render ao vivo após reload
   if(state.selectedLeague)openCompetition(state.selectedLeague);
   const ov=document.getElementById("analysisOverlay");
   if(ov?.classList.contains("open")&&state.lastOpenedMatchId)openAnalysis(state.lastOpenedMatchId);
