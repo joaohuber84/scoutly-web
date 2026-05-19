@@ -2226,11 +2226,17 @@ function isCupLeague(league) {
 }
 
 function getLeagueBadge(league, country=""){
+  // 1. Logo oficial da API-Football (radar, agenda, ao vivo)
+  const mappedLogo = getLeagueLogoUrl(league);
+  if (mappedLogo) {
+    return `<img src="${escapeHtml(mappedLogo)}" width="16" height="16" style="object-fit:contain;border-radius:2px;vertical-align:middle;" onerror="this.style.display='none'">`;
+  }
+  // 2. Bandeira do país
   const flagCode = getFlag(country||inferCountryFromLeague(normalizeLeagueName(league)), league);
   if (flagCode) {
     return `<img src="https://flagcdn.com/w40/${flagCode.toLowerCase()}.png" width="16" style="border-radius:2px;vertical-align:middle;">`;
   }
-  // Copa sem bandeira → troféu
+  // 3. Troféu para copas sem logo mapeada
   if (isCupLeague(league)) return `🏆`;
   return "";
 }
