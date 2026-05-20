@@ -175,8 +175,10 @@
       flex-shrink: 0;
       max-width: 42%;
       min-width: 76px;
-      overflow: hidden; /* safety — nunca transborda */
+      overflow: hidden;
     }
+    /* Texto não-numérico no radar — alinha à esquerda para não cortar início */
+    .ri2-right .ri2-market-num[style*="text-align:left"] { align-self: flex-start; }
     .ri2-market-num {
       font-family: var(--font-mono); font-size: 15px; font-weight: 800;
       color: var(--green); line-height: 1.1; font-variant-numeric: tabular-nums;
@@ -1424,7 +1426,7 @@
     }
     .market-line-num {
       font-family: var(--font-head); font-size: 20px; font-weight: 900;
-      color: var(--green); display: block; line-height: 1;
+      color: var(--text); display: block; line-height: 1;
       letter-spacing: -0.03em; word-break: break-word;
     }
     .market-line-sublabel {
@@ -1846,7 +1848,7 @@
   <!-- ══ TEASER COPA DO MUNDO 2026 ═══════════════════════════════════════ -->
   <div class="worldcup-teaser" onclick="openWC2026()">
     <div class="wc-left" style="display:flex;align-items:center;gap:14px">
-      <div style="width:52px;height:52px;flex-shrink:0;border-radius:10px;background:linear-gradient(135deg,#1a2a1a,#0d1a0d);border:1.5px solid rgba(245,166,35,0.4);display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(0,200,83,0.2)"><svg width="30" height="34" viewBox="0 0 30 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 2H26C26 2 28 8 28 13C28 21 22 27 15 29C8 27 2 21 2 13C2 8 4 2 4 2Z" fill="url(#tg)" stroke="rgba(245,166,35,0.5)" stroke-width="0.5"/><path d="M10 29H20V31H10V29Z" fill="#f5a623"/><path d="M8 31H22V33H8V31Z" fill="#f5a623"/><path d="M15 6L16.5 11H21.5L17.5 14L19 19L15 16L11 19L12.5 14L8.5 11H13.5L15 6Z" fill="#fff" opacity="0.9"/><defs><linearGradient id="tg" x1="2" y1="2" x2="28" y2="29"><stop offset="0%" stop-color="#2d5a2d"/><stop offset="100%" stop-color="#1a3a1a"/></linearGradient></defs></svg></div>
+      <img src="https://assets.football-logos.cc/logos/tournaments/1500x1500/fifa-world-cup-2026.31d2489d.png" width="52" height="52" style="object-fit:contain;flex-shrink:0;border-radius:8px;filter:drop-shadow(0 0 12px rgba(0,200,83,0.3))" onerror="this.outerHTML='<div style=\"width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:28px\">🏆</div>'">
       <div>
         <div class="wc-badge">🏆 Copa do Mundo 2026</div>
         <div class="wc-title">Scoutly na <span>Copa do Mundo 2026</span></div>
@@ -2048,7 +2050,7 @@
   <div class="wc-panel">
     <div class="wc-panel-hd">
       <div class="wc-panel-hd-left" style="display:flex;align-items:flex-start;gap:14px">
-        <div style="width:48px;height:48px;flex-shrink:0;margin-top:4px;border-radius:10px;background:linear-gradient(135deg,#1a2a1a,#0d1a0d);border:1.5px solid rgba(245,166,35,0.4);display:flex;align-items:center;justify-content:center"><svg width="28" height="32" viewBox="0 0 30 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 2H26C26 2 28 8 28 13C28 21 22 27 15 29C8 27 2 21 2 13C2 8 4 2 4 2Z" fill="url(#tg2)" stroke="rgba(245,166,35,0.4)" stroke-width="0.5"/><path d="M10 29H20V31H10V29Z" fill="#f5a623"/><path d="M8 31H22V33H8V31Z" fill="#f5a623"/><path d="M15 6L16.5 11H21.5L17.5 14L19 19L15 16L11 19L12.5 14L8.5 11H13.5L15 6Z" fill="#fff" opacity="0.9"/><defs><linearGradient id="tg2" x1="2" y1="2" x2="28" y2="29"><stop offset="0%" stop-color="#2d5a2d"/><stop offset="100%" stop-color="#1a3a1a"/></linearGradient></defs></svg></div>
+        <img src="https://assets.football-logos.cc/logos/tournaments/1500x1500/fifa-world-cup-2026.31d2489d.png" width="48" height="48" style="object-fit:contain;flex-shrink:0;margin-top:4px;border-radius:8px" onerror="this.outerHTML='<div style=\"width:48px;height:48px;display:flex;align-items:center;justify-content:center;font-size:24px\">🏆</div>'">
         <div>
         <div class="eyebrow">Copa do Mundo 2026</div>
         <h2 class="wc-panel-title">FIFA World Cup <span>2026</span></h2>
@@ -2757,10 +2759,10 @@ function formatMarketDisplay(market, numClass, labelClass) {
     if (isRadar) {
       // Radar: compacto
       const team = teamMatch ? (teamMatch[1].length > 10 ? teamMatch[1].slice(0,10)+"…" : teamMatch[1]) : "";
-      return `<span class="${numClass}" style="font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%">Dupla Chance</span>${team?`<span class="${labelClass}" style="font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%">${escapeHtml(team)} ou Emp.</span>`:""}`;
+      return `<span class="${numClass}" style="font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%;text-align:left;direction:ltr">Dupla Chance</span>${team?`<span class="${labelClass}" style="font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%;text-align:left">${escapeHtml(team)} ou Emp.</span>`:""}`;
     } else {
       // Overlay: texto completo legível
-      return `<span class="${numClass}" style="font-size:15px;font-weight:800;line-height:1.3;word-break:break-word;display:block">${escapeHtml(m)}</span>`;
+      return `<span class="${numClass}" style="font-size:15px;font-weight:800;line-height:1.3;word-break:break-word;display:block;color:var(--text)">${escapeHtml(m)}</span>`;
     }
   }
 
@@ -2768,14 +2770,14 @@ function formatMarketDisplay(market, numClass, labelClass) {
     // Overlay: texto completo para qualquer mercado
     if (lower.includes("ambas marcam")) displayText = "Ambas Marcam";
     else if (lower.includes("ambas não") || lower.includes("ambas nao")) displayText = "Ambas Não Marcam";
-    return `<span class="${numClass}" style="font-size:15px;font-weight:800;line-height:1.3;word-break:break-word;display:block">${escapeHtml(displayText)}</span>`;
+    return `<span class="${numClass}" style="font-size:15px;font-weight:800;line-height:1.3;word-break:break-word;display:block;color:var(--text)">${escapeHtml(displayText)}</span>`;
   }
 
   // Radar: encurtar
   if (lower.includes("ambas marcam")) displayText = "Ambas Marcam";
   else if (lower.includes("ambas não") || lower.includes("ambas nao")) displayText = "Ambas Não";
   else if (lower.includes("vitória") || lower.includes("vitoria")) displayText = lower.includes("mandante") ? "Vitória Casa" : "Vitória Fora";
-  return `<span class="${numClass}" style="font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%">${escapeHtml(displayText)}</span>`;
+  return `<span class="${numClass}" style="font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%;text-align:left">${escapeHtml(displayText)}</span>`;
 }
 
 /* ── INSIGHT ──────────────────────────────────────────────────────── */
@@ -3182,7 +3184,7 @@ function openAnalysis(matchId){
       [formatDecimal(h.avgGoalsFor,1), formatDecimal(a.avgGoalsFor,1), "Gols marcados"],
       [formatDecimal(h.avgGoalsAgainst,1), formatDecimal(a.avgGoalsAgainst,1), "Gols sofridos"],
       [formatDecimal(h.avgShots,0), formatDecimal(a.avgShots,0), "Finalizações totais"],
-      [formatDecimal(h.avgShotsOnTarget??h.avgSOT??h.sot,0), formatDecimal(a.avgShotsOnTarget??a.avgSOT??a.sot,0), "No gol"],
+      [formatDecimal(h.avgShotsOnTarget??h.avgSOT??h.sot??h.shots_on_target??h.shotsOnTarget,0), formatDecimal(a.avgShotsOnTarget??a.avgSOT??a.sot??a.shots_on_target??a.shotsOnTarget,0), "No gol"],
       [formatDecimal(h.avgCorners,1), formatDecimal(a.avgCorners,1), "Escanteios"],
       [formatDecimal(h.avgCards,1), formatDecimal(a.avgCards,1), "Cartões"],
     ];
@@ -3261,7 +3263,7 @@ function openAnalysis(matchId){
         content.innerHTML = `<div class="h2h-rows">
           ${h2hBar(formatDecimal(metrics.homeGoals,1),formatDecimal(metrics.awayGoals,1),"Gols esperados")}
           ${h2hBar(formatDecimal(metrics.homeShots,0),formatDecimal(metrics.awayShots,0),"Finalizações")}
-          ${h2hBar(formatDecimal(metrics.homeSOT,0),formatDecimal(metrics.awaySOT,0),"No gol")}
+          ${h2hBar(formatDecimal(metrics.homeSOT??metrics.expectedHomeSOT??metrics.expected_home_sot,0),formatDecimal(metrics.awaySOT??metrics.expectedAwaySOT??metrics.expected_away_sot,0),"No gol")}
           ${h2hBar(formatDecimal(metrics.homeCorners,1),formatDecimal(metrics.awayCorners,1),"Escanteios")}
           ${h2hBar(formatDecimal(metrics.homeCards,1),formatDecimal(metrics.awayCards,1),"Cartões")}
           ${h2hBar(formatDecimal(metrics.avgFouls,1),formatDecimal(metrics.avgFouls,1),"Faltas (total)")}
@@ -4171,13 +4173,13 @@ async function refreshModalLiveStats(matchId) {
         AO VIVO${minLabel}
         <span style="font-size:9px;color:var(--text-3);font-weight:400;margin-left:auto">↻ atualiza a cada 15 min</span>
       </div>
-      <div style="text-align:center;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-        <div style="display:flex;align-items:center;justify-content:center;gap:12px">
-          <div style="font-size:12px;color:var(--text-2);font-weight:600;text-align:right;max-width:100px">${escapeHtml(homeName)}</div>
-          <div style="font-family:var(--font-mono);font-size:28px;font-weight:800;color:var(--text);letter-spacing:.04em">${live?.homeScore ?? 0} — ${live?.awayScore ?? 0}</div>
-          <div style="font-size:12px;color:var(--text-2);font-weight:600;text-align:left;max-width:100px">${escapeHtml(awayName)}</div>
+      <div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+        <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px">
+          <div style="font-size:12px;color:var(--text-2);font-weight:700;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(homeName)}</div>
+          <div style="font-family:var(--font-mono);font-size:26px;font-weight:900;color:var(--text);letter-spacing:.04em;white-space:nowrap;padding:0 4px">${live?.homeScore ?? 0} — ${live?.awayScore ?? 0}</div>
+          <div style="font-size:12px;color:var(--text-2);font-weight:700;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(awayName)}</div>
         </div>
-        ${live?.minute ? `<div style="font-size:11px;color:var(--text-3);margin-top:4px">${live.minute}' jogados</div>` : ""}
+        ${live?.minute ? `<div style="font-size:11px;color:var(--text-3);margin-top:6px;text-align:center">${live.minute}' jogados</div>` : ""}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;font-size:9px;color:var(--text-3);text-align:center;margin-bottom:10px">
         <div style="color:var(--green)">CASA</div>
@@ -4487,9 +4489,9 @@ function getLeagueLogoUrl(league) {
   return result;
 }
 
-// SVG inline da Copa do Mundo — usado quando logo = "wc_svg"
+// Logo oficial Copa do Mundo 2026
 function getLeagueBadgeWC(size=16){
-  return `<svg width="${size}" height="${Math.round(size*1.2)}" viewBox="0 0 30 34" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;vertical-align:middle"><path d="M4 2H26C26 2 28 8 28 13C28 21 22 27 15 29C8 27 2 21 2 13C2 8 4 2 4 2Z" fill="#1a3a1a" stroke="rgba(245,166,35,0.6)" stroke-width="0.8"/><path d="M15 6L16.5 11H21.5L17.5 14L19 19L15 16L11 19L12.5 14L8.5 11H13.5L15 6Z" fill="#f5a623" opacity="0.9"/></svg>`;
+  return `<img src="https://assets.football-logos.cc/logos/tournaments/1500x1500/fifa-world-cup-2026.31d2489d.png" width="${size}" height="${size}" style="object-fit:contain;flex-shrink:0;vertical-align:middle;border-radius:2px" onerror="this.outerHTML='🏆'">`;
 }
 
 const CURRENT_SEASON = new Date().getFullYear();
