@@ -225,7 +225,10 @@
     .wc-filter-btn { padding: 6px 14px; border-radius: var(--radius); font-size: 12px; font-weight: 700; border: 1px solid var(--border); background: var(--surface-2); color: var(--text-2); cursor: pointer; transition: all 0.15s; }
     .wc-filter-btn.active { background: rgba(0,200,83,0.12); border-color: rgba(0,200,83,0.3); color: var(--green); }
     .wc-match-row { display: grid; grid-template-columns: 100px 1fr auto 1fr 120px; align-items: center; gap: 8px; padding: 10px 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 6px; font-size: 12px; }
-    @media (max-width: 600px) { .wc-match-row { grid-template-columns: 80px 1fr; gap: 4px; } }
+    @media (max-width: 600px) {
+      .wc-match-row { grid-template-columns: 72px 1fr auto 1fr; gap: 4px; padding: 8px 10px; }
+      .wc-match-venue { display: none; }
+    }
     .wc-match-date { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); }
     .wc-match-team { font-weight: 600; color: var(--text); }
     .wc-match-team.home { text-align: right; }
@@ -314,7 +317,7 @@
       color: #000; font-size: 36px; line-height: 1;
     }
     .brand-name {
-      font-family: var(--font-head); font-size: 26px; font-weight: 800;
+      font-family: var(--font-head); font-size: clamp(18px, 4vw, 26px); font-weight: 800;
       color: var(--text); letter-spacing: -0.02em; line-height: 1;
     }
     .brand-sub {
@@ -1246,7 +1249,7 @@
     .stat-label { font-size: 9px; color: var(--text-3); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 5px; line-height: 1.2; }
     .stat-value {
       font-family: var(--font-mono);
-      font-size: 22px; font-weight: 600;
+      font-size: clamp(16px, 3.5vw, 22px); font-weight: 600;
       color: var(--text); line-height: 1;
       font-variant-numeric: tabular-nums;
       letter-spacing: -0.02em;
@@ -1545,22 +1548,194 @@
     .hidden { display: none !important; }
 
     /* ─── RESPONSIVE ──────────────────────────────────────────────────── */
-    @media (min-width: 640px) {
-      .competitions-grid { grid-template-columns: repeat(2,1fr); }
-    }
+
+    /* Desktop médio */
     @media (min-width: 900px) {
       .competitions-grid { grid-template-columns: repeat(3,1fr); }
     }
+    @media (min-width: 640px) {
+      .competitions-grid { grid-template-columns: repeat(2,1fr); }
+    }
+
+    /* Tablet */
     @media (max-width: 860px) {
       .a-grid { grid-template-columns: 1fr; }
     }
+
+    /* ── MOBILE GERAL (≤ 720px) ── */
     @media (max-width: 720px) {
+      /* Layout base */
+      .shell { padding: 12px 12px 64px; }
       .hero-grid { grid-template-columns: 1fr; }
-      .shell { padding: 16px 12px 56px; }
-      .analysis-hd, .analysis-body { padding-left: 16px; padding-right: 16px; }
-      .stats-grid { grid-template-columns: repeat(3,1fr); }
-      .game-card { flex-direction: column; align-items: flex-start; }
+      .analysis-hd, .analysis-body { padding-left: 14px; padding-right: 14px; }
       .see-btn { width: 100%; text-align: center; }
+
+      /* Topbar */
+      .topbar { gap: 10px; margin-bottom: 16px; }
+      .brand-logo, .brand-logo img { width: 52px; height: 52px; }
+      .brand-logo-fallback { width: 52px; height: 52px; font-size: 26px; }
+      .brand-name { font-size: 20px; }
+      .brand-sub { font-size: 10px; }
+      .status-pill { font-size: 11px; padding: 6px 12px; }
+
+      /* Radar */
+      .radar-item-v2 { padding: 10px 12px; gap: 8px; }
+      .ri2-rank { width: 22px; height: 22px; font-size: 10px; }
+      .ri2-team-names { font-size: 12px; }
+      .ri2-market-num { font-size: 13px; }
+      .ri2-market-label { font-size: 8px; }
+      .ri2-kickoff { font-size: 9px; }
+      .ri2-league { font-size: 9px; }
+      .radar-full-head { padding: 12px 14px; }
+
+      /* Seção assertividade */
+      .assert-bar { padding: 14px 16px; }
+      .assert-big-pct { font-size: 34px; }
+      .assert-hero { gap: 12px; flex-direction: column; }
+      .assert-big-num { padding: 10px 16px; width: 100%; flex-direction: row; justify-content: space-between; align-items: center; }
+      .assert-big-label, .assert-big-sub { text-align: left; }
+      .assert-stats { width: 100%; }
+      .assert-stat-bar { max-width: 60px; }
+      .assert-market-chip { font-size: 10px; padding: 3px 8px; }
+
+      /* Histórico — badge total */
+      .assert-total-badge { font-size: 9px; padding: 2px 8px; }
+
+      /* Jogos ao vivo */
+      .live-card { flex-direction: column; gap: 10px; }
+      .live-score-block { width: 100%; justify-content: center; }
+      .live-teams { flex-direction: row; justify-content: space-between; }
+
+      /* Game cards */
+      .game-card { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px; }
+      .game-pick-badge { font-size: 11px; }
+
+      /* Análise overlay */
+      .analysis-overlay .analysis-panel { width: 100%; max-width: 100%; border-radius: 0; }
+      .analysis-hd { padding: 14px 16px; }
+      .analysis-body { padding: 14px 16px 24px; }
+      .stat-num-big { font-size: 32px; }
+      .stats-grid { grid-template-columns: repeat(3,1fr); gap: 8px; }
+      .stat-card { padding: 10px 8px; }
+      .stat-val { font-size: 18px; }
+      .stat-lbl { font-size: 9px; }
+      .h2h-row-label { font-size: 10px; width: 72px; }
+      .h2h-val { font-size: 11px; min-width: 28px; }
+
+      /* Copa do Mundo teaser */
+      .worldcup-teaser { padding: 12px 14px; gap: 10px; }
+      .wc-left { gap: 10px; }
+      .wc-title { font-size: 14px; }
+      .wc-desc { font-size: 10px; }
+      .wc-explore { font-size: 10px; }
+      .wc-num { font-size: 17px; }
+      .wc-unit { min-width: 36px; padding: 4px 7px; }
+      .wc-sep { font-size: 16px; }
+
+      /* Copa overlay */
+      .wc-panel { max-height: 95vh; }
+      .wc-panel-hd { padding: 14px 16px 12px; }
+      .wc-panel-title { font-size: 18px; }
+      .wc-panel-body { padding: 14px 16px; }
+      .wc-tab { font-size: 11px; padding: 6px 12px; }
+      .wc-group-card { padding: 10px; }
+      .wc-group-title { font-size: 10px; }
+      .wc-group-team { font-size: 11px; gap: 6px; }
+      .wc-match-row { grid-template-columns: 70px 1fr auto 1fr; gap: 4px; padding: 8px 10px; font-size: 11px; }
+      .wc-match-venue { display: none; }
+      .wc-match-date { font-size: 10px; }
+
+      /* Competições accordion */
+      .comp-accordion-title { font-size: 14px; }
+      .comp-accordion-header { padding: 12px 14px; }
+      .comp-accordion-body { padding: 12px; }
+      .competition-card { padding: 10px 8px; }
+      .comp-name { font-size: 11px; }
+      .comp-logo { width: 32px; height: 32px; }
+
+      /* Agenda */
+      .agenda-header { padding: 12px 14px; }
+      .agenda-title { font-size: 14px; }
+      .agenda-body { padding: 10px 10px 6px; }
+      .agenda-row { padding: 8px 10px; }
+      .agenda-teams { font-size: 12px; }
+
+      /* Histórico */
+      .pick-table td, .pick-table th { font-size: 11px; padding: 7px 8px; }
+    }
+
+    /* ── MOBILE PEQUENO (≤ 400px) ── */
+    @media (max-width: 400px) {
+      .shell { padding: 10px 10px 60px; }
+      .brand-name { font-size: 18px; }
+      .ri2-team-names { font-size: 11px; }
+      .ri2-market-num { font-size: 12px; }
+      .wc-match-row { grid-template-columns: 62px 1fr auto 1fr; font-size: 10px; }
+      .assert-big-pct { font-size: 30px; }
+      .competitions-grid { grid-template-columns: 1fr 1fr; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .wc-groups-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* ─── MOBILE FIXES ADICIONAIS ─────────────────────────────────────── */
+    @media (max-width: 600px) {
+      /* Live score não transborda */
+      .live-card { gap: 8px; }
+      .live-score-block div[style*="font-size:28px"] { font-size: 22px !important; }
+
+      /* Radar full header */
+      .radar-full-head { padding: 10px 12px; }
+      .radar-full-meta { flex-wrap: wrap; gap: 4px; }
+
+      /* Market-line-num no overlay de análise */
+      .market-line-num { font-size: 16px !important; }
+
+      /* Seção title menor */
+      .section-title { font-size: 16px; }
+      .section-desc { font-size: 12px; }
+
+      /* Assert bar hero */
+      .assert-big-pct { font-size: 36px; }
+
+      /* Comp accordion */
+      .comp-accordion-title { font-size: 14px; }
+
+      /* Live section title */
+      .live-section-title { font-size: 14px; }
+
+      /* Agenda */
+      .agenda-title { font-size: 14px; }
+      .agenda-teams { font-size: 12px; }
+
+      /* Beta banner */
+      .beta-banner { font-size: 11px; padding: 8px 12px; }
+
+      /* Tabs no overlay análise */
+      .h2h-tab { font-size: 10px; padding: 4px 10px; }
+      .h2h-tabs { gap: 3px; }
+
+      /* Picks detectados — não quebra layout */
+      .market-line { padding: 10px 12px; }
+
+      /* Copa overlay — tabs menores */
+      .wc-panel-hd-left img { width: 36px !important; height: 36px !important; }
+      .wc-panel-title { font-size: 16px; }
+    }
+
+    @media (max-width: 380px) {
+      /* Topbar mínima */
+      .topbar { flex-wrap: nowrap; }
+      .brand-sub { display: none; }
+      .status-pill span:not(.status-dot) { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+      /* Radar item */
+      .radar-item-v2 { grid-template-columns: 22px 1fr auto; gap: 6px; }
+      .ri2-right { gap: 2px; }
+      .ri2-chips { display: none; }
+
+      /* Copa counter mínimo */
+      .wc-countdown { gap: 3px; }
+      .wc-lbl { font-size: 7px; }
     }
   </style>
   <!-- Google Analytics -->
