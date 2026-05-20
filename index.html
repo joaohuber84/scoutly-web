@@ -1609,7 +1609,7 @@
   <!-- ══ TEASER COPA DO MUNDO 2026 ═══════════════════════════════════════ -->
   <div class="worldcup-teaser" onclick="openWC2026()">
     <div class="wc-left" style="display:flex;align-items:center;gap:14px">
-      <img src="https://media.api-sports.io/football/leagues/1.png" width="52" height="52"
+      <img src="https://upload.wikimedia.org/wikipedia/en/thumb/6/67/2026_FIFA_World_Cup_logo.svg/200px-2026_FIFA_World_Cup_logo.svg.png" width="52" height="52"
         style="object-fit:contain;flex-shrink:0;border-radius:8px;filter:drop-shadow(0 0 10px rgba(0,200,83,0.3))"
         onerror="this.style.display='none'">
       <div>
@@ -1636,7 +1636,7 @@
   <!-- ══ ASSERTIVIDADE ══════════════════════════════════════════════════════ -->
   <div class="assert-bar" id="assertBar">
     <div class="assert-header">
-      <span class="assert-label">📊 Histórico do Radar Scoutly</span>
+      <span class="assert-label">📊 Resultado do Radar Scoutly</span>
       <span class="assert-total-badge" id="assertTotalBadge">carregando...</span>
     </div>
     <div id="assertHeroSection">
@@ -1813,7 +1813,7 @@
   <div class="wc-panel">
     <div class="wc-panel-hd">
       <div class="wc-panel-hd-left" style="display:flex;align-items:flex-start;gap:14px">
-        <img src="https://media.api-sports.io/football/leagues/1.png" width="48" height="48" style="object-fit:contain;flex-shrink:0;margin-top:6px;border-radius:6px" onerror="this.style.display='none'">
+        <img src="https://upload.wikimedia.org/wikipedia/en/thumb/6/67/2026_FIFA_World_Cup_logo.svg/200px-2026_FIFA_World_Cup_logo.svg.png" width="48" height="48" style="object-fit:contain;flex-shrink:0;margin-top:6px;border-radius:6px" onerror="this.style.display='none'">
         <div>
         <div class="eyebrow">Copa do Mundo 2026</div>
         <h2 class="wc-panel-title">FIFA World Cup <span>2026</span></h2>
@@ -2909,6 +2909,7 @@ function openAnalysis(matchId){
       [formatDecimal(h.avgShotsOnTarget??h.avgSOT??h.sot,0), formatDecimal(a.avgShotsOnTarget??a.avgSOT??a.sot,0), "No gol"],
       [formatDecimal(h.avgCorners,1), formatDecimal(a.avgCorners,1), "Escanteios"],
       [formatDecimal(h.avgCards,1), formatDecimal(a.avgCards,1), "Cartões"],
+      [formatDecimal(h.avgFouls??h.fouls,1), formatDecimal(a.avgFouls??a.fouls,1), "Faltas"],
     ];
     const barsHtml = rows.map(([hv,av,label]) => h2hBar(hv,av,label)).join("");
     const hStreak = h.formStreak || null;
@@ -2988,6 +2989,7 @@ function openAnalysis(matchId){
           ${h2hBar(formatDecimal(metrics.homeSOT,0),formatDecimal(metrics.awaySOT,0),"No gol")}
           ${h2hBar(formatDecimal(metrics.homeCorners,1),formatDecimal(metrics.awayCorners,1),"Escanteios")}
           ${h2hBar(formatDecimal(metrics.homeCards,1),formatDecimal(metrics.awayCards,1),"Cartões")}
+          ${h2hBar(formatDecimal(metrics.avgFouls,1),formatDecimal(metrics.avgFouls,1),"Faltas (total)")}
         </div>`;
       } else {
         content.innerHTML = renderH2HBars(hForm, aForm);
@@ -4424,15 +4426,13 @@ async function loadAssertiveness() {
     const roiUnits = data.reduce((acc, i) => acc + (i.correct ? 1 : -1), 0);
     const roiPct   = Math.round((roiUnits / data.length) * 100);
 
-    // Atualiza badge total
-    if (badgeEl) badgeEl.textContent = `${data.length} picks avaliados`;
-
-    // Mercados
+    // Mercados — usa todos os dados (não só monthData) para ter volume suficiente
     const families = {
-      "⚽ Gols":        monthData.filter(i => { const m=String(i.market||"").toLowerCase(); return(m.includes("gol")&&!m.includes("escanteio"))||m.includes("ambas"); }),
-      "🚩 Escanteios":  monthData.filter(i => String(i.market||"").toLowerCase().includes("escanteio")),
-      "🎯 Finalizações":monthData.filter(i => { const m=String(i.market||"").toLowerCase(); return m.includes("finaliz")||m.includes("no gol"); }),
-      "🟨 Cartões":     monthData.filter(i => String(i.market||"").toLowerCase().includes("cart")),
+      "⚽ Gols":          data.filter(i => { const m=String(i.market||"").toLowerCase(); return(m.includes("gol")&&!m.includes("escanteio"))||m.includes("ambas"); }),
+      "🚩 Escanteios":    data.filter(i => String(i.market||"").toLowerCase().includes("escanteio")),
+      "🎯 Finalizações":  data.filter(i => { const m=String(i.market||"").toLowerCase(); return m.includes("finaliz")||m.includes("no gol"); }),
+      "🟨 Cartões":       data.filter(i => String(i.market||"").toLowerCase().includes("cart")),
+      "🛡️ Dupla Chance":  data.filter(i => String(i.market||"").toLowerCase().includes("dupla")),
     };
 
     // Barra de progresso
@@ -4450,33 +4450,61 @@ async function loadAssertiveness() {
       </div>`;
     }
 
+    // Quantos acertos em 10
+    const acertosEm10 = Math.round(totalRes.pct / 10);
+    const roiTexto = roiPct >= 0
+      ? `quem seguiu ficou no lucro (+${roiPct}%)`
+      : `retorno negativo (${roiPct}%)`;
+
+    // Badge do total
+    if (badgeEl) badgeEl.textContent = `${data.length} picks do radar avaliados`;
+
     // Hero com número grande = total geral
     heroEl.innerHTML = `
+      <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;line-height:1.6">
+        Picks gerados <strong style="color:var(--text-2)">automaticamente pelo radar</strong> e verificados após o encerramento de cada partida. Sem seleção manual.
+      </div>
       <div class="assert-hero">
         <div class="assert-big-num">
           <div class="assert-big-pct">${totalRes.pct}%</div>
-          <div class="assert-big-label">Taxa de acerto</div>
-          <div class="assert-big-sub">vs ~50% mercado</div>
+          <div class="assert-big-label" style="text-align:center">de acerto</div>
+          <div class="assert-big-sub">${acertosEm10} de cada 10 jogos</div>
         </div>
         <div class="assert-stats">
-          ${statRow("Esta semana", weekRes)}
-          ${statRow("Este mês", monthRes, "")}
-          <div class="assert-stat-row">
-            <span class="assert-stat-label">ROI simulado</span>
-            <span class="assert-stat-val" style="color:${roiPct>=0?"var(--green)":"var(--red)"}">${roiPct>=0?"+":""}${roiPct}%</span>
+          ${weekRes ? `<div class="assert-stat-row">
+            <span class="assert-stat-label">Últimos 7 dias</span>
+            ${bar(weekRes.pct)}
+            <span class="assert-stat-val">${weekRes.pct}% <span style="font-size:9px;color:var(--text-3)">(${weekRes.correct}/${weekRes.total})</span></span>
+          </div>` : ""}
+          ${monthRes ? `<div class="assert-stat-row">
+            <span class="assert-stat-label">Últimos 30 dias</span>
+            ${bar(monthRes.pct)}
+            <span class="assert-stat-val">${monthRes.pct}% <span style="font-size:9px;color:var(--text-3)">(${monthRes.correct}/${monthRes.total})</span></span>
+          </div>` : ""}
+          <div class="assert-stat-row" style="margin-top:4px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.04)">
+            <span class="assert-stat-label" style="font-size:10px">Se apostasse R$10 em cada pick</span>
+            <span class="assert-stat-val" style="color:${roiPct>=0?"var(--green)":"var(--red)"}">
+              ${roiPct>=0?"+":""}${roiPct}% ${roiPct>=0?"💰":""}
+            </span>
           </div>
         </div>
       </div>
       <div class="assert-divider"></div>
-      <div class="assert-markets" style="margin-top:10px">
-        ${Object.entries(families)
-          .filter(([,items]) => items.length >= 3)
-          .map(([label, items]) => {
-            const r = calcRate(items);
-            if (!r) return "";
-            const cls = chipClass(r.pct);
-            return `<div class="assert-market-chip ${cls}">${label} <span class="mpct">${r.pct}%</span> <span style="font-size:9px;color:var(--text-3)">(${r.total})</span></div>`;
-          }).join("")}
+      <div style="margin-top:10px">
+        <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;font-weight:700">Acerto por tipo de aposta</div>
+        <div class="assert-markets">
+          ${Object.entries(families)
+            .filter(([,items]) => items.length >= 2)
+            .map(([label, items]) => {
+              const r = calcRate(items);
+              if (!r) return "";
+              const cls = chipClass(r.pct);
+              return `<div class="assert-market-chip ${cls}">${label} <span class="mpct">${r.pct}%</span> <span style="font-size:9px;color:var(--text-3)">${r.correct}/${r.total}</span></div>`;
+            }).join("")}
+          ${Object.entries(families).filter(([,items])=>items.length>=2).length===0
+            ? `<span style="font-size:11px;color:var(--text-3)">Mais dados em breve — crescendo a cada jogo avaliado</span>`
+            : ""}
+        </div>
       </div>`;
 
   } catch(e) {
