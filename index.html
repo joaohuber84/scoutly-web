@@ -73,23 +73,29 @@
       background: linear-gradient(135deg, #0a1a0a, #0d2010);
       border: 1px solid rgba(0,200,83,0.3);
       border-radius: var(--radius-lg);
-      padding: 16px 20px;
+      padding: 18px 20px;
       margin-bottom: 16px;
-      display: flex; align-items: center; justify-content: space-between;
-      gap: 16px; flex-wrap: wrap;
+      display: flex; flex-direction: column; gap: 16px;
       position: relative; overflow: hidden;
       cursor: pointer;
       transition: border-color 0.2s, box-shadow 0.2s;
     }
     .worldcup-teaser:hover { border-color: rgba(0,200,83,0.5); box-shadow: 0 0 24px rgba(0,200,83,0.1); }
-    .worldcup-teaser::before {
-      content: '2026';
-      position: absolute; right: -8px; top: 50%;
-      transform: translateY(-50%);
-      font-family: var(--font-head); font-size: 80px; font-weight: 900;
-      color: rgba(0,200,83,0.05); letter-spacing: -4px; pointer-events: none;
+    /* Linha superior: logo + texto */
+    .wc-top-row {
+      display: flex; align-items: flex-start; gap: 14px;
     }
-    .wc-left { flex: 1; min-width: 0; position: relative; z-index: 1; }
+    .wc-logo-img {
+      width: 56px; height: 56px; object-fit: contain; flex-shrink: 0;
+      border-radius: 8px; filter: drop-shadow(0 0 10px rgba(0,200,83,0.3));
+    }
+    .wc-text-block { flex: 1; min-width: 0; }
+    /* Linha inferior: countdown */
+    .wc-bottom-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; flex-wrap: wrap;
+    }
+    .wc-left { flex: 1; min-width: 0; }
     .wc-badge {
       display: inline-flex; align-items: center; gap: 5px;
       background: rgba(0,200,83,0.15); border: 1px solid rgba(0,200,83,0.35);
@@ -98,21 +104,22 @@
       color: var(--green); letter-spacing: 0.1em;
       text-transform: uppercase; margin-bottom: 6px;
     }
-    .wc-title { font-family: var(--font-head); font-size: 17px; font-weight: 800; color: #fff; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 5px; }
+    .wc-title { font-family: var(--font-head); font-size: clamp(15px,3vw,18px); font-weight: 800; color: #fff; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 5px; }
     .wc-title span { color: var(--green); }
     .wc-desc { font-size: 11px; color: rgba(255,255,255,0.45); line-height: 1.5; }
     .wc-explore { display: inline-flex; align-items: center; gap: 5px; margin-top: 8px; font-size: 11px; font-weight: 700; color: var(--green); }
-    .wc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; position: relative; z-index: 1; }
-    .wc-countdown { display: flex; align-items: center; gap: 4px; }
-    .wc-unit { display: flex; flex-direction: column; align-items: center; background: rgba(0,200,83,0.08); border: 1px solid rgba(0,200,83,0.2); border-radius: 8px; padding: 6px 10px; min-width: 48px; }
-    .wc-num { font-family: var(--font-mono); font-size: 22px; font-weight: 900; color: var(--green); line-height: 1; letter-spacing: -0.02em; }
+    .wc-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+    .wc-countdown { display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; }
+    .wc-unit { display: flex; flex-direction: column; align-items: center; background: rgba(0,200,83,0.08); border: 1px solid rgba(0,200,83,0.2); border-radius: 8px; padding: 6px 10px; min-width: 44px; }
+    .wc-num { font-family: var(--font-mono); font-size: 20px; font-weight: 900; color: var(--green); line-height: 1; letter-spacing: -0.02em; }
     .wc-lbl { font-family: var(--font-mono); font-size: 8px; font-weight: 700; color: rgba(0,200,83,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
-    .wc-sep { font-family: var(--font-mono); font-size: 20px; font-weight: 900; color: rgba(0,200,83,0.4); padding-bottom: 14px; }
+    .wc-sep { font-family: var(--font-mono); font-size: 18px; font-weight: 900; color: rgba(0,200,83,0.4); padding-bottom: 12px; }
     .wc-start { font-family: var(--font-mono); font-size: 9px; font-weight: 700; color: rgba(255,255,255,0.25); letter-spacing: 0.06em; }
     @media (max-width: 520px) {
-      .worldcup-teaser { flex-direction: column; align-items: flex-start; }
-      .wc-right { align-items: flex-start; width: 100%; }
-      .wc-num { font-size: 18px; }
+      .wc-bottom-row { flex-direction: column; align-items: flex-start; }
+      .wc-countdown { width: 100%; justify-content: flex-start; }
+      .wc-num { font-size: 17px; }
+      .wc-unit { min-width: 38px; padding: 5px 7px; }
       .wc-unit { min-width: 40px; padding: 5px 8px; }
     }
 
@@ -1847,16 +1854,16 @@
 
   <!-- ══ TEASER COPA DO MUNDO 2026 ═══════════════════════════════════════ -->
   <div class="worldcup-teaser" onclick="openWC2026()">
-    <div class="wc-left" style="display:flex;align-items:center;gap:14px">
-      <img src="https://assets.football-logos.cc/logos/tournaments/1500x1500/fifa-world-cup-2026.31d2489d.png" width="52" height="52" style="object-fit:contain;flex-shrink:0;border-radius:8px;filter:drop-shadow(0 0 12px rgba(0,200,83,0.3))" onerror="this.outerHTML='<div style=\"width:52px;height:52px;display:flex;align-items:center;justify-content:center;font-size:28px\">🏆</div>'">
-      <div>
-        <div class="wc-badge">🏆 Copa do Mundo 2026</div>
+    <div class="wc-top-row">
+      <img src="https://assets.football-logos.cc/logos/tournaments/1500x1500/fifa-world-cup-2026.31d2489d.png" class="wc-logo-img" alt="Copa do Mundo 2026" onerror="this.style.display='none'">
+      <div class="wc-text-block">
+        <div class="wc-badge">⚽ Copa do Mundo 2026</div>
         <div class="wc-title">Scoutly na <span>Copa do Mundo 2026</span></div>
         <div class="wc-desc">48 seleções · 3 países · 16 cidades · 1 radar inteligente</div>
         <div class="wc-explore">🔍 Explorar grupos, agenda e curiosidades →</div>
       </div>
     </div>
-    <div class="wc-right">
+    <div class="wc-bottom-row">
       <div class="wc-countdown">
         <div class="wc-unit"><div class="wc-num" id="wcDays">--</div><div class="wc-lbl">dias</div></div>
         <div class="wc-sep">:</div>
@@ -2971,12 +2978,12 @@ function getDetectedMarkets(match){
 function statCardsMarkup(match){
   const m=getMetrics(match);
   return [
-    {label:"Gols esp.",value:formatDecimal(m.avgGoals,1),color:""},
-    {label:"Finalizações",value:formatDecimal(m.avgShots,0),color:""},
-    {label:"No gol",value:formatDecimal(m.avgSOT,0),color:"var(--blue)"},
-    {label:"Escanteios",value:formatDecimal(m.avgCorners,1),color:""},
-    {label:"Cartões",value:formatDecimal(m.avgCards,1),color:"var(--amber)"},
-  ].map(i=>`<div class="stat-item"><div class="stat-label">${escapeHtml(i.label)}</div><div class="stat-value" style="${i.color?`color:${i.color}`:""}">${escapeHtml(i.value)}</div></div>`).join("");
+    {label:"Gols esp.",value:formatDecimal(m.avgGoals,1)},
+    {label:"Finalizações",value:formatDecimal(m.avgShots,0)},
+    {label:"No gol",value:formatDecimal(m.avgSOT,0)},
+    {label:"Escanteios",value:formatDecimal(m.avgCorners,1)},
+    {label:"Cartões",value:formatDecimal(m.avgCards,1)},
+  ].map(i=>`<div class="stat-item"><div class="stat-label">${escapeHtml(i.label)}</div><div class="stat-value">${escapeHtml(i.value)}</div></div>`).join("");
 }
 
 /* ── OPEN ANALYSIS ─────────────────────────────────────────────────── */
@@ -3037,14 +3044,14 @@ function openAnalysis(matchId){
     <div class="a-highlight">
       <div class="a-pick-teams">
         ${teamBadge(match,"home")}
-        <div class="team-names">${escapeHtml(homeTeam)} × ${escapeHtml(awayTeam)}</div>
+        <div class="team-names" style="font-size:13px;font-weight:700;color:var(--text-2);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(homeTeam)} × ${escapeHtml(awayTeam)}</div>
         ${teamBadge(match,"away")}
       </div>
-      <div class="chips">
+      <div style="display:flex;align-items:center;gap:6px;margin-top:8px;margin-bottom:4px;flex-wrap:wrap">
         ${chipMarkup(primaryTier)}
         ${marketFamilyChip(marketFamily(primaryPick))}
       </div>
-      <div class="a-pick-label">🎯 Pick Principal do Radar</div>
+      <div class="a-pick-label" style="margin-bottom:6px;margin-top:0">🎯 Pick Principal do Radar</div>
       <div class="a-market">${escapeHtml(primaryPick)}</div>
       <div class="a-insight">${escapeHtml(insight)}</div>
     </div>
@@ -3052,10 +3059,11 @@ function openAnalysis(matchId){
     <div class="a-grid">
       <div class="a-col">
 
-        <div class="a-box">
-          <div class="a-box-title">Projeção Scoutly</div>
-          <div class="stats-grid">${statCardsMarkup(match)}</div>
-        </div>
+
+        ${(()=>{ const _m=getMetrics(match); const _hasData=_m.avgGoals>0||_m.avgShots>0||_m.avgCorners>0;
+          if(!_hasData) return `<div class="a-box"><div class="a-box-title">Projeção Scoutly</div><div style="font-size:12px;color:var(--text-3);text-align:center;padding:16px 0;font-style:italic">Dados insuficientes para projeção.</div></div>`;
+          return `<div class="a-box"><div class="a-box-title">Projeção Scoutly</div><div class="stats-grid">${statCardsMarkup(match)}</div></div>`;
+        })()}
 
         <div class="a-box">
           <div class="a-box-title">Comparação H2H</div>
@@ -3184,7 +3192,8 @@ function openAnalysis(matchId){
       [formatDecimal(h.avgGoalsFor,1), formatDecimal(a.avgGoalsFor,1), "Gols marcados"],
       [formatDecimal(h.avgGoalsAgainst,1), formatDecimal(a.avgGoalsAgainst,1), "Gols sofridos"],
       [formatDecimal(h.avgShots,0), formatDecimal(a.avgShots,0), "Finalizações totais"],
-      [formatDecimal(h.avgShotsOnTarget??h.avgSOT??h.sot??h.shots_on_target??h.shotsOnTarget,0), formatDecimal(a.avgShotsOnTarget??a.avgSOT??a.sot??a.shots_on_target??a.shotsOnTarget,0), "No gol"],
+      // No gol — múltiplos fallbacks para cobrir todos os nomes de campo do banco
+      [formatDecimal(h.avgShotsOnTarget??h.avgSOT??h.sot??h.shots_on_target??h.shotsOnTarget??h.avg_shots_on_target,0), formatDecimal(a.avgShotsOnTarget??a.avgSOT??a.sot??a.shots_on_target??a.shotsOnTarget??a.avg_shots_on_target,0), "No gol"],
       [formatDecimal(h.avgCorners,1), formatDecimal(a.avgCorners,1), "Escanteios"],
       [formatDecimal(h.avgCards,1), formatDecimal(a.avgCards,1), "Cartões"],
     ];
@@ -4469,9 +4478,7 @@ const LEAGUE_LOGO_MAP = {
 function getLeagueLogoUrl(league) {
   const n = normalizeLeagueName(league);
   if (LEAGUE_LOGO_MAP[n]) return LEAGUE_LOGO_MAP[n];
-  // Fallback: tentar o nome original sem normalizar
   if (LEAGUE_LOGO_MAP[league]) return LEAGUE_LOGO_MAP[league];
-  // Fallback: variantes comuns
   const variants = {
     "Liga do Chile": "Liga Chilena",
     "Liga da Colômbia": "Liga Colombiana",
@@ -4483,10 +4490,11 @@ function getLeagueLogoUrl(league) {
     "Copa Sudamericana": "Sul-Americana",
     "Copa Libertadores": "Libertadores",
     "Superligaen": "Superliga",
+    "Copa Sul-Sudeste": "Copa Sul-Sudeste",
+    "Copa Verde": "Copa Verde",
   };
   const mapped = variants[league] || variants[n];
-  const result = mapped ? (LEAGUE_LOGO_MAP[mapped] || "") : "";
-  return result;
+  return mapped ? (LEAGUE_LOGO_MAP[mapped] || "") : "";
 }
 
 // Logo oficial Copa do Mundo 2026
