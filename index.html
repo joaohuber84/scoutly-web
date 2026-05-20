@@ -1229,17 +1229,29 @@
 
     /* HIGHLIGHT */
     .a-highlight {
-      background: var(--green-dim); border: 1px solid rgba(0,200,83,0.2);
-      border-radius: var(--radius-lg); padding: 16px; margin-bottom: 20px;
+      background: linear-gradient(135deg, rgba(0,200,83,0.08), rgba(0,200,83,0.04));
+      border: 1px solid rgba(0,200,83,0.2);
+      border-radius: var(--radius-lg); padding: 18px; margin-bottom: 20px;
+      position: relative; overflow: hidden;
     }
-    .a-pick-teams { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+    .a-highlight::before {
+      content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
+      background: linear-gradient(180deg, var(--green), #00e676);
+      border-radius: 4px 0 0 4px;
+    }
+    .a-pick-teams { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+    .a-pick-label {
+      font-size: 9px; font-weight: 800; color: var(--green);
+      letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 4px;
+    }
     .a-market {
-      font-family: var(--font-head); font-size: 22px; font-weight: 800;
-      color: var(--text); text-transform: uppercase; letter-spacing: -0.02em;
-      line-height: 1.1; margin: 10px 0 10px;
+      font-family: var(--font-head); font-size: clamp(18px, 4vw, 24px); font-weight: 900;
+      color: #fff; letter-spacing: -0.03em;
+      line-height: 1.1; margin: 6px 0 12px; word-break: break-word;
     }
     .a-insight {
-      font-size: 13px; color: rgba(228,233,240,0.8); line-height: 1.7;
+      font-size: 12px; color: rgba(228,233,240,0.75); line-height: 1.7;
+      padding-top: 10px; border-top: 1px solid rgba(0,200,83,0.12);
     }
 
     /* ANALYSIS GRID */
@@ -1394,26 +1406,41 @@
     .markets-list { display: flex; flex-direction: column; gap: 8px; }
     .market-line {
       background: var(--surface-3); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 12px;
-      transition: border-color 0.2s;
+      border-radius: var(--radius-lg); padding: 14px;
+      transition: border-color 0.2s, background 0.2s;
+      position: relative; overflow: hidden;
     }
-    .market-line:hover { border-color: var(--border-2); }
+    .market-line::before {
+      content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+      background: var(--green); opacity: 0.5; border-radius: 3px 0 0 3px;
+    }
+    .market-line:hover { border-color: var(--border-2); background: var(--surface-2); }
+    .market-line:hover::before { opacity: 1; }
+    .market-line-header { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
     .market-line-name {
-      font-family: var(--font-body); font-size: 13px; font-weight: 700;
+      font-family: var(--font-body); font-size: 12px; font-weight: 700;
       color: var(--text); line-height: 1.3;
-      margin-top: 8px; margin-bottom: 5px;
+      margin-bottom: 4px;
     }
     .market-line-num {
-      font-family: var(--font-mono); font-size: 20px; font-weight: 700;
+      font-family: var(--font-head); font-size: 20px; font-weight: 900;
       color: var(--green); display: block; line-height: 1;
-      font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+      letter-spacing: -0.03em; word-break: break-word;
     }
     .market-line-sublabel {
-      font-family: var(--font-body); font-size: 10px; font-weight: 600;
+      font-family: var(--font-body); font-size: 9px; font-weight: 700;
       color: var(--text-3); text-transform: uppercase;
-      letter-spacing: 0.04em; display: block; margin-top: 2px;
+      letter-spacing: 0.06em; display: block; margin-top: 3px;
     }
-    .market-line-copy { font-size: 11px; color: var(--text-2); line-height: 1.5; }
+    .market-line-copy {
+      font-size: 11px; color: var(--text-2); line-height: 1.55;
+      margin-top: 6px; padding-top: 6px;
+      border-top: 1px solid var(--border);
+    }
+    @media (max-width: 500px) {
+      .market-line-num { font-size: 16px; }
+      .market-line-copy { font-size: 10px; }
+    }
 
     /* ─── STANDINGS ───────────────────────────────────────────────────── */
     .standings-wrap { margin-top: 16px; }
@@ -1819,7 +1846,7 @@
   <!-- ══ TEASER COPA DO MUNDO 2026 ═══════════════════════════════════════ -->
   <div class="worldcup-teaser" onclick="openWC2026()">
     <div class="wc-left" style="display:flex;align-items:center;gap:14px">
-      <div style="width:52px;height:52px;flex-shrink:0;border-radius:8px;background:linear-gradient(135deg,rgba(245,166,35,0.15),rgba(0,200,83,0.1));border:1px solid rgba(245,166,35,0.3);display:flex;align-items:center;justify-content:center;font-size:28px;filter:drop-shadow(0 0 10px rgba(0,200,83,0.3))">🏆</div>
+      <div style="width:52px;height:52px;flex-shrink:0;border-radius:10px;background:linear-gradient(135deg,#1a2a1a,#0d1a0d);border:1.5px solid rgba(245,166,35,0.4);display:flex;align-items:center;justify-content:center;box-shadow:0 0 20px rgba(0,200,83,0.2)"><svg width="30" height="34" viewBox="0 0 30 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 2H26C26 2 28 8 28 13C28 21 22 27 15 29C8 27 2 21 2 13C2 8 4 2 4 2Z" fill="url(#tg)" stroke="rgba(245,166,35,0.5)" stroke-width="0.5"/><path d="M10 29H20V31H10V29Z" fill="#f5a623"/><path d="M8 31H22V33H8V31Z" fill="#f5a623"/><path d="M15 6L16.5 11H21.5L17.5 14L19 19L15 16L11 19L12.5 14L8.5 11H13.5L15 6Z" fill="#fff" opacity="0.9"/><defs><linearGradient id="tg" x1="2" y1="2" x2="28" y2="29"><stop offset="0%" stop-color="#2d5a2d"/><stop offset="100%" stop-color="#1a3a1a"/></linearGradient></defs></svg></div>
       <div>
         <div class="wc-badge">🏆 Copa do Mundo 2026</div>
         <div class="wc-title">Scoutly na <span>Copa do Mundo 2026</span></div>
@@ -2021,7 +2048,7 @@
   <div class="wc-panel">
     <div class="wc-panel-hd">
       <div class="wc-panel-hd-left" style="display:flex;align-items:flex-start;gap:14px">
-        <div style="width:48px;height:48px;flex-shrink:0;border-radius:8px;background:linear-gradient(135deg,rgba(245,166,35,0.2),rgba(0,200,83,0.15));border:1px solid rgba(245,166,35,0.35);display:flex;align-items:center;justify-content:center;font-size:26px;margin-top:4px">🏆</div>
+        <div style="width:48px;height:48px;flex-shrink:0;margin-top:4px;border-radius:10px;background:linear-gradient(135deg,#1a2a1a,#0d1a0d);border:1.5px solid rgba(245,166,35,0.4);display:flex;align-items:center;justify-content:center"><svg width="28" height="32" viewBox="0 0 30 34" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 2H26C26 2 28 8 28 13C28 21 22 27 15 29C8 27 2 21 2 13C2 8 4 2 4 2Z" fill="url(#tg2)" stroke="rgba(245,166,35,0.4)" stroke-width="0.5"/><path d="M10 29H20V31H10V29Z" fill="#f5a623"/><path d="M8 31H22V33H8V31Z" fill="#f5a623"/><path d="M15 6L16.5 11H21.5L17.5 14L19 19L15 16L11 19L12.5 14L8.5 11H13.5L15 6Z" fill="#fff" opacity="0.9"/><defs><linearGradient id="tg2" x1="2" y1="2" x2="28" y2="29"><stop offset="0%" stop-color="#2d5a2d"/><stop offset="100%" stop-color="#1a3a1a"/></linearGradient></defs></svg></div>
         <div>
         <div class="eyebrow">Copa do Mundo 2026</div>
         <h2 class="wc-panel-title">FIFA World Cup <span>2026</span></h2>
@@ -2719,22 +2746,34 @@ function formatMarketDisplay(market, numClass, labelClass) {
   }
 
   // Mercados sem número (dupla chance, ambas marcam, etc.)
-  // Encurta textos longos para o radar mobile
+  // Radar vs Overlay — comportamento diferente
+  const isRadar = (numClass === "ri2-market-num");
   let displayText = m;
+
   if (lower.includes("dupla chance")) {
-    // "Dupla chance Palmeiras ou empate" → "Dupla Chance" + "Palmeiras ou Emp."
     const teamMatch = m.match(/dupla chance (.+?) ou empate/i);
-    if (teamMatch) {
-      const team = teamMatch[1].length > 10 ? teamMatch[1].slice(0,10)+"…" : teamMatch[1];
-      return `<span class="${numClass}" style="font-size:12px;line-height:1.2;white-space:nowrap;text-align:right;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%">Dupla Chance</span><span class="${labelClass}" style="text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%;font-size:8px">${escapeHtml(team)} ou Emp.</span>`;
+    if (isRadar) {
+      // Radar: compacto
+      const team = teamMatch ? (teamMatch[1].length > 10 ? teamMatch[1].slice(0,10)+"…" : teamMatch[1]) : "";
+      return `<span class="${numClass}" style="font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%">Dupla Chance</span>${team?`<span class="${labelClass}" style="font-size:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%">${escapeHtml(team)} ou Emp.</span>`:""}`;
+    } else {
+      // Overlay: texto completo legível
+      return `<span class="${numClass}" style="font-size:15px;font-weight:800;line-height:1.3;word-break:break-word;display:block">${escapeHtml(m)}</span>`;
     }
   }
-  if (lower.includes("ambas marcam")) displayText = "Ambas Marcam";
-  if (lower.includes("ambas não") || lower.includes("ambas nao")) displayText = "Ambas Não Marc.";
-  if (lower.includes("vitória") || lower.includes("vitoria")) {
-    displayText = lower.includes("mandante") ? "Vitória Casa" : "Vitória Fora";
+
+  if (!isRadar) {
+    // Overlay: texto completo para qualquer mercado
+    if (lower.includes("ambas marcam")) displayText = "Ambas Marcam";
+    else if (lower.includes("ambas não") || lower.includes("ambas nao")) displayText = "Ambas Não Marcam";
+    return `<span class="${numClass}" style="font-size:15px;font-weight:800;line-height:1.3;word-break:break-word;display:block">${escapeHtml(displayText)}</span>`;
   }
-  return `<span class="${numClass}" style="font-size:12px;line-height:1.2;white-space:nowrap;text-align:right;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%">${escapeHtml(displayText)}</span>`;
+
+  // Radar: encurtar
+  if (lower.includes("ambas marcam")) displayText = "Ambas Marcam";
+  else if (lower.includes("ambas não") || lower.includes("ambas nao")) displayText = "Ambas Não";
+  else if (lower.includes("vitória") || lower.includes("vitoria")) displayText = lower.includes("mandante") ? "Vitória Casa" : "Vitória Fora";
+  return `<span class="${numClass}" style="font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%">${escapeHtml(displayText)}</span>`;
 }
 
 /* ── INSIGHT ──────────────────────────────────────────────────────── */
@@ -2867,13 +2906,17 @@ function getSecondaryPicks(match){
   for(const item of candidates){
     const key=item.toLowerCase(); if(seen.has(key))continue;
     const f=marketFamily(item);
-    if(["escanteios","shots","sot","cards"].includes(f)&&f===primaryFamily){
-      const d=detectDirection(item); const l=extractLine(item);
+    const d=detectDirection(item); const l=extractLine(item);
+    // Regra 1: mesmo mercado numérico — só permite se for mesma direção e linha coerente
+    if(["escanteios","shots","sot","cards","gols"].includes(f)&&f===primaryFamily){
       if(!d||l==null||!primaryDir||primaryLine==null)continue;
-      if(d!==primaryDir)continue;
+      if(d!==primaryDir)continue; // bloqueia over+under do mesmo mercado
       if(d==="under"&&l>=primaryLine)continue;
       if(d==="over"&&l<=primaryLine)continue;
     }
+    // Regra 2: alternativa tem direção oposta ao principal — bloquear
+    // Ex: principal é "Mais de 7.5 escanteios" → bloquear "Menos de 11.5 escanteios"
+    if(primaryDir&&d&&d!==primaryDir&&f===primaryFamily)continue;
     seen.add(key);
     if(f!==primaryFamily)noRep.push(item); else rep.push(item);
   }
@@ -2916,13 +2959,12 @@ function getDetectedMarkets(match){
 function statCardsMarkup(match){
   const m=getMetrics(match);
   return [
-    {label:"Gols esp.",value:formatDecimal(m.avgGoals,1)},
-    {label:"Finalizações",value:formatDecimal(m.avgShots,0)},
-    {label:"No gol",value:formatDecimal(m.avgSOT,0)},
-    {label:"Escanteios",value:formatDecimal(m.avgCorners,1)},
-    {label:"Cartões",value:formatDecimal(m.avgCards,1)},
-    {label:"Faltas",value:formatDecimal(m.avgFouls,1)}
-  ].map(i=>`<div class="stat-item"><div class="stat-label">${escapeHtml(i.label)}</div><div class="stat-value">${escapeHtml(i.value)}</div></div>`).join("");
+    {label:"Gols esp.",value:formatDecimal(m.avgGoals,1),color:""},
+    {label:"Finalizações",value:formatDecimal(m.avgShots,0),color:""},
+    {label:"No gol",value:formatDecimal(m.avgSOT,0),color:"var(--blue)"},
+    {label:"Escanteios",value:formatDecimal(m.avgCorners,1),color:""},
+    {label:"Cartões",value:formatDecimal(m.avgCards,1),color:"var(--amber)"},
+  ].map(i=>`<div class="stat-item"><div class="stat-label">${escapeHtml(i.label)}</div><div class="stat-value" style="${i.color?`color:${i.color}`:""}">${escapeHtml(i.value)}</div></div>`).join("");
 }
 
 /* ── OPEN ANALYSIS ─────────────────────────────────────────────────── */
@@ -2990,7 +3032,8 @@ function openAnalysis(matchId){
         ${chipMarkup(primaryTier)}
         ${marketFamilyChip(marketFamily(primaryPick))}
       </div>
-      <div class="a-market">${formatMarketDisplay(primaryPick,"radar-market-num","radar-market-label")}</div>
+      <div class="a-pick-label">🎯 Pick Principal do Radar</div>
+      <div class="a-market">${escapeHtml(primaryPick)}</div>
       <div class="a-insight">${escapeHtml(insight)}</div>
     </div>
 
@@ -3033,10 +3076,10 @@ function openAnalysis(matchId){
           <div class="markets-list">
             ${detectedMarkets.length?detectedMarkets.map(i=>`
               <div class="market-line">
-                <div class="chips">
+                <div class="chips" style="margin-bottom:8px">
                   ${chipMarkup(i.tier)}
                   ${marketFamilyChip(i.family)}
-                  ${i.chip?`<span class="chip chip-extra" style="font-size:10px">${escapeHtml(i.chip)}</span>`:""}
+                  ${i.individual?`<span class="chip" style="background:rgba(77,159,255,0.12);border:1px solid rgba(77,159,255,0.25);color:var(--blue);font-size:9px">individual</span>`:""}
                 </div>
                 <div class="market-line-name">${formatMarketDisplay(i.market,"market-line-num","market-line-sublabel")}</div>
                 <div class="market-line-copy">${escapeHtml(i.copy)}</div>
@@ -3128,11 +3171,10 @@ function openAnalysis(matchId){
     const rows = [
       [formatDecimal(h.avgGoalsFor,1), formatDecimal(a.avgGoalsFor,1), "Gols marcados"],
       [formatDecimal(h.avgGoalsAgainst,1), formatDecimal(a.avgGoalsAgainst,1), "Gols sofridos"],
-      [formatDecimal(h.avgShots,0), formatDecimal(a.avgShots,0), "Finalizações"],
+      [formatDecimal(h.avgShots,0), formatDecimal(a.avgShots,0), "Finalizações totais"],
       [formatDecimal(h.avgShotsOnTarget??h.avgSOT??h.sot,0), formatDecimal(a.avgShotsOnTarget??a.avgSOT??a.sot,0), "No gol"],
       [formatDecimal(h.avgCorners,1), formatDecimal(a.avgCorners,1), "Escanteios"],
       [formatDecimal(h.avgCards,1), formatDecimal(a.avgCards,1), "Cartões"],
-      [formatDecimal(h.avgFouls??h.fouls,1), formatDecimal(a.avgFouls??a.fouls,1), "Faltas"],
     ];
     const barsHtml = rows.map(([hv,av,label]) => h2hBar(hv,av,label)).join("");
     const hStreak = h.formStreak || null;
@@ -4394,11 +4436,42 @@ const LEAGUE_LOGO_MAP = {
   "Scottish Premiership": "https://media.api-sports.io/football/leagues/179.png",
   "Allsvenskan": "https://media.api-sports.io/football/leagues/113.png",
   "Eliteserien": "https://media.api-sports.io/football/leagues/103.png",
+  "Liga Chilena": "https://media.api-sports.io/football/leagues/265.png",
+  "Liga Colombiana": "https://media.api-sports.io/football/leagues/239.png",
+  "Copa do Nordeste": "https://media.api-sports.io/football/leagues/75.png",
+  "Copa Argentina": "https://media.api-sports.io/football/leagues/130.png",
+  "Copa do Brasil": "https://media.api-sports.io/football/leagues/73.png",
+  "Copa Verde": "https://media.api-sports.io/football/leagues/1218.png",
+  "Copa Sul-Sudeste": "https://media.api-sports.io/football/leagues/476.png",
+  "Nations League": "https://media.api-sports.io/football/leagues/5.png",
+  "Copa América": "https://media.api-sports.io/football/leagues/9.png",
+  "Liga Peruana": "https://media.api-sports.io/football/leagues/268.png",
+  "Liga Uruguaia": "https://media.api-sports.io/football/leagues/278.png",
+  "Copa del Rey": "https://media.api-sports.io/football/leagues/143.png",
+  "Taça de Portugal": "https://media.api-sports.io/football/leagues/96.png",
+  "CONCACAF Champions Cup": "https://media.api-sports.io/football/leagues/18.png",
 };
 
 function getLeagueLogoUrl(league) {
   const n = normalizeLeagueName(league);
-  return LEAGUE_LOGO_MAP[n] || "";
+  if (LEAGUE_LOGO_MAP[n]) return LEAGUE_LOGO_MAP[n];
+  // Fallback: tentar o nome original sem normalizar
+  if (LEAGUE_LOGO_MAP[league]) return LEAGUE_LOGO_MAP[league];
+  // Fallback: variantes comuns
+  const variants = {
+    "Liga do Chile": "Liga Chilena",
+    "Liga da Colômbia": "Liga Colombiana",
+    "Nordeste": "Copa do Nordeste",
+    "Copa Nordeste": "Copa do Nordeste",
+    "Sul-Americana": "Sul-Americana",
+    "CONMEBOL Libertadores": "Libertadores",
+    "CONMEBOL Sudamericana": "Sul-Americana",
+    "Copa Sudamericana": "Sul-Americana",
+    "Copa Libertadores": "Libertadores",
+    "Superligaen": "Superliga",
+  };
+  const mapped = variants[league] || variants[n];
+  return mapped ? (LEAGUE_LOGO_MAP[mapped] || "") : "";
 }
 
 const CURRENT_SEASON = new Date().getFullYear();
