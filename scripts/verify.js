@@ -1,315 +1,438 @@
 const { createClient } = require("@supabase/supabase-js")
 
 const APISPORTS_KEY = process.env.APISPORTS_KEY || ""
-const SUPABASE_URL = process.env.SUPABASE_URL || ""
-const SUPABASE_KEY =
+const SUPABASE_URL  = process.env.SUPABASE_URL   || ""
+const SUPABASE_KEY  =
   process.env.SUPABASE_SERVICE_ROLE_KEY ||
-  process.env.SUPABASE_SERVICE_KEY ||
-  process.env.SUPABASE_KEY ||
+  process.env.SUPABASE_SERVICE_KEY      ||
+  process.env.SUPABASE_KEY              ||
   ""
 
 if (!APISPORTS_KEY) throw new Error("APISPORTS_KEY não encontrada.")
-if (!SUPABASE_URL) throw new Error("SUPABASE_URL não encontrada.")
-if (!SUPABASE_KEY) throw new Error("SUPABASE_SERVICE_ROLE_KEY não encontrada.")
+if (!SUPABASE_URL)  throw new Error("SUPABASE_URL não encontrada.")
+if (!SUPABASE_KEY)  throw new Error("SUPABASE_SERVICE_ROLE_KEY não encontrada.")
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
-const API = "https://v3.football.api-sports.io"
+const API_BASE = "https://v3.football.api-sports.io"
 
 /**
  * SCOUTLY VERIFY V1.0
- * Roda após os jogos para verificar resultados reais
- * e gravar na tabela pick_results.
- * 
+ *
+ * Responsabilidade: avaliar picks do radar após o encerramento dos jogos.
+ *
  * Fluxo:
- * 1. Busca picks das últimas 48h que ainda não foram verificados
- * 2. Consulta resultado real na API-Football
- * 3. Verifica se o pick acertou
- * 4. Grava em pick_results
+ *   1. Busca picks na daily_picks com kickoff > 2h atrás
+ *   2. Filtra os que ainda não foram avaliados (não existem em pick_results)
+ *   3. Busca o resultado real na API-Football
+ *   4. Avalia cada mercado previsto contra o resultado
+ *   5. Salva em pick_results com correct = true/false
+ *
+ * Mercados suportados:
+ *   - Mais de X gols / Menos de X gols
+ *   - Mais de X escanteios / Menos de X escanteios
+ *   - Mais de X finalizações / Menos de X finalizações
+ *   - Mais de X finalizações no gol / Menos de X finalizações no gol
+ *   - Mais de X cartões / Menos de X cartões
+ *   - Ambas marcam / Ambas não marcam
+ *   - Dupla chance [time] ou empate
+ *   - Vitória do mandante / Vitória do visitante
+ *   - [Time] mais de X escanteios (individual)
+ *   - [Time] mais de X chutes (individual)
+ *   - [Time] mais de X chutes no gol (individual)
  */
 
+// Quanto tempo após o kickoff consideramos o jogo como "potencialmente encerrado"
+const GRACE_AFTER_KICKOFF_HOURS = 2.5
+
+// Não tenta avaliar jogos muito antigos (evita chamadas desnecessárias à API)
+const MAX_LOOKBACK_DAYS = 14
+
 const REQUEST_DELAY_MS = 400
-const VERIFY_WINDOW_HOURS = 48 // Verifica jogos das últimas 48h
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
-function safeNumber(v, fb = 0) { const n = Number(v); return Number.isFinite(n) ? n : fb }
 
-async function api(path, params = {}) {
-  await sleep(REQUEST_DELAY_MS)
-  const url = new URL(`${API}${path}`)
-  Object.entries(params).forEach(([k, v]) => {
-    if (v !== undefined && v !== null && v !== "") url.searchParams.set(k, String(v))
-  })
-  const res = await fetch(url, {
-    headers: { "x-apisports-key": APISPORTS_KEY }
-  })
-  if (!res.ok) throw new Error(`API ${res.status} em ${path}`)
-  const json = await res.json()
-  if (json.errors && Object.keys(json.errors).length > 0) throw new Error(`API error: ${JSON.stringify(json.errors)}`)
-  return json.response || []
+function safeNum(v, fb = 0) {
+  const n = Number(v)
+  return Number.isFinite(n) ? n : fb
 }
-
-// ─── MARKET VERIFICATION LOGIC ────────────────────────────────────────────
 
 function normalizeText(v) {
-  return String(v || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim()
+  return String(v || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim()
 }
 
-function extractLine(market) {
+function extractNumber(market) {
   const m = String(market || "").replace(",", ".")
   const match = m.match(/(\d+(\.\d+)?)/)
   return match ? Number(match[1]) : null
 }
 
-function detectDirection(market) {
+// ── API ─────────────────────────────────────────────────────────────
+
+async function fetchFixture(fixtureId) {
+  await sleep(REQUEST_DELAY_MS)
+  const url = `${API_BASE}/fixtures?id=${fixtureId}`
+  const res = await fetch(url, {
+    headers: { "x-apisports-key": APISPORTS_KEY }
+  })
+  if (!res.ok) throw new Error(`API ${res.status} — fixture ${fixtureId}`)
+  const json = await res.json()
+  return (json.response || [])[0] || null
+}
+
+async function fetchFixtureStats(fixtureId) {
+  await sleep(REQUEST_DELAY_MS)
+  const url = `${API_BASE}/fixtures/statistics?fixture=${fixtureId}`
+  const res = await fetch(url, {
+    headers: { "x-apisports-key": APISPORTS_KEY }
+  })
+  if (!res.ok) throw new Error(`API stats ${res.status} — fixture ${fixtureId}`)
+  const json = await res.json()
+  return json.response || []
+}
+
+function isFixtureFinished(fixture) {
+  const status = String(fixture?.fixture?.status?.short || "").toUpperCase()
+  return ["FT", "AET", "PEN"].includes(status)
+}
+
+function extractStat(statsArray, teamIndex, type) {
+  const teamStats = statsArray[teamIndex]?.statistics || []
+  const found = teamStats.find(s => s.type === type)
+  if (!found || found.value === null || found.value === undefined) return 0
+  if (typeof found.value === "string") {
+    const n = Number(found.value.replace("%", "").trim())
+    return Number.isFinite(n) ? n : 0
+  }
+  return safeNum(found.value)
+}
+
+// ── AVALIADORES DE MERCADO ───────────────────────────────────────────
+
+/**
+ * Avalia se um pick foi correto dado o resultado real.
+ * Retorna true, false, ou null (não conseguiu avaliar).
+ */
+function evaluateMarket(market, fixture, statsArray) {
   const m = normalizeText(market)
-  if (m.includes("mais de")) return "over"
-  if (m.includes("menos de")) return "under"
+  const homeGoals = safeNum(fixture?.goals?.home)
+  const awayGoals = safeNum(fixture?.goals?.away)
+  const totalGoals = homeGoals + awayGoals
+  const homeName = normalizeText(fixture?.teams?.home?.name || "")
+  const awayName = normalizeText(fixture?.teams?.away?.name || "")
+  const line = extractNumber(market)
+
+  // ── GOLS ──────────────────────────────────────────────────────────
+  if (m.includes("mais de") && m.includes("gol") && !m.includes("escanteio") && !m.includes("finaliz")) {
+    if (line === null) return null
+    return totalGoals > line
+  }
+  if (m.includes("menos de") && m.includes("gol") && !m.includes("escanteio") && !m.includes("finaliz")) {
+    if (line === null) return null
+    return totalGoals < line
+  }
+
+  // ── AMBAS MARCAM ──────────────────────────────────────────────────
+  if (m.includes("ambas marcam") || m === "ambas marcam") {
+    return homeGoals >= 1 && awayGoals >= 1
+  }
+  if (m.includes("ambas nao marcam") || m.includes("ambas não marcam")) {
+    return homeGoals === 0 || awayGoals === 0
+  }
+
+  // ── RESULTADO ─────────────────────────────────────────────────────
+  if (m.includes("vitoria do mandante") || m.includes("vitória do mandante")) {
+    return homeGoals > awayGoals
+  }
+  if (m.includes("vitoria do visitante") || m.includes("vitória do visitante")) {
+    return awayGoals > homeGoals
+  }
+  if (m.includes("dupla chance")) {
+    // "Dupla chance [time] ou empate"
+    if (m.includes(homeName) || m.includes("mandante") || m.includes("casa")) {
+      return homeGoals >= awayGoals // vitória da casa OU empate
+    }
+    if (m.includes(awayName) || m.includes("visitante") || m.includes("fora")) {
+      return awayGoals >= homeGoals // vitória do visitante OU empate
+    }
+    // Fallback: se não identificou o time, tenta pela posição no texto
+    return null
+  }
+
+  // ── ESCANTEIOS TOTAIS ─────────────────────────────────────────────
+  if ((m.includes("mais de") || m.includes("menos de")) && m.includes("escanteio")) {
+    if (!statsArray.length) return null
+    // Verifica se é mercado individual de time
+    if (m.includes(homeName) || m.includes(awayName)) {
+      return evaluateIndividualCorners(m, line, fixture, statsArray)
+    }
+    const homeCorners = extractStat(statsArray, 0, "Corner Kicks")
+    const awayCorners = extractStat(statsArray, 1, "Corner Kicks")
+    const totalCorners = homeCorners + awayCorners
+    if (line === null) return null
+    if (m.includes("mais de")) return totalCorners > line
+    if (m.includes("menos de")) return totalCorners < line
+    return null
+  }
+
+  // ── FINALIZAÇÕES NO GOL (deve vir antes de finalizações totais) ───
+  if (m.includes("finaliz") && m.includes("no gol")) {
+    if (!statsArray.length) return null
+    if (m.includes(homeName) || m.includes(awayName)) {
+      return evaluateIndividualSOT(m, line, fixture, statsArray)
+    }
+    const homeSOT = extractStat(statsArray, 0, "Shots on Goal")
+    const awaySOT  = extractStat(statsArray, 1, "Shots on Goal")
+    const totalSOT = homeSOT + awaySOT
+    if (line === null) return null
+    if (m.includes("mais de")) return totalSOT > line
+    if (m.includes("menos de")) return totalSOT < line
+    return null
+  }
+
+  // ── FINALIZAÇÕES TOTAIS ───────────────────────────────────────────
+  if (m.includes("finaliz") && !m.includes("no gol")) {
+    if (!statsArray.length) return null
+    if (m.includes(homeName) || m.includes(awayName)) {
+      return evaluateIndividualShots(m, line, fixture, statsArray)
+    }
+    const homeShots = extractStat(statsArray, 0, "Total Shots")
+    const awayShots = extractStat(statsArray, 1, "Total Shots")
+    const totalShots = homeShots + awayShots
+    if (line === null) return null
+    if (m.includes("mais de")) return totalShots > line
+    if (m.includes("menos de")) return totalShots < line
+    return null
+  }
+
+  // ── CHUTES (alias de finalizações, nomenclatura individual) ───────
+  if ((m.includes("chutes") || m.includes("chute")) && !m.includes("no gol")) {
+    if (!statsArray.length) return null
+    return evaluateIndividualShots(m, line, fixture, statsArray)
+  }
+  if ((m.includes("chutes") || m.includes("chute")) && m.includes("no gol")) {
+    if (!statsArray.length) return null
+    return evaluateIndividualSOT(m, line, fixture, statsArray)
+  }
+
+  // ── CARTÕES ───────────────────────────────────────────────────────
+  if (m.includes("cart")) {
+    if (!statsArray.length) return null
+    const homeYellow = extractStat(statsArray, 0, "Yellow Cards")
+    const homeRed    = extractStat(statsArray, 0, "Red Cards")
+    const awayYellow = extractStat(statsArray, 1, "Yellow Cards")
+    const awayRed    = extractStat(statsArray, 1, "Red Cards")
+    const totalCards = homeYellow + homeRed + awayYellow + awayRed
+    if (line === null) return null
+    if (m.includes("mais de")) return totalCards > line
+    if (m.includes("menos de")) return totalCards < line
+    return null
+  }
+
+  // Mercado não reconhecido
+  console.log(`  ⚠️  Mercado não reconhecido: "${market}"`)
   return null
 }
 
-function detectFamily(market) {
-  const m = normalizeText(market)
-  if (m.includes("escanteio")) return "escanteios"
-  if (m.includes("no gol")) return "sot"
-  if (m.includes("finaliz")) return "shots"
-  if (m.includes("cart")) return "cards"
-  if (m.includes("ambas")) return "btts"
-  if (m.includes("dupla chance")) return "dupla_chance"
-  if (m.includes("vitoria") || m.includes("vitória")) return "resultado"
-  if (m.includes("gol")) return "gols"
-  return "outro"
-}
-
-async function getFixtureResult(fixtureId) {
-  try {
-    const data = await api("/fixtures", { id: fixtureId })
-    if (!data.length) return null
-    const fixture = data[0]
-    const status = fixture?.fixture?.status?.short
-    const finished = ["FT", "AET", "PEN"].includes(String(status || "").toUpperCase())
-    if (!finished) return null
-
-    // Estatísticas do jogo
-    const statsData = await api("/fixtures/statistics", { fixture: fixtureId })
-
-    const homeStats = statsData.find(s => s.team?.id === fixture?.teams?.home?.id)?.statistics || []
-    const awayStats = statsData.find(s => s.team?.id === fixture?.teams?.away?.id)?.statistics || []
-
-    function getStat(stats, type) {
-      const found = stats.find(x => x.type === type)
-      if (!found || found.value === null) return 0
-      const v = String(found.value || "").replace("%", "").trim()
-      return Number.isFinite(Number(v)) ? Number(v) : 0
-    }
-
-    return {
-      finished: true,
-      homeGoals: safeNumber(fixture?.goals?.home),
-      awayGoals: safeNumber(fixture?.goals?.away),
-      homeCorners: getStat(homeStats, "Corner Kicks"),
-      awayCorners: getStat(awayStats, "Corner Kicks"),
-      totalCorners: getStat(homeStats, "Corner Kicks") + getStat(awayStats, "Corner Kicks"),
-      homeShots: getStat(homeStats, "Total Shots"),
-      awayShots: getStat(awayStats, "Total Shots"),
-      totalShots: getStat(homeStats, "Total Shots") + getStat(awayStats, "Total Shots"),
-      homeSOT: getStat(homeStats, "Shots on Goal"),
-      awaySOT: getStat(awayStats, "Shots on Goal"),
-      totalSOT: getStat(homeStats, "Shots on Goal") + getStat(awayStats, "Shots on Goal"),
-      homeCards: getStat(homeStats, "Yellow Cards") + getStat(homeStats, "Red Cards"),
-      awayCards: getStat(awayStats, "Yellow Cards") + getStat(awayStats, "Red Cards"),
-      totalCards: getStat(homeStats, "Yellow Cards") + getStat(homeStats, "Red Cards") +
-                  getStat(awayStats, "Yellow Cards") + getStat(awayStats, "Red Cards"),
-      homeTeamId: fixture?.teams?.home?.id,
-      awayTeamId: fixture?.teams?.away?.id,
-      homeName: fixture?.teams?.home?.name,
-      awayName: fixture?.teams?.away?.name,
-    }
-  } catch (e) {
-    console.error(`Erro ao buscar resultado do fixture ${fixtureId}:`, e.message)
-    return null
-  }
-}
-
-function evaluatePick(market, result) {
-  const family = detectFamily(market)
-  const direction = detectDirection(market)
-  const line = extractLine(market)
-  const m = normalizeText(market)
-
-  const totalGoals = result.homeGoals + result.awayGoals
-
-  // GOLS
-  if (family === "gols") {
-    if (line === null) return null
-    if (direction === "over") return totalGoals > line
-    if (direction === "under") return totalGoals < line
-    return null
-  }
-
-  // BTTS
-  if (family === "btts") {
-    if (m.includes("ambas marcam") && !m.includes("nao") && !m.includes("não")) {
-      return result.homeGoals >= 1 && result.awayGoals >= 1
-    }
-    if (m.includes("nao marcam") || m.includes("não marcam")) {
-      return result.homeGoals === 0 || result.awayGoals === 0
-    }
-    return null
-  }
-
-  // ESCANTEIOS
-  if (family === "escanteios") {
-    if (line === null) return null
-    // Mercados por time (ex: "Flamengo mais de 3.5 escanteios")
-    if (m.includes(normalizeText(result.homeName || ""))) {
-      return direction === "over" ? result.homeCorners > line : result.homeCorners < line
-    }
-    if (m.includes(normalizeText(result.awayName || ""))) {
-      return direction === "over" ? result.awayCorners > line : result.awayCorners < line
-    }
-    // Total
-    return direction === "over" ? result.totalCorners > line : result.totalCorners < line
-  }
-
-  // FINALIZAÇÕES NO GOL
-  if (family === "sot") {
-    if (line === null) return null
-    return direction === "over" ? result.totalSOT > line : result.totalSOT < line
-  }
-
-  // FINALIZAÇÕES TOTAIS
-  if (family === "shots") {
-    if (line === null) return null
-    return direction === "over" ? result.totalShots > line : result.totalShots < line
-  }
-
-  // CARTÕES
-  if (family === "cards") {
-    if (line === null) return null
-    return direction === "over" ? result.totalCards > line : result.totalCards < line
-  }
-
-  // RESULTADO / DUPLA CHANCE
-  if (family === "resultado" || family === "dupla_chance") {
-    const homeWon = result.homeGoals > result.awayGoals
-    const awayWon = result.awayGoals > result.homeGoals
-    const draw = result.homeGoals === result.awayGoals
-
-    if (m.includes("vitoria do mandante") || m.includes("vitória do mandante")) return homeWon
-    if (m.includes("vitoria do visitante") || m.includes("vitória do visitante")) return awayWon
-    if (m.includes("empate")) return draw
-
-    if (m.includes("dupla chance")) {
-      if (m.includes("ou empate") && (m.includes(normalizeText(result.homeName||"")))) return homeWon || draw
-      if (m.includes("ou empate") && (m.includes(normalizeText(result.awayName||"")))) return awayWon || draw
-    }
-    return null
-  }
-
+function evaluateIndividualCorners(m, line, fixture, statsArray) {
+  if (line === null) return null
+  const homeCorners = extractStat(statsArray, 0, "Corner Kicks")
+  const awayCorners = extractStat(statsArray, 1, "Corner Kicks")
+  const homeName = normalizeText(fixture?.teams?.home?.name || "")
+  const awayName = normalizeText(fixture?.teams?.away?.name || "")
+  let teamCorners = null
+  if (m.includes(homeName)) teamCorners = homeCorners
+  else if (m.includes(awayName)) teamCorners = awayCorners
+  if (teamCorners === null) return null
+  if (m.includes("mais de")) return teamCorners > line
+  if (m.includes("menos de")) return teamCorners < line
   return null
 }
 
-// ─── MAIN ─────────────────────────────────────────────────────────────────
+function evaluateIndividualShots(m, line, fixture, statsArray) {
+  if (line === null) return null
+  const homeShots = extractStat(statsArray, 0, "Total Shots")
+  const awayShots = extractStat(statsArray, 1, "Total Shots")
+  const homeName = normalizeText(fixture?.teams?.home?.name || "")
+  const awayName = normalizeText(fixture?.teams?.away?.name || "")
+  let teamShots = null
+  if (m.includes(homeName)) teamShots = homeShots
+  else if (m.includes(awayName)) teamShots = awayShots
+  if (teamShots === null) return null
+  if (m.includes("mais de")) return teamShots > line
+  if (m.includes("menos de")) return teamShots < line
+  return null
+}
+
+function evaluateIndividualSOT(m, line, fixture, statsArray) {
+  if (line === null) return null
+  const homeSOT = extractStat(statsArray, 0, "Shots on Goal")
+  const awaySOT  = extractStat(statsArray, 1, "Shots on Goal")
+  const homeName = normalizeText(fixture?.teams?.home?.name || "")
+  const awayName = normalizeText(fixture?.teams?.away?.name || "")
+  let teamSOT = null
+  if (m.includes(homeName)) teamSOT = homeSOT
+  else if (m.includes(awayName)) teamSOT = awaySOT
+  if (teamSOT === null) return null
+  if (m.includes("mais de")) return teamSOT > line
+  if (m.includes("menos de")) return teamSOT < line
+  return null
+}
+
+// ── SUPABASE ─────────────────────────────────────────────────────────
+
+async function loadPendingPicks() {
+  const now = new Date()
+  const graceMs = GRACE_AFTER_KICKOFF_HOURS * 60 * 60 * 1000
+  const cutoffTime = new Date(now.getTime() - graceMs).toISOString()
+  const maxLookback = new Date(now.getTime() - MAX_LOOKBACK_DAYS * 24 * 60 * 60 * 1000).toISOString()
+
+  // Picks cujo kickoff já passou (com grace de 2.5h)
+  const { data: allPicks, error } = await supabase
+    .from("daily_picks")
+    .select("id, match_id, home_team, away_team, league, kickoff, market")
+    .lte("kickoff", cutoffTime)
+    .gte("kickoff", maxLookback)
+    .order("kickoff", { ascending: false })
+
+  if (error) throw new Error(`Erro ao carregar picks: ${error.message}`)
+  if (!allPicks || !allPicks.length) return []
+
+  // Filtra os que já foram avaliados
+  const { data: alreadyEvaluated, error: evalError } = await supabase
+    .from("pick_results")
+    .select("match_id")
+
+  if (evalError) throw new Error(`Erro ao carregar avaliados: ${evalError.message}`)
+  const evaluatedIds = new Set((alreadyEvaluated || []).map(r => String(r.match_id)))
+
+  const pending = allPicks.filter(p => !evaluatedIds.has(String(p.match_id)))
+  console.log(`📋 Picks pendentes de avaliação: ${pending.length} (de ${allPicks.length} totais)`)
+  return pending
+}
+
+async function saveResult(pick, correct, resultHome, resultAway, checkedAt) {
+  const { error } = await supabase.from("pick_results").insert({
+    match_id:   pick.match_id,
+    home_team:  pick.home_team,
+    away_team:  pick.away_team,
+    league:     pick.league,
+    kickoff:    pick.kickoff,
+    market:     pick.market,
+    predicted:  pick.market,    // o que o radar previu
+    result_home: resultHome,
+    result_away: resultAway,
+    correct:    correct,
+    checked_at: checkedAt,
+    created_at: checkedAt,
+  })
+  if (error) throw new Error(`Erro ao salvar result match ${pick.match_id}: ${error.message}`)
+}
+
+// ── MAIN ─────────────────────────────────────────────────────────────
 
 async function run() {
   console.log("🔍 Scoutly Verify V1.0 iniciado")
+  console.log(`📅 Grace: ${GRACE_AFTER_KICKOFF_HOURS}h após kickoff | Lookback: ${MAX_LOOKBACK_DAYS} dias`)
 
-  const now = new Date()
-  const windowStart = new Date(now.getTime() - VERIFY_WINDOW_HOURS * 60 * 60 * 1000)
-
-  // 1. Busca picks das últimas 48h que ainda não foram verificados
-  const { data: picks, error: picksError } = await supabase
-    .from("daily_picks")
-    .select("*")
-    .gte("kickoff", windowStart.toISOString())
-    .lte("kickoff", now.toISOString())
-
-  if (picksError) throw new Error(`Erro ao buscar picks: ${picksError.message}`)
-  if (!picks || !picks.length) {
-    console.log("Nenhum pick para verificar na janela atual.")
+  const pending = await loadPendingPicks()
+  if (!pending.length) {
+    console.log("✅ Nenhum pick pendente. Tudo avaliado.")
     return
   }
 
-  console.log(`📋 Picks para verificar: ${picks.length}`)
+  let evaluated = 0, correct = 0, incorrect = 0, skipped = 0
 
-  // 2. Verifica quais já foram verificados
-  const { data: existingResults } = await supabase
-    .from("pick_results")
-    .select("match_id, market")
-    .gte("created_at", windowStart.toISOString())
+  for (const pick of pending) {
+    console.log(`\n⚽ ${pick.home_team} x ${pick.away_team} [${pick.league}]`)
+    console.log(`   📌 Pick: ${pick.market}`)
+    console.log(`   🕐 Kickoff: ${pick.kickoff}`)
 
-  const alreadyChecked = new Set(
-    (existingResults || []).map(r => `${r.match_id}::${r.market}`)
-  )
+    try {
+      // 1. Busca o resultado na API
+      const fixture = await fetchFixture(pick.match_id)
 
-  let verified = 0
-  let correct = 0
-  let incorrect = 0
-  let skipped = 0
+      if (!fixture) {
+        console.log(`   ⚠️  Fixture não encontrada na API — pulando`)
+        skipped++
+        continue
+      }
 
-  for (const pick of picks) {
-    const key = `${pick.match_id}::${pick.market}`
-    if (alreadyChecked.has(key)) {
+      if (!isFixtureFinished(fixture)) {
+        const status = fixture?.fixture?.status?.short || "?"
+        console.log(`   ⏳ Jogo ainda não encerrado (status: ${status}) — pulando`)
+        skipped++
+        continue
+      }
+
+      const homeGoals = safeNum(fixture?.goals?.home)
+      const awayGoals = safeNum(fixture?.goals?.away)
+      console.log(`   📊 Resultado: ${homeGoals}-${awayGoals}`)
+
+      // 2. Busca estatísticas (para mercados de escanteios, finalizações, cartões)
+      let statsArray = []
+      const m = normalizeText(pick.market)
+      const needsStats = m.includes("escanteio") || m.includes("finaliz") ||
+                         m.includes("chute") || m.includes("cart")
+      if (needsStats) {
+        statsArray = await fetchFixtureStats(pick.match_id)
+        if (statsArray.length) {
+          const homeCorners = extractStat(statsArray, 0, "Corner Kicks")
+          const awayCorners = extractStat(statsArray, 1, "Corner Kicks")
+          const homeShots = extractStat(statsArray, 0, "Total Shots")
+          const awayShots = extractStat(statsArray, 1, "Total Shots")
+          const homeSOT = extractStat(statsArray, 0, "Shots on Goal")
+          const awaySOT = extractStat(statsArray, 1, "Shots on Goal")
+          const homeCards = extractStat(statsArray, 0, "Yellow Cards") + extractStat(statsArray, 0, "Red Cards")
+          const awayCards = extractStat(statsArray, 1, "Yellow Cards") + extractStat(statsArray, 1, "Red Cards")
+          console.log(`   📈 Stats: escanteios ${homeCorners+awayCorners} | finalizações ${homeShots+awayShots} | no gol ${homeSOT+awaySOT} | cartões ${homeCards+awayCards}`)
+        } else {
+          console.log(`   ⚠️  Estatísticas não disponíveis na API`)
+        }
+      }
+
+      // 3. Avalia o mercado
+      const result = evaluateMarket(pick.market, fixture, statsArray)
+
+      if (result === null) {
+        console.log(`   ❓ Mercado não avaliável — pulando`)
+        skipped++
+        continue
+      }
+
+      // 4. Salva na pick_results
+      const checkedAt = new Date().toISOString()
+      await saveResult(pick, result, homeGoals, awayGoals, checkedAt)
+
+      const emoji = result ? "✅" : "❌"
+      console.log(`   ${emoji} Resultado: ${result ? "ACERTO" : "ERRO"}`)
+
+      evaluated++
+      if (result) correct++
+      else incorrect++
+
+    } catch (err) {
+      console.error(`   ❌ Erro ao processar pick ${pick.match_id}:`, err.message)
       skipped++
-      continue
     }
-
-    console.log(`🔎 Verificando: ${pick.home_team} x ${pick.away_team} — ${pick.market}`)
-
-    const result = await getFixtureResult(pick.match_id)
-
-    if (!result || !result.finished) {
-      console.log(`⏳ Jogo ainda não finalizado: ${pick.home_team} x ${pick.away_team}`)
-      continue
-    }
-
-    const isCorrect = evaluatePick(pick.market, result)
-
-    if (isCorrect === null) {
-      console.log(`⚠️ Não foi possível avaliar: ${pick.market}`)
-      continue
-    }
-
-    const { error: insertError } = await supabase
-      .from("pick_results")
-      .insert({
-        match_id: pick.match_id,
-        home_team: pick.home_team,
-        away_team: pick.away_team,
-        league: pick.league,
-        kickoff: pick.kickoff,
-        market: pick.market,
-        predicted: pick.market,
-        result_home: result.homeGoals,
-        result_away: result.awayGoals,
-        correct: isCorrect,
-        checked_at: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-      })
-
-    if (insertError) {
-      console.error(`❌ Erro ao gravar resultado: ${insertError.message}`)
-      continue
-    }
-
-    verified++
-    if (isCorrect) { correct++; console.log(`✅ ACERTOU: ${pick.market}`) }
-    else { incorrect++; console.log(`❌ ERROU: ${pick.market} | Placar: ${result.homeGoals}-${result.awayGoals}`) }
   }
 
-  console.log(`\n📊 Resumo da verificação:`)
-  console.log(`   Verificados: ${verified}`)
-  console.log(`   Acertos: ${correct}`)
-  console.log(`   Erros: ${incorrect}`)
-  console.log(`   Já verificados (pulados): ${skipped}`)
-  if (verified > 0) {
-    const rate = Math.round((correct / verified) * 100)
-    console.log(`   Taxa de acerto: ${rate}%`)
-  }
-  console.log("✅ Scoutly Verify V1.0 concluído")
+  const accuracy = evaluated > 0 ? Math.round((correct / evaluated) * 100) : 0
+
+  console.log(`\n📊 Resumo da rodada:`)
+  console.log(`   Avaliados: ${evaluated}`)
+  console.log(`   ✅ Acertos: ${correct}`)
+  console.log(`   ❌ Erros: ${incorrect}`)
+  console.log(`   ⏭️  Pulados: ${skipped}`)
+  console.log(`   🎯 Taxa desta rodada: ${accuracy}%`)
+  console.log(`\n✅ Scoutly Verify V1.0 concluído`)
 }
 
-run().catch(error => {
-  console.error("❌ Erro fatal no Scoutly Verify V1.0:", error)
+run().catch(err => {
+  console.error("❌ Erro fatal no Scoutly Verify V1.0:", err)
   process.exit(1)
 })
