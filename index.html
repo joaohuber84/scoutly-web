@@ -2536,6 +2536,7 @@ function isCupLeague(league) {
 function getLeagueBadge(league, country=""){
   // 1. Logo oficial da API-Football (radar, agenda, ao vivo)
   const mappedLogo = getLeagueLogoUrl(league);
+  if (mappedLogo === "wc_svg") return getLeagueBadgeWC(16); // Copa do Mundo SVG
   if (mappedLogo) {
     return `<img src="${escapeHtml(mappedLogo)}" width="16" height="16" style="object-fit:contain;border-radius:2px;vertical-align:middle;" onerror="this.style.display='none'">`;
   }
@@ -2552,6 +2553,7 @@ function getLeagueBadge(league, country=""){
 function getCompetitionBadge(league, country="", logoUrl="") {
   // 1. Logo oficial da API-Football (mapa local)
   const mappedLogo = getLeagueLogoUrl(league);
+  if (mappedLogo === "wc_svg") return `<div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:linear-gradient(135deg,#1a3a1a,#0d1a0d);border:1px solid rgba(245,166,35,0.3)">${getLeagueBadgeWC(20)}</div>`;
   if (mappedLogo) {
     return `<img src="${escapeHtml(mappedLogo)}" width="32" height="32" alt="${escapeHtml(league)}" style="object-fit:contain;border-radius:4px;" onerror="this.src=''">`;
   }
@@ -2935,24 +2937,32 @@ function getDetectedMarkets(match){
   const alts=getSecondaryPicks(match);
   const individuals=getIndividualMarkets(match);
   const items=[];
+  const usedFamilies=new Set(); // bloqueia família duplicada ENTRE as alternativas
 
-  // Picks alternativos dos campos do banco (máx 2)
-  if(alts[0])items.push({market:alts[0],tier:"Boa",family:marketFamily(alts[0]),copy:buildAlternativeCopy(match,alts[0])});
-  if(alts[1])items.push({market:alts[1],tier:"Moderada",family:marketFamily(alts[1]),copy:buildAlternativeCopy(match,alts[1])});
+  for(const alt of alts){
+    if(!alt)continue;
+    const f=marketFamily(alt);
+    // Não permite mesma família entre as próprias alternativas
+    if(usedFamilies.has(f))continue;
+    const tier=items.length===0?"Boa":"Moderada";
+    items.push({market:alt,tier,family:f,copy:buildAlternativeCopy(match,alt)});
+    usedFamilies.add(f);
+    if(items.length>=2)break;
+  }
 
-  // Se não chegou a 2 alternativas, tenta completar com mercado individual por time
+  // Completa com mercado individual por time se ainda faltar
   if(items.length < 2){
     for(const ind of individuals){
       if(items.length >= 2)break;
-      // Não duplica mesma família que já existe
-      if(items.some(i=>i.family===ind.family))continue;
+      if(usedFamilies.has(ind.family))continue;
       const tier=probabilityToTier(ind.confidence);
       const copy=`Projeção de ${formatDecimal(ind.value,1)} para este time — desequilíbrio estatístico favorável.`;
       items.push({market:ind.market,tier,family:ind.family,copy,chip:ind.chip,individual:true});
+      usedFamilies.add(ind.family);
     }
   }
 
-  return items.slice(0,2); // sempre máx 2 alternativas
+  return items.slice(0,2);
 }
 
 /* ── STATS MARKUP ─────────────────────────────────────────────────── */
@@ -4450,6 +4460,8 @@ const LEAGUE_LOGO_MAP = {
   "Copa del Rey": "https://media.api-sports.io/football/leagues/143.png",
   "Taça de Portugal": "https://media.api-sports.io/football/leagues/96.png",
   "CONCACAF Champions Cup": "https://media.api-sports.io/football/leagues/18.png",
+  "Copa do Mundo": "wc_svg",
+  "FIFA World Cup": "wc_svg",
 };
 
 function getLeagueLogoUrl(league) {
@@ -4471,7 +4483,13 @@ function getLeagueLogoUrl(league) {
     "Superligaen": "Superliga",
   };
   const mapped = variants[league] || variants[n];
-  return mapped ? (LEAGUE_LOGO_MAP[mapped] || "") : "";
+  const result = mapped ? (LEAGUE_LOGO_MAP[mapped] || "") : "";
+  return result;
+}
+
+// SVG inline da Copa do Mundo — usado quando logo = "wc_svg"
+function getLeagueBadgeWC(size=16){
+  return `<svg width="${size}" height="${Math.round(size*1.2)}" viewBox="0 0 30 34" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;vertical-align:middle"><path d="M4 2H26C26 2 28 8 28 13C28 21 22 27 15 29C8 27 2 21 2 13C2 8 4 2 4 2Z" fill="#1a3a1a" stroke="rgba(245,166,35,0.6)" stroke-width="0.8"/><path d="M15 6L16.5 11H21.5L17.5 14L19 19L15 16L11 19L12.5 14L8.5 11H13.5L15 6Z" fill="#f5a623" opacity="0.9"/></svg>`;
 }
 
 const CURRENT_SEASON = new Date().getFullYear();
