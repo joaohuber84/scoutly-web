@@ -3752,16 +3752,31 @@ function renderLiveSection() {
   const countEl = document.getElementById("liveCount");
   if (!wrap || !list) return;
 
-  const liveMatches = (state.matches || []).filter(m => {
+  // Jogos do banco com dados ao vivo
+  const dbMatches = (state.matches || []).filter(m => {
     const live = liveState.data.get(String(m.id));
     return live?.isLive || live?.isFinished;
-  }).sort((a, b) => {
-    const la = liveState.data.get(String(a.id));
-    const lb = liveState.data.get(String(b.id));
-    // Ao vivo primeiro, depois por tier
+  }).map(m => ({
+    ...m,
+    _liveData: liveState.data.get(String(m.id)),
+    _fromDB: true,
+  }));
+
+  // Jogos externos (API ao vivo, fora do banco)
+  const extMatches = Array.from(liveState.external.values()).map(ext => ({
+    id: ext.id, home_team: ext.home_team, away_team: ext.away_team,
+    home_logo: ext.home_logo, away_logo: ext.away_logo,
+    league: ext.league, country: ext.country, kickoff: ext.kickoff,
+    _liveData: ext.liveData,
+    _fromDB: false,
+    pick: null, // sem pick do radar para externos
+  }));
+
+  // Juntar e ordenar: ao vivo primeiro → tier mais alto primeiro
+  const liveMatches = [...dbMatches, ...extMatches].sort((a, b) => {
+    const la = a._liveData, lb = b._liveData;
     if (la?.isLive && !lb?.isLive) return -1;
     if (!la?.isLive && lb?.isLive) return 1;
-    // Mesmo status → liga mais importante primeiro
     const tierA = LIVE_TIER[String(a.league||"")] ?? 4;
     const tierB = LIVE_TIER[String(b.league||"")] ?? 4;
     return tierA - tierB;
@@ -3770,7 +3785,7 @@ function renderLiveSection() {
   if (!liveMatches.length) { wrap.classList.remove("has-live"); return; }
   wrap.classList.add("has-live");
 
-  const liveCount = liveMatches.filter(m => liveState.data.get(String(m.id))?.isLive).length;
+  const liveCount = liveMatches.filter(m => (m._liveData || liveState.data.get(String(m.id)))?.isLive).length;
   if (countEl) countEl.textContent = liveCount;
 
   const MAX_VISIBLE = 5;
@@ -3784,8 +3799,8 @@ function renderLiveSection() {
   }
 
   list.innerHTML = visible.map(match => {
-    const live = liveState.data.get(String(match.id));
-    const pick = getPrimaryPick(match);
+    const live = match._liveData || liveState.data.get(String(match.id));
+    const pick = match._fromDB ? getPrimaryPick(match) : null;
     const hasPick = pick && pick !== "Mercado em revisão";
     const badge = getLeagueBadge(match.league, match.country || inferCountryFromLeague(match.league));
     const homeName = normalizeTeamName(match.home_team);
@@ -3796,7 +3811,8 @@ function renderLiveSection() {
       : `<span class="live-scoreboard" style="color:var(--text-3)">${live?.homeScore??0} — ${live?.awayScore??0}</span>
          <span class="live-minute-badge" style="color:var(--text-3)">FIM</span>`;
 
-    return `<div class="live-game-row" onclick="openAnalysis('${escapeHtml(String(match.id))}')">
+    const _ca = match._fromDB ? `onclick="openAnalysis('${escapeHtml(String(match.id))}')"` : `style="cursor:default"`;
+    return `<div class="live-game-row" ${_ca}>
       <div class="live-game-scoreline">
         <div class="live-team-block home">
           ${teamLogoHtml(match.home_logo, homeName)}
@@ -3847,6 +3863,7 @@ const LIVE_TIER = {
 /* ── LIVE SCORE MODULE ────────────────────────────────────────────── */
 const liveState = {
   data: new Map(),        // matchId → { score, minute, status, stats }
+  external: new Map(),    // fixtureId → fixture completo (jogos fora do banco)
   interval: null,
   modalInterval: null,
   activeModalId: null,
@@ -3899,23 +3916,18 @@ function getStat(stats, teamIndex, type) {
 }
 
 async function refreshLiveData() {
-  // Só busca ao vivo se houver matches na janela
-  const relevant = (state.matches || []).filter(m => isMatchLive(m.kickoff));
-  if (!relevant.length) return;
-
   const liveFixtures = await fetchLiveFixtures();
-
-  // Mapa rápido por fixture id
   const liveMap = new Map();
   liveFixtures.forEach(f => { liveMap.set(f.fixture.id, f); });
 
-  // Atualiza state para cada match relevante
+  // ── 1. Atualiza jogos do banco que estão na janela de tempo ──
+  const relevant = (state.matches || []).filter(m => isMatchLive(m.kickoff));
+  const relevantIds = new Set(relevant.map(m => Number(m.id)));
+
   relevant.forEach(m => {
     const id = Number(m.id);
     const fixture = liveMap.get(id);
-
     if (fixture) {
-      // Jogo encontrado na API ao vivo
       const short = fixture.fixture?.status?.short || "";
       liveState.data.set(String(id), {
         homeScore: safeNum(fixture.goals?.home),
@@ -3926,44 +3938,75 @@ async function refreshLiveData() {
         isFinished: FINISHED_STATUSES.includes(short),
       });
     } else {
-      // Jogo não retornado pela API — usa horário como fallback
       const d = parseDateSafe(m.kickoff);
       if (!d) return;
       const now = new Date();
-      const elapsed = (now - d) / 60000; // minutos desde o kickoff
+      const elapsed = (now - d) / 60000;
       const existingData = liveState.data.get(String(id));
-
       if (elapsed >= 0 && elapsed <= 110) {
-        // Jogo deveria estar ao vivo — mantém dados existentes ou cria placeholder
         if (!existingData) {
           liveState.data.set(String(id), {
             homeScore: 0, awayScore: 0,
             minute: Math.min(Math.round(elapsed), 90),
-            status: "LIVE",
-            isLive: true,
-            isFinished: false,
-            fromKickoff: true, // marcador de que veio do fallback
+            status: "LIVE", isLive: true, isFinished: false, fromKickoff: true,
           });
         }
       } else if (elapsed > 110 && elapsed <= 150) {
-        // Provável que terminou — marca como encerrado
         if (!existingData || existingData.isLive) {
           liveState.data.set(String(id), {
             ...(existingData || { homeScore:0, awayScore:0 }),
-            isLive: false,
-            isFinished: true,
-            status: "FT",
+            isLive: false, isFinished: true, status: "FT",
           });
         }
       }
     }
   });
 
-  // Re-render
+  // ── 2. Jogos ao vivo da API que NÃO estão no banco → liveState.external ──
+  liveState.external.clear();
+  const TIER_LEAGUES = new Set([
+    "UEFA Champions League","UEFA Europa League","UEFA Conference League",
+    "Libertadores","Sul-Americana","Premier League","La Liga","Serie A",
+    "Bundesliga","Ligue 1","Brasileirão Série A","Copa do Brasil",
+    "Brasileirão Série B","Liga Argentina","MLS","Liga MX","Saudi Pro League",
+    "Eredivisie","Belgian Pro League","Scottish Premiership","Super Lig",
+    "Primeira Liga","Allsvenskan","Eliteserien","Austrian Bundesliga",
+    "Copa América","Nations League","Copa do Mundo","Eurocopa",
+    "Mundial de Clubes","CONCACAF Champions Cup",
+  ]);
+
+  liveFixtures.forEach(f => {
+    const id = f.fixture?.id;
+    if (!id) return;
+    if (relevantIds.has(id)) return; // já está no banco
+    const short = f.fixture?.status?.short || "";
+    if (!LIVE_STATUSES.includes(short)) return; // só jogos realmente ao vivo
+    // Filtra competições relevantes pela API
+    const leagueName = String(f.league?.name || "");
+    const leagueId = f.league?.id;
+    // Aceita: ligas do tier ou top leagues por ID
+    const TOP_IDS = new Set([2,3,39,140,135,78,61,71,72,13,11,253,307,94,88,144,218,128,179,113,103,848,1]);
+    if (!TIER_LEAGUES.has(leagueName) && !TOP_IDS.has(leagueId)) return;
+    liveState.external.set(String(id), {
+      id, kickoff: f.fixture?.date,
+      home_team: f.teams?.home?.name || "Casa",
+      away_team: f.teams?.away?.name || "Fora",
+      home_logo: f.teams?.home?.logo || null,
+      away_logo: f.teams?.away?.logo || null,
+      league: leagueName,
+      country: f.league?.country || null,
+      liveData: {
+        homeScore: safeNum(f.goals?.home),
+        awayScore: safeNum(f.goals?.away),
+        minute: f.fixture?.status?.elapsed || null,
+        status: short, isLive: true, isFinished: false,
+      }
+    });
+  });
+
   updateLiveIndicators();
   renderLiveSection();
 
-  // Atualiza stats do modal se aberto
   if (liveState.activeModalId) {
     const live = liveState.data.get(String(liveState.activeModalId));
     if (live?.isLive) await refreshModalLiveStats(liveState.activeModalId);
