@@ -149,9 +149,9 @@
       transition: border-color 0.2s, background 0.2s, transform 0.12s;
       position: relative;
       display: grid;
-      grid-template-columns: 28px 1fr auto;
+      grid-template-columns: 28px minmax(0,1fr) minmax(80px,44%);
       align-items: center;
-      gap: 12px;
+      gap: 10px;
     }
     .radar-item-v2::before {
       content: ''; position: absolute; left: 0; top: 0; bottom: 0;
@@ -170,9 +170,25 @@
     .ri2-teams { display: flex; align-items: center; gap: 7px; }
     .ri2-team-names { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ri2-kickoff { font-family: var(--font-mono); font-size: 10px; color: var(--amber); font-weight: 700; flex-shrink: 0; margin-left: auto; }
-    .ri2-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
-    .ri2-market-num { font-family: var(--font-mono); font-size: 16px; font-weight: 800; color: var(--green); line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; white-space: nowrap; }
-    .ri2-market-label { font-size: 9px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+    .ri2-right {
+      display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+      flex-shrink: 0;
+      max-width: 44%;        /* nunca toma mais que 44% da linha */
+      min-width: 80px;
+    }
+    .ri2-market-num {
+      font-family: var(--font-mono); font-size: 16px; font-weight: 800;
+      color: var(--green); line-height: 1.2; font-variant-numeric: tabular-nums;
+      letter-spacing: -0.02em;
+      white-space: normal;        /* permite quebra */
+      word-break: break-word;
+      text-align: right;
+    }
+    .ri2-market-label {
+      font-size: 9px; font-weight: 600; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: 0.04em;
+      white-space: normal; text-align: right;
+    }
     .ri2-chips { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
 
     /* ─── COPA 2026 OVERLAY ───────────────────────────────────────────── */
@@ -404,12 +420,19 @@
       flex: 1; min-width: 0;
       font-size: 13px; font-weight: 600; color: var(--text);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      max-width: calc(100% - 170px); /* garante espaço pro pick badge */
+    }
+    @media (max-width: 500px) {
+      .agenda-teams { max-width: calc(100% - 130px); font-size: 12px; }
     }
     .agenda-pick {
       font-size: 10px; color: var(--green); font-weight: 700;
       background: var(--green-dim); border: 1px solid rgba(0,200,83,0.2);
-      border-radius: 5px; padding: 2px 7px; flex-shrink: 0;
-      max-width: 130px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      border-radius: 5px; padding: 2px 8px; flex-shrink: 0;
+      max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    @media (max-width: 400px) {
+      .agenda-pick { max-width: 120px; font-size: 9px; padding: 2px 6px; }
     }
     .agenda-live-badge {
       display: inline-flex; align-items: center; gap: 4px;
@@ -1579,8 +1602,9 @@
       .status-pill { font-size: 11px; padding: 6px 12px; }
 
       /* Radar */
-      .radar-item-v2 { padding: 10px 12px; gap: 8px; }
+      .radar-item-v2 { padding: 10px 12px; gap: 8px; grid-template-columns: 22px minmax(0,1fr) minmax(70px,40%); }
       .ri2-rank { width: 22px; height: 22px; font-size: 10px; }
+      .ri2-right { max-width: 40%; min-width: 70px; }
       .ri2-team-names { font-size: 12px; }
       .ri2-market-num { font-size: 13px; }
       .ri2-market-label { font-size: 8px; }
@@ -1729,9 +1753,11 @@
       .status-pill span:not(.status-dot) { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
       /* Radar item */
-      .radar-item-v2 { grid-template-columns: 22px 1fr auto; gap: 6px; }
-      .ri2-right { gap: 2px; }
+      .radar-item-v2 { grid-template-columns: 20px minmax(0,1fr) minmax(60px,38%); gap: 6px; padding: 8px 10px; }
+      .ri2-right { gap: 2px; max-width: 38%; min-width: 60px; }
       .ri2-chips { display: none; }
+      .ri2-market-num { font-size: 11px; }
+      .ri2-market-label { font-size: 8px; }
 
       /* Copa counter mínimo */
       .wc-countdown { gap: 3px; }
@@ -2686,7 +2712,22 @@ function formatMarketDisplay(market, numClass, labelClass) {
   }
 
   // Mercados sem número (dupla chance, ambas marcam, etc.)
-  return `<span class="${labelClass}" style="font-size:13px;color:var(--text)">${escapeHtml(m)}</span>`;
+  // Encurta textos longos para o radar mobile
+  let displayText = m;
+  if (lower.includes("dupla chance")) {
+    // "Dupla chance Palmeiras ou empate" → "Dupla Chance" + "Palmeiras ou Emp."
+    const teamMatch = m.match(/dupla chance (.+?) ou empate/i);
+    if (teamMatch) {
+      const team = teamMatch[1].length > 10 ? teamMatch[1].slice(0,10)+"…" : teamMatch[1];
+      return `<span class="${numClass}" style="font-size:13px;line-height:1.3;white-space:normal;word-break:break-word;text-align:right">Dupla Chance</span><span class="${labelClass}" style="text-align:right;white-space:normal">${escapeHtml(team)} ou Empate</span>`;
+    }
+  }
+  if (lower.includes("ambas marcam")) displayText = "Ambas Marcam";
+  if (lower.includes("ambas não") || lower.includes("ambas nao")) displayText = "Ambas Não Marc.";
+  if (lower.includes("vitória") || lower.includes("vitoria")) {
+    displayText = lower.includes("mandante") ? "Vitória Casa" : "Vitória Fora";
+  }
+  return `<span class="${numClass}" style="font-size:13px;line-height:1.3;white-space:normal;word-break:break-word;text-align:right">${escapeHtml(displayText)}</span>`;
 }
 
 /* ── INSIGHT ──────────────────────────────────────────────────────── */
