@@ -171,23 +171,23 @@
     .ri2-team-names { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .ri2-kickoff { font-family: var(--font-mono); font-size: 10px; color: var(--amber); font-weight: 700; flex-shrink: 0; margin-left: auto; }
     .ri2-right {
-      display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
+      display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
       flex-shrink: 0;
-      max-width: 44%;        /* nunca toma mais que 44% da linha */
-      min-width: 80px;
+      max-width: 42%;
+      min-width: 76px;
+      overflow: hidden; /* safety — nunca transborda */
     }
     .ri2-market-num {
-      font-family: var(--font-mono); font-size: 16px; font-weight: 800;
-      color: var(--green); line-height: 1.2; font-variant-numeric: tabular-nums;
+      font-family: var(--font-mono); font-size: 15px; font-weight: 800;
+      color: var(--green); line-height: 1.1; font-variant-numeric: tabular-nums;
       letter-spacing: -0.02em;
-      white-space: normal;        /* permite quebra */
-      word-break: break-word;
+      white-space: nowrap;   /* ← mantém "Mais de 1,5" em uma linha */
       text-align: right;
     }
     .ri2-market-label {
       font-size: 9px; font-weight: 600; color: var(--text-3);
       text-transform: uppercase; letter-spacing: 0.04em;
-      white-space: normal; text-align: right;
+      white-space: nowrap; text-align: right;
     }
     .ri2-chips { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
 
@@ -1605,9 +1605,10 @@
       .radar-item-v2 { padding: 10px 12px; gap: 8px; grid-template-columns: 22px minmax(0,1fr) minmax(70px,40%); }
       .ri2-rank { width: 22px; height: 22px; font-size: 10px; }
       .ri2-right { max-width: 40%; min-width: 70px; }
+      .ri2-market-num { white-space: nowrap; }
       .ri2-team-names { font-size: 12px; }
-      .ri2-market-num { font-size: 13px; }
-      .ri2-market-label { font-size: 8px; }
+      .ri2-market-num { font-size: 12px; white-space: nowrap; }
+      .ri2-market-label { font-size: 8px; white-space: nowrap; }
       .ri2-kickoff { font-size: 9px; }
       .ri2-league { font-size: 9px; }
       .radar-full-head { padding: 12px 14px; }
@@ -1626,9 +1627,17 @@
       .assert-total-badge { font-size: 9px; padding: 2px 8px; }
 
       /* Jogos ao vivo */
+      /* Live card mobile */
+      .live-game-row { padding: 8px 12px; }
+      .live-game-scoreline { gap: 4px; }
+      .live-scoreboard { font-size: 17px; }
+      .live-team-name { font-size: 12px; }
+      .live-center-score { min-width: 56px; }
+      .live-game-pick { max-width: 160px; font-size: 9px; }
+      .live-league-tag { font-size: 9px; }
+      /* legacy */
       .live-card { flex-direction: column; gap: 10px; }
       .live-score-block { width: 100%; justify-content: center; }
-      .live-teams { flex-direction: row; justify-content: space-between; }
 
       /* Game cards */
       .game-card { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px; }
@@ -1756,8 +1765,8 @@
       .radar-item-v2 { grid-template-columns: 20px minmax(0,1fr) minmax(60px,38%); gap: 6px; padding: 8px 10px; }
       .ri2-right { gap: 2px; max-width: 38%; min-width: 60px; }
       .ri2-chips { display: none; }
-      .ri2-market-num { font-size: 11px; }
-      .ri2-market-label { font-size: 8px; }
+      .ri2-market-num { font-size: 10px; white-space: nowrap; }
+      .ri2-market-label { font-size: 7px; white-space: nowrap; }
 
       /* Copa counter mínimo */
       .wc-countdown { gap: 3px; }
@@ -1810,9 +1819,7 @@
   <!-- ══ TEASER COPA DO MUNDO 2026 ═══════════════════════════════════════ -->
   <div class="worldcup-teaser" onclick="openWC2026()">
     <div class="wc-left" style="display:flex;align-items:center;gap:14px">
-      <img src="https://upload.wikimedia.org/wikipedia/en/thumb/6/67/2026_FIFA_World_Cup_logo.svg/200px-2026_FIFA_World_Cup_logo.svg.png" width="52" height="52"
-        style="object-fit:contain;flex-shrink:0;border-radius:8px;filter:drop-shadow(0 0 10px rgba(0,200,83,0.3))"
-        onerror="this.style.display='none'">
+      <div style="width:52px;height:52px;flex-shrink:0;border-radius:8px;background:linear-gradient(135deg,rgba(245,166,35,0.15),rgba(0,200,83,0.1));border:1px solid rgba(245,166,35,0.3);display:flex;align-items:center;justify-content:center;font-size:28px;filter:drop-shadow(0 0 10px rgba(0,200,83,0.3))">🏆</div>
       <div>
         <div class="wc-badge">🏆 Copa do Mundo 2026</div>
         <div class="wc-title">Scoutly na <span>Copa do Mundo 2026</span></div>
@@ -2014,7 +2021,7 @@
   <div class="wc-panel">
     <div class="wc-panel-hd">
       <div class="wc-panel-hd-left" style="display:flex;align-items:flex-start;gap:14px">
-        <img src="https://upload.wikimedia.org/wikipedia/en/thumb/6/67/2026_FIFA_World_Cup_logo.svg/200px-2026_FIFA_World_Cup_logo.svg.png" width="48" height="48" style="object-fit:contain;flex-shrink:0;margin-top:6px;border-radius:6px" onerror="this.style.display='none'">
+        <div style="width:48px;height:48px;flex-shrink:0;border-radius:8px;background:linear-gradient(135deg,rgba(245,166,35,0.2),rgba(0,200,83,0.15));border:1px solid rgba(245,166,35,0.35);display:flex;align-items:center;justify-content:center;font-size:26px;margin-top:4px">🏆</div>
         <div>
         <div class="eyebrow">Copa do Mundo 2026</div>
         <h2 class="wc-panel-title">FIFA World Cup <span>2026</span></h2>
@@ -2719,7 +2726,7 @@ function formatMarketDisplay(market, numClass, labelClass) {
     const teamMatch = m.match(/dupla chance (.+?) ou empate/i);
     if (teamMatch) {
       const team = teamMatch[1].length > 10 ? teamMatch[1].slice(0,10)+"…" : teamMatch[1];
-      return `<span class="${numClass}" style="font-size:13px;line-height:1.3;white-space:normal;word-break:break-word;text-align:right">Dupla Chance</span><span class="${labelClass}" style="text-align:right;white-space:normal">${escapeHtml(team)} ou Empate</span>`;
+      return `<span class="${numClass}" style="font-size:12px;line-height:1.2;white-space:nowrap;text-align:right;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%">Dupla Chance</span><span class="${labelClass}" style="text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%;font-size:8px">${escapeHtml(team)} ou Emp.</span>`;
     }
   }
   if (lower.includes("ambas marcam")) displayText = "Ambas Marcam";
@@ -2727,7 +2734,7 @@ function formatMarketDisplay(market, numClass, labelClass) {
   if (lower.includes("vitória") || lower.includes("vitoria")) {
     displayText = lower.includes("mandante") ? "Vitória Casa" : "Vitória Fora";
   }
-  return `<span class="${numClass}" style="font-size:13px;line-height:1.3;white-space:normal;word-break:break-word;text-align:right">${escapeHtml(displayText)}</span>`;
+  return `<span class="${numClass}" style="font-size:12px;line-height:1.2;white-space:nowrap;text-align:right;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%">${escapeHtml(displayText)}</span>`;
 }
 
 /* ── INSIGHT ──────────────────────────────────────────────────────── */
