@@ -159,7 +159,7 @@
       /* 3 colunas: rank | centro | mercado fixo */
       display: grid;
       grid-template-columns: 28px 1fr 140px;
-      align-items: stretch; /* todos com mesma altura */
+      align-items: center;
       gap: 12px;
     }
     .radar-item-v2::before {
@@ -183,7 +183,7 @@
     /* Centro: liga+hora em cima, times embaixo */
     .ri2-main {
       min-width: 0; display: flex; flex-direction: column;
-      justify-content: center; gap: 4px;
+      gap: 4px;
     }
     .ri2-header {
       display: flex; align-items: center; gap: 6px; min-width: 0;
@@ -200,29 +200,26 @@
       color: var(--amber); font-weight: 700;
       flex-shrink: 0; white-space: nowrap;
     }
+    /* Times: [logo] Casa × Visitante [logo] — tudo compacto numa linha */
     .ri2-teams {
-      display: flex; align-items: center; gap: 0; min-width: 0;
-      overflow: hidden;
-    }
-    /* Bloco de cada time: logo + nome colados */
-    .ri2-team-side {
       display: flex; align-items: center; gap: 5px;
       min-width: 0; overflow: hidden;
     }
-    .ri2-team-side.home { flex: 1; min-width: 0; }
-    .ri2-team-side.away { flex: 1; min-width: 0; justify-content: flex-end; flex-direction: row-reverse; }
+    .ri2-team-side {
+      display: flex; align-items: center; gap: 4px;
+      min-width: 0; overflow: hidden; flex-shrink: 1;
+    }
+    .ri2-team-side.home { flex: 1 1 0; min-width: 0; }
+    .ri2-team-side.away { flex: 0 1 auto; min-width: 0; }
     .ri2-team-name {
       font-size: 13px; font-weight: 700; color: var(--text);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       min-width: 0;
     }
-    .ri2-team-side.away .ri2-team-name { text-align: right; }
-    /* Separador × entre os dois times */
     .ri2-vs {
-      font-size: 11px; font-weight: 600; color: var(--text-3);
-      flex-shrink: 0; padding: 0 6px;
+      font-size: 10px; font-weight: 500; color: var(--text-3);
+      flex-shrink: 0; white-space: nowrap;
     }
-    /* Mantido para compatibilidade mas não usado mais no radar */
     .ri2-team-names {
       font-size: 13px; font-weight: 700; color: var(--text);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -301,9 +298,10 @@
         max-width: calc(100% - 120px);
       }
       .ri2-chips .chip { font-size: 8px; padding: 2px 6px; }
-      /* Times mobile — nomes mais curtos */
+      /* Times mobile */
+      .ri2-teams { gap: 4px; }
       .ri2-team-name { font-size: 12px; }
-      .ri2-vs { padding: 0 4px; font-size: 10px; }
+      .ri2-vs { font-size: 9px; }
     }
 
     /* ─── COPA 2026 OVERLAY ───────────────────────────────────────────── */
@@ -3685,8 +3683,8 @@ function renderRadar(){
                 </div>
                 <span class="ri2-vs">×</span>
                 <div class="ri2-team-side away">
-                  ${teamBadge(item,"away","sm")}
                   <span class="ri2-team-name">${escapeHtml(item.away_team)}</span>
+                  ${teamBadge(item,"away","sm")}
                 </div>
               </div>
             </div>
