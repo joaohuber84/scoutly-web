@@ -200,31 +200,24 @@
       color: var(--amber); font-weight: 700;
       flex-shrink: 0; white-space: nowrap;
     }
-    /* Times: [logo] Casa × Visitante [logo] — tudo compacto numa linha */
+    /* Times: [logo] Casa × Visitante [logo] — linha única compacta */
     .ri2-teams {
-      display: flex; align-items: center; gap: 5px;
-      min-width: 0; overflow: hidden;
-    }
-    .ri2-team-side {
-      display: flex; align-items: center; gap: 4px;
+      display: flex; align-items: center; gap: 6px;
       min-width: 0; overflow: hidden; flex-shrink: 1;
     }
-    .ri2-team-side.home { flex: 1 1 0; min-width: 0; }
-    .ri2-team-side.away { flex: 0 1 auto; min-width: 0; }
-    .ri2-team-name {
+    .ri2-team-badge-home { flex-shrink: 0; }
+    .ri2-team-badge-away { flex-shrink: 0; }
+    .ri2-team-inline {
+      /* "Casa × Visitante" como texto único, trunca no final */
       font-size: 13px; font-weight: 700; color: var(--text);
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      min-width: 0;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      flex: 1 1 0; min-width: 0;
     }
-    .ri2-vs {
-      font-size: 10px; font-weight: 500; color: var(--text-3);
-      flex-shrink: 0; white-space: nowrap;
-    }
-    .ri2-team-names {
-      font-size: 13px; font-weight: 700; color: var(--text);
-      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      flex: 1; min-width: 0;
-    }
+    /* compatibilidade */
+    .ri2-team-side { display: flex; align-items: center; gap: 4px; min-width: 0; }
+    .ri2-team-name { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+    .ri2-vs { font-size: 10px; font-weight: 500; color: var(--text-3); flex-shrink: 0; white-space: nowrap; }
+    .ri2-team-names { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
 
     /* Coluna direita: mercado + chips — centralizado verticalmente */
     .ri2-right {
@@ -299,9 +292,8 @@
       }
       .ri2-chips .chip { font-size: 8px; padding: 2px 6px; }
       /* Times mobile */
-      .ri2-teams { gap: 4px; }
-      .ri2-team-name { font-size: 12px; }
-      .ri2-vs { font-size: 9px; }
+      .ri2-teams { gap: 5px; }
+      .ri2-team-inline { font-size: 12px; }
     }
 
     /* ─── COPA 2026 OVERLAY ───────────────────────────────────────────── */
@@ -3677,15 +3669,9 @@ function renderRadar(){
                 <div class="ri2-kickoff">${formatKickoffHour(item.kickoff)}</div>
               </div>
               <div class="ri2-teams">
-                <div class="ri2-team-side home">
-                  ${teamBadge(item,"home","sm")}
-                  <span class="ri2-team-name">${escapeHtml(item.home_team)}</span>
-                </div>
-                <span class="ri2-vs">×</span>
-                <div class="ri2-team-side away">
-                  <span class="ri2-team-name">${escapeHtml(item.away_team)}</span>
-                  ${teamBadge(item,"away","sm")}
-                </div>
+                <span class="ri2-team-badge-home">${teamBadge(item,"home","sm")}</span>
+                <span class="ri2-team-inline">${escapeHtml(item.home_team)} × ${escapeHtml(item.away_team)}</span>
+                <span class="ri2-team-badge-away">${teamBadge(item,"away","sm")}</span>
               </div>
             </div>
             <div class="ri2-right">
