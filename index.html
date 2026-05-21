@@ -152,32 +152,42 @@
       background: var(--surface-2);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 12px 14px 12px 16px;
+      padding: 12px 16px;
       cursor: pointer;
       transition: border-color 0.2s, background 0.2s, transform 0.12s;
       position: relative;
+      /* 3 colunas: rank | centro | mercado fixo */
       display: grid;
-      grid-template-columns: 26px minmax(0,1fr) 130px;
-      align-items: center;
-      gap: 10px;
+      grid-template-columns: 28px 1fr 140px;
+      align-items: stretch; /* todos com mesma altura */
+      gap: 12px;
     }
     .radar-item-v2::before {
       content: ''; position: absolute; left: 0; top: 0; bottom: 0;
       width: 3px; border-radius: 3px 0 0 3px;
-      background: var(--green); opacity: 0.3;
-      transition: opacity 0.2s;
+      background: var(--green); opacity: 0.3; transition: opacity 0.2s;
     }
     .radar-item-v2:hover { border-color: var(--border-2); background: var(--surface-3); transform: translateX(3px); }
     .radar-item-v2:hover::before { opacity: 1; }
     .radar-item-v2:active { transform: translateX(3px) scale(0.99); }
+
+    /* Rank */
     .ri2-rank {
-      width: 26px; height: 26px; border-radius: 8px;
+      width: 28px; height: 28px; border-radius: 8px;
       background: var(--surface-3); border: 1px solid var(--border-2);
       color: var(--text-3); font-size: 11px; font-weight: 700;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; align-self: center;
     }
-    .ri2-main { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-    .ri2-header { display: flex; align-items: center; gap: 5px; min-width: 0; }
+
+    /* Centro: liga+hora em cima, times embaixo */
+    .ri2-main {
+      min-width: 0; display: flex; flex-direction: column;
+      justify-content: center; gap: 4px;
+    }
+    .ri2-header {
+      display: flex; align-items: center; gap: 6px; min-width: 0;
+    }
     .ri2-league {
       display: flex; align-items: center; gap: 4px;
       font-size: 10px; color: var(--text-3);
@@ -190,22 +200,26 @@
       color: var(--amber); font-weight: 700;
       flex-shrink: 0; white-space: nowrap;
     }
-    .ri2-teams { display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .ri2-teams {
+      display: flex; align-items: center; gap: 6px; min-width: 0;
+    }
     .ri2-team-names {
       font-size: 13px; font-weight: 700; color: var(--text);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       flex: 1; min-width: 0;
     }
-    /* Coluna direita fixa 130px — mercado + chips */
+
+    /* Coluna direita: mercado + chips — centralizado verticalmente */
     .ri2-right {
-      width: 130px; flex-shrink: 0;
-      display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
-      overflow: hidden;
+      width: 140px; flex-shrink: 0;
+      display: flex; flex-direction: column;
+      align-items: flex-end; justify-content: center;
+      gap: 5px; overflow: hidden;
     }
     .ri2-right .ri2-market-num[style*="text-align:left"] { align-self: flex-start; }
     .ri2-market-num {
-      font-family: var(--font-head); font-size: 14px; font-weight: 800;
-      color: var(--green); line-height: 1.1;
+      font-family: var(--font-head); font-size: 15px; font-weight: 800;
+      color: var(--green); line-height: 1;
       white-space: nowrap; text-align: right;
       letter-spacing: -0.02em;
       overflow: hidden; text-overflow: ellipsis; max-width: 100%;
@@ -217,38 +231,56 @@
     }
     .ri2-chips {
       display: flex; gap: 3px; flex-wrap: nowrap; justify-content: flex-end;
+      overflow: hidden; max-width: 100%;
+    }
+    .ri2-chips .chip {
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      flex-shrink: 1;
     }
 
-    /* ── RADAR MOBILE ≤ 540px ────────────────────────────────────────
-       Layout 2 linhas:
-       Linha 1 (ri2-main): liga + hora + times
-       Linha 2 (ri2-bottom): mercado + chips
+    /* ── RADAR MOBILE ≤ 600px ────────────────────────────────────────
+       Layout:
+       Col 1 (rank) | Col 2 (tudo)
+       Row 1: liga + hora
+       Row 2: logos + times
+       Row 3: mercado + chips (verde, destaque)
     ──────────────────────────────────────────────────────────────── */
-    @media (max-width: 540px) {
+    @media (max-width: 600px) {
       .radar-item-v2 {
-        grid-template-columns: 22px 1fr;
-        grid-template-rows: auto auto;
-        gap: 6px 8px;
-        padding: 10px 12px;
+        grid-template-columns: 26px 1fr;
+        grid-template-rows: auto auto auto;
+        align-items: start;
+        gap: 4px 10px;
+        padding: 11px 12px;
       }
-      /* rank ocupa linha 1+2 col 1 */
-      .ri2-rank { grid-row: 1 / 3; align-self: start; margin-top: 2px; width: 22px; height: 22px; font-size: 10px; }
-      /* ri2-main: linha 1 col 2 */
-      .ri2-main { grid-column: 2; grid-row: 1; gap: 2px; }
-      /* ri2-right vira linha 2 col 2 */
+      .ri2-rank {
+        grid-column: 1; grid-row: 1 / 4;
+        align-self: center;
+        width: 26px; height: 26px; font-size: 10px;
+      }
+      .ri2-main {
+        grid-column: 2; grid-row: 1 / 3;
+        gap: 3px;
+      }
       .ri2-right {
-        grid-column: 2; grid-row: 2;
+        grid-column: 2; grid-row: 3;
         width: 100%; max-width: 100%;
         flex-direction: row; align-items: center; justify-content: flex-start;
-        gap: 6px; overflow: visible;
+        gap: 8px; overflow: visible;
+        padding-top: 4px;
+        border-top: 1px solid var(--border);
+        margin-top: 2px;
       }
       .ri2-market-num {
-        font-size: 13px; white-space: nowrap;
+        font-size: 14px; white-space: nowrap;
         text-align: left; flex-shrink: 0;
       }
-      .ri2-market-label { font-size: 7px; }
-      .ri2-chips { flex-shrink: 0; }
-      .ri2-chips .chip { font-size: 8px; padding: 2px 5px; }
+      .ri2-market-label { font-size: 7px; text-align: left; }
+      .ri2-chips {
+        flex-shrink: 0; overflow: hidden;
+        max-width: calc(100% - 120px);
+      }
+      .ri2-chips .chip { font-size: 8px; padding: 2px 6px; }
     }
 
     /* ─── COPA 2026 OVERLAY ───────────────────────────────────────────── */
@@ -2630,11 +2662,20 @@ function getCompetitionBadge(league, country="", logoUrl="") {
 
 function shouldHideLeague(l){
   const raw=String(l||"").toLowerCase(); const name=String(normalizeLeagueName(l)||"").toLowerCase();
+  // Copa Verde e Copa Sul-Sudeste: removidas por falta de dados confiáveis
+  if(name.includes("copa verde")||name.includes("sul-sudeste")||name.includes("sul sudeste"))return true;
   return(name.includes("u17")||name.includes("u18")||name.includes("u19")||name.includes("u20")||
     name.includes("u21")||name.includes("u23")||name.includes("reserve")||name.includes("youth")||
     name.includes("women")||name.includes("feminino")||
     raw.includes("2. bundesliga")||raw.includes("bundesliga 2")||
     name.includes("challenger pro league")||name.includes("open cup"));
+}
+
+// Jogo válido para o radar: tem pick real E tem dados mínimos
+function isRadarEligiblePick(match){
+  const pick = getPrimaryPick(match);
+  if(pick === "Mercado em revisão") return false;
+  return true;
 }
 
 function isStillRelevantForRadar(v){
@@ -3450,17 +3491,14 @@ function buildRadarSnapshot(){
     const m=getMatchById(item.match_id);
     if(!m||!isStillRelevantForRadar(m.kickoff)||shouldHideLeague(m.league))return null;
     const pick=getPrimaryPick(m)||item.market;
-    // Não mostra no radar se mercado em revisão E métricas zeradas
-    if(pick==="Mercado em revisão"){
-      const met=getMetrics(m);
-      if(!met.avgGoals&&!met.avgShots&&!met.avgCorners)return null;
-    }
+    // Bloquear do radar: sem pick real
+    if(!isRadarEligiblePick(m))return null;
     return{...m,league:normalizeLeagueName(m.league),home_team:normalizeTeamName(m.home_team),away_team:normalizeTeamName(m.away_team),
       radar_market:pick,radar_probability:Number(item.probability||getMatchProbability(m)),
       radar_rank:Number(item.rank||999),source:"daily"};
   }).filter(Boolean).sort((a,b)=>{const ta=new Date(a.kickoff).getTime(),tb=new Date(b.kickoff).getTime();const as=ta<=nowTs,bs=tb<=nowTs;if(as!==bs)return as?-1:1;if(a.radar_rank!==b.radar_rank)return a.radar_rank-b.radar_rank;return ta-tb;});
 
-  const fallback=eligible.filter(m=>!fromDaily.some(i=>String(i.id)===String(m.id)))
+  const fallback=eligible.filter(m=>!fromDaily.some(i=>String(i.id)===String(m.id))&&isRadarEligiblePick(m))
     .sort((a,b)=>{const ta=new Date(a.kickoff).getTime(),tb=new Date(b.kickoff).getTime();const as=ta<=nowTs,bs=tb<=nowTs;if(as!==bs)return as?-1:1;const pd=getMatchProbability(b)-getMatchProbability(a);if(Math.abs(pd)>0.0001)return pd;return ta-tb;})
     .slice(0,80).map((m,idx)=>({...m,league:normalizeLeagueName(m.league),home_team:normalizeTeamName(m.home_team),away_team:normalizeTeamName(m.away_team),radar_market:getPrimaryPick(m),radar_probability:getMatchProbability(m),radar_rank:fromDaily.length+idx+1,source:"fallback"}));
 
