@@ -201,8 +201,28 @@
       flex-shrink: 0; white-space: nowrap;
     }
     .ri2-teams {
-      display: flex; align-items: center; gap: 6px; min-width: 0;
+      display: flex; align-items: center; gap: 0; min-width: 0;
+      overflow: hidden;
     }
+    /* Bloco de cada time: logo + nome colados */
+    .ri2-team-side {
+      display: flex; align-items: center; gap: 5px;
+      min-width: 0; overflow: hidden;
+    }
+    .ri2-team-side.home { flex: 1; min-width: 0; }
+    .ri2-team-side.away { flex: 1; min-width: 0; justify-content: flex-end; flex-direction: row-reverse; }
+    .ri2-team-name {
+      font-size: 13px; font-weight: 700; color: var(--text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      min-width: 0;
+    }
+    .ri2-team-side.away .ri2-team-name { text-align: right; }
+    /* Separador × entre os dois times */
+    .ri2-vs {
+      font-size: 11px; font-weight: 600; color: var(--text-3);
+      flex-shrink: 0; padding: 0 6px;
+    }
+    /* Mantido para compatibilidade mas não usado mais no radar */
     .ri2-team-names {
       font-size: 13px; font-weight: 700; color: var(--text);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -218,10 +238,10 @@
     }
     .ri2-right .ri2-market-num[style*="text-align:left"] { align-self: flex-start; }
     .ri2-market-num {
-      font-family: var(--font-head); font-size: 15px; font-weight: 800;
+      font-family: var(--font-body); font-size: 15px; font-weight: 800;
       color: var(--green); line-height: 1;
       white-space: nowrap; text-align: right;
-      letter-spacing: -0.02em;
+      letter-spacing: 0;
       overflow: hidden; text-overflow: ellipsis; max-width: 100%;
     }
     .ri2-market-label {
@@ -281,6 +301,9 @@
         max-width: calc(100% - 120px);
       }
       .ri2-chips .chip { font-size: 8px; padding: 2px 6px; }
+      /* Times mobile — nomes mais curtos */
+      .ri2-team-name { font-size: 12px; }
+      .ri2-vs { padding: 0 4px; font-size: 10px; }
     }
 
     /* ─── COPA 2026 OVERLAY ───────────────────────────────────────────── */
@@ -1155,7 +1178,7 @@
       display: flex; align-items: center; justify-content: center;
       overflow: hidden; flex-shrink: 0; font-size: 11px; font-weight: 700; color: var(--text-2);
     }
-    .team-badge.sm { width: 28px; height: 28px; min-width: 28px; min-height: 28px; border-radius: 8px; font-size: 10px; }
+    .team-badge.sm { width: 22px; height: 22px; min-width: 22px; min-height: 22px; border-radius: 6px; font-size: 10px; }
     .team-badge.lg { width: 44px; height: 44px; min-width: 44px; min-height: 44px; border-radius: 12px; font-size: 13px; }
     .team-badge img {
       width: 100%; height: 100%;
@@ -3656,9 +3679,15 @@ function renderRadar(){
                 <div class="ri2-kickoff">${formatKickoffHour(item.kickoff)}</div>
               </div>
               <div class="ri2-teams">
-                ${teamBadge(item,"home","sm")}
-                <div class="ri2-team-names">${escapeHtml(item.home_team)} × ${escapeHtml(item.away_team)}</div>
-                ${teamBadge(item,"away","sm")}
+                <div class="ri2-team-side home">
+                  ${teamBadge(item,"home","sm")}
+                  <span class="ri2-team-name">${escapeHtml(item.home_team)}</span>
+                </div>
+                <span class="ri2-vs">×</span>
+                <div class="ri2-team-side away">
+                  ${teamBadge(item,"away","sm")}
+                  <span class="ri2-team-name">${escapeHtml(item.away_team)}</span>
+                </div>
               </div>
             </div>
             <div class="ri2-right">
