@@ -207,20 +207,22 @@
     }
     /* logo da casa — fixo à esquerda */
     .ri2-badge-home { flex-shrink: 0; }
-    /* bloco direito: nomes + logo visitante colados */
+    /* bloco direito: nomes + logo visitante COMPACTOS, sem expansão */
     .ri2-matchup {
       display: flex; align-items: center; gap: 5px;
       flex: 1; min-width: 0; overflow: hidden;
     }
+    /* nome da casa: encolhe se necessário, NÃO cresce */
     .ri2-home-name {
       font-size: 13px; font-weight: 700; color: var(--text);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      flex: 1 1 0; min-width: 0;
+      flex: 0 1 auto; min-width: 0;
     }
     .ri2-vs {
       font-size: 10px; font-weight: 500; color: var(--text-3);
       flex-shrink: 0; white-space: nowrap;
     }
+    /* nome visitante: igual ao da casa */
     .ri2-away-name {
       font-size: 13px; font-weight: 700; color: var(--text);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
