@@ -200,23 +200,38 @@
       color: var(--amber); font-weight: 700;
       flex-shrink: 0; white-space: nowrap;
     }
-    /* Times: [logo] Casa × Visitante [logo] — linha única compacta */
+    /* Times: [logo_casa] [NomeCasa × NomeVisitante logo_visitante] */
     .ri2-teams {
       display: flex; align-items: center; gap: 6px;
-      min-width: 0; overflow: hidden; flex-shrink: 1;
+      min-width: 0; overflow: hidden;
     }
-    .ri2-team-badge-home { flex-shrink: 0; }
-    .ri2-team-badge-away { flex-shrink: 0; }
-    .ri2-team-inline {
-      /* "Casa × Visitante" como texto único, trunca no final */
+    /* logo da casa — fixo à esquerda */
+    .ri2-badge-home { flex-shrink: 0; }
+    /* bloco direito: nomes + logo visitante colados */
+    .ri2-matchup {
+      display: flex; align-items: center; gap: 5px;
+      flex: 1; min-width: 0; overflow: hidden;
+    }
+    .ri2-home-name {
       font-size: 13px; font-weight: 700; color: var(--text);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       flex: 1 1 0; min-width: 0;
     }
-    /* compatibilidade */
+    .ri2-vs {
+      font-size: 10px; font-weight: 500; color: var(--text-3);
+      flex-shrink: 0; white-space: nowrap;
+    }
+    .ri2-away-name {
+      font-size: 13px; font-weight: 700; color: var(--text);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      flex: 0 1 auto; min-width: 0;
+    }
+    /* logo visitante colado ao nome visitante */
+    .ri2-badge-away { flex-shrink: 0; }
+    /* legado */
     .ri2-team-side { display: flex; align-items: center; gap: 4px; min-width: 0; }
-    .ri2-team-name { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
-    .ri2-vs { font-size: 10px; font-weight: 500; color: var(--text-3); flex-shrink: 0; white-space: nowrap; }
+    .ri2-team-name { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .ri2-team-inline { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1 1 0; min-width: 0; }
     .ri2-team-names { font-size: 13px; font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
 
     /* Coluna direita: mercado + chips — centralizado verticalmente */
@@ -293,9 +308,9 @@
       .ri2-chips .chip { font-size: 8px; padding: 2px 6px; }
       /* Times mobile */
       .ri2-teams { gap: 5px; }
-      .ri2-team-inline { font-size: 12px; }
+      .ri2-home-name, .ri2-away-name { font-size: 12px; }
+      .ri2-matchup { gap: 4px; }
     }
-
     /* ─── COPA 2026 OVERLAY ───────────────────────────────────────────── */
     .wc-overlay {
       position: fixed; inset: 0; z-index: 200;
@@ -3669,9 +3684,13 @@ function renderRadar(){
                 <div class="ri2-kickoff">${formatKickoffHour(item.kickoff)}</div>
               </div>
               <div class="ri2-teams">
-                <span class="ri2-team-badge-home">${teamBadge(item,"home","sm")}</span>
-                <span class="ri2-team-inline">${escapeHtml(item.home_team)} × ${escapeHtml(item.away_team)}</span>
-                <span class="ri2-team-badge-away">${teamBadge(item,"away","sm")}</span>
+                <span class="ri2-badge-home">${teamBadge(item,"home","sm")}</span>
+                <div class="ri2-matchup">
+                  <span class="ri2-home-name">${escapeHtml(item.home_team)}</span>
+                  <span class="ri2-vs">×</span>
+                  <span class="ri2-away-name">${escapeHtml(item.away_team)}</span>
+                  <span class="ri2-badge-away">${teamBadge(item,"away","sm")}</span>
+                </div>
               </div>
             </div>
             <div class="ri2-right">
