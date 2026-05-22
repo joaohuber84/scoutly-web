@@ -17,12 +17,12 @@ const API = "https://v3.football.api-sports.io"
 const TIMEZONE = "America/Sao_Paulo"
 
 /**
- * SCOUTLY SYNC V13.6
- * [FIX] clearFutureWindow: daily_picks agora só apaga picks com kickoff futuro
- *       Picks de jogos já acontecidos ficam preservados para o verify.js processar
- *       → histórico de assertividade cresce corretamente a cada rodada
- *       Antes: .delete().neq("id", 0) apagava TUDO
- *       Agora: .delete().gte("kickoff", now) preserva jogos passados
+ * SCOUTLY SYNC V13.7
+ * [FIX 1] clearFutureWindow: daily_picks agora só apaga picks com kickoff futuro
+ *         Picks de jogos já acontecidos ficam preservados para o verify.js processar
+ * [FIX 2] RADAR_BLACKLIST: todas as copas nacionais removidas.
+ *         Agora aparecem em competições e no radar quando tiverem picks fortes.
+ *         Mantidas apenas Copa Sul-Sudeste e Copa Verde (sem dados na API-Football).
  */
 
 const WINDOW_HOURS = 168
@@ -61,14 +61,12 @@ const LEAGUE_TIER = {
   "Copa Sul-Sudeste":4,"Recopa Sul-Americana":4,"Copa Asiática":4,"Copa da Escócia":4,
 }
 
+// Mantidas apenas competições sem dados confiáveis na API-Football.
+// Todas as copas nacionais foram removidas — agora aparecem em competições
+// e no radar quando tiverem picks fortes.
 const RADAR_BLACKLIST = new Set([
-  "Copa da Escócia","Copa da Turquia","Copa da Bélgica","Copa da Áustria",
-  "Copa da Grécia","Copa da Dinamarca","KNVB Cup","Taça da Liga",
-  "Copa Chile","Copa Colombia","Copa MX","Leagues Cup","Copa Sul-Sudeste",
-  "Copa Verde","Recopa Sul-Americana","Copa Asiática","Copa da Escócia",
-  "Copa do Chile","Copa da Colômbia","Copa BetPlay","Copa MX",
-  "Copa por México","Copa da Noruega","Copa da Suécia","Copa da Finlândia",
-  "Copa da Polônia","Copa da Romênia","Copa da Sérvia","Copa da Croácia",
+  "Copa Sul-Sudeste",
+  "Copa Verde",
 ])
 
 function getLeagueTierScore(league) {
@@ -120,12 +118,15 @@ const TARGET_COMPETITIONS = [
   { mode:"country", country:"Portugal", type:"cup", names:["Taça de Portugal","Taca de Portugal","Portuguese Cup"], display:"Taça de Portugal", region:"general", priority:72 },
   { mode:"country", country:"Portugal", type:"cup", names:["Taça da Liga","Taca da Liga"], display:"Taça da Liga", region:"general", priority:70 },
   { mode:"country", country:"Turkey", type:"league", names:["Süper Lig","Super Lig"], display:"Super Lig", region:"general", priority:78 },
-  { mode:"country", country:"Turkey", type:"cup", names:["Turkish Cup","Ziraat Türkiye Kupası"], display:"Copa da Turquia", region:"general", priority:70 },
+  { mode:"country", country:"Turkey", type:"cup", names:["Turkish Cup","Ziraat Türkiye Kupası","Ziraat Kupasi"], display:"Copa da Turquia", region:"general", priority:70 },
   { mode:"country", country:"Denmark", type:"league", names:["Superliga","Superligaen","3F Superliga"], display:"Superliga", region:"general", priority:75 },
   { mode:"country", country:"Greece", type:"league", names:["Super League 1","Super League","Super League Greece"], display:"Super League Greece", region:"general", priority:74 },
   { mode:"country", country:"Belgium", type:"league", names:["Pro League","Jupiler Pro League","Belgian Pro League"], display:"Belgian Pro League", region:"general", priority:85 },
   { mode:"country", country:"Belgium", type:"cup", names:["Belgian Cup","Croky Cup"], display:"Copa da Bélgica", region:"general", priority:70 },
   { mode:"country", country:"Austria", type:"league", names:["Bundesliga","Austrian Bundesliga"], display:"Austrian Bundesliga", region:"general", priority:84 },
+  { mode:"country", country:"Austria", type:"cup", names:["Austrian Cup","ÖFB Cup","OFB Cup"], display:"Copa da Áustria", region:"general", priority:70 },
+  { mode:"country", country:"Greece", type:"cup", names:["Greek Cup","Greece Cup"], display:"Copa da Grécia", region:"general", priority:70 },
+  { mode:"country", country:"Denmark", type:"cup", names:["Danish Cup","DBU Pokalen"], display:"Copa da Dinamarca", region:"general", priority:70 },
   { mode:"country", country:"Scotland", type:"league", names:["Premiership","Scottish Premiership"], display:"Scottish Premiership", region:"general", priority:78 },
   { mode:"country", country:"Scotland", type:"cup", names:["Scottish Cup","Scottish FA Cup"], display:"Scottish Cup", region:"general", priority:70 },
   { mode:"country", country:"Sweden", type:"league", names:["Allsvenskan"], display:"Allsvenskan", region:"general", priority:74 },
@@ -307,11 +308,20 @@ function normalizeCompetitionName(country, rawName, fallbackDisplay) {
     if (norm.includes("taca de portugal") || norm.includes("taça de portugal")) return "Taça de Portugal"
     if (norm.includes("taca da liga") || norm.includes("taça da liga")) return "Taça da Liga"
   }
-  if (c === "Turkey") { if (norm.includes("super lig") || norm.includes("süper lig")) return "Super Lig"; if (norm.includes("cup") || norm.includes("kupa")) return "Copa da Turquia" }
+  if (c === "Turkey") {
+    if (norm.includes("super lig") || norm.includes("süper lig")) return "Super Lig"
+    if (norm.includes("cup") || norm.includes("kupa") || norm.includes("kupasi")) return "Copa da Turquia"
+  }
   if (c === "Greece") { if (norm.includes("super league")) return "Super League Greece"; if (norm.includes("cup")) return "Copa da Grécia" }
   if (c === "Belgium") { if (norm === "pro league" || norm.includes("jupiler")) return "Belgian Pro League"; if (norm.includes("cup") || norm.includes("croky")) return "Copa da Bélgica" }
-  if (c === "Austria") return "Austrian Bundesliga"
-  if (c === "Denmark") { if (norm.includes("superliga") || norm.includes("superligaen")) return "Superliga" }
+  if (c === "Austria") {
+    if (norm === "bundesliga") return "Austrian Bundesliga"
+    if (norm.includes("cup") || norm.includes("ofb")) return "Copa da Áustria"
+  }
+  if (c === "Denmark") {
+    if (norm.includes("superliga") || norm.includes("superligaen")) return "Superliga"
+    if (norm.includes("cup") || norm.includes("dbu")) return "Copa da Dinamarca"
+  }
   if (c === "Scotland") { if (norm.includes("premiership")) return "Scottish Premiership"; if (norm.includes("cup")) return "Scottish Cup" }
   if (c === "Sweden") return "Allsvenskan"
   if (c === "Norway") return "Eliteserien"
@@ -602,7 +612,6 @@ function buildExpectedMetrics(homeProfile, awayProfile, h2hProfile = null) {
   let homeGoalsAgainst = homeProfile.avgGoalsAgainst
   let awayGoalsFor = awayProfile.avgGoalsFor
   let awayGoalsAgainst = awayProfile.avgGoalsAgainst
-
   if (h2hProfile && h2hProfile.matches >= 3) {
     homeGoalsFor = round(homeGoalsFor*FORM_WEIGHT + h2hProfile.homeAvgGoalsFor*H2H_WEIGHT)
     homeGoalsAgainst = round(homeGoalsAgainst*FORM_WEIGHT + h2hProfile.homeAvgGoalsAgainst*H2H_WEIGHT)
@@ -610,7 +619,6 @@ function buildExpectedMetrics(homeProfile, awayProfile, h2hProfile = null) {
     awayGoalsAgainst = round(awayGoalsAgainst*FORM_WEIGHT + h2hProfile.awayAvgGoalsAgainst*H2H_WEIGHT)
     console.log(`   📊 H2H blend aplicado (${h2hProfile.matches} confrontos diretos)`)
   }
-
   const expectedHomeGoals = clamp(round(homeGoalsFor*0.60+awayGoalsAgainst*0.40),0.25,3.8)
   const expectedAwayGoals = clamp(round(awayGoalsFor*0.56+homeGoalsAgainst*0.44),0.20,3.4)
   const expectedGoals = round(expectedHomeGoals+expectedAwayGoals)
@@ -882,26 +890,17 @@ function hasMinimumMatchData(homeContext, awayContext) {
          isUsableTeamProfile(buildSideProfile(awayContext,"away"),awayContext.general)
 }
 
-// ✅ FIX — clearFutureWindow: só apaga daily_picks com kickoff futuro
-// Picks de jogos já acontecidos ficam preservados para o verify.js processar
 async function clearFutureWindow() {
   const now = new Date().toISOString()
   const { start, end } = getSyncWindowRange()
-
-  // Antes: .delete().neq("id", 0) → apagava TODOS os picks
-  // Agora: .delete().gte("kickoff", now) → preserva picks de jogos passados
   const { error: dailyError } = await supabase
     .from("daily_picks")
     .delete()
     .gte("kickoff", now)
-
   if (dailyError) throw new Error(`Supabase delete daily_picks: ${dailyError.message}`)
-
-  // Remove matches antigos (já aconteceram)
   const { data: oldRows, error: oldError } = await supabase
     .from("matches").select("id").lte("kickoff", now)
   if (oldError) throw new Error(`Supabase select old matches: ${oldError.message}`)
-
   const oldIds = (oldRows || []).map(x => x.id)
   if (oldIds.length) {
     await supabase.from("match_stats").delete().in("match_id", oldIds)
@@ -909,12 +908,9 @@ async function clearFutureWindow() {
     const { error } = await supabase.from("matches").delete().in("id", oldIds)
     if (error) throw new Error(`Supabase delete old matches: ${error.message}`)
   }
-
-  // Remove matches futuros dentro da janela (para reconstruir limpo)
   const { data: futureRows, error: futureError } = await supabase
     .from("matches").select("id").gte("kickoff", start.toISOString()).lte("kickoff", end.toISOString())
   if (futureError) throw new Error(`Supabase select future matches: ${futureError.message}`)
-
   const futureIds = (futureRows || []).map(x => x.id)
   if (futureIds.length) {
     await supabase.from("match_stats").delete().in("match_id", futureIds)
@@ -922,7 +918,6 @@ async function clearFutureWindow() {
     const { error } = await supabase.from("matches").delete().in("id", futureIds)
     if (error) throw new Error(`Supabase delete future matches: ${error.message}`)
   }
-
   return oldIds.length + futureIds.length
 }
 
@@ -948,7 +943,6 @@ async function buildAndStoreMatches(fixtureLists) {
   const cleared=await clearFutureWindow()
   console.log(`🧹 Limpeza prévia concluída: ${cleared}`)
   const stored=[]
-
   for(const fixture of allFixtures){
     try{
       const comp=fixture.__comp; if(!comp)continue
@@ -1010,7 +1004,6 @@ async function buildAndStoreMatches(fixtureLists) {
 
 async function rebuildDailyPicks(matches) {
   if(!matches.length)return 0
-
   const sorted=[...matches]
     .filter(m=>m.id&&m.pick&&m.metrics&&safeNumber(m.metrics.goals,0)>0)
     .filter(m=>!RADAR_BLACKLIST.has(String(m.league||"")))
@@ -1021,24 +1014,18 @@ async function rebuildDailyPicks(matches) {
       if(scoreB!==scoreA)return scoreB-scoreA
       return safeNumber(b.priority,0)-safeNumber(a.priority,0)
     })
-
   const selected=[]; const marketCount={},leagueCount={},familyCount={},regionCount={}
   const detectFamily=market=>{ const m=normalizeText(market); if(m.includes("escanteio"))return"escanteios"; if(m.includes("finalizacoes")||m.includes("finalizações"))return"shots"; if(m.includes("no gol"))return"sot"; if(m.includes("cart"))return"cards"; if(m.includes("ambas"))return"ambas"; if(m.includes("dupla chance"))return"dupla_chance"; if(m.includes("vitoria")||m.includes("vitória")||m.includes("empate"))return"resultado"; if(m.includes("gol"))return"gols"; return"outro" }
-
   for(const match of sorted){
     const market=String(match.pick||""); const league=String(match.league||""); const family=detectFamily(market); const region=String(match.region||"general"); const gameProfile=String(match.game_profile||"")
     marketCount[market]=marketCount[market]||0; leagueCount[league]=leagueCount[league]||0; familyCount[family]=familyCount[family]||0; regionCount[region]=regionCount[region]||0
-
     if(safeNumber(match.probability,0)<MIN_PROBABILITY_GENERAL)continue
     if(gameProfile==="defensivo"&&safeNumber(match.probability,0)<MIN_PROBABILITY_DEFENSIVO)continue
     if(gameProfile==="equilibrado"&&safeNumber(match.probability,0)<MIN_PROBABILITY_EQUILIBRADO)continue
     if(region==="international"&&safeNumber(match.probability,0)<MIN_PROBABILITY_INTERNATIONAL)continue
-
     if(LEAGUE_TIER[league]===4&&selected.length>=MAX_DAILY_PICKS/2)continue
-
     if(marketCount[market]>=MAX_SAME_MARKET_IN_DAILY)continue
     if(leagueCount[league]>=MAX_SAME_LEAGUE_IN_DAILY)continue
-
     if(family==="gols"&&familyCount[family]>=4)continue
     if(family==="escanteios"&&familyCount[family]>=3)continue
     if(family==="shots"&&familyCount[family]>=2)continue
@@ -1047,14 +1034,11 @@ async function rebuildDailyPicks(matches) {
     if(family==="ambas"&&familyCount[family]>=2)continue
     if(family==="dupla_chance"&&familyCount[family]>=3)continue
     if(family==="resultado"&&familyCount[family]>=2)continue
-
     if(region==="international"&&regionCount[region]>=MAX_INTERNATIONAL_IN_DAILY)continue
     if(region==="brazil"&&regionCount[region]>=MAX_BRAZIL_IN_DAILY)continue
-
     selected.push(match); marketCount[market]+=1; leagueCount[league]+=1; familyCount[family]+=1; regionCount[region]+=1
     if(selected.length>=MAX_DAILY_PICKS)break
   }
-
   const rows=selected.map((m,index)=>({ rank:index+1,match_id:m.id,league:m.league,home_team:m.home_team,away_team:m.away_team,market:m.pick,probability:round(m.probability),kickoff:m.kickoff,is_opportunity:false,home_logo:m.home_logo||null,away_logo:m.away_logo||null,created_at:new Date().toISOString() }))
   if(!rows.length)return 0
   const{error}=await supabase.from("daily_picks").insert(rows)
@@ -1063,8 +1047,9 @@ async function rebuildDailyPicks(matches) {
 }
 
 async function run() {
-  console.log("🚀 Scoutly Sync V13.6 iniciado")
-  console.log("✅ [FIX] clearFutureWindow: daily_picks preserva jogos passados para o verify")
+  console.log("🚀 Scoutly Sync V13.7 iniciado")
+  console.log("✅ [FIX] RADAR_BLACKLIST: copas nacionais removidas — aparecem em competições e radar")
+  console.log("✅ [FIX] Copa da Turquia, Copa da Bélgica, Copa da Áustria, Copa da Grécia, Copa da Dinamarca, Scottish Cup agora são buscadas e analisadas")
   const{start,end}=getSyncWindowRange()
   console.log(`📆 Janela ativa: ${start.toISOString()} -> ${end.toISOString()}`)
   const competitions=await resolveTargetCompetitions()
@@ -1080,7 +1065,7 @@ async function run() {
   console.log(`\n📊 Resumo final:`)
   console.log(`   Matches gravados: ${storedMatches.length}`)
   console.log(`   Daily picks gerados: ${picksCount}`)
-  console.log("✅ Scoutly Sync V13.6 concluído")
+  console.log("✅ Scoutly Sync V13.7 concluído")
 }
 
-run().catch(err=>{ console.error("❌ Erro fatal no Scoutly Sync V13.6:",err); process.exit(1) })
+run().catch(err=>{ console.error("❌ Erro fatal no Scoutly Sync V13.7:",err); process.exit(1) })
