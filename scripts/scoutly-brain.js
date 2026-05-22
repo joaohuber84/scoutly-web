@@ -15,10 +15,13 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 })
 
 /**
- * SCOUTLY BRAIN V4.2
+ * SCOUTLY BRAIN V4.3
  * [FIX 1] chooseBestAndAlternatives — removido usedFamilies
  * [FIX 2] buildMarketCandidates — thresholds relaxed 0.52→0.50
  * [FIX 3] rebuildDailyPicks — delete só picks FUTUROS → histórico preservado
+ * [FIX 4] RADAR_BLACKLIST — todas as copas nacionais removidas.
+ *         Agora aparecem em competições E no radar quando tiverem picks fortes.
+ *         Mantida apenas "Copa Sul-Sudeste" (sem dados confiáveis na API-Football).
  */
 
 const TIMEZONE = "America/Sao_Paulo"
@@ -51,10 +54,9 @@ const LEAGUE_TIER = {
   "Copa Colombia":4,"Leagues Cup":4,"Copa Sul-Sudeste":4,
 }
 
+// Apenas Copa Sul-Sudeste mantida — sem dados confiáveis na API-Football
 const RADAR_BLACKLIST = new Set([
-  "Taça da Liga","Copa da Turquia","Copa da Bélgica","Copa da Áustria",
-  "Copa da Grécia","Copa da Dinamarca","Scottish Cup","Copa Chile",
-  "Copa Colombia","Leagues Cup","Copa Sul-Sudeste",
+  "Copa Sul-Sudeste",
 ])
 
 function getLeagueTierScore(league) {
@@ -250,7 +252,6 @@ function buildResultCandidates(row,profile){
   return candidates
 }
 
-// ✅ FIX 2 — thresholds relaxed 0.50
 function buildMarketCandidates(row,options={}){
   const relaxed=options.relaxed===true
   const profile=getGameProfile(row)
@@ -268,7 +269,6 @@ function buildMarketCandidates(row,options={}){
   return candidates.filter((c)=>c.probability>=minProbability&&c.score>=minScore).sort((a,b)=>b.score-a.score)
 }
 
-// ✅ FIX 1 — sem usedFamilies
 function chooseBestAndAlternatives(candidates,row){
   if(!candidates.length)return{best:null,alternatives:[]}
   const sorted=[...candidates].sort((a,b)=>b.score-a.score)
@@ -327,13 +327,12 @@ async function updateMatchAnalysisFromBrain(analyses){
   for(const item of analyses){const{error}=await supabase.from("match_analysis").update({best_pick_1:item.best_pick_1,best_pick_2:item.best_pick_2,best_pick_3:item.best_pick_3,aggressive_pick:item.aggressive_pick,analysis_text:item.insight}).eq("match_id",item.match_id);if(error)console.error(`Erro ao atualizar match_analysis ${item.match_id}:`,error.message)}
 }
 
-// ✅ FIX 3 — delete só picks FUTUROS → histórico preservado para o verify.js
 async function rebuildDailyPicks(radar,ticket){
   const now=new Date().toISOString()
   const{error:deleteError}=await supabase
     .from("daily_picks")
     .delete()
-    .gte("kickoff",now)   // ← CORREÇÃO: era .neq("id",0) — apagava TUDO
+    .gte("kickoff",now)
   if(deleteError)throw deleteError
   const orderedRadar=[...radar].sort(compareByKickoff)
   const rows=orderedRadar.map((item,index)=>{const isInTicket=ticket.some((t)=>String(t.match_id)===String(item.match_id));return{rank:index+1,match_id:item.match_id,home_team:item.home_team,away_team:item.away_team,league:item.league,market:item.main_pick,probability:round2(item.main_probability),is_opportunity:isInTicket,home_logo:item.home_logo||null,away_logo:item.away_logo||null,kickoff:item.kickoff||null,created_at:new Date().toISOString()}})
@@ -343,10 +342,8 @@ async function rebuildDailyPicks(radar,ticket){
 }
 
 async function runScoutlyBrain(){
-  console.log("🧠 Scoutly Brain V4.2 iniciado...")
-  console.log("✅ [FIX 1] Alternativas sem bloqueio de família")
-  console.log("✅ [FIX 2] Thresholds relaxed 0.52→0.50")
-  console.log("✅ [FIX 3] delete só picks futuros — histórico preservado para verify.js")
+  console.log("🧠 Scoutly Brain V4.3 iniciado...")
+  console.log("✅ [FIX 4] RADAR_BLACKLIST: todas as copas nacionais removidas — aparecem em competições e no radar")
   const matches=await loadActiveMatches()
   console.log(`📦 Jogos ativos carregados: ${matches.length}`)
   const analyses=matches.map(buildAnalysisFromRow).filter(Boolean)
@@ -360,8 +357,8 @@ async function runScoutlyBrain(){
   console.log("🎟️ BILHETE FINAL:")
   ticket.forEach((item,index)=>{console.log(`  ${index+1}. ${buildMatchLabel(item)} → ${item.main_pick} | score:${item.main_score}`)})
   await rebuildDailyPicks(radar,ticket)
-  console.log("✅ Scoutly Brain V4.2 finalizado.")
+  console.log("✅ Scoutly Brain V4.3 finalizado.")
   console.log(`📡 Radar: ${radar.length} jogo(s) | 🎫 Bilhete: ${ticket.length} jogo(s)`)
 }
 
-runScoutlyBrain().catch((error)=>{console.error("❌ Erro no Scoutly Brain V4.2:",error);process.exit(1)})
+runScoutlyBrain().catch((error)=>{console.error("❌ Erro no Scoutly Brain V4.3:",error);process.exit(1)})
