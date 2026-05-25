@@ -3933,7 +3933,7 @@ async function renderResultados() {
   try {
     const { data, error } = await supabaseClient
       .from("pick_results")
-      .select("correct, market, home_team, away_team, created_at, pick")
+      .select("correct, market, home_team, away_team, created_at")
       .order("created_at", { ascending: false })
       .limit(300);
 
@@ -3969,7 +3969,7 @@ async function renderResultados() {
     };
 
     const marketCards = Object.entries(families).map(([icon, { name, filter }]) => {
-      const items = data.filter(i => filter(i.market || i.pick || ""));
+      const items = data.filter(i => filter(i.market || ""));
       if (items.length < 2) return "";
       const c = items.filter(i => i.correct).length;
       const p = Math.round((c / items.length) * 100);
@@ -4020,7 +4020,7 @@ async function renderResultados() {
       const d = new Date(i.created_at);
       const dateStr = d.toLocaleDateString("pt-BR", { day:"2-digit", month:"2-digit" });
       const match = (i.home_team && i.away_team) ? `${normalizeTeamName(i.home_team)} × ${normalizeTeamName(i.away_team)}` : "—";
-      const market = i.pick || i.market || "—";
+      const market = i.market || "—";
       const ok = i.correct === true;
       return `<div class="res-pick-row">
         <div class="res-pick-icon">${ok ? "✅" : "❌"}</div>
