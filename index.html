@@ -1185,6 +1185,94 @@
       .wc-lbl { font-size: 7px; }
       .assert-big-pct { font-size: 28px; }
     }
+    /* ─── RESULTADOS VERIFICADOS ──────────────────────────────────── */
+    .res-hero {
+      display: grid; grid-template-columns: auto 1fr auto;
+      gap: 14px; align-items: center;
+      background: linear-gradient(160deg, rgba(0,179,104,0.09), rgba(0,179,104,0.03));
+      border: 1px solid var(--green-line); border-left: 4px solid var(--green);
+      border-radius: var(--radius-lg); padding: 18px; margin-bottom: 18px;
+    }
+    .res-big {
+      display: flex; flex-direction: column; align-items: center;
+      background: var(--surface-3); border: 1px solid var(--green-line);
+      border-radius: var(--radius-lg); padding: 14px 20px;
+    }
+    .res-big-pct {
+      font-family: var(--font-head); font-size: 48px; font-weight: 900;
+      color: var(--green); line-height: 1; letter-spacing: -0.05em;
+    }
+    .res-big-label { font-size: 9px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.10em; margin-top: 3px; }
+    .res-hero-stats { display: flex; flex-direction: column; gap: 8px; }
+    .res-stat-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .res-stat-label { font-size: 11px; color: var(--text-3); }
+    .res-stat-val { font-family: var(--font-mono); font-size: 11px; font-weight: 700; color: var(--text); }
+    .res-stat-bar { flex: 1; height: 3px; background: var(--surface-4); border-radius: 2px; overflow: hidden; max-width: 80px; }
+    .res-stat-fill { height: 100%; border-radius: 2px; background: var(--green); transition: width 0.7s ease; }
+    .res-streak {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      background: var(--surface-3); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 12px 16px;
+    }
+    .res-streak-num { font-family: var(--font-head); font-size: 28px; font-weight: 900; line-height: 1; letter-spacing: -0.04em; }
+    .res-streak-label { font-size: 9px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; }
+    .res-markets-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px;
+    }
+    @media (max-width: 480px) { .res-markets-grid { grid-template-columns: repeat(2, 1fr); } }
+    .res-market-card {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 12px;
+      display: flex; flex-direction: column; gap: 6px;
+    }
+    .res-market-icon { font-size: 18px; }
+    .res-market-name { font-size: 10px; font-weight: 700; color: var(--text-2); }
+    .res-market-pct {
+      font-family: var(--font-head); font-size: 22px; font-weight: 900;
+      line-height: 1; letter-spacing: -0.03em;
+    }
+    .res-market-meta { font-size: 9px; color: var(--text-3); }
+    .res-market-bar { height: 3px; background: var(--surface-4); border-radius: 2px; overflow: hidden; margin-top: 2px; }
+    .res-market-fill { height: 100%; border-radius: 2px; transition: width 0.7s ease; }
+    .res-weekly-grid {
+      display: flex; align-items: flex-end; gap: 6px;
+      height: 64px; margin-bottom: 6px;
+    }
+    .res-week-col { display: flex; flex-direction: column; align-items: center; gap: 3px; flex: 1; }
+    .res-week-bar-wrap { flex: 1; width: 100%; display: flex; align-items: flex-end; }
+    .res-week-bar {
+      width: 100%; border-radius: 3px 3px 0 0;
+      transition: height 0.7s ease; min-height: 3px;
+    }
+    .res-week-label { font-family: var(--font-mono); font-size: 8px; color: var(--text-3); white-space: nowrap; }
+    .res-week-pct { font-family: var(--font-mono); font-size: 8px; font-weight: 700; }
+    .res-picks-list { display: flex; flex-direction: column; gap: 5px; }
+    .res-pick-row {
+      display: grid; grid-template-columns: 18px 1fr auto auto;
+      align-items: center; gap: 8px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 9px 12px;
+      font-size: 11px;
+    }
+    .res-pick-icon { font-size: 14px; text-align: center; }
+    .res-pick-main { min-width: 0; }
+    .res-pick-match { font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .res-pick-market { font-size: 10px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .res-pick-date { font-family: var(--font-mono); font-size: 9px; color: var(--text-3); white-space: nowrap; }
+    .res-pick-result { font-size: 10px; font-weight: 700; white-space: nowrap; }
+    .res-pick-result.ok  { color: var(--green); }
+    .res-pick-result.err { color: var(--red); }
+    .res-section-title {
+      font-size: 10px; font-weight: 700; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: 0.10em;
+      margin-bottom: 10px; display: flex; align-items: center; gap: 8px;
+    }
+    .res-section-title::after { content:""; flex:1; height:1px; background:var(--border); }
+    @media (max-width: 600px) {
+      .res-hero { grid-template-columns: 1fr; }
+      .res-streak { flex-direction: row; justify-content: space-between; }
+      .res-big-pct { font-size: 38px; }
+    }
   </style>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-583FPFX1PT"></script>
   <script>
@@ -1261,6 +1349,11 @@
     </div>
     <div id="assertHeroSection">
       <div class="assert-loading">Carregando histórico...</div>
+    </div>
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+      <button onclick="openResultados()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius-sm);background:var(--green-dim);border:1px solid var(--green-line);color:var(--green);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:background var(--transition);" onmouseover="this.style.background='var(--green-glow)'" onmouseout="this.style.background='var(--green-dim)'">
+        📋 Ver histórico completo →
+      </button>
     </div>
   </div>
 
@@ -1616,6 +1709,23 @@
     </div>
     <div class="analysis-body" id="analysisBody">
       <div class="loading-state">Carregando análise...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RESULTADOS OVERLAY ═══════════════════════════════════════════ -->
+<div class="analysis-overlay" id="resultadosOverlay">
+  <div class="analysis-card">
+    <div class="analysis-hd">
+      <div class="analysis-hd-left">
+        <div class="eyebrow">Transparência total</div>
+        <h2 class="analysis-title">📊 Resultados Verificados</h2>
+        <div class="analysis-sub">Picks gerados automaticamente pelo radar · verificados após cada partida</div>
+      </div>
+      <button class="close-btn" onclick="closeResultados()">✕</button>
+    </div>
+    <div class="analysis-body" id="resultadosBody">
+      <div class="loading-state">Carregando histórico...</div>
     </div>
   </div>
 </div>
@@ -3611,7 +3721,7 @@ const WC2026_AGENDA = [
   {date:"11/07 16:00",home:"1º A/B",homeFc:"us",away:"2º C/D",awayFc:"de",group:"-",venue:"MetLife, N.Jersey",round:"Oitavas",brasil:false},
   {date:"12/07 16:00",home:"1º C/D",homeFc:"br",away:"2º A/B",awayFc:"mx",group:"-",venue:"Rose Bowl, L.A.",round:"Oitavas",brasil:false},
   // ── FINAL ──
-  {date:"19/07 17:00",home:"Finalista 1",homeFc:"br",away:"Finalista 2",awayFc:"ar",group:"-",venue:"MetLife Stadium, N.Jersey",round:"🏆 Final",brasil:false},
+  {date:"19/07 17:00",home:"A Definir",homeFc:"us",away:"A Definir",awayFc:"us",group:"-",venue:"MetLife Stadium, N.Jersey",round:"🏆 Final",brasil:false},
 ];
 
 function renderWCGroups(){
@@ -3801,6 +3911,194 @@ async function initialize(){
   startWorldCupCountdown();
   renderWCGroups();
   renderWCAgenda();
+}
+
+/* ── RESULTADOS VERIFICADOS ───────────────────────────────────────── */
+function openResultados() {
+  const overlay = document.getElementById("resultadosOverlay");
+  if (!overlay) return;
+  overlay.classList.add("open");
+  renderResultados();
+}
+
+function closeResultados() {
+  document.getElementById("resultadosOverlay")?.classList.remove("open");
+}
+
+async function renderResultados() {
+  const body = document.getElementById("resultadosBody");
+  if (!body) return;
+  body.innerHTML = `<div class="loading-state">Carregando histórico...</div>`;
+
+  try {
+    const { data, error } = await supabaseClient
+      .from("pick_results")
+      .select("correct, market, home_team, away_team, created_at, pick")
+      .order("created_at", { ascending: false })
+      .limit(300);
+
+    if (error) throw error;
+    if (!data || !data.length) {
+      body.innerHTML = `<div class="empty-state">Sem histórico registrado ainda. Os resultados aparecerão aqui após as primeiras partidas verificadas.</div>`;
+      return;
+    }
+
+    // ── Cálculos gerais ──
+    const total   = data.length;
+    const correct = data.filter(i => i.correct === true).length;
+    const errors  = total - correct;
+    const pct     = Math.round((correct / total) * 100);
+
+    // Streak atual
+    let streak = 0; let streakType = null;
+    for (const pick of data) {
+      const t = pick.correct ? "ok" : "err";
+      if (streakType === null) streakType = t;
+      if (t === streakType) streak++;
+      else break;
+    }
+
+    // ── Por mercado ──
+    const families = {
+      "⚽": { name:"Gols",         filter: m => { const x=String(m||"").toLowerCase(); return (x.includes("gol")&&!x.includes("escanteio"))||x.includes("ambas"); } },
+      "🚩": { name:"Escanteios",   filter: m => String(m||"").toLowerCase().includes("escanteio") },
+      "🎯": { name:"Finalizações", filter: m => { const x=String(m||"").toLowerCase(); return x.includes("finaliz")||x.includes("no gol"); } },
+      "🟨": { name:"Cartões",      filter: m => String(m||"").toLowerCase().includes("cart") },
+      "🛡️": { name:"Dupla Chance", filter: m => String(m||"").toLowerCase().includes("dupla") },
+      "📊": { name:"Outros",       filter: m => { const x=String(m||"").toLowerCase(); return !x.includes("gol")&&!x.includes("escanteio")&&!x.includes("finaliz")&&!x.includes("cart")&&!x.includes("dupla")&&!x.includes("ambas"); } },
+    };
+
+    const marketCards = Object.entries(families).map(([icon, { name, filter }]) => {
+      const items = data.filter(i => filter(i.market || i.pick || ""));
+      if (items.length < 2) return "";
+      const c = items.filter(i => i.correct).length;
+      const p = Math.round((c / items.length) * 100);
+      const color = p >= 70 ? "var(--green)" : p >= 55 ? "var(--amber)" : "var(--red)";
+      return `<div class="res-market-card">
+        <div class="res-market-icon">${icon}</div>
+        <div class="res-market-name">${name}</div>
+        <div class="res-market-pct" style="color:${color}">${p}%</div>
+        <div class="res-market-meta">${c}/${items.length} picks</div>
+        <div class="res-market-bar"><div class="res-market-fill" style="width:${p}%;background:${color}"></div></div>
+      </div>`;
+    }).join("");
+
+    // ── Evolução semanal (últimas 8 semanas) ──
+    const now = new Date();
+    const weeks = [];
+    for (let w = 7; w >= 0; w--) {
+      const weekStart = new Date(now);
+      weekStart.setDate(weekStart.getDate() - weekStart.getDay() - w * 7);
+      weekStart.setHours(0,0,0,0);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 7);
+      const wItems = data.filter(i => {
+        const d = new Date(i.created_at);
+        return d >= weekStart && d < weekEnd;
+      });
+      if (wItems.length === 0) { weeks.push(null); continue; }
+      const wCorrect = wItems.filter(i => i.correct).length;
+      const wPct = Math.round((wCorrect / wItems.length) * 100);
+      const label = `${weekStart.getDate()}/${weekStart.getMonth()+1}`;
+      weeks.push({ pct: wPct, label, total: wItems.length });
+    }
+
+    const maxPct = Math.max(...weeks.filter(Boolean).map(w => w.pct), 1);
+    const weekBars = weeks.map(w => {
+      if (!w) return `<div class="res-week-col"><div class="res-week-bar-wrap"><div style="width:100%;height:3px;background:var(--surface-3);border-radius:3px"></div></div><div class="res-week-label">—</div></div>`;
+      const h = Math.round((w.pct / maxPct) * 52);
+      const color = w.pct >= 70 ? "var(--green)" : w.pct >= 55 ? "var(--amber)" : "var(--red)";
+      return `<div class="res-week-col">
+        <div class="res-week-pct" style="color:${color}">${w.pct}%</div>
+        <div class="res-week-bar-wrap"><div class="res-week-bar" style="height:${h}px;background:${color}"></div></div>
+        <div class="res-week-label">${w.label}</div>
+      </div>`;
+    }).join("");
+
+    // ── Últimos 40 picks ──
+    const recentPicks = data.slice(0, 40).map(i => {
+      const d = new Date(i.created_at);
+      const dateStr = d.toLocaleDateString("pt-BR", { day:"2-digit", month:"2-digit" });
+      const match = (i.home_team && i.away_team) ? `${normalizeTeamName(i.home_team)} × ${normalizeTeamName(i.away_team)}` : "—";
+      const market = i.pick || i.market || "—";
+      const ok = i.correct === true;
+      return `<div class="res-pick-row">
+        <div class="res-pick-icon">${ok ? "✅" : "❌"}</div>
+        <div class="res-pick-main">
+          <div class="res-pick-match">${escapeHtml(match)}</div>
+          <div class="res-pick-market">${escapeHtml(market)}</div>
+        </div>
+        <div class="res-pick-result ${ok ? "ok" : "err"}">${ok ? "Acerto" : "Erro"}</div>
+        <div class="res-pick-date">${dateStr}</div>
+      </div>`;
+    }).join("");
+
+    const streakColor = streakType === "ok" ? "var(--green)" : "var(--red)";
+    const streakEmoji = streakType === "ok" ? "🔥" : "❄️";
+
+    // ── Render final ──
+    body.innerHTML = `
+      <!-- HERO -->
+      <div class="res-hero">
+        <div class="res-big">
+          <div class="res-big-pct">${pct}%</div>
+          <div class="res-big-label">de acerto</div>
+        </div>
+        <div class="res-hero-stats">
+          <div class="res-stat-row">
+            <span class="res-stat-label">Total de picks</span>
+            <div class="res-stat-bar"><div class="res-stat-fill" style="width:100%"></div></div>
+            <span class="res-stat-val">${total}</span>
+          </div>
+          <div class="res-stat-row">
+            <span class="res-stat-label">Acertos</span>
+            <div class="res-stat-bar"><div class="res-stat-fill" style="width:${pct}%"></div></div>
+            <span class="res-stat-val" style="color:var(--green)">${correct}</span>
+          </div>
+          <div class="res-stat-row">
+            <span class="res-stat-label">Erros</span>
+            <div class="res-stat-bar"><div class="res-stat-fill" style="width:${100-pct}%;background:var(--red)"></div></div>
+            <span class="res-stat-val" style="color:var(--red)">${errors}</span>
+          </div>
+          <div class="res-stat-row" style="margin-top:4px;padding-top:8px;border-top:1px solid var(--border)">
+            <span class="res-stat-label" style="font-size:10px">ROI simulado (R$10 por pick)</span>
+            <span class="res-stat-val" style="color:${(correct-errors)>=0?'var(--green)':'var(--red)'}">${(correct-errors)>=0?"+":""}${((correct-errors)*10).toLocaleString("pt-BR")} R$</span>
+          </div>
+        </div>
+        <div class="res-streak">
+          <div class="res-streak-num" style="color:${streakColor}">${streakEmoji} ${streak}</div>
+          <div class="res-streak-label">${streakType==="ok"?"seguidos":"erros"}<br>consecutivos</div>
+        </div>
+      </div>
+
+      <!-- POR MERCADO -->
+      <div class="res-section-title">Por tipo de aposta</div>
+      <div class="res-markets-grid">${marketCards || `<div class="empty-state" style="grid-column:1/-1">Mais dados em breve</div>`}</div>
+
+      <!-- EVOLUÇÃO SEMANAL -->
+      <div class="res-section-title">Evolução semanal (últimas 8 semanas)</div>
+      <div class="a-box" style="margin-bottom:18px;padding:14px 16px">
+        <div class="res-weekly-grid">${weekBars}</div>
+        <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text-3);margin-top:4px">
+          <span>← mais antigo</span>
+          <span>esta semana →</span>
+        </div>
+      </div>
+
+      <!-- ÚLTIMOS PICKS -->
+      <div class="res-section-title">Últimos ${Math.min(40, total)} picks verificados</div>
+      <div class="res-picks-list">${recentPicks}</div>
+
+      <div style="text-align:center;font-size:10px;color:var(--text-3);margin-top:16px;line-height:1.6">
+        Todos os picks foram gerados automaticamente pelo radar Scoutly.<br>
+        Nenhum pick é selecionado manualmente após o resultado.
+      </div>
+    `;
+
+  } catch(e) {
+    console.error("Resultados error:", e);
+    body.innerHTML = `<div class="error-state">Erro ao carregar histórico:\n${escapeHtml(e.message||String(e))}</div>`;
+  }
 }
 
 initialize();
