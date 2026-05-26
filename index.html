@@ -121,13 +121,13 @@
     }
     .brand { display: flex; align-items: center; gap: 12px; }
     .brand-logo {
-      width: 120px; height: 120px; border-radius: 28px;
+      width: 180px; height: 180px; border-radius: 36px;
       background: transparent; flex-shrink: 0;
       display: flex; align-items: center; justify-content: center;
     }
-    .brand-logo img { width: 120px; height: 120px; object-fit: contain; }
+    .brand-logo img { width: 180px; height: 180px; object-fit: contain; }
     .brand-logo-fallback {
-      width: 120px; height: 120px; border-radius: 28px;
+      width: 180px; height: 180px; border-radius: 36px;
       background: var(--green); color: #000;
       font-size: 56px; font-weight: 800;
       display: flex; align-items: center; justify-content: center;
@@ -1150,8 +1150,8 @@
     @media (max-width: 720px) {
       .shell { padding: 12px 12px 72px; }
       .topbar { gap: 10px; margin-bottom: 18px; }
-      .brand-logo, .brand-logo img { width: 72px; height: 72px; }
-      .brand-logo-fallback { width: 72px; height: 72px; font-size: 34px; }
+      .brand-logo, .brand-logo img { width: 96px; height: 96px; }
+      .brand-logo-fallback { width: 96px; height: 96px; font-size: 44px; }
       .brand-name { font-size: 18px; }
       .brand-sub { font-size: 9px; }
       .status-pill { font-size: 10px; padding: 6px 11px; }
@@ -1391,7 +1391,7 @@
   <div class="topbar">
     <div class="brand">
       <div class="brand-logo">
-        <img src="logo-icon.png" alt="Scoutly" width="120" height="120" onerror="this.outerHTML='<span class=brand-logo-fallback>S</span>'">
+        <img src="logo-icon.png" alt="Scoutly" width="180" height="180" onerror="this.outerHTML='<span class=brand-logo-fallback>S</span>'">
       </div>
       <div>
         <div class="brand-name">Scoutly</div>
@@ -1401,6 +1401,52 @@
     <div class="status-pill" id="statusChip">
       <span class="status-dot"></span>
       <span id="statusText">Conectando...</span>
+    </div>
+  </div>
+
+  <!-- ══ COMO FUNCIONA — STRIP ══════════════════════════════════════ -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:12px 16px;margin-bottom:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:200px">
+      <span style="font-size:9px;font-weight:700;color:var(--green);text-transform:uppercase;letter-spacing:0.12em;white-space:nowrap">Como funciona</span>
+      <div style="flex:1;height:1px;background:var(--border)"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;flex:3;min-width:240px">
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text-2)">🔄 <span><strong style="color:var(--text)">Sync</strong> coleta dados reais via API-Football</span></span>
+      <span style="color:var(--border-2);font-size:14px">·</span>
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text-2)">🧠 <span><strong style="color:var(--text)">Brain</strong> identifica os mercados mais sólidos</span></span>
+      <span style="color:var(--border-2);font-size:14px">·</span>
+      <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--text-2)">🎯 <span><strong style="color:var(--text)">Você usa</strong> como apoio pra montar suas apostas</span></span>
+    </div>
+    <button onclick="toggleComoFunciona()" style="font-size:10px;color:var(--green);font-weight:700;background:none;border:none;cursor:pointer;white-space:nowrap;font-family:var(--font-body);flex-shrink:0">Ver mais ↓</button>
+  </div>
+
+  <!-- ══ COMO FUNCIONA — DETALHADO (accordion) ═══════════════════════ -->
+  <div id="comoFuncionaDetail" style="display:none;background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:var(--radius-xl);margin-bottom:14px;overflow:hidden">
+    <div style="padding:16px 18px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:13px 14px;display:flex;align-items:flex-start;gap:12px">
+          <div style="font-size:22px;flex-shrink:0;margin-top:1px">🔄</div>
+          <div><div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:3px">1. O Sync coleta dados reais</div><div style="font-size:11px;color:var(--text-2);line-height:1.6">A cada ciclo automático, busca estatísticas via API-Football — gols, escanteios, finalizações, chutes no gol, cartões e probabilidades dos jogos das próximas 48h.</div></div>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:13px 14px;display:flex;align-items:flex-start;gap:12px">
+          <div style="font-size:22px;flex-shrink:0;margin-top:1px">🧠</div>
+          <div><div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:3px">2. O Brain identifica as melhores leituras</div><div style="font-size:11px;color:var(--text-2);line-height:1.6">Cruza médias históricas, tendência recente e consistência de linha. Prioriza mercados de produção — escanteios, finalizações, cartões — onde a estatística é mais estável que resultado final.</div></div>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:13px 14px;display:flex;align-items:flex-start;gap:12px">
+          <div style="font-size:22px;flex-shrink:0;margin-top:1px">🎯</div>
+          <div><div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:3px">3. Você usa como apoio — não como certeza</div><div style="font-size:11px;color:var(--text-2);line-height:1.6">Ideal pra montar uma duplinha bem fundamentada, filtrar por mercado ou combinar com sua leitura. Nenhum pick é selecionado manualmente.</div></div>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:13px 14px;display:flex;align-items:flex-start;gap:12px">
+          <div style="font-size:22px;flex-shrink:0;margin-top:1px">✅</div>
+          <div><div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:3px">4. O histórico é verificado automaticamente</div><div style="font-size:11px;color:var(--text-2);line-height:1.6">Após cada partida, o Verify registra o resultado e atualiza a taxa de acerto. Transparência total — desempenho real do radar por mercado, por semana e no geral.</div></div>
+        </div>
+      </div>
+      <div style="margin-top:10px;background:var(--green-dim2);border:1px solid var(--green-line);border-radius:var(--radius-sm);padding:10px 13px;font-size:11px;color:var(--text-2);line-height:1.6">
+        💡 <strong style="color:var(--green)">Dica:</strong> O Scoutly funciona melhor como filtro inteligente. Mercados de produção têm taxa de acerto historicamente mais alta que resultado final.
+      </div>
+      <div style="margin-top:7px;font-size:10px;color:var(--text-3);line-height:1.6;padding:8px 12px;background:var(--surface-3);border-radius:var(--radius-sm)">
+        <strong style="color:var(--text-2)">Importante:</strong> O Scoutly é uma ferramenta de apoio estatístico. As leituras indicam tendência — não garantem resultado. Jogue com responsabilidade e dentro do seu bankroll.
+      </div>
     </div>
   </div>
 
@@ -1414,6 +1460,19 @@
         <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>
         Compartilhar
       </button>
+    </div>
+  </div>
+
+
+  <!-- ══ CTA REDES ═══════════════════════════════════════════════════════ -->
+  <div style="background:linear-gradient(135deg,rgba(0,179,104,0.07),rgba(0,179,104,0.03));border:1px solid var(--green-line);border-radius:var(--radius-xl);padding:14px 18px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap">
+    <div>
+      <div style="font-family:var(--font-head);font-size:14px;font-weight:800;color:var(--text);letter-spacing:-0.02em;margin-bottom:2px">📸 Siga o Scoutly no Instagram</div>
+      <div style="font-size:11px;color:var(--text-2)">Picks diários, resultados verificados e análises.</div>
+    </div>
+    <div style="display:flex;gap:7px;flex-wrap:wrap;flex-shrink:0">
+      <a href="https://instagram.com/scoutlypro" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);border-radius:var(--radius-sm);color:#fff;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">📸 @scoutlypro</a>
+      <a href="https://wa.me/?text=Cara%2C%20conhece%20o%20Scoutly%3F%20Radar%20inteligente%20de%20apostas%20esportivas%20%E2%80%94%20picks%20com%20estat%C3%ADstica%20real%2C%20acesso%20gratuito%20em%20scoutlypro.app" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;background:#1db954;border-radius:var(--radius-sm);color:#fff;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap;">💬 Compartilhar</a>
     </div>
   </div>
 
@@ -1442,6 +1501,7 @@
     </div>
   </div>
 
+
   <!-- ══ ASSERTIVIDADE ════════════════════════════════════════════════ -->
   <div class="assert-bar" id="assertBar">
     <div class="assert-header">
@@ -1458,6 +1518,7 @@
     </div>
   </div>
 
+
   <!-- ══ JOGOS AO VIVO ════════════════════════════════════════════════ -->
   <div class="live-section" id="liveSectionWrap">
     <div class="live-section-header">
@@ -1467,6 +1528,7 @@
     </div>
     <div id="liveGamesList"></div>
   </div>
+
 
   <!-- ══ RADAR ════════════════════════════════════════════════════════ -->
   <div class="radar-panel-full">
@@ -1494,6 +1556,7 @@
     </div>
   </div>
 
+
   <!-- ══ AGENDA DO DIA ════════════════════════════════════════════════ -->
   <div class="agenda-section">
     <div class="agenda-header" id="agendaHeader" onclick="toggleAgenda()">
@@ -1509,6 +1572,7 @@
       <div class="loading-state">Carregando jogos...</div>
     </div>
   </div>
+
 
   <!-- ══ COMPETIÇÕES ══════════════════════════════════════════════════ -->
   <div class="comp-accordion" id="compAccordion">
@@ -1545,71 +1609,6 @@
     </div>
   </div>
 
-  <!-- ══ CTA REDES ═══════════════════════════════════════════════════════ -->
-  <div style="background:linear-gradient(135deg,rgba(0,179,104,0.07),rgba(0,179,104,0.03));border:1px solid var(--green-line);border-radius:var(--radius-xl);padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap">
-    <div>
-      <div style="font-family:var(--font-head);font-size:15px;font-weight:800;color:var(--text);letter-spacing:-0.02em;margin-bottom:3px">📸 Siga o Scoutly no Instagram</div>
-      <div style="font-size:11px;color:var(--text-2);line-height:1.5">Picks diários, resultados verificados e análises. Acompanha pra não perder nada.</div>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;flex-shrink:0">
-      <a href="https://instagram.com/scoutlypro" target="_blank" rel="noopener"
-         style="display:inline-flex;align-items:center;gap:7px;padding:9px 16px;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);border-radius:var(--radius-sm);color:#fff;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;">
-        📸 @scoutlypro
-      </a>
-      <a href="https://wa.me/?text=Cara%2C%20conhece%20o%20Scoutly%3F%20Radar%20inteligente%20de%20apostas%20esportivas%20%E2%80%94%20picks%20com%20estat%C3%ADstica%20real%2C%20acesso%20gratuito%20em%20scoutlypro.app" target="_blank" rel="noopener"
-         style="display:inline-flex;align-items:center;gap:7px;padding:9px 16px;background:#1db954;border-radius:var(--radius-sm);color:#fff;font-size:12px;font-weight:700;text-decoration:none;white-space:nowrap;">
-        💬 Compartilhar
-      </a>
-    </div>
-  </div>
-
-  <!-- ══ COMO FUNCIONA ════════════════════════════════════════════════════ -->
-  <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:var(--radius-xl);margin-bottom:20px;overflow:hidden">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;cursor:pointer" onclick="toggleComoFunciona()" id="comoFuncionaHeader">
-      <div style="display:flex;align-items:center;gap:10px">
-        <span style="font-size:14px;font-weight:800;color:var(--text)">⚙️ Como o Scoutly funciona</span>
-      </div>
-      <span id="comoFuncionaIcon" style="font-size:11px;color:var(--text-3);transition:transform 0.2s">▼</span>
-    </div>
-    <div id="comoFuncionaBody" style="display:none;padding:0 18px 20px">
-      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px">
-        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;display:flex;align-items:flex-start;gap:13px">
-          <div style="font-size:24px;flex-shrink:0;margin-top:2px">🔄</div>
-          <div>
-            <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:4px">1. O Sync coleta dados reais</div>
-            <div style="font-size:11px;color:var(--text-2);line-height:1.6">A cada ciclo automático, o sync busca estatísticas reais via API-Football — gols, escanteios, finalizações, chutes no gol, cartões e probabilidades dos jogos das próximas 48h.</div>
-          </div>
-        </div>
-        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;display:flex;align-items:flex-start;gap:13px">
-          <div style="font-size:24px;flex-shrink:0;margin-top:2px">🧠</div>
-          <div>
-            <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:4px">2. O Brain identifica as melhores leituras</div>
-            <div style="font-size:11px;color:var(--text-2);line-height:1.6">O Brain.js cruza médias históricas, tendência recente e consistência de linha para identificar os mercados mais sólidos. Prioriza apostas de produção — escanteios, finalizações, cartões — onde a estatística é mais estável do que resultado final.</div>
-          </div>
-        </div>
-        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;display:flex;align-items:flex-start;gap:13px">
-          <div style="font-size:24px;flex-shrink:0;margin-top:2px">🎯</div>
-          <div>
-            <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:4px">3. Você usa como apoio — não como certeza</div>
-            <div style="font-size:11px;color:var(--text-2);line-height:1.6">O radar apresenta as leituras rankeadas por confiança. Ideal pra montar uma duplinha bem fundamentada, combinar com sua leitura própria ou filtrar por mercado. Nenhum pick é selecionado manualmente.</div>
-          </div>
-        </div>
-        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;display:flex;align-items:flex-start;gap:13px">
-          <div style="font-size:24px;flex-shrink:0;margin-top:2px">✅</div>
-          <div>
-            <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:4px">4. O histórico é verificado automaticamente</div>
-            <div style="font-size:11px;color:var(--text-2);line-height:1.6">Após cada partida, o Verify registra o resultado e atualiza a taxa de acerto. Transparência total — você vê o desempenho real do radar por mercado, por semana e no geral.</div>
-          </div>
-        </div>
-      </div>
-      <div style="margin-top:10px;background:var(--green-dim2);border:1px solid var(--green-line);border-radius:var(--radius-sm);padding:11px 14px;font-size:11px;color:var(--text-2);line-height:1.6">
-        💡 <strong style="color:var(--green)">Dica de uso:</strong> O Scoutly funciona melhor como filtro inteligente — use o radar pra identificar jogos com padrão estatístico forte e combine com sua leitura. Mercados de produção (escanteios, finalizações) têm taxa de acerto historicamente mais alta que resultado final.
-      </div>
-      <div style="margin-top:8px;background:var(--surface-3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;font-size:10px;color:var(--text-3);line-height:1.6">
-        <strong style="color:var(--text-2)">Importante:</strong> O Scoutly é uma ferramenta de apoio estatístico. As leituras indicam tendência — não garantem resultado. Jogue com responsabilidade e dentro do seu bankroll.
-      </div>
-    </div>
-  </div>
 
   <!-- ══ SOBRE ════════════════════════════════════════════════════════ -->
   <div class="about-card">
@@ -1618,11 +1617,13 @@
     <div class="about-list">
       <div class="about-item">Picks gerados automaticamente — sem seleção manual</div>
       <div class="about-item">Radar do dia organizado por horário e liga</div>
-      <div class="about-item">Competições com acesso direto a jogos e classificação</div>
+      <div class="about-item">Histórico verificado com taxa de acerto por mercado e semana</div>
       <div class="about-item">Análise completa com projeção, H2H e probabilidades</div>
-      <div class="about-item">Histórico verificado com taxa de acerto por mercado</div>
+      <div class="about-item">Copa 2026: forma das seleções em tempo real</div>
     </div>
     <div class="about-note">As análises não garantem resultados e devem ser utilizadas como apoio à tomada de decisão. Jogue com responsabilidade.</div>
+  </div>
+
   </div>
 
 </div><!-- /shell -->
@@ -3497,6 +3498,8 @@ const LEAGUE_ID_MAP = {
   "Brasileirão Série B": 72,
   "Copa do Brasil": 73,
   "Copa do Nordeste": 75,
+  "Copa do Mundo": 1,
+  "FIFA World Cup": 1,
   "Premier League": 39,
   "La Liga": 140,
   "Serie A": 135,
@@ -4655,12 +4658,10 @@ document.addEventListener("click", e => {
 
 /* ── COMO FUNCIONA TOGGLE ─────────────────────────────────────────── */
 function toggleComoFunciona() {
-  const body = document.getElementById("comoFuncionaBody");
-  const icon = document.getElementById("comoFuncionaIcon");
+  const body = document.getElementById("comoFuncionaDetail");
   if (!body) return;
   const open = body.style.display !== "none";
   body.style.display = open ? "none" : "block";
-  if (icon) icon.style.transform = open ? "" : "rotate(180deg)";
 }
 
 initialize();
