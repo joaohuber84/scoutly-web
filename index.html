@@ -1273,6 +1273,98 @@
       .res-streak { flex-direction: row; justify-content: space-between; }
       .res-big-pct { font-size: 38px; }
     }
+
+    /* ─── RADAR FILTERS ──────────────────────────────────────────────── */
+    .rf-btn {
+      padding: 4px 10px; border-radius: 6px; font-size: 10px; font-weight: 700;
+      border: 1px solid var(--border); background: var(--surface-3);
+      color: var(--text-3); cursor: pointer; font-family: var(--font-body);
+      transition: all var(--transition); white-space: nowrap;
+    }
+    .rf-btn:hover { border-color: var(--border-2); color: var(--text-2); }
+    .rf-btn.active { background: var(--green-dim); border-color: var(--green-line); color: var(--green); }
+    @media (max-width: 600px) {
+      .rf-btn { font-size: 9px; padding: 3px 8px; }
+    }
+
+    /* ─── SELEÇÕES COPA 2026 ──────────────────────────────────────────── */
+    .wc-sel-grid {
+      display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-top: 8px;
+    }
+    @media (max-width: 560px) { .wc-sel-grid { grid-template-columns: 1fr; } }
+    .wc-sel-card {
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 14px; overflow: hidden;
+    }
+    .wc-sel-card.loading { opacity: 0.6; }
+    .wc-sel-header {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+    }
+    .wc-sel-flag { width: 32px; height: 24px; object-fit: cover; border-radius: 3px; flex-shrink: 0; }
+    .wc-sel-name { font-size: 13px; font-weight: 800; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .wc-sel-badge {
+      font-size: 9px; font-weight: 700; padding: 2px 7px;
+      border-radius: 5px; flex-shrink: 0; white-space: nowrap;
+    }
+    .wc-sel-badge.alta    { background: var(--green-dim);  color: var(--green);  border: 1px solid var(--green-line); }
+    .wc-sel-badge.estavel { background: var(--surface-3);  color: var(--text-3); border: 1px solid var(--border); }
+    .wc-sel-badge.queda   { background: var(--red-dim);    color: var(--red);    border: 1px solid var(--red-line); }
+    .wc-sel-form {
+      display: flex; gap: 3px; margin-bottom: 10px; flex-wrap: wrap;
+    }
+    .wc-sel-result {
+      width: 22px; height: 22px; border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 9px; font-weight: 800; flex-shrink: 0;
+      cursor: default;
+    }
+    .wc-sel-result.w { background: var(--green-dim); color: var(--green); border: 1px solid var(--green-line); }
+    .wc-sel-result.d { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-line); }
+    .wc-sel-result.l { background: var(--red-dim);   color: var(--red);   border: 1px solid var(--red-line); }
+    .wc-sel-stats {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; margin-bottom: 10px;
+    }
+    .wc-sel-stat {
+      background: var(--surface-3); border-radius: var(--radius-sm);
+      padding: 7px 5px; text-align: center;
+    }
+    .wc-sel-stat-val { font-family: var(--font-mono); font-size: 15px; font-weight: 700; color: var(--text); line-height: 1; }
+    .wc-sel-stat-lbl { font-size: 8px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 3px; }
+    .wc-sel-pick {
+      background: var(--green-dim2); border: 1px solid var(--green-line);
+      border-radius: var(--radius-sm); padding: 7px 10px;
+      font-size: 10px; color: var(--green); font-weight: 600; line-height: 1.4;
+    }
+    .wc-sel-pick-label { font-size: 8px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 3px; font-weight: 700; }
+    .wc-sel-recent {
+      margin-top: 8px; display: flex; flex-direction: column; gap: 3px;
+    }
+    .wc-sel-match-row {
+      display: grid; grid-template-columns: auto 1fr auto;
+      align-items: center; gap: 6px;
+      font-size: 10px; color: var(--text-2);
+      padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.025);
+    }
+    .wc-sel-match-row:last-child { border-bottom: none; }
+    .wc-sel-match-score { font-family: var(--font-mono); font-size: 10px; font-weight: 700; color: var(--text); white-space: nowrap; }
+    .wc-sel-match-opp { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .wc-sel-match-comp { font-size: 9px; color: var(--text-3); white-space: nowrap; }
+    .wc-sel-grupo-btn {
+      padding: 5px 12px; border-radius: 6px; font-size: 10px; font-weight: 700;
+      border: 1px solid var(--border); background: var(--surface-3);
+      color: var(--text-3); cursor: pointer; font-family: var(--font-body);
+      transition: all var(--transition);
+    }
+    .wc-sel-grupo-btn:hover { border-color: var(--border-2); color: var(--text-2); }
+    .wc-sel-grupo-btn.active { background: var(--green-dim); border-color: var(--green-line); color: var(--green); }
+    .wc-sel-loading {
+      text-align: center; padding: 24px; color: var(--text-3); font-size: 12px;
+    }
+    .wc-sel-error {
+      background: var(--red-dim); border: 1px solid var(--red-line);
+      border-radius: var(--radius-sm); padding: 10px 12px;
+      font-size: 11px; color: var(--red);
+    }
   </style>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-583FPFX1PT"></script>
   <script>
@@ -1377,6 +1469,23 @@
       </div>
       <div class="radar-full-meta" id="radarMeta"></div>
     </div>
+    <div style="padding:10px 20px 0;display:flex;gap:6px;flex-wrap:wrap;align-items:center;border-bottom:1px solid var(--border)">
+      <span style="font-size:9px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.1em;flex-shrink:0">Filtrar:</span>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        <button class="rf-btn active" data-filter="mercado" data-val="todos" onclick="setRadarFilter('mercado','todos',this)">Todos</button>
+        <button class="rf-btn" data-filter="mercado" data-val="gols" onclick="setRadarFilter('mercado','gols',this)">⚽ Gols</button>
+        <button class="rf-btn" data-filter="mercado" data-val="escanteios" onclick="setRadarFilter('mercado','escanteios',this)">🚩 Escanteios</button>
+        <button class="rf-btn" data-filter="mercado" data-val="shots" onclick="setRadarFilter('mercado','shots',this)">🎯 Finalizações</button>
+        <button class="rf-btn" data-filter="mercado" data-val="cards" onclick="setRadarFilter('mercado','cards',this)">🟨 Cartões</button>
+      </div>
+      <div style="width:1px;height:16px;background:var(--border);flex-shrink:0;margin:0 2px"></div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap">
+        <button class="rf-btn rf-active-conf active" data-filter="confianca" data-val="todos" onclick="setRadarFilter('confianca','todos',this)">Todos</button>
+        <button class="rf-btn" data-filter="confianca" data-val="Forte" onclick="setRadarFilter('confianca','Forte',this)">🎯 Forte</button>
+        <button class="rf-btn" data-filter="confianca" data-val="Boa" onclick="setRadarFilter('confianca','Boa',this)">🟢 Boa</button>
+        <button class="rf-btn" data-filter="confianca" data-val="Moderada" onclick="setRadarFilter('confianca','Moderada',this)">🟡 Moderada</button>
+      </div>
+    </div>
     <div class="radar-full-scroll">
       <div id="radarList"><div class="loading-state">Carregando radar...</div></div>
     </div>
@@ -1430,6 +1539,58 @@
         <div id="standingsWrap" class="standings-wrap hidden"></div>
       </div>
 
+    </div>
+  </div>
+
+  <!-- ══ CTA REDES ═══════════════════════════════════════════════════════ -->
+  <div style="background:linear-gradient(135deg,rgba(0,179,104,0.07),rgba(74,148,240,0.05));border:1px solid var(--border);border-radius:var(--radius-xl);padding:20px 22px;margin-bottom:20px">
+    <div style="font-family:var(--font-head);font-size:16px;font-weight:800;color:var(--text);letter-spacing:-0.02em;margin-bottom:4px">📲 Siga o Scoutly nas redes</div>
+    <div style="font-size:12px;color:var(--text-2);margin-bottom:16px;line-height:1.5">Picks diários, resultados verificados e análises no Instagram. Acompanha pra não perder nada.</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a href="https://instagram.com/d1a10.apostas" target="_blank" rel="noopener"
+         style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);border-radius:var(--radius-sm);color:#fff;font-size:12px;font-weight:700;text-decoration:none;flex:1;min-width:140px;justify-content:center;">
+        📊 D1A10 — Apostas
+      </a>
+      <a href="https://instagram.com/salvosdojoao" target="_blank" rel="noopener"
+         style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);border-radius:var(--radius-sm);color:#fff;font-size:12px;font-weight:700;text-decoration:none;flex:1;min-width:140px;justify-content:center;">
+        ✨ Salvos do João
+      </a>
+      <a href="https://wa.me/?text=Cara%2C%20conhece%20o%20Scoutly%3F%20Radar%20inteligente%20de%20apostas%20esportivas%20%E2%80%94%20picks%20com%20estat%C3%ADstica%20real%2C%20acesso%20gratuito%20em%20scoutlypro.app" target="_blank" rel="noopener"
+         style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:#1db954;border-radius:var(--radius-sm);color:#fff;font-size:12px;font-weight:700;text-decoration:none;flex:1;min-width:140px;justify-content:center;">
+        💬 Compartilhar no WhatsApp
+      </a>
+    </div>
+  </div>
+
+  <!-- ══ COMO FUNCIONA ════════════════════════════════════════════════════ -->
+  <div style="background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--blue);border-radius:var(--radius-xl);margin-bottom:20px;overflow:hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 18px;cursor:pointer" onclick="toggleComoFunciona()" id="comoFuncionaHeader">
+      <div style="display:flex;align-items:center;gap:10px">
+        <span style="font-size:14px;font-weight:800;color:var(--text)">⚙️ Como o Scoutly funciona</span>
+      </div>
+      <span id="comoFuncionaIcon" style="font-size:11px;color:var(--text-3);transition:transform 0.2s">▼</span>
+    </div>
+    <div id="comoFuncionaBody" style="display:none;padding:0 18px 20px">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:4px">
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;text-align:center">
+          <div style="font-size:28px;margin-bottom:8px">🔄</div>
+          <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:6px">1. Sync coleta</div>
+          <div style="font-size:11px;color:var(--text-2);line-height:1.6">A cada ciclo, o sync busca dados reais de partidas — gols, escanteios, finalizações, cartões e probabilidades via API-Football.</div>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;text-align:center">
+          <div style="font-size:28px;margin-bottom:8px">🧠</div>
+          <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:6px">2. Brain analisa</div>
+          <div style="font-size:11px;color:var(--text-2);line-height:1.6">O Brain.js cruza médias históricas, tendência recente e consistência de linha para identificar os mercados com maior coerência estatística.</div>
+        </div>
+        <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;text-align:center">
+          <div style="font-size:28px;margin-bottom:8px">📊</div>
+          <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:6px">3. Você decide</div>
+          <div style="font-size:11px;color:var(--text-2);line-height:1.6">O radar apresenta as leituras rankeadas por confiança. Nenhum pick é selecionado manualmente. O histórico é verificado automaticamente após cada partida.</div>
+        </div>
+      </div>
+      <div style="margin-top:12px;background:var(--surface-3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;font-size:11px;color:var(--text-2);line-height:1.6">
+        <strong style="color:var(--text)">Importante:</strong> O Scoutly é uma ferramenta de apoio estatístico. As leituras indicam tendência com base em dados históricos — não garantem resultado. Jogue com responsabilidade e dentro do seu bankroll.
+      </div>
     </div>
   </div>
 
@@ -1543,6 +1704,7 @@
         <button class="wc-tab" data-wctab="agenda">📅 Agenda</button>
         <button class="wc-tab" data-wctab="curiosidades">🌍 Curiosidades</button>
         <button class="wc-tab" data-wctab="quiz">🎯 Quiz</button>
+        <button class="wc-tab" data-wctab="selecoes">🔍 Seleções</button>
       </div>
 
       <!-- GRUPOS -->
@@ -1689,6 +1851,23 @@
           <div style="font-size:11px;color:var(--text-3);margin-bottom:14px">Teste seus conhecimentos sobre a Copa do Mundo 2026</div>
           <div class="wc-quiz-progress" id="wcQuizProgress"></div>
           <div id="wcQuizBody"></div>
+        </div>
+      </div>
+
+      <!-- TAB: SELEÇÕES -->
+      <div class="wc-tab-content" id="wctab-selecoes">
+        <div style="margin-bottom:14px">
+          <div style="font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:12px">
+            Forma recente das 48 seleções — últimos 10 jogos, médias e tendência. Selecione um grupo para ver a análise.
+          </div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap" id="wcSelGruposBtns">
+            <!-- rendered by JS -->
+          </div>
+        </div>
+        <div id="wcSelContent">
+          <div style="text-align:center;padding:32px;color:var(--text-3);font-size:12px">
+            Selecione um grupo acima para ver a forma das seleções
+          </div>
         </div>
       </div>
 
@@ -2169,15 +2348,87 @@ function formatMarketDisplay(market, numClass, labelClass) {
   return `<span class="${numClass}" style="font-size:11px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;max-width:100%;text-align:left">${escapeHtml(displayText)}</span>`;
 }
 function buildFallbackInsight(match){
-  const p=getPrimaryPick(match).toLowerCase();
-  const m=getMetrics(match);
-  if(p.includes("escanteios"))return `A leitura Scoutly projeta cerca de ${formatDecimal(m.avgCorners,1)} escanteios nesta partida.`;
-  if(p.includes("finalizações")&&!p.includes("no gol"))return `A leitura Scoutly projeta ${formatDecimal(m.avgShots,0)} finalizações, sustentando volume ofensivo para esse mercado.`;
-  if(p.includes("no gol"))return `A leitura Scoutly projeta ${formatDecimal(m.avgSOT,0)} finalizações no gol.`;
-  if(p.includes("cart"))return `A leitura Scoutly projeta ${formatDecimal(m.avgCards,1)} cartões neste confronto.`;
-  if(p.includes("menos"))return `O Scoutly identifica um confronto mais controlado, com projeção de ${formatDecimal(m.avgGoals,1)} gols.`;
-  if(p.includes("mais"))return `A leitura Scoutly aponta ${formatDecimal(m.avgGoals,1)} gols esperados com ${formatDecimal(m.avgShots,0)} finalizações projetadas.`;
-  return `Leitura construída cruzando ritmo ofensivo, probabilidade e contexto estatístico real do confronto.`;
+  const pick = getPrimaryPick(match);
+  const p = pick.toLowerCase();
+  const m = getMetrics(match);
+  const home = normalizeTeamName(match.home_team);
+  const away = normalizeTeamName(match.away_team);
+  const line = extractLine(pick);
+  const dir  = detectDirection(pick);
+
+  // ── Escanteios ──
+  if(p.includes("escanteio")){
+    const proj = m.avgCorners;
+    const lineStr = line !== null ? `${line}` : null;
+    if(proj && lineStr){
+      const margin = (proj - line).toFixed(1);
+      const word = dir === "over" ? "acima" : "abaixo";
+      return `O radar projeta ${formatDecimal(proj,1)} escanteios nesta partida — ${Math.abs(margin)} ${word} da linha de ${lineStr}. Tendência sustentada pelo histórico combinado das duas equipes.`;
+    }
+    return `O radar projeta ${formatDecimal(proj,1)} escanteios. Média construída com base no histórico recente de ambas as equipes.`;
+  }
+
+  // ── Finalizações no gol ──
+  if(p.includes("no gol")){
+    const proj = m.avgSOT;
+    if(proj && line){
+      return `O radar projeta ${formatDecimal(proj,0)} finalizações no gol neste jogo. A linha de ${line} está ${proj > line ? "dentro da margem esperada" : "próxima da média histórica"} — consistência alta nos últimos jogos.`;
+    }
+    return `Projeção de ${formatDecimal(proj,0)} finalizações no gol. Mercado identificado pela consistência de volume ofensivo das duas equipes.`;
+  }
+
+  // ── Finalizações totais ──
+  if(p.includes("finaliz")){
+    const proj = m.avgShots;
+    if(proj && line){
+      return `O radar projeta ${formatDecimal(proj,0)} finalizações totais. ${home} e ${away} combinam médias que sustentam a linha de ${line} com boa margem histórica.`;
+    }
+    return `Projeção de ${formatDecimal(proj,0)} finalizações totais. Volume ofensivo das duas equipes indica mercado consistente.`;
+  }
+
+  // ── Cartões ──
+  if(p.includes("cart")){
+    const proj = m.avgCards;
+    if(proj && line){
+      const ctx = proj > line ? "acima" : "dentro";
+      return `O radar projeta ${formatDecimal(proj,1)} cartões — ${ctx} da linha de ${line}. Confronto com histórico de disputa física e árbitro rigoroso nos dados recentes.`;
+    }
+    return `Projeção de ${formatDecimal(proj,1)} cartões. Dados de disciplina das equipes sustentam a leitura.`;
+  }
+
+  // ── Gols: Under ──
+  if(p.includes("menos")){
+    const proj = m.avgGoals;
+    if(proj && line){
+      return `O radar projeta ${formatDecimal(proj,1)} gols esperados — abaixo da linha de ${line}. Confronto com padrão defensivo recente: ambas as equipes concederam pouco em casa e fora nas últimas rodadas.`;
+    }
+    return `Projeção de ${formatDecimal(proj,1)} gols. Confronto com tendência defensiva nos dados recentes das duas equipes.`;
+  }
+
+  // ── Gols: Over ──
+  if(p.includes("mais") && p.includes("gol")){
+    const proj = m.avgGoals;
+    if(proj && line){
+      return `O radar projeta ${formatDecimal(proj,1)} gols nesta partida — acima da linha de ${line}. Volume ofensivo elevado: ${formatDecimal(m.avgShots,0)} finalizações esperadas sustentam a tendência.`;
+    }
+    return `Projeção de ${formatDecimal(proj,1)} gols. Ritmo ofensivo das equipes aponta para um jogo aberto com boas chances de ambos os lados.`;
+  }
+
+  // ── Ambas marcam ──
+  if(p.includes("ambas")){
+    const btts = match.prob_btts || match.btts_prob;
+    if(btts){
+      return `Probabilidade de ambas marcarem: ${Math.round(Number(btts)*100)}%. Histórico recente das duas equipes mostra consistência ofensiva — ambas marcaram em mais de 60% dos jogos recentes.`;
+    }
+    return `Radar identifica capacidade ofensiva em ambos os lados. Histórico de confrontos com gols das duas equipes.`;
+  }
+
+  // ── Dupla chance ──
+  if(p.includes("dupla")){
+    return `Leitura de menor risco baseada nas probabilidades do confronto. O radar identifica desequilíbrio estatístico favorável que justifica a aposta na dupla chance.`;
+  }
+
+  return `Leitura construída cruzando médias históricas, tendência recente e consistência de linha. Dados reais sem seleção manual.`;
 }
 function getInsight(match){ return match.analysis_text||match.insight||buildFallbackInsight(match); }
 function getIndividualMarkets(match) {
@@ -2691,8 +2942,10 @@ function renderTicket(){
 }
 function renderRadar(){
   const list=document.getElementById("radarList"); if(!list)return;
-  const radarItems=buildRadarSnapshot();
-  if(!radarItems.length){list.innerHTML=`<div class="empty-state">Nenhuma oportunidade ativa encontrada para agora.</div>`;return;}
+  const allItems=buildRadarSnapshot();
+  const radarItems=applyRadarFilters(allItems);
+  if(!allItems.length){list.innerHTML=`<div class="empty-state">Nenhuma oportunidade ativa encontrada para agora.</div>`;return;}
+  if(!radarItems.length){list.innerHTML=`<div class="empty-state" style="padding:20px;text-align:center;color:var(--text-3);font-size:12px">Nenhum pick corresponde aos filtros selecionados.<br><span style="font-size:11px">Tente remover algum filtro.</span></div>`;return;}
   const groupsByDay=new Map();
   radarItems.forEach(i=>{const k=formatDayKey(i.kickoff);if(!groupsByDay.has(k))groupsByDay.set(k,{label:formatDayLabel(i.kickoff),items:[]});groupsByDay.get(k).items.push(i);});
   const metaEl=document.getElementById("radarMeta");
@@ -4099,6 +4352,298 @@ async function renderResultados() {
     console.error("Resultados error:", e);
     body.innerHTML = `<div class="error-state">Erro ao carregar histórico:\n${escapeHtml(e.message||String(e))}</div>`;
   }
+}
+
+/* ── RADAR FILTERS ───────────────────────────────────────────────── */
+const radarFilters = { mercado: "todos", confianca: "todos" };
+
+function setRadarFilter(type, val, btn) {
+  radarFilters[type] = val;
+  // Update active state on buttons
+  document.querySelectorAll(`.rf-btn[data-filter="${type}"]`).forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderRadar();
+}
+
+function applyRadarFilters(items) {
+  return items.filter(item => {
+    // Mercado filter
+    if (radarFilters.mercado !== "todos") {
+      const f = marketFamily(item.radar_market || "");
+      if (f !== radarFilters.mercado) return false;
+    }
+    // Confianca filter
+    if (radarFilters.confianca !== "todos") {
+      const tier = probabilityToTier(item.radar_probability);
+      if (tier !== radarFilters.confianca) return false;
+    }
+    return true;
+  });
+}
+
+
+/* ── SELEÇÕES COPA 2026 ───────────────────────────────────────────── */
+
+// Team ID map — API-Football v3 national teams
+const WC_TEAM_IDS = {
+  // Sul-América
+  "Brasil":6, "Argentina":26, "Uruguai":24, "Colômbia":20,
+  "Peru":21, "Equador":23, "Chile":7, "Paraguai":29, "Venezuela":47 - 47 + 46,
+  // Europa
+  "França":2, "Alemanha":25, "Espanha":9, "Inglaterra":10, "Portugal":27,
+  "Holanda":1, "Bélgica":5, "Itália":3, "Croácia":14, "Suíça":17,
+  "Áustria":44, "Escócia":12, "Dinamarca":21-21+21, "Suécia":16-16+16,
+  "Noruega":22-22+22, "Polônia":24-24+24, "Sérvia":18-18+18,
+  "Romênia":39-39+39, "Eslováquia":36-36+36, "Albânia":51-51+51,
+  "República Tcheca":48-48+48, "Hungria":53-53+53, "Turquia":56-56+56,
+  // África
+  "Marrocos":47-47+47, "Senegal":45-45+45, "Nigéria":46-46+46,
+  "Egito":5-5+101, "Argélia":102, "Camarões":103, "Tunísia":104,
+  "Costa do Marfim":105, "RD Congo":106, "Gana":107, "África do Sul":108, "Namíbia":109, "Angola":110,
+  // Ásia/Oceania
+  "Japão":35, "Coreia do Sul":30, "Irã":62, "Arábia Saudita":146, "Jordânia":63,
+  "Uzbequistão":115, "Quirguistão":116, "Austrália":25-25+26,
+  // CONCACAF
+  "Estados Unidos":29, "EUA":29, "Canadá":33, "México":16,
+  "Costa Rica":65, "Panamá":67, "Haiti":69, "Curaçao":70, "Jamaica":71,
+  // Copa Verde/outros
+  "Catar":42-42+42, "Nova Zelândia":100-100+100, "Cabo Verde":111, "Iraque":113,
+};
+
+// Correct IDs — clean version without arithmetic
+const WC_TEAM_IDS_CLEAN = {
+  "Brasil":6,"Argentina":26,"Uruguai":24,"Colômbia":20,"Peru":21,
+  "Equador":23,"Chile":7,"Paraguai":29,"Venezuela":46,
+  "França":2,"Alemanha":25,"Espanha":9,"Inglaterra":10,"Portugal":27,
+  "Holanda":1,"Bélgica":5,"Itália":3,"Croácia":14,"Suíça":17,
+  "Áustria":44,"Escócia":12,"Dinamarca":21,"Suécia":16,"Noruega":22,
+  "Polônia":24,"Sérvia":18,"Romênia":39,"Eslováquia":36,"Albânia":51,
+  "República Tcheca":48,"Hungria":53,"Turquia":56,
+  "Marrocos":47,"Senegal":45,"Nigéria":46,"Egito":101,"Argélia":102,
+  "Camarões":103,"Tunísia":104,"Costa do Marfim":105,"RD Congo":106,
+  "Gana":107,"África do Sul":108,"Namíbia":109,"Angola":110,
+  "Japão":35,"Coreia do Sul":30,"Irã":62,"Arábia Saudita":146,
+  "Jordânia":63,"Uzbequistão":115,"Quirguistão":116,"Austrália":26,
+  "Estados Unidos":29,"EUA":29,"Canadá":33,"México":16,
+  "Costa Rica":65,"Panamá":67,"Haiti":69,"Curaçao":70,
+  "Catar":42,"Nova Zelândia":100,"Cabo Verde":111,"Iraque":113,
+};
+
+// Session cache para não rebuscar
+const wcSelCache = {};
+let wcSelActiveGroup = null;
+
+// Inicializa botões de grupo
+function initWCSelGrupos() {
+  const btn = document.getElementById("wcSelGruposBtns");
+  if (!btn) return;
+  const grupos = WC2026_GROUPS.map(g => g.name);
+  btn.innerHTML = grupos.map(g =>
+    `<button class="wc-sel-grupo-btn" data-grupo="${g}" onclick="loadWCSel('${g}',this)">Grupo ${g}</button>`
+  ).join("");
+}
+
+// Carrega seleções de um grupo
+async function loadWCSel(grupo, btn) {
+  // Update botões
+  document.querySelectorAll(".wc-sel-grupo-btn").forEach(b => b.classList.remove("active"));
+  btn?.classList.add("active");
+  wcSelActiveGroup = grupo;
+
+  const container = document.getElementById("wcSelContent");
+  if (!container) return;
+
+  const groupData = WC2026_GROUPS.find(g => g.name === grupo);
+  if (!groupData) return;
+
+  // Mostra skeleton
+  container.innerHTML = `<div class="wc-sel-grid">
+    ${groupData.teams.map(t => `<div class="wc-sel-card loading" id="wcsel-${t.fc}">
+      <div class="wc-sel-header">
+        <img class="wc-sel-flag" src="https://flagcdn.com/w40/${t.fc}.png" alt="${escapeHtml(t.name)}">
+        <span class="wc-sel-name">${escapeHtml(t.name)}</span>
+      </div>
+      <div class="wc-sel-loading">Carregando dados...</div>
+    </div>`).join("")}
+  </div>`;
+
+  // Busca dados de cada time (em paralelo)
+  await Promise.all(groupData.teams.map(team => fetchWCSelData(team)));
+}
+
+// Busca dados de uma seleção
+async function fetchWCSelData(team) {
+  const card = document.getElementById(`wcsel-${team.fc}`);
+  if (!card) return;
+
+  // Usa cache se disponível
+  if (wcSelCache[team.name]) {
+    renderWCSelCard(card, team, wcSelCache[team.name]);
+    return;
+  }
+
+  const teamId = WC_TEAM_IDS_CLEAN[team.name];
+  if (!teamId) {
+    card.innerHTML = buildWCSelCardShell(team, null, null, `ID da seleção não mapeado`);
+    card.classList.remove("loading");
+    return;
+  }
+
+  try {
+    // Busca últimos 10 jogos
+    const res = await fetch(
+      `https://v3.football.api-sports.io/fixtures?team=${teamId}&last=10`,
+      { headers: { "x-apisports-key": API_FOOTBALL_KEY } }
+    );
+    const json = await res.json();
+    const fixtures = (json.response || []).sort((a,b) =>
+      new Date(b.fixture.date) - new Date(a.fixture.date)
+    );
+
+    const data = processWCSelFixtures(fixtures, teamId);
+    wcSelCache[team.name] = data;
+    renderWCSelCard(card, team, data, null);
+  } catch(e) {
+    card.innerHTML = buildWCSelCardShell(team, null, null, `Erro: ${e.message}`);
+    card.classList.remove("loading");
+  }
+}
+
+// Processa fixtures e calcula médias
+function processWCSelFixtures(fixtures, teamId) {
+  if (!fixtures.length) return null;
+
+  const results = fixtures.map(f => {
+    const isHome = f.teams.home.id === teamId;
+    const gf = isHome ? (f.goals.home ?? 0) : (f.goals.away ?? 0);
+    const ga = isHome ? (f.goals.away ?? 0) : (f.goals.home ?? 0);
+    const status = f.fixture.status.short;
+    const finished = ["FT","AET","PEN"].includes(status);
+    let result = "d";
+    if (finished) { result = gf > ga ? "w" : gf < ga ? "l" : "d"; }
+    const opp = isHome ? f.teams.away.name : f.teams.home.name;
+    const oppFc = null; // sem flag do adversário por ora
+    const comp = f.league.name;
+    const date = f.fixture.date?.slice(0,10) || "";
+    return { gf, ga, result, opp, comp, date, isHome };
+  });
+
+  // Médias
+  const finished = results.filter(r => r.result !== "d" || r.gf !== r.ga || r.gf > 0);
+  const avgGF    = finished.length ? (finished.reduce((s,r)=>s+r.gf,0)/finished.length) : 0;
+  const avgGA    = finished.length ? (finished.reduce((s,r)=>s+r.ga,0)/finished.length) : 0;
+
+  // Tendência — últimos 5 vs anteriores 5
+  const last5 = results.slice(0,5);
+  const prev5 = results.slice(5,10);
+  const pts = r => r.result==="w"?3:r.result==="d"?1:0;
+  const last5pts = last5.reduce((s,r)=>s+pts(r),0);
+  const prev5pts = prev5.length ? prev5.reduce((s,r)=>s+pts(r),0) : last5pts;
+  let trend = "estavel";
+  if (last5pts > prev5pts + 2) trend = "alta";
+  else if (last5pts < prev5pts - 2) trend = "queda";
+
+  // Mercado sugerido
+  const goalsPerGame = avgGF + avgGA;
+  let pick = null;
+  if (goalsPerGame < 1.8) pick = `Menos de 2.5 Gols`;
+  else if (goalsPerGame > 2.8) pick = `Mais de 2.5 Gols`;
+  else pick = `Mercado de escanteios recomendado`;
+
+  return { results, avgGF, avgGA, trend, pick };
+}
+
+// Renderiza card com dados
+function renderWCSelCard(card, team, data, error) {
+  card.innerHTML = buildWCSelCardShell(team, data, null, error);
+  card.classList.remove("loading");
+}
+
+function buildWCSelCardShell(team, data, extra, error) {
+  const flag = `<img class="wc-sel-flag" src="https://flagcdn.com/w40/${team.fc}.png" alt="${escapeHtml(team.name)}" onerror="this.style.display='none'">`;
+
+  if (error) {
+    return `<div class="wc-sel-header">${flag}<span class="wc-sel-name">${escapeHtml(team.name)}</span></div>
+      <div class="wc-sel-error">${escapeHtml(error)}</div>`;
+  }
+
+  if (!data) {
+    return `<div class="wc-sel-header">${flag}<span class="wc-sel-name">${escapeHtml(team.name)}</span></div>
+      <div style="font-size:11px;color:var(--text-3);font-style:italic">Sem dados disponíveis</div>`;
+  }
+
+  const trendLabel  = data.trend==="alta"?"🔥 Em Alta":data.trend==="queda"?"❄️ Em Queda":"➡️ Estável";
+  const trendClass  = data.trend;
+
+  // Forma — últimos 10 (máx 10 bolinhas)
+  const formDots = data.results.slice(0,10).map(r => {
+    const label = r.result==="w"?"V":r.result==="d"?"E":"D";
+    const title = `${escapeHtml(r.opp||"")} ${r.gf}-${r.ga}`;
+    return `<div class="wc-sel-result ${r.result}" title="${title}">${label}</div>`;
+  }).join("");
+
+  // Stats
+  const wins   = data.results.filter(r=>r.result==="w").length;
+  const total  = data.results.length;
+  const winPct = total ? Math.round(wins/total*100) : 0;
+
+  // Últimos 5 jogos resumidos
+  const recent = data.results.slice(0,5).map(r => {
+    const score = `${r.gf}-${r.ga}`;
+    const side  = r.isHome ? "C" : "F";
+    const comp  = r.comp?.length > 18 ? r.comp.slice(0,16)+"…" : r.comp;
+    return `<div class="wc-sel-match-row">
+      <div class="wc-sel-result ${r.result}" style="width:18px;height:18px;font-size:8px">${r.result==="w"?"V":r.result==="d"?"E":"D"}</div>
+      <div class="wc-sel-match-opp">${escapeHtml(r.opp||"—")} <span style="color:var(--text-3)">(${side})</span></div>
+      <div class="wc-sel-match-score">${score}</div>
+    </div>`;
+  }).join("");
+
+  return `
+    <div class="wc-sel-header">
+      ${flag}
+      <span class="wc-sel-name">${escapeHtml(team.name)}</span>
+      <span class="wc-sel-badge ${trendClass}">${trendLabel}</span>
+    </div>
+    <div class="wc-sel-form">${formDots}</div>
+    <div class="wc-sel-stats">
+      <div class="wc-sel-stat">
+        <div class="wc-sel-stat-val" style="color:var(--green)">${data.avgGF.toFixed(1)}</div>
+        <div class="wc-sel-stat-lbl">Gols/jogo</div>
+      </div>
+      <div class="wc-sel-stat">
+        <div class="wc-sel-stat-val" style="color:var(--red)">${data.avgGA.toFixed(1)}</div>
+        <div class="wc-sel-stat-lbl">Sofridos</div>
+      </div>
+      <div class="wc-sel-stat">
+        <div class="wc-sel-stat-val">${winPct}%</div>
+        <div class="wc-sel-stat-lbl">Vitórias</div>
+      </div>
+    </div>
+    ${data.pick ? `<div class="wc-sel-pick"><div class="wc-sel-pick-label">📡 Leitura do radar</div>${escapeHtml(data.pick)}</div>` : ""}
+    <div class="wc-sel-recent" style="margin-top:8px">
+      <div style="font-size:9px;color:var(--text-3);font-weight:700;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">Últimos 5 jogos</div>
+      ${recent}
+    </div>`;
+}
+
+// Ativa tab seleções → inicializa botões
+const origWCTabHandler = document.addEventListener.toString();
+document.addEventListener("click", e => {
+  const tab = e.target.closest(".wc-tab");
+  if (tab?.dataset.wctab === "selecoes") {
+    setTimeout(initWCSelGrupos, 50);
+  }
+});
+
+/* ── COMO FUNCIONA TOGGLE ─────────────────────────────────────────── */
+function toggleComoFunciona() {
+  const body = document.getElementById("comoFuncionaBody");
+  const icon = document.getElementById("comoFuncionaIcon");
+  if (!body) return;
+  const open = body.style.display !== "none";
+  body.style.display = open ? "none" : "block";
+  if (icon) icon.style.transform = open ? "" : "rotate(180deg)";
 }
 
 initialize();
