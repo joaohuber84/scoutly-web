@@ -4384,49 +4384,32 @@ function applyRadarFilters(items) {
 
 /* ── SELEÇÕES COPA 2026 ───────────────────────────────────────────── */
 
-// Team ID map — API-Football v3 national teams
-const WC_TEAM_IDS = {
-  // Sul-América
-  "Brasil":6, "Argentina":26, "Uruguai":24, "Colômbia":20,
-  "Peru":21, "Equador":23, "Chile":7, "Paraguai":29, "Venezuela":47 - 47 + 46,
-  // Europa
-  "França":2, "Alemanha":25, "Espanha":9, "Inglaterra":10, "Portugal":27,
-  "Holanda":1, "Bélgica":5, "Itália":3, "Croácia":14, "Suíça":17,
-  "Áustria":44, "Escócia":12, "Dinamarca":21-21+21, "Suécia":16-16+16,
-  "Noruega":22-22+22, "Polônia":24-24+24, "Sérvia":18-18+18,
-  "Romênia":39-39+39, "Eslováquia":36-36+36, "Albânia":51-51+51,
-  "República Tcheca":48-48+48, "Hungria":53-53+53, "Turquia":56-56+56,
-  // África
-  "Marrocos":47-47+47, "Senegal":45-45+45, "Nigéria":46-46+46,
-  "Egito":5-5+101, "Argélia":102, "Camarões":103, "Tunísia":104,
-  "Costa do Marfim":105, "RD Congo":106, "Gana":107, "África do Sul":108, "Namíbia":109, "Angola":110,
-  // Ásia/Oceania
-  "Japão":35, "Coreia do Sul":30, "Irã":62, "Arábia Saudita":146, "Jordânia":63,
-  "Uzbequistão":115, "Quirguistão":116, "Austrália":25-25+26,
-  // CONCACAF
-  "Estados Unidos":29, "EUA":29, "Canadá":33, "México":16,
-  "Costa Rica":65, "Panamá":67, "Haiti":69, "Curaçao":70, "Jamaica":71,
-  // Copa Verde/outros
-  "Catar":42-42+42, "Nova Zelândia":100-100+100, "Cabo Verde":111, "Iraque":113,
-};
+// Team IDs — use WC_TEAM_IDS_CLEAN below
 
 // Correct IDs — clean version without arithmetic
 const WC_TEAM_IDS_CLEAN = {
-  "Brasil":6,"Argentina":26,"Uruguai":24,"Colômbia":20,"Peru":21,
-  "Equador":23,"Chile":7,"Paraguai":29,"Venezuela":46,
-  "França":2,"Alemanha":25,"Espanha":9,"Inglaterra":10,"Portugal":27,
-  "Holanda":1,"Bélgica":5,"Itália":3,"Croácia":14,"Suíça":17,
-  "Áustria":44,"Escócia":12,"Dinamarca":21,"Suécia":16,"Noruega":22,
-  "Polônia":24,"Sérvia":18,"Romênia":39,"Eslováquia":36,"Albânia":51,
-  "República Tcheca":48,"Hungria":53,"Turquia":56,
-  "Marrocos":47,"Senegal":45,"Nigéria":46,"Egito":101,"Argélia":102,
-  "Camarões":103,"Tunísia":104,"Costa do Marfim":105,"RD Congo":106,
-  "Gana":107,"África do Sul":108,"Namíbia":109,"Angola":110,
-  "Japão":35,"Coreia do Sul":30,"Irã":62,"Arábia Saudita":146,
-  "Jordânia":63,"Uzbequistão":115,"Quirguistão":116,"Austrália":26,
-  "Estados Unidos":29,"EUA":29,"Canadá":33,"México":16,
-  "Costa Rica":65,"Panamá":67,"Haiti":69,"Curaçao":70,
-  "Catar":42,"Nova Zelândia":100,"Cabo Verde":111,"Iraque":113,
+  // Sul-América
+  "Brasil":6, "Argentina":26, "Uruguai":24, "Colômbia":20,
+  "Peru":21, "Equador":23, "Chile":7, "Paraguai":29, "Venezuela":46,
+  // Europa
+  "França":2, "Alemanha":25, "Espanha":9, "Inglaterra":10, "Portugal":27,
+  "Holanda":8, "Bélgica":5, "Itália":3, "Croácia":14, "Suíça":17,
+  "Áustria":44, "Escócia":12, "Dinamarca":119, "Suécia":16, "Noruega":103,
+  "Polônia":24, "Sérvia":18, "Romênia":39, "Eslováquia":36, "Albânia":51,
+  "República Tcheca":48, "Hungria":53, "Turquia":56, "Bósnia":110,
+  "Coreia do Sul":30, "Japão":35,
+  // África
+  "Marrocos":47, "Senegal":45, "Nigéria":49, "Egito":101, "Argélia":102,
+  "Camarões":103, "Tunísia":104, "Costa do Marfim":105, "RD Congo":106,
+  "Gana":107, "África do Sul":108, "Namíbia":109, "Angola":111,
+  // Ásia/Oceania
+  "Irã":62, "Arábia Saudita":146, "Jordânia":63,
+  "Uzbequistão":115, "Quirguistão":116, "Austrália":25, "Catar":42,
+  // CONCACAF
+  "Estados Unidos":29, "EUA":29, "Canadá":33, "México":16,
+  "Costa Rica":65, "Panamá":67, "Haiti":69, "Curaçao":70,
+  // Outros
+  "Nova Zelândia":100, "Cabo Verde":111, "Iraque":113,
 };
 
 // Session cache para não rebuscar
@@ -4513,7 +4496,31 @@ async function fetchWCSelData(team) {
 function processWCSelFixtures(fixtures, teamId) {
   if (!fixtures.length) return null;
 
-  const results = fixtures.map(f => {
+  // Filter: only international fixtures (exclude club leagues)
+  const INTL_TYPES = new Set(["World","International","Friendly","Friendlies","Cup"]);
+  const intlFixtures = fixtures.filter(f => {
+    const type = f.league?.type || "";
+    const name = (f.league?.name || "").toLowerCase();
+    // Keep if type is World/International OR if it's a known intl competition
+    return INTL_TYPES.has(type)
+      || name.includes("world cup")
+      || name.includes("copa do mundo")
+      || name.includes("nations league")
+      || name.includes("eliminat")
+      || name.includes("qualifier")
+      || name.includes("euro")
+      || name.includes("friendly")
+      || name.includes("amistoso")
+      || name.includes("copa america")
+      || name.includes("africa cup")
+      || name.includes("asian cup")
+      || name.includes("concacaf")
+      || name.includes("gold cup");
+  });
+  // Fallback to all if too few intl games found
+  const toProcess = intlFixtures.length >= 3 ? intlFixtures : fixtures;
+
+  const results = toProcess.map(f => {
     const isHome = f.teams.home.id === teamId;
     const gf = isHome ? (f.goals.home ?? 0) : (f.goals.away ?? 0);
     const ga = isHome ? (f.goals.away ?? 0) : (f.goals.home ?? 0);
