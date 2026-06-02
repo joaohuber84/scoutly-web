@@ -2739,7 +2739,8 @@ function openAnalysis(matchId){
   // Also try to load events directly for live/recent matches
   const liveCheck = liveState.data.get(String(match.id));
   if (liveCheck?.isLive || liveCheck?.isFinished) {
-    fetchMatchEvents(match.id).then(events => {
+    const apiId = match.fixture_id || match.id;
+  fetchMatchEvents(apiId).then(events => {
       if (events && events.length > 0) renderMatchTimeline(match.id, events);
     });
   }
@@ -3455,7 +3456,8 @@ function buildLiveIndicatorHtml(live) {
   return "";
 }
 async function refreshModalLiveStats(matchId) {
-  const statsData = await fetchFixtureStats(matchId);
+  const apiMatchId = (() => { const m = getMatchById(matchId); return m?.fixture_id || matchId; })();
+  const statsData = await fetchFixtureStats(apiMatchId);
   if (!statsData.length) return;
   const live = liveState.data.get(String(matchId));
   const section = document.getElementById("liveStatsSection");
@@ -3467,7 +3469,9 @@ async function refreshModalLiveStats(matchId) {
   }
   // Inject timeline at top if not present
   if (!document.getElementById("matchTimeline")) {
-    fetchMatchEvents(matchId).then(events => {
+    const m = getMatchById(matchId);
+    const apiId = m?.fixture_id || matchId;
+    fetchMatchEvents(apiId).then(events => {
       if (events.length) renderMatchTimeline(matchId, events);
     });
   }
@@ -3511,7 +3515,8 @@ function injectLiveStatsInModal(matchId) {
     else analysisBody.prepend(wrapper);
     liveState.activeModalId = matchId;
     refreshModalLiveStats(matchId);
-    fetchMatchEvents(matchId).then(events => {
+    const apiFixtureId = (() => { const m = getMatchById(matchId); return m?.fixture_id || matchId; })();
+    fetchMatchEvents(apiFixtureId).then(events => {
       if (events.length) renderMatchTimeline(matchId, events);
     });
     if (liveState.modalInterval) clearInterval(liveState.modalInterval);
@@ -3522,7 +3527,8 @@ function injectLiveStatsInModal(matchId) {
         return;
       }
       refreshModalLiveStats(matchId);
-      fetchMatchEvents(matchId).then(events => {
+      const apiId2 = (() => { const m = getMatchById(matchId); return m?.fixture_id || matchId; })();
+      fetchMatchEvents(apiId2).then(events => {
         if (events.length) renderMatchTimeline(matchId, events);
       });
     }, 60 * 1000);
