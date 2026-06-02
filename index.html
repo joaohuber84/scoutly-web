@@ -1374,6 +1374,67 @@
       border-radius: var(--radius-sm); padding: 10px 12px;
       font-size: 11px; color: var(--red);
     }
+
+    /* ─── MATCH TIMELINE ─────────────────────────────────────────────── */
+    .match-timeline {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--red);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      margin-bottom: 14px;
+    }
+    .tl-track {
+      position: relative;
+      height: 20px;
+      background: var(--surface-3);
+      border-radius: 4px;
+      overflow: visible;
+    }
+    .tl-progress {
+      position: absolute;
+      left: 0; top: 0; height: 100%;
+      background: linear-gradient(90deg, rgba(0,179,104,0.12), rgba(0,179,104,0.04));
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+    .tl-half-line {
+      position: absolute;
+      left: 47.37%; /* 45/95 */
+      top: 0; bottom: 0;
+      width: 1px;
+      background: var(--border-2);
+      z-index: 1;
+    }
+    .tl-dot {
+      position: absolute;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      z-index: 2;
+      cursor: default;
+      border: 1px solid rgba(255,255,255,0.15);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    }
+    .tl-dot-icon { font-size: 10px; line-height: 1; }
+    .tl-dot:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid var(--border-2);
+      border-radius: 5px;
+      padding: 3px 7px;
+      font-size: 9px;
+      color: var(--text);
+      white-space: nowrap;
+      z-index: 100;
+      pointer-events: none;
+    }
   </style>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-583FPFX1PT"></script>
   <script>
@@ -1945,7 +2006,7 @@ const RADAR_MAX_ITEMS  = 15;
 const RADAR_MAX_PER_LEAGUE = 3;
 const TICKET_SIZE      = 3;
 const AUTO_UI_REFRESH_MS   = 60000;
-const AUTO_DATA_REFRESH_MS = 180000;
+const AUTO_DATA_REFRESH_MS = 4 * 60 * 60 * 1000;
 
 const state = {
   dailyPicks:[], matches:[], competitions:[],
@@ -2251,7 +2312,11 @@ function isCompetitionVisible(v){
 }
 function getMatchById(id){
   const t=String(id);
-  return state.matches.find(m=>String(m.id)===t||String(m.fixture_id)===t||String(m.match_id)===t)||null;
+  const fromState = state.matches.find(m=>String(m.id)===t||String(m.fixture_id)===t||String(m.match_id)===t);
+  if (fromState) return fromState;
+  const ext = liveState.external.get(t);
+  if (ext) return {...ext, id:ext.id, match_id:ext.id};
+  return null;
 }
 function getRadarEligibleMatches(){
   return state.matches.filter(m=>isStillRelevantForRadar(m.kickoff)&&!shouldHideLeague(m.league));
@@ -3235,7 +3300,11 @@ function renderLiveSection() {
         <div class="live-team-block away">${teamLogoHtml(match.away_logo, awayName)}<span class="live-team-name">${escapeHtml(awayName)}</span></div>
       </div>
       <div class="live-game-subline">
-        <span class="live-league-tag">${badge} ${escapeHtml(getLeagueDisplay(match.league))}</span>
+        <span class="live-league-tag">${
+          (String(match.league||"").includes("World Cup")||String(match.league||"").includes("Copa do Mundo"))
+          ? `<span style="color:var(--green);font-weight:700">🌍 Copa do Mundo 2026</span>`
+          : `${badge} ${escapeHtml(getLeagueDisplay(match.league))}`
+        }</span>
         ${hasPick ? `<span class="live-game-pick">📌 ${escapeHtml(pick)}</span>` : ""}
       </div>
     </div>`;
@@ -3263,8 +3332,8 @@ const LIVE_TIER = {
   "Liga Colombiana":3,"Liga Chilena":3,"Liga Peruana":3,"Liga Uruguaia":3,
   "Scottish Premiership":4,"Allsvenskan":4,"Eliteserien":4,
 };
-const liveState = { data: new Map(), external: new Map(), interval: null, modalInterval: null, activeModalId: null };
-const LIVE_REFRESH_MS = 15 * 60 * 1000;
+const liveState = { data: new Map(), external: new Map(), interval: null, modalInterval: null, statsInterval: null, activeModalId: null };
+const LIVE_REFRESH_MS = 30 * 1000; // 30 segundos
 const LIVE_STATUSES = ["1H","2H","ET","BT","P","LIVE"];
 const FINISHED_STATUSES = ["FT","AET","PEN"];
 function isMatchLive(kickoff) {
@@ -3321,19 +3390,20 @@ async function refreshLiveData() {
     }
   });
   liveState.external.clear();
-  const TIER_LEAGUES = new Set(["UEFA Champions League","UEFA Europa League","UEFA Conference League","Libertadores","Sul-Americana","Premier League","La Liga","Serie A","Bundesliga","Ligue 1","Brasileirão Série A","Copa do Brasil","Brasileirão Série B","Liga Argentina","MLS","Liga MX","Saudi Pro League","Eredivisie","Belgian Pro League","Scottish Premiership","Super Lig","Primeira Liga","Allsvenskan","Eliteserien","Austrian Bundesliga","Copa América","Nations League","Copa do Mundo","Eurocopa","Mundial de Clubes","CONCACAF Champions Cup"]);
+  const TIER_LEAGUES = new Set(["UEFA Champions League","UEFA Europa League","UEFA Conference League","Libertadores","Sul-Americana","Premier League","La Liga","Serie A","Bundesliga","Ligue 1","Brasileirão Série A","Copa do Brasil","Brasileirão Série B","Liga Argentina","MLS","Liga MX","Saudi Pro League","Eredivisie","Belgian Pro League","Scottish Premiership","Super Lig","Primeira Liga","Allsvenskan","Eliteserien","Austrian Bundesliga","Copa América","Nations League","Copa do Mundo","FIFA World Cup","Eurocopa","Mundial de Clubes","CONCACAF Champions Cup","Copa América","Nations League","CONMEBOL Libertadores","Eliminatórias"]);
   liveFixtures.forEach(f => {
     const id = f.fixture?.id; if (!id) return;
     if (relevantIds.has(id)) return;
     const short = f.fixture?.status?.short || "";
     if (!LIVE_STATUSES.includes(short)) return;
     const leagueId = f.league?.id;
-    const TOP_IDS = new Set([2,3,39,140,135,78,61,71,72,13,11,253,307,94,88,144,218,128,179,113,103,848,45,66,81,137,143,130,75,73,265,239,262,5,9,18,40,94,96,119,128,197,203,268,278]);
+    const TOP_IDS = new Set([1,2,3,5,9,11,13,18,39,40,45,61,66,71,72,73,75,78,81,88,94,96,103,113,119,128,129,130,135,137,140,143,144,179,197,203,218,239,253,262,265,268,278,307,848]);
     if (!TOP_IDS.has(leagueId)) return;
     liveState.external.set(String(id), {
       id, kickoff: f.fixture?.date, home_team: f.teams?.home?.name || "Casa", away_team: f.teams?.away?.name || "Fora",
       home_logo: f.teams?.home?.logo || null, away_logo: f.teams?.away?.logo || null,
       league: String(f.league?.name || ""), country: f.league?.country || null,
+      league_id: f.league?.id || null, isWorldCup: f.league?.id === 1,
       liveData: { homeScore: safeNum(f.goals?.home), awayScore: safeNum(f.goals?.away), minute: f.fixture?.status?.elapsed || null, status: short, isLive: true, isFinished: false }
     });
   });
@@ -3370,7 +3440,9 @@ function buildLiveIndicatorHtml(live) {
   const score = `<span class="live-score">${live.homeScore} — ${live.awayScore}</span>`;
   if (live.isLive) {
     const min = live.minute ? `<span class="live-minute">${live.minute}'</span>` : "";
-    return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="live-badge"><span class="live-dot"></span>AO VIVO</span>${score} ${min}</div><div style="font-size:9px;color:var(--text-3);margin-top:2px">↻ atualiza a cada 15 min</div>`;
+    const now = new Date();
+    const timeStr = now.toLocaleTimeString("pt-BR", { hour:"2-digit", minute:"2-digit", second:"2-digit" });
+    return `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><span class="live-badge"><span class="live-dot"></span>AO VIVO</span>${score} ${min}</div><div style="font-size:9px;color:var(--text-3);margin-top:2px">↻ ${timeStr}</div>`;
   }
   if (live.isFinished) { return `<div style="display:flex;align-items:center;gap:8px"><span class="finished-badge">⏱ FIM</span> ${score}</div>`; }
   return "";
@@ -3386,6 +3458,12 @@ async function refreshModalLiveStats(matchId) {
     const total = h + a || 1; const hPct = Math.round((h / total) * 100); const aPct = 100 - hPct;
     return `<div class="live-stat-row"><div class="live-stat-home">${hVal}</div><div class="live-stat-label">${label}</div><div class="live-stat-away">${aVal}</div></div><div class="live-stat-row"><div class="live-stat-bar-wrap"><div class="live-stat-bar-home" style="width:${hPct}%"></div><div class="live-stat-bar-away" style="width:${aPct}%"></div></div></div>`;
   }
+  // Inject timeline at top if not present
+  if (!document.getElementById("matchTimeline")) {
+    fetchMatchEvents(matchId).then(events => {
+      if (events.length) renderMatchTimeline(matchId, events);
+    });
+  }
   const corners = [getStat(statsData,0,"Corner Kicks"), getStat(statsData,1,"Corner Kicks")];
   const shots = [getStat(statsData,0,"Total Shots"), getStat(statsData,1,"Total Shots")];
   const sot = [getStat(statsData,0,"Shots on Goal"), getStat(statsData,1,"Shots on Goal")];
@@ -3398,29 +3476,218 @@ async function refreshModalLiveStats(matchId) {
   section.innerHTML = `<div class="live-stats-section"><div class="live-stats-title"><span class="live-dot"></span>AO VIVO${minLabel}<span style="font-size:9px;color:var(--text-3);font-weight:400;margin-left:auto">↻ atualiza a cada 15 min</span></div><div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)"><div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px"><div style="font-size:12px;color:var(--text-2);font-weight:700;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(homeName)}</div><div style="font-family:var(--font-mono);font-size:26px;font-weight:900;color:var(--text);letter-spacing:.04em;white-space:nowrap;padding:0 4px">${live?.homeScore ?? 0} — ${live?.awayScore ?? 0}</div><div style="font-size:12px;color:var(--text-2);font-weight:700;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(awayName)}</div></div>${live?.minute ? `<div style="font-size:11px;color:var(--text-3);margin-top:6px;text-align:center">${live.minute}' jogados</div>` : ""}</div><div style="display:grid;grid-template-columns:1fr 1fr;font-size:9px;color:var(--text-3);text-align:center;margin-bottom:10px"><div style="color:var(--green)">CASA</div><div style="color:var(--blue)">FORA</div></div>${statRow("Escanteios", corners[0], corners[1])}${statRow("Finalizações", shots[0], shots[1])}${statRow("No gol", sot[0], sot[1])}${statRow("Posse (%)", poss[0].replace("%",""), poss[1].replace("%",""))}${statRow("Cartões", cards[0], cards[1])}</div>`;
 }
 function injectLiveStatsInModal(matchId) {
-  const analysisCard = document.querySelector(".analysis-card"); if (!analysisCard) return;
-  const existing = document.getElementById("liveStatsSection"); if (existing) existing.remove();
-  const live = liveState.data.get(String(matchId));
-  if (!live?.isLive && !live?.isFinished) return;
-  const firstBox = analysisCard.querySelector(".a-box"); if (!firstBox) return;
-  const wrapper = document.createElement("div"); wrapper.id = "liveStatsSection";
-  if (live.isFinished) {
-    wrapper.innerHTML = `<div class="live-stats-section" style="border-color:var(--border)"><div class="live-stats-title" style="color:var(--text-3)">⏱ JOGO ENCERRADO · Placar final: ${live.homeScore} — ${live.awayScore}</div></div>`;
-    firstBox.parentNode.insertBefore(wrapper, firstBox); return;
-  }
-  firstBox.parentNode.insertBefore(wrapper, firstBox);
-  liveState.activeModalId = matchId;
-  refreshModalLiveStats(matchId);
-  if (liveState.modalInterval) clearInterval(liveState.modalInterval);
-  liveState.modalInterval = setInterval(() => {
-    if (!document.getElementById("analysisOverlay")?.classList.contains("open")) { clearInterval(liveState.modalInterval); liveState.activeModalId = null; return; }
+  // Timing guard: wait for DOM to be ready
+  const tryInject = (attempts = 0) => {
+    const analysisCard = document.querySelector(".analysis-card");
+    const analysisBody = document.getElementById("analysisBody");
+    if (!analysisCard || !analysisBody) {
+      if (attempts < 10) setTimeout(() => tryInject(attempts + 1), 100);
+      return;
+    }
+    const existing = document.getElementById("liveStatsSection");
+    if (existing) existing.remove();
+    const live = liveState.data.get(String(matchId));
+    if (!live?.isLive && !live?.isFinished) return;
+    // Insert before first a-box, or at top of analysisBody
+    const firstBox = analysisCard.querySelector(".a-box") || analysisBody.firstElementChild;
+    const wrapper = document.createElement("div");
+    wrapper.id = "liveStatsSection";
+    if (live.isFinished) {
+      wrapper.innerHTML = `<div class="live-stats-section" style="border-color:var(--border)"><div class="live-stats-title" style="color:var(--text-3)">⏱ JOGO ENCERRADO · Placar final: ${live.homeScore} — ${live.awayScore}</div></div>`;
+      if (firstBox) firstBox.parentNode.insertBefore(wrapper, firstBox);
+      else analysisBody.prepend(wrapper);
+      return;
+    }
+    if (firstBox) firstBox.parentNode.insertBefore(wrapper, firstBox);
+    else analysisBody.prepend(wrapper);
+    liveState.activeModalId = matchId;
     refreshModalLiveStats(matchId);
-  }, LIVE_REFRESH_MS);
+    fetchMatchEvents(matchId).then(events => {
+      if (events.length) renderMatchTimeline(matchId, events);
+    });
+    if (liveState.modalInterval) clearInterval(liveState.modalInterval);
+    liveState.modalInterval = setInterval(() => {
+      if (!document.getElementById("analysisOverlay")?.classList.contains("open")) {
+        clearInterval(liveState.modalInterval);
+        liveState.activeModalId = null;
+        return;
+      }
+      refreshModalLiveStats(matchId);
+      fetchMatchEvents(matchId).then(events => {
+        if (events.length) renderMatchTimeline(matchId, events);
+      });
+    }, 60 * 1000);
+  };
+  tryInject();
 }
+/* ── MATCH EVENTS + TIMELINE ─────────────────────────────────── */
+async function fetchMatchEvents(fixtureId) {
+  try {
+    const res = await fetch(
+      `https://v3.football.api-sports.io/fixtures/events?fixture=${fixtureId}`,
+      { headers: { "x-apisports-key": API_FOOTBALL_KEY } }
+    );
+    const json = await res.json();
+    return json.response || [];
+  } catch(e) { console.error("Events fetch error:", e); return []; }
+}
+
+function renderMatchTimeline(matchId, events) {
+  const match = (state.matches||[]).find(m => String(m.id) === String(matchId))
+             || (() => { const ext = liveState.external.get(String(matchId)); return ext; })();
+  if (!match) return;
+
+  const live = liveState.data.get(String(matchId));
+  const currentMin = live?.minute || 90;
+  const homeName = match.home_team || "Casa";
+  const awayName = match.away_team || "Fora";
+
+  // Categorize events
+  const homeGoals   = events.filter(e => e.type === "Goal" && e.team?.id === (match.home_id || events.find(x=>x.type==="Goal")?.team?.id) && e.detail !== "Missed Penalty");
+  const awayGoals   = events.filter(e => e.type === "Goal" && e.team?.name === awayName && e.detail !== "Missed Penalty");
+  // Better: split by team position
+  const teams = [...new Set(events.map(e => e.team?.name).filter(Boolean))];
+  const homeTeamName = teams[0] || homeName;
+  const awayTeamName = teams[1] || awayName;
+
+  function eventsForTeam(teamName, type) {
+    return events.filter(e => e.team?.name === teamName && (type === "all" || e.type === type || e.type?.includes(type)));
+  }
+  function eventsForTeamMulti(teamName, types) {
+    return events.filter(e => e.team?.name === teamName && types.includes(e.type));
+  }
+
+  const hGoals   = eventsForTeam(homeTeamName, "Goal").filter(e => e.detail !== "Missed Penalty");
+  const aGoals   = eventsForTeam(awayTeamName, "Goal").filter(e => e.detail !== "Missed Penalty");
+  const hCards   = eventsForTeamMulti(homeTeamName, ["Card"]);
+  const aCards   = eventsForTeamMulti(awayTeamName, ["Card"]);
+  const hSubs    = eventsForTeam(homeTeamName, "subst");
+  const aSubs    = eventsForTeam(awayTeamName, "subst");
+  const hCorners = events.filter(e => e.team?.name === homeTeamName && e.detail === "Corner");
+  const aCorners = events.filter(e => e.team?.name === awayTeamName && e.detail === "Corner");
+
+  // Timeline dot builder
+  function dot(min, icon, color, label) {
+    const pct = Math.min((min / 95) * 100, 100);
+    return `<div class="tl-dot" style="left:${pct}%;background:${color}" title="${escapeHtml(label)} · ${min}'">
+      <span class="tl-dot-icon">${icon}</span>
+    </div>`;
+  }
+
+  // Build home timeline dots
+  const homeDots = [
+    ...hGoals.map(e => dot(e.time?.elapsed||0, "⚽", "var(--green)", e.player?.name||"Gol")),
+    ...hCards.map(e => dot(e.time?.elapsed||0, e.detail==="Red Card"?"🟥":"🟨", e.detail==="Red Card"?"var(--red)":"var(--amber)", e.player?.name||"Cartão")),
+    ...hSubs.map(e => dot(e.time?.elapsed||0, "↕", "var(--blue)", `${e.player?.name||""}→${e.assist?.name||""}`)),
+  ].join("");
+
+  const awayDots = [
+    ...aGoals.map(e => dot(e.time?.elapsed||0, "⚽", "var(--green)", e.player?.name||"Gol")),
+    ...aCards.map(e => dot(e.time?.elapsed||0, e.detail==="Red Card"?"🟥":"🟨", e.detail==="Red Card"?"var(--red)":"var(--amber)", e.player?.name||"Cartão")),
+    ...aSubs.map(e => dot(e.time?.elapsed||0, "↕", "var(--blue)", `${e.player?.name||""}→${e.assist?.name||""}`)),
+  ].join("");
+
+  // Goals list
+  function goalList(goals, align) {
+    if (!goals.length) return `<span style="font-size:10px;color:var(--text-3)">-</span>`;
+    return goals.map(g => {
+      const pen = g.detail === "Penalty" ? " (P)" : g.detail === "Own Goal" ? " (CG)" : "";
+      return `<div style="font-size:10px;color:var(--text-2);text-align:${align}">${escapeHtml(g.player?.name?.split(" ").pop()||"?")} ${g.time?.elapsed||"?"}' ${pen}</div>`;
+    }).join("");
+  }
+
+  const hScore = live?.homeScore ?? hGoals.length;
+  const aScore = live?.awayScore ?? aGoals.length;
+  const minLabel = live?.minute ? `${live.minute}'` : "FIM";
+  const isLive = live?.isLive;
+
+  const html = `
+    <div class="match-timeline" id="matchTimeline">
+      <div style="font-size:9px;font-weight:700;color:${isLive?"var(--red)":"var(--text-3)"};text-transform:uppercase;letter-spacing:0.10em;margin-bottom:10px;display:flex;align-items:center;gap:7px">
+        ${isLive?'<span class="live-dot"></span>':''}
+        ${isLive?'TEMPO REAL':'ENCERRADO'}
+        <span style="font-weight:400;font-size:9px;margin-left:auto;color:var(--text-3)">↻ atualiza a cada 60s</span>
+      </div>
+
+      <!-- Placar -->
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:12px">
+        <div style="font-size:12px;font-weight:700;color:var(--text);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(homeName)}</div>
+        <div style="font-family:var(--font-mono);font-size:28px;font-weight:900;color:var(--text);letter-spacing:0.04em;white-space:nowrap;text-align:center;padding:4px 10px;background:var(--surface-3);border-radius:var(--radius-sm)">
+          ${hScore} <span style="color:var(--text-3);font-size:20px">·</span> ${aScore}
+          ${isLive?`<div style="font-size:10px;color:var(--red);font-weight:700;margin-top:2px">${minLabel}</div>`:`<div style="font-size:10px;color:var(--text-3);margin-top:2px">FIM</div>`}
+        </div>
+        <div style="font-size:12px;font-weight:700;color:var(--text);text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(awayName)}</div>
+      </div>
+
+      <!-- Gols -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;font-size:10px">
+        <div style="background:var(--surface-3);border-radius:var(--radius-sm);padding:7px 9px">
+          <div style="font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">⚽ Gols — ${escapeHtml(homeName)}</div>
+          ${goalList(hGoals,"left")}
+        </div>
+        <div style="background:var(--surface-3);border-radius:var(--radius-sm);padding:7px 9px">
+          <div style="font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">⚽ Gols — ${escapeHtml(awayName)}</div>
+          ${goalList(aGoals,"left")}
+        </div>
+      </div>
+
+      <!-- Timeline -->
+      <div style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--text-3);margin-bottom:4px">
+          <span>${escapeHtml(homeName)}</span><span>45'</span><span>90'</span>
+        </div>
+        <div class="tl-track">
+          <div class="tl-half-line"></div>
+          <div class="tl-progress" style="width:${Math.min((currentMin/95)*100,100)}%"></div>
+          ${homeDots}
+        </div>
+        <div class="tl-track" style="margin-top:4px">
+          <div class="tl-half-line"></div>
+          <div class="tl-progress" style="width:${Math.min((currentMin/95)*100,100)}%"></div>
+          ${awayDots}
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--text-3);margin-top:4px">
+          <span>${escapeHtml(awayName)}</span><span></span>
+        </div>
+      </div>
+
+      <!-- Resumo de eventos -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:10px">
+        ${hGoals.length+aGoals.length > 0 ? `<span style="background:var(--green-dim);border:1px solid var(--green-line);border-radius:5px;padding:2px 8px;color:var(--green)">⚽ ${hGoals.length+aGoals.length} gols</span>` : ""}
+        ${hCards.length+aCards.length > 0 ? `<span style="background:var(--amber-dim);border:1px solid var(--amber-line);border-radius:5px;padding:2px 8px;color:var(--amber)">🟨 ${hCards.length+aCards.length} cartões</span>` : ""}
+        ${hCorners.length+aCorners.length > 0 ? `<span style="background:var(--blue-dim);border:1px solid var(--blue-line);border-radius:5px;padding:2px 8px;color:var(--blue)">🚩 ${hCorners.length+aCorners.length} escanteios</span>` : ""}
+        ${hSubs.length+aSubs.length > 0 ? `<span style="background:var(--surface-3);border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--text-3)">↕ ${hSubs.length+aSubs.length} subs</span>` : ""}
+      </div>
+    </div>`;
+
+  // Find or create timeline container
+  let container = document.getElementById("matchTimeline");
+  if (container) {
+    container.outerHTML = html;
+  } else {
+    // Insert after liveStatsSection or before first a-box
+    const section = document.getElementById("liveStatsSection");
+    const analysisBody = document.getElementById("analysisBody");
+    if (section) {
+      section.insertAdjacentHTML("afterend", html);
+    } else if (analysisBody) {
+      analysisBody.insertAdjacentHTML("afterbegin", html);
+    }
+  }
+}
+
 function startLiveModule() {
   refreshLiveData();
   if (liveState.interval) clearInterval(liveState.interval);
+  if (liveState.statsInterval) clearInterval(liveState.statsInterval);
+  // Fast refresh: placar + minuto a cada 30s
   liveState.interval = setInterval(refreshLiveData, LIVE_REFRESH_MS);
+  // Stats refresh: só quando modal aberto, a cada 60s
+  liveState.statsInterval = setInterval(() => {
+    if (!liveState.activeModalId) return;
+    if (!document.getElementById("analysisOverlay")?.classList.contains("open")) return;
+    refreshModalLiveStats(liveState.activeModalId);
+  }, 60 * 1000);
 }
 const SHARE_URL = "https://scoutlypro.app";
 const SHARE_TEXT = "🎯 Conhece o Scoutly? Radar inteligente de apostas esportivas — analisa jogos, gera picks com estatística real e mostra ao vivo o que está rolando. Acesse grátis!";
