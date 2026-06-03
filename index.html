@@ -3382,16 +3382,17 @@ async function refreshLiveData() {
     const apiId = Number(m.fixture_id || m.id);
     // Also try to match by home/away team name in live data (last resort)
     const fixture = liveMap.get(apiId) || (() => {
-      // Search liveMap for a match with same teams
+      // Search liveMap for a match with same teams (normalize + longer match)
+      const norm = s => (s||"").toLowerCase()
+        .normalize("NFD").replace(/[̀-ͯ]/g,"")
+        .replace(/[^a-z0-9]/g," ").trim();
+      const mHomeN = norm(m.home_team); const mAwayN = norm(m.away_team);
       for (const [fid, f] of liveMap) {
-        const fHome = (f.teams?.home?.name||"").toLowerCase();
-        const fAway = (f.teams?.away?.name||"").toLowerCase();
-        const mHome = (m.home_team||"").toLowerCase();
-        const mAway = (m.away_team||"").toLowerCase();
-        if ((fHome.includes(mHome.slice(0,5)) || mHome.includes(fHome.slice(0,5))) &&
-            (fAway.includes(mAway.slice(0,5)) || mAway.includes(fAway.slice(0,5)))) {
-          return f;
-        }
+        const fHomeN = norm(f.teams?.home?.name);
+        const fAwayN = norm(f.teams?.away?.name);
+        const homeMatch = fHomeN.includes(mHomeN.slice(0,7)) || mHomeN.includes(fHomeN.slice(0,7));
+        const awayMatch = fAwayN.includes(mAwayN.slice(0,7)) || mAwayN.includes(fAwayN.slice(0,7));
+        if (homeMatch && awayMatch) return f;
       }
       return null;
     })();
@@ -3417,7 +3418,10 @@ async function refreshLiveData() {
       }
     }
   });
-  liveState.external.clear();
+  // Sticky external: mark existing entries, remove only if missing 2 cycles
+  liveState.external.forEach((val, key) => {
+    liveState.external.set(key, { ...val, _missedCycles: (val._missedCycles || 0) + 1 });
+  });
   const TIER_LEAGUES = new Set(["UEFA Champions League","UEFA Europa League","UEFA Conference League","Libertadores","Sul-Americana","Premier League","La Liga","Serie A","Bundesliga","Ligue 1","Brasileirão Série A","Copa do Brasil","Brasileirão Série B","Liga Argentina","MLS","Liga MX","Saudi Pro League","Eredivisie","Belgian Pro League","Scottish Premiership","Super Lig","Primeira Liga","Allsvenskan","Eliteserien","Austrian Bundesliga","Copa América","Nations League","Copa do Mundo","FIFA World Cup","Eurocopa","Mundial de Clubes","CONCACAF Champions Cup","Copa América","Nations League","CONMEBOL Libertadores","Eliminatórias"]);
   liveFixtures.forEach(f => {
     const id = f.fixture?.id; if (!id) return;
@@ -3432,8 +3436,14 @@ async function refreshLiveData() {
       home_logo: f.teams?.home?.logo || null, away_logo: f.teams?.away?.logo || null,
       league: String(f.league?.name || ""), country: f.league?.country || null,
       league_id: f.league?.id || null, isWorldCup: f.league?.id === 1,
+      fixture_id: id, // API fixture ID for stats/events calls
+      _missedCycles: 0, // reset when game is seen
       liveData: { homeScore: safeNum(f.goals?.home), awayScore: safeNum(f.goals?.away), minute: f.fixture?.status?.elapsed || null, status: short, isLive: true, isFinished: false }
     });
+  });
+  // Remove external games that missed 3+ cycles (likely finished or halftime)
+  liveState.external.forEach((val, key) => {
+    if ((val._missedCycles || 0) >= 3) liveState.external.delete(key);
   });
   updateLiveIndicators();
   renderLiveSection();
@@ -3486,10 +3496,19 @@ async function refreshModalLiveStats(matchId) {
   };
   const apiMatchId = getApiId(matchId);
   const statsData = await fetchFixtureStats(apiMatchId);
-  if (!statsData.length) return;
+  if (!statsData.length) {
+    const section = document.getElementById("liveStatsSection");
+    if (section && !section.dataset.retrying) {
+      section.dataset.retrying = "1";
+      section.innerHTML = `<div class="live-stats-section"><div class="live-stats-title"><span class="live-dot"></span>AO VIVO · carregando stats...<span style="font-size:9px;color:var(--text-3);font-weight:400;margin-left:auto">↻ ${new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span></div><div style="font-size:11px;color:var(--text-3);text-align:center;padding:12px">Aguardando estatísticas da partida...</div></div>`;
+      setTimeout(() => refreshModalLiveStats(matchId), 10000);
+    }
+    return;
+  }
   const live = liveState.data.get(String(matchId));
   const section = document.getElementById("liveStatsSection");
   if (!section) return;
+  delete section.dataset.retrying;
   function statRow(label, hVal, aVal) {
     const h = Number(hVal) || 0; const a = Number(aVal) || 0;
     const total = h + a || 1; const hPct = Math.round((h / total) * 100); const aPct = 100 - hPct;
@@ -3654,7 +3673,7 @@ function renderMatchTimeline(matchId, events) {
       <div style="font-size:9px;font-weight:700;color:${isLive?"var(--red)":"var(--text-3)"};text-transform:uppercase;letter-spacing:0.10em;margin-bottom:10px;display:flex;align-items:center;gap:7px">
         ${isLive?'<span class="live-dot"></span>':''}
         ${isLive?'TEMPO REAL':'ENCERRADO'}
-        <span style="font-weight:400;font-size:9px;margin-left:auto;color:var(--text-3)">↻ atualiza a cada 60s</span>
+        <span style="font-weight:400;font-size:9px;margin-left:auto;color:var(--text-3)">↻ ${new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span>
       </div>
 
       <!-- Placar -->
