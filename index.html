@@ -2122,6 +2122,8 @@ const TICKET_SIZE      = 3;
 const AUTO_UI_REFRESH_MS   = 60000;
 const AUTO_DATA_REFRESH_MS = 4 * 60 * 60 * 1000;
 
+let _currentModalMatch = null; // full match object for current analysis modal
+
 const state = {
   dailyPicks:[], matches:[], competitions:[],
   selectedLeague:null, currentTicket:[],
@@ -2730,7 +2732,10 @@ function getDetectedMarkets(match){
       if(items.length >= 2)break;
       if(usedFamilies.has(ind.family))continue;
       const tier=probabilityToTier(ind.confidence);
-      const copy=`Projeção de ${formatDecimal(ind.value,1)} para este time — desequilíbrio estatístico favorável.`;
+      // Extract team name from market string (e.g. "Mais de 4.5 Chutes no Gol — Holanda")
+      const teamFromMarket = ind.market.includes(" — ") ? ind.market.split(" — ").pop().trim() : null;
+      const teamLabel = teamFromMarket || "este time";
+      const copy=`Projeção de ${formatDecimal(ind.value,1)} para ${teamLabel} — desequilíbrio estatístico favorável para este mercado.`;
       items.push({market:ind.market,tier,family:ind.family,copy,chip:ind.chip,individual:true});
       usedFamilies.add(ind.family);
     }
@@ -2862,6 +2867,7 @@ function openAnalysis(matchId){
     </div>
   `;
   state.lastOpenedMatchId=match.id;
+  _currentModalMatch = match;
   document.getElementById("analysisOverlay").classList.add("open");
   pushModalState("analysisOverlay");
   lockBodyScroll();
@@ -3006,6 +3012,7 @@ function openAnalysis(matchId){
 function closeAnalysis(){
   document.getElementById("analysisOverlay").classList.remove("open");
   unlockBodyScroll();
+  _currentModalMatch = null;
   if (liveState.modalInterval) { clearInterval(liveState.modalInterval); liveState.modalInterval = null; }
   liveState.activeModalId = null;
 }
@@ -3518,13 +3525,16 @@ async function refreshLiveData() {
       // Search liveMap for a match with same teams (normalize + longer match)
       const norm = s => (s||"").toLowerCase()
         .normalize("NFD").replace(/[̀-ͯ]/g,"")
-        .replace(/[^a-z0-9]/g," ").trim();
+        .replace(/[^a-z0-9]/g," ").replace(/\s+/g," ").trim();
       const mHomeN = norm(m.home_team); const mAwayN = norm(m.away_team);
+      // Extract significant words (len >= 3) for fuzzy matching
+      const words = s => s.split(" ").filter(w => w.length >= 3);
+      const anyWordMatch = (a, b) => words(a).some(w => b.includes(w)) || words(b).some(w => a.includes(w));
       for (const [fid, f] of liveMap) {
         const fHomeN = norm(f.teams?.home?.name);
         const fAwayN = norm(f.teams?.away?.name);
-        const homeMatch = fHomeN.includes(mHomeN.slice(0,7)) || mHomeN.includes(fHomeN.slice(0,7));
-        const awayMatch = fAwayN.includes(mAwayN.slice(0,7)) || mAwayN.includes(fAwayN.slice(0,7));
+        const homeMatch = anyWordMatch(fHomeN, mHomeN);
+        const awayMatch = anyWordMatch(fAwayN, mAwayN);
         if (homeMatch && awayMatch) return f;
       }
       return null;
@@ -3805,7 +3815,25 @@ function injectLiveStatsInModal(matchId) {
     }
     const existing = document.getElementById("liveStatsSection");
     if (existing) existing.remove();
-    const live = liveState.data.get(String(matchId));
+    let live = liveState.data.get(String(matchId));
+    // Fallback: check external live data
+    if (!live) {
+      const ext = liveState.external.get(String(matchId));
+      if (ext?.liveData) live = { ...ext.liveData, apiFixtureId: ext.id };
+    }
+    // Fallback 2: check if match kickoff suggests it's live now
+    if (!live) {
+      const m = getMatchById(matchId);
+      if (m) {
+        const d = parseDateSafe(m.kickoff);
+        if (d) {
+          const elapsed = (new Date() - d) / 60000;
+          if (elapsed >= 0 && elapsed <= 115) {
+            live = { homeScore:0, awayScore:0, minute: Math.min(Math.round(elapsed),90), isLive:true, isFinished:false };
+          }
+        }
+      }
+    }
     if (!live?.isLive && !live?.isFinished) return;
     // Insert before first a-box, or at top of analysisBody
     const firstBox = analysisCard.querySelector(".a-highlight") 
@@ -4866,8 +4894,12 @@ async function fetchTopScorers(leagueId, season) {
 function switchStandingsTab(tab, btn) {
   document.querySelectorAll("#standingsTabSection .h2h-tab").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
-  const match = getMatchById(state.lastOpenedMatchId);
-  if (!match) return;
+  const match = _currentModalMatch || getMatchById(state.lastOpenedMatchId);
+  if (!match) {
+    const el = document.getElementById("standingsTabContent");
+    if (el) el.innerHTML = '<div class="empty-state">Dados do jogo não disponíveis</div>';
+    return;
+  }
   if (tab === "classificacao") loadModalStandings(match);
   else loadModalScorers(match);
 }
@@ -4944,7 +4976,7 @@ async function loadModalScorers(match) {
 }
 
 async function initModalStandings(match) {
-  // Auto-load on modal open
+  _currentModalMatch = _currentModalMatch || match;
   await loadModalStandings(match);
 }
 
