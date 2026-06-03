@@ -2864,9 +2864,7 @@ function openAnalysis(matchId){
   state.lastOpenedMatchId=match.id;
   document.getElementById("analysisOverlay").classList.add("open");
   pushModalState("analysisOverlay");
-  document.body.style.overflow = "hidden";
-  document.body.style.position = "fixed";
-  document.body.style.width = "100%";
+  lockBodyScroll();
   // Load standings tab
   setTimeout(() => initModalStandings(match), 300);
   injectLiveStatsInModal(match.id);
@@ -3007,6 +3005,7 @@ function openAnalysis(matchId){
 }
 function closeAnalysis(){
   document.getElementById("analysisOverlay").classList.remove("open");
+  unlockBodyScroll();
   if (liveState.modalInterval) { clearInterval(liveState.modalInterval); liveState.modalInterval = null; }
   liveState.activeModalId = null;
 }
@@ -4506,8 +4505,8 @@ function filterWCAgenda(filter, btn){
   renderWCAgenda();
 }
 
-function openWC2026(){ document.getElementById("wcOverlay").classList.add("open"); pushModalState("wcOverlay"); document.body.style.overflow="hidden"; document.body.style.position="fixed"; document.body.style.width="100%"; }
-function closeWC2026(){ document.getElementById("wcOverlay").classList.remove("open"); document.body.style.overflow=""; document.body.style.position=""; document.body.style.width=""; }
+function openWC2026(){ document.getElementById("wcOverlay").classList.add("open"); pushModalState("wcOverlay"); lockBodyScroll(); }
+function closeWC2026(){ document.getElementById("wcOverlay").classList.remove("open"); unlockBodyScroll(); }
 
 document.addEventListener("click", e => {
   const tab = e.target.closest(".wc-tab"); if(!tab)return;
@@ -4658,17 +4657,13 @@ function openResultados() {
   if (!overlay) return;
   overlay.classList.add("open");
   pushModalState("resultadosOverlay");
-  document.body.style.overflow = "hidden";
-  document.body.style.position = "fixed";
-  document.body.style.width = "100%";
+  lockBodyScroll();
   renderResultados();
 }
 
 function closeResultados() {
   document.getElementById("resultadosOverlay")?.classList.remove("open");
-  document.body.style.overflow = "";
-  document.body.style.position = "";
-  document.body.style.width = "";
+  unlockBodyScroll();
 }
 
 async function renderResultados() {
@@ -5281,6 +5276,24 @@ function toggleComoFunciona() {
   if (!body) return;
   const open = body.style.display !== "none";
   body.style.display = open ? "none" : "block";
+}
+
+
+/* ── SCROLL LOCK HELPERS ──────────────────────────────────────── */
+let _savedScrollY = 0;
+function lockBodyScroll() {
+  _savedScrollY = window.scrollY || window.pageYOffset;
+  document.body.style.overflow = 'hidden';
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${_savedScrollY}px`;
+  document.body.style.width = '100%';
+}
+function unlockBodyScroll() {
+  document.body.style.overflow = '';
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.width = '';
+  window.scrollTo(0, _savedScrollY);
 }
 
 initialize();
