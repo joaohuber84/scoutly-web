@@ -764,10 +764,15 @@
       padding: 18px 20px 24px;
       overflow-y: auto; flex: 1;
       scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
     }
     .analysis-body::-webkit-scrollbar { width: 4px; }
     .analysis-body::-webkit-scrollbar-track { background: transparent; }
     .analysis-body::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 4px; }
+    .analysis-overlay.open { touch-action: none; }
+    .analysis-card { touch-action: pan-y; }
+    .wc-panel-body { overscroll-behavior: contain; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
 
     /* ── Pick principal — DOMINANTE ────────────────────────────────── */
     .a-highlight {
@@ -2859,6 +2864,9 @@ function openAnalysis(matchId){
   state.lastOpenedMatchId=match.id;
   document.getElementById("analysisOverlay").classList.add("open");
   pushModalState("analysisOverlay");
+  document.body.style.overflow = "hidden";
+  document.body.style.position = "fixed";
+  document.body.style.width = "100%";
   // Load standings tab
   setTimeout(() => initModalStandings(match), 300);
   injectLiveStatsInModal(match.id);
@@ -3663,8 +3671,10 @@ function buildLiveModalHtml(matchId, statsData, events) {
     const h = Number(String(hRaw).replace("%","")) || 0;
     const a = Number(String(aRaw).replace("%","")) || 0;
     const total = h + a || 1;
-    const hPct = Math.round((h/total)*100);
-    const aPct = 100-hPct;
+    // For possession, use raw values directly
+    const isPosse = label.includes("Posse");
+    const hPct = isPosse ? h : Math.round((h/total)*100);
+    const aPct = isPosse ? a : 100-hPct;
     return `<div class="live-stat-full-row">
       <div class="live-stat-numbers">
         <span class="live-stat-val-home">${hRaw}</span>
@@ -3681,14 +3691,25 @@ function buildLiveModalHtml(matchId, statsData, events) {
   // Stats section
   let statsHtml = "";
   if (statsData && statsData.length) {
+    // Detect home/away order — API doesn't guarantee team order
+    let h = 0; let a = 1;
+    if (statsData.length >= 2) {
+      const t0 = (statsData[0]?.team?.name || "").toLowerCase();
+      const normHome = (homeName || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+      const normT0   = t0.normalize("NFD").replace(/[̀-ͯ]/g,"");
+      // If first team doesn't look like home team, swap
+      if (normHome.length > 3 && !normT0.includes(normHome.slice(0,5)) && !normHome.includes(normT0.slice(0,5))) {
+        h = 1; a = 0;
+      }
+    }
     const gs  = (i,t) => getStat(statsData,i,t);
     const gn  = (i,t) => safeNum(getStat(statsData,i,t));
-    const cards = [gn(0,"Yellow Cards")+gn(0,"Red Cards"), gn(1,"Yellow Cards")+gn(1,"Red Cards")];
+    const cards = [gn(h,"Yellow Cards")+gn(h,"Red Cards"), gn(a,"Yellow Cards")+gn(a,"Red Cards")];
     statsHtml = `<div class="live-stat-rows">
-      ${statRow("Escanteios", gs(0,"Corner Kicks"), gs(1,"Corner Kicks"))}
-      ${statRow("Finalizações", gs(0,"Total Shots"), gs(1,"Total Shots"))}
-      ${statRow("No gol", gs(0,"Shots on Goal"), gs(1,"Shots on Goal"))}
-      ${statRow("Posse %", gs(0,"Ball Possession").replace("%",""), gs(1,"Ball Possession").replace("%",""))}
+      ${statRow("Escanteios", gs(h,"Corner Kicks"), gs(a,"Corner Kicks"))}
+      ${statRow("Finalizações", gs(h,"Total Shots"), gs(a,"Total Shots"))}
+      ${statRow("No gol", gs(h,"Shots on Goal"), gs(a,"Shots on Goal"))}
+      ${statRow("Posse %", gs(h,"Ball Possession").replace("%",""), gs(a,"Ball Possession").replace("%",""))}
       ${statRow("Cartões", cards[0], cards[1])}
     </div>`;
   } else {
@@ -4485,8 +4506,8 @@ function filterWCAgenda(filter, btn){
   renderWCAgenda();
 }
 
-function openWC2026(){ document.getElementById("wcOverlay").classList.add("open"); pushModalState("wcOverlay"); }
-function closeWC2026(){ document.getElementById("wcOverlay").classList.remove("open"); }
+function openWC2026(){ document.getElementById("wcOverlay").classList.add("open"); pushModalState("wcOverlay"); document.body.style.overflow="hidden"; document.body.style.position="fixed"; document.body.style.width="100%"; }
+function closeWC2026(){ document.getElementById("wcOverlay").classList.remove("open"); document.body.style.overflow=""; document.body.style.position=""; document.body.style.width=""; }
 
 document.addEventListener("click", e => {
   const tab = e.target.closest(".wc-tab"); if(!tab)return;
@@ -4637,11 +4658,17 @@ function openResultados() {
   if (!overlay) return;
   overlay.classList.add("open");
   pushModalState("resultadosOverlay");
+  document.body.style.overflow = "hidden";
+  document.body.style.position = "fixed";
+  document.body.style.width = "100%";
   renderResultados();
 }
 
 function closeResultados() {
   document.getElementById("resultadosOverlay")?.classList.remove("open");
+  document.body.style.overflow = "";
+  document.body.style.position = "";
+  document.body.style.width = "";
 }
 
 async function renderResultados() {
