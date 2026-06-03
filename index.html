@@ -751,7 +751,7 @@
     }
     .analysis-sub img { border-radius: 2px; }
     .close-btn {
-      width: 34px; height: 34px; border-radius: var(--radius-sm);
+      width: 48px; height: 48px; border-radius: var(--radius-sm);
       flex-shrink: 0; background: var(--surface-2); border: 1px solid var(--border);
       color: var(--text-2); font-size: 14px;
       display: flex; align-items: center; justify-content: center;
@@ -1375,66 +1375,171 @@
       font-size: 11px; color: var(--red);
     }
 
-    /* ─── MATCH TIMELINE ─────────────────────────────────────────────── */
-    .match-timeline {
+    /* ─── LIVE MODAL ─────────────────────────────────────────────────── */
+    .live-modal-wrap {
       background: var(--surface-2);
-      border: 1px solid var(--border);
+      border: 1px solid var(--red-line);
       border-left: 3px solid var(--red);
       border-radius: var(--radius-lg);
-      padding: 14px 16px;
+      padding: 16px; margin-bottom: 16px;
+    }
+    .live-modal-wrap.finished {
+      border-color: var(--border);
+      border-left-color: var(--text-3);
+    }
+    .live-modal-header {
+      display: flex; align-items: center; justify-content: space-between;
       margin-bottom: 14px;
     }
-    .tl-track {
-      position: relative;
-      height: 20px;
-      background: var(--surface-3);
-      border-radius: 4px;
-      overflow: visible;
+    .live-modal-label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 9px; font-weight: 800; color: var(--red);
+      text-transform: uppercase; letter-spacing: 0.10em;
     }
-    .tl-progress {
-      position: absolute;
-      left: 0; top: 0; height: 100%;
-      background: linear-gradient(90deg, rgba(0,179,104,0.12), rgba(0,179,104,0.04));
-      border-radius: 4px;
-      transition: width 0.5s ease;
+    .live-modal-ts {
+      font-size: 9px; color: var(--text-3); font-family: var(--font-mono);
     }
-    .tl-half-line {
-      position: absolute;
-      left: 47.37%; /* 45/95 */
-      top: 0; bottom: 0;
-      width: 1px;
-      background: var(--border-2);
-      z-index: 1;
+    /* Scoreboard */
+    .live-scoreboard-row {
+      display: grid; grid-template-columns: 1fr auto 1fr;
+      align-items: center; gap: 10px; margin-bottom: 14px;
     }
-    .tl-dot {
-      position: absolute;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      width: 20px; height: 20px;
-      border-radius: 50%;
+    .live-sb-team {
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+    }
+    .live-sb-logo {
+      width: 36px; height: 36px; object-fit: contain; border-radius: 6px;
+    }
+    .live-sb-logo-fb {
+      width: 36px; height: 36px; border-radius: 6px;
+      background: var(--surface-3); border: 1px solid var(--border);
       display: flex; align-items: center; justify-content: center;
-      z-index: 2;
-      cursor: default;
-      border: 1px solid rgba(255,255,255,0.15);
-      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      font-size: 10px; font-weight: 700; color: var(--text-3);
     }
-    .tl-dot-icon { font-size: 10px; line-height: 1; }
-    .tl-dot:hover::after {
-      content: attr(title);
-      position: absolute;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--surface);
-      border: 1px solid var(--border-2);
-      border-radius: 5px;
-      padding: 3px 7px;
-      font-size: 9px;
-      color: var(--text);
+    .live-sb-name {
+      font-size: 11px; font-weight: 700; color: var(--text);
+      text-align: center; line-height: 1.2;
+      max-width: 80px; overflow: hidden; text-overflow: ellipsis;
       white-space: nowrap;
-      z-index: 100;
-      pointer-events: none;
     }
+    .live-sb-center {
+      display: flex; flex-direction: column; align-items: center; gap: 3px;
+    }
+    .live-sb-score {
+      font-family: var(--font-mono); font-size: 36px; font-weight: 900;
+      color: #fff; letter-spacing: 0.05em; line-height: 1;
+      background: var(--surface-3); border-radius: var(--radius-sm);
+      padding: 6px 14px; white-space: nowrap;
+    }
+    .live-sb-minute {
+      font-size: 11px; font-weight: 800; color: var(--red);
+      display: flex; align-items: center; gap: 5px;
+    }
+    /* Stats rows */
+    .live-stat-rows { display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px; }
+    .live-stat-row-new {
+      display: grid; grid-template-columns: 28px 1fr 28px;
+      align-items: center; gap: 6px;
+    }
+    .live-stat-val-home {
+      font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+      color: var(--green); text-align: right;
+    }
+    .live-stat-val-away {
+      font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+      color: var(--blue); text-align: left;
+    }
+    .live-stat-bar-row {
+      display: flex; height: 5px; border-radius: 3px; overflow: hidden;
+      background: var(--surface-4);
+    }
+    .live-stat-bar-h {
+      background: var(--green); border-radius: 3px 0 0 3px;
+      transition: width 0.5s ease; opacity: 0.85;
+    }
+    .live-stat-bar-a {
+      background: var(--blue); border-radius: 0 3px 3px 0;
+      transition: width 0.5s ease; margin-left: auto; opacity: 0.85;
+    }
+    .live-stat-label-center {
+      font-size: 9px; color: var(--text-3); text-align: center;
+      text-transform: uppercase; letter-spacing: 0.05em; line-height: 1.2;
+      white-space: nowrap;
+    }
+    .live-stat-full-row {
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .live-stat-numbers {
+      display: flex; justify-content: space-between; align-items: center; gap: 4px;
+    }
+    /* Events list */
+    .live-events-list {
+      border-top: 1px solid var(--border);
+      padding-top: 12px; margin-top: 4px;
+    }
+    .live-events-title {
+      font-size: 9px; font-weight: 700; color: var(--text-3);
+      text-transform: uppercase; letter-spacing: 0.10em;
+      margin-bottom: 8px;
+    }
+    .live-event-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
+      font-size: 11px;
+    }
+    .live-event-item:last-child { border-bottom: none; }
+    .live-event-min {
+      font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+      color: var(--amber); width: 28px; flex-shrink: 0; text-align: right;
+    }
+    .live-event-icon { font-size: 14px; flex-shrink: 0; width: 18px; text-align: center; }
+    .live-event-detail { flex: 1; min-width: 0; }
+    .live-event-player {
+      font-weight: 600; color: var(--text);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .live-event-type { font-size: 10px; color: var(--text-3); }
+    .live-event-team {
+      font-size: 9px; font-weight: 700; padding: 2px 6px;
+      border-radius: 4px; flex-shrink: 0;
+    }
+    .live-event-team.home { background: var(--green-dim); color: var(--green); }
+    .live-event-team.away { background: var(--blue-dim); color: var(--blue); }
+    /* No events */
+    .live-no-events {
+      text-align: center; padding: 12px 0;
+      font-size: 11px; color: var(--text-3); font-style: italic;
+    }
+
+
+    @media (max-width: 768px) {
+      #analysisFooter { display: block !important; }
+      .analysis-card { border-radius: var(--radius-xl) var(--radius-xl) 0 0; }
+    }
+
+    /* ─── ARTILHEIROS ────────────────────────────────────────────────── */
+    .scorer-row {
+      display: grid; grid-template-columns: 26px auto 1fr auto auto;
+      align-items: center; gap: 8px;
+      padding: 8px 4px; border-bottom: 1px solid rgba(255,255,255,0.03);
+      font-size: 11px;
+    }
+    .scorer-row:last-child { border-bottom: none; }
+    .scorer-rank {
+      font-family: var(--font-mono); font-size: 10px; font-weight: 700;
+      color: var(--text-3); text-align: right;
+    }
+    .scorer-rank.top { color: var(--amber); }
+    .scorer-logo { width: 18px; height: 18px; object-fit: contain; border-radius: 3px; flex-shrink: 0; }
+    .scorer-logo-fb { width: 18px; height: 18px; background: var(--surface-3); border-radius: 3px; flex-shrink: 0; }
+    .scorer-info { min-width: 0; }
+    .scorer-name { font-weight: 700; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .scorer-team { font-size: 9px; color: var(--text-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .scorer-goals {
+      font-family: var(--font-mono); font-size: 16px; font-weight: 900;
+      color: var(--green); text-align: right; flex-shrink: 0;
+    }
+    .scorer-assists { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); flex-shrink: 0; white-space: nowrap; }
   </style>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-583FPFX1PT"></script>
   <script>
@@ -1967,6 +2072,10 @@
     </div>
     <div class="analysis-body" id="analysisBody">
       <div class="loading-state">Carregando análise...</div>
+    </div>
+    <!-- Footer close button — visible on mobile -->
+    <div style="display:none;padding:10px 16px;border-top:1px solid var(--border);flex-shrink:0" id="analysisFooter">
+      <button onclick="closeAnalysis()" style="width:100%;padding:13px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-2);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all 0.15s">✕ Fechar análise</button>
     </div>
   </div>
 </div>
@@ -2732,9 +2841,26 @@ function openAnalysis(matchId){
         </div>
       </div>
     </div>
+
+    <!-- ── Classificação + Artilheiros ── -->
+    <div class="a-box" style="margin-top:12px" id="standingsTabSection">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+        <div class="a-box-title" style="margin-bottom:0">Competição</div>
+        <div style="display:flex;gap:5px">
+          <button class="h2h-tab active" id="tabClassificacao" onclick="switchStandingsTab('classificacao',this)">📊 Tabela</button>
+          <button class="h2h-tab" id="tabArtilheiros" onclick="switchStandingsTab('artilheiros',this)">⚽ Artilheiros</button>
+        </div>
+      </div>
+      <div id="standingsTabContent">
+        <div class="loading-state" style="padding:14px">Carregando tabela...</div>
+      </div>
+    </div>
   `;
   state.lastOpenedMatchId=match.id;
   document.getElementById("analysisOverlay").classList.add("open");
+  pushModalState("analysisOverlay");
+  // Load standings tab
+  setTimeout(() => initModalStandings(match), 300);
   injectLiveStatsInModal(match.id);
   // Also try to load events directly for live/recent matches
   const liveCheck = liveState.data.get(String(match.id));
@@ -3486,7 +3612,6 @@ function buildLiveIndicatorHtml(live) {
   return "";
 }
 async function refreshModalLiveStats(matchId) {
-  // Get API fixture ID: from liveState cache, match fixture_id, or supabase id
   const getApiId = (id) => {
     const liveEntry = liveState.data.get(String(id));
     if (liveEntry?.apiFixtureId) return liveEntry.apiFixtureId;
@@ -3500,39 +3625,155 @@ async function refreshModalLiveStats(matchId) {
     const section = document.getElementById("liveStatsSection");
     if (section && !section.dataset.retrying) {
       section.dataset.retrying = "1";
-      section.innerHTML = `<div class="live-stats-section"><div class="live-stats-title"><span class="live-dot"></span>AO VIVO · carregando stats...<span style="font-size:9px;color:var(--text-3);font-weight:400;margin-left:auto">↻ ${new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span></div><div style="font-size:11px;color:var(--text-3);text-align:center;padding:12px">Aguardando estatísticas da partida...</div></div>`;
+      section.innerHTML = buildLiveModalHtml(matchId, null, null);
       setTimeout(() => refreshModalLiveStats(matchId), 10000);
     }
     return;
   }
-  const live = liveState.data.get(String(matchId));
   const section = document.getElementById("liveStatsSection");
   if (!section) return;
   delete section.dataset.retrying;
-  function statRow(label, hVal, aVal) {
-    const h = Number(hVal) || 0; const a = Number(aVal) || 0;
-    const total = h + a || 1; const hPct = Math.round((h / total) * 100); const aPct = 100 - hPct;
-    return `<div class="live-stat-row"><div class="live-stat-home">${hVal}</div><div class="live-stat-label">${label}</div><div class="live-stat-away">${aVal}</div></div><div class="live-stat-row"><div class="live-stat-bar-wrap"><div class="live-stat-bar-home" style="width:${hPct}%"></div><div class="live-stat-bar-away" style="width:${aPct}%"></div></div></div>`;
-  }
-  // Inject timeline at top if not present
-  if (!document.getElementById("matchTimeline")) {
-    const m = getMatchById(matchId);
-    const apiId = m?.fixture_id || matchId;
-    fetchMatchEvents(apiId).then(events => {
-      if (events.length) renderMatchTimeline(matchId, events);
-    });
-  }
-  const corners = [getStat(statsData,0,"Corner Kicks"), getStat(statsData,1,"Corner Kicks")];
-  const shots = [getStat(statsData,0,"Total Shots"), getStat(statsData,1,"Total Shots")];
-  const sot = [getStat(statsData,0,"Shots on Goal"), getStat(statsData,1,"Shots on Goal")];
-  const poss = [getStat(statsData,0,"Ball Possession"), getStat(statsData,1,"Ball Possession")];
-  const cards = [safeNum(getStat(statsData,0,"Yellow Cards")) + safeNum(getStat(statsData,0,"Red Cards")), safeNum(getStat(statsData,1,"Yellow Cards")) + safeNum(getStat(statsData,1,"Red Cards"))];
-  const minLabel = live?.minute ? ` · ${live.minute}'` : "";
-  const match = (state.matches||[]).find(m => String(m.id) === String(matchId));
-  const homeName = match?.home_team || statsData[0]?.team?.name || "Casa";
-  const awayName = match?.away_team || statsData[1]?.team?.name || "Fora";
-  section.innerHTML = `<div class="live-stats-section"><div class="live-stats-title"><span class="live-dot"></span>AO VIVO${minLabel}<span style="font-size:9px;color:var(--text-3);font-weight:400;margin-left:auto">↻ ${new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span></div><div style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)"><div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px"><div style="font-size:12px;color:var(--text-2);font-weight:700;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(homeName)}</div><div style="font-family:var(--font-mono);font-size:26px;font-weight:900;color:var(--text);letter-spacing:.04em;white-space:nowrap;padding:0 4px">${live?.homeScore ?? 0} — ${live?.awayScore ?? 0}</div><div style="font-size:12px;color:var(--text-2);font-weight:700;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(awayName)}</div></div>${live?.minute ? `<div style="font-size:11px;color:var(--text-3);margin-top:6px;text-align:center">${live.minute}' jogados</div>` : ""}</div><div style="display:grid;grid-template-columns:1fr 1fr;font-size:9px;color:var(--text-3);text-align:center;margin-bottom:10px"><div style="color:var(--green)">CASA</div><div style="color:var(--blue)">FORA</div></div>${statRow("Escanteios", corners[0], corners[1])}${statRow("Finalizações", shots[0], shots[1])}${statRow("No gol", sot[0], sot[1])}${statRow("Posse (%)", poss[0].replace("%",""), poss[1].replace("%",""))}${statRow("Cartões", cards[0], cards[1])}</div>`;
+
+  // Fetch events too
+  const events = await fetchMatchEvents(apiMatchId);
+  section.innerHTML = buildLiveModalHtml(matchId, statsData, events);
 }
+
+function buildLiveModalHtml(matchId, statsData, events) {
+  const live = liveState.data.get(String(matchId));
+  const match = getMatchById(matchId);
+  const homeName = match?.home_team || statsData?.[0]?.team?.name || "Casa";
+  const awayName = match?.away_team || statsData?.[1]?.team?.name || "Fora";
+  const homeLogo = match?.home_logo || statsData?.[0]?.team?.logo || "";
+  const awayLogo = match?.away_logo || statsData?.[1]?.team?.logo || "";
+  const isLive = live?.isLive;
+  const isFinished = live?.isFinished;
+  const hScore = live?.homeScore ?? 0;
+  const aScore = live?.awayScore ?? 0;
+  const minute = live?.minute;
+  const ts = new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});
+
+  // Team logo helper
+  const teamLogo = (logo, name) => logo
+    ? `<img src="${escapeHtml(logo)}" class="live-sb-logo" onerror="this.style.display='none'">`
+    : `<div class="live-sb-logo-fb">${escapeHtml(teamInitials(name))}</div>`;
+
+  // Stat row helper
+  function statRow(label, hRaw, aRaw) {
+    const h = Number(String(hRaw).replace("%","")) || 0;
+    const a = Number(String(aRaw).replace("%","")) || 0;
+    const total = h + a || 1;
+    const hPct = Math.round((h/total)*100);
+    const aPct = 100-hPct;
+    return `<div class="live-stat-full-row">
+      <div class="live-stat-numbers">
+        <span class="live-stat-val-home">${hRaw}</span>
+        <span class="live-stat-label-center">${label}</span>
+        <span class="live-stat-val-away">${aRaw}</span>
+      </div>
+      <div class="live-stat-bar-row">
+        <div class="live-stat-bar-h" style="width:${hPct}%"></div>
+        <div class="live-stat-bar-a" style="width:${aPct}%"></div>
+      </div>
+    </div>`;
+  }
+
+  // Stats section
+  let statsHtml = "";
+  if (statsData && statsData.length) {
+    const gs  = (i,t) => getStat(statsData,i,t);
+    const gn  = (i,t) => safeNum(getStat(statsData,i,t));
+    const cards = [gn(0,"Yellow Cards")+gn(0,"Red Cards"), gn(1,"Yellow Cards")+gn(1,"Red Cards")];
+    statsHtml = `<div class="live-stat-rows">
+      ${statRow("Escanteios", gs(0,"Corner Kicks"), gs(1,"Corner Kicks"))}
+      ${statRow("Finalizações", gs(0,"Total Shots"), gs(1,"Total Shots"))}
+      ${statRow("No gol", gs(0,"Shots on Goal"), gs(1,"Shots on Goal"))}
+      ${statRow("Posse %", gs(0,"Ball Possession").replace("%",""), gs(1,"Ball Possession").replace("%",""))}
+      ${statRow("Cartões", cards[0], cards[1])}
+    </div>`;
+  } else {
+    statsHtml = `<div style="font-size:11px;color:var(--text-3);text-align:center;padding:10px 0;font-style:italic">Aguardando estatísticas...</div>`;
+  }
+
+  // Events section
+  let eventsHtml = "";
+  if (events && events.length) {
+    const ICONS = { "Goal":"⚽", "Card":"🟨", "subst":"↕", "Var":"📺" };
+    const sorted = [...events].sort((a,b) => (b.time?.elapsed||0)-(a.time?.elapsed||0));
+    // Determine home team name from statsData or events
+    const homeTeamName = statsData?.[0]?.team?.name || homeName;
+    const evRows = sorted.slice(0,15).map(ev => {
+      const min = ev.time?.elapsed || "?";
+      const isHome = (ev.team?.name||"") === homeTeamName ||
+                     (ev.team?.name||"").toLowerCase().includes(homeName.toLowerCase().slice(0,5));
+      const teamSide = isHome ? "home" : "away";
+      const teamLabel = isHome ? homeName.split(" ")[0] : awayName.split(" ")[0];
+      let icon = ICONS[ev.type] || "•";
+      let typeLabel = ev.detail || ev.type || "";
+      let playerName = ev.player?.name || "";
+
+      if (ev.type === "Card") {
+        icon = ev.detail === "Red Card" ? "🟥" : "🟨";
+        typeLabel = ev.detail === "Red Card" ? "Cartão vermelho" : "Cartão amarelo";
+      } else if (ev.type === "Goal") {
+        if (ev.detail === "Own Goal") { icon = "⚽"; typeLabel = "Gol contra"; }
+        else if (ev.detail === "Penalty") typeLabel = "Gol de pênalti";
+        else typeLabel = "Gol";
+      } else if (ev.type === "subst") {
+        icon = "↕";
+        const out = ev.player?.name?.split(" ").pop() || "";
+        const inn = ev.assist?.name?.split(" ").pop() || "";
+        playerName = `${inn} ↑  ${out} ↓`;
+        typeLabel = "Substituição";
+      }
+
+      return `<div class="live-event-item">
+        <span class="live-event-min">${min}'</span>
+        <span class="live-event-icon">${icon}</span>
+        <div class="live-event-detail">
+          <div class="live-event-player">${escapeHtml(playerName)}</div>
+          <div class="live-event-type">${escapeHtml(typeLabel)}</div>
+        </div>
+        <span class="live-event-team ${teamSide}">${escapeHtml(teamLabel)}</span>
+      </div>`;
+    }).join("");
+    eventsHtml = `<div class="live-events-list">
+      <div class="live-events-title">Eventos da partida</div>
+      ${evRows}
+    </div>`;
+  }
+
+  const wrapClass = isFinished ? "live-modal-wrap finished" : "live-modal-wrap";
+  const labelHtml = isFinished
+    ? `<div class="live-modal-label" style="color:var(--text-3)">⏱ ENCERRADO</div>`
+    : `<div class="live-modal-label"><span class="live-dot"></span>TEMPO REAL</div>`;
+
+  return `<div class="${wrapClass}">
+    <div class="live-modal-header">
+      ${labelHtml}
+      <span class="live-modal-ts">↻ ${ts}</span>
+    </div>
+    <div class="live-scoreboard-row">
+      <div class="live-sb-team">
+        ${teamLogo(homeLogo, homeName)}
+        <span class="live-sb-name">${escapeHtml(homeName)}</span>
+      </div>
+      <div class="live-sb-center">
+        <div class="live-sb-score">${hScore} <span style="color:var(--text-3);font-size:24px">·</span> ${aScore}</div>
+        ${isLive && minute ? `<div class="live-sb-minute"><span class="live-dot"></span>${minute}'</div>` : ""}
+        ${isFinished ? `<div style="font-size:10px;color:var(--text-3);margin-top:2px">FIM DE JOGO</div>` : ""}
+      </div>
+      <div class="live-sb-team">
+        ${teamLogo(awayLogo, awayName)}
+        <span class="live-sb-name">${escapeHtml(awayName)}</span>
+      </div>
+    </div>
+    ${statsHtml}
+    ${eventsHtml}
+  </div>`;
+}
+
+
 function injectLiveStatsInModal(matchId) {
   // Timing guard: wait for DOM to be ready
   const tryInject = (attempts = 0) => {
@@ -3600,148 +3841,16 @@ async function fetchMatchEvents(fixtureId) {
 }
 
 function renderMatchTimeline(matchId, events) {
-  const match = (state.matches||[]).find(m => String(m.id) === String(matchId))
-             || (() => { const ext = liveState.external.get(String(matchId)); return ext; })();
-  if (!match) return;
-
+  // Find or refresh liveStatsSection — now handled by refreshModalLiveStats
+  const section = document.getElementById("liveStatsSection");
+  if (!section) return;
+  // Re-render with events
   const live = liveState.data.get(String(matchId));
-  const currentMin = live?.minute || 90;
-  const homeName = match.home_team || "Casa";
-  const awayName = match.away_team || "Fora";
-
-  // Categorize events
-  const homeGoals   = events.filter(e => e.type === "Goal" && e.team?.id === (match.home_id || events.find(x=>x.type==="Goal")?.team?.id) && e.detail !== "Missed Penalty");
-  const awayGoals   = events.filter(e => e.type === "Goal" && e.team?.name === awayName && e.detail !== "Missed Penalty");
-  // Better: split by team position
-  const teams = [...new Set(events.map(e => e.team?.name).filter(Boolean))];
-  const homeTeamName = teams[0] || homeName;
-  const awayTeamName = teams[1] || awayName;
-
-  function eventsForTeam(teamName, type) {
-    return events.filter(e => e.team?.name === teamName && (type === "all" || e.type === type || e.type?.includes(type)));
-  }
-  function eventsForTeamMulti(teamName, types) {
-    return events.filter(e => e.team?.name === teamName && types.includes(e.type));
-  }
-
-  const hGoals   = eventsForTeam(homeTeamName, "Goal").filter(e => e.detail !== "Missed Penalty");
-  const aGoals   = eventsForTeam(awayTeamName, "Goal").filter(e => e.detail !== "Missed Penalty");
-  const hCards   = eventsForTeamMulti(homeTeamName, ["Card"]);
-  const aCards   = eventsForTeamMulti(awayTeamName, ["Card"]);
-  const hSubs    = eventsForTeam(homeTeamName, "subst");
-  const aSubs    = eventsForTeam(awayTeamName, "subst");
-  const hCorners = events.filter(e => e.team?.name === homeTeamName && e.detail === "Corner");
-  const aCorners = events.filter(e => e.team?.name === awayTeamName && e.detail === "Corner");
-
-  // Timeline dot builder
-  function dot(min, icon, color, label) {
-    const pct = Math.min((min / 95) * 100, 100);
-    return `<div class="tl-dot" style="left:${pct}%;background:${color}" title="${escapeHtml(label)} · ${min}'">
-      <span class="tl-dot-icon">${icon}</span>
-    </div>`;
-  }
-
-  // Build home timeline dots
-  const homeDots = [
-    ...hGoals.map(e => dot(e.time?.elapsed||0, "⚽", "var(--green)", e.player?.name||"Gol")),
-    ...hCards.map(e => dot(e.time?.elapsed||0, e.detail==="Red Card"?"🟥":"🟨", e.detail==="Red Card"?"var(--red)":"var(--amber)", e.player?.name||"Cartão")),
-    ...hSubs.map(e => dot(e.time?.elapsed||0, "↕", "var(--blue)", `${e.player?.name||""}→${e.assist?.name||""}`)),
-  ].join("");
-
-  const awayDots = [
-    ...aGoals.map(e => dot(e.time?.elapsed||0, "⚽", "var(--green)", e.player?.name||"Gol")),
-    ...aCards.map(e => dot(e.time?.elapsed||0, e.detail==="Red Card"?"🟥":"🟨", e.detail==="Red Card"?"var(--red)":"var(--amber)", e.player?.name||"Cartão")),
-    ...aSubs.map(e => dot(e.time?.elapsed||0, "↕", "var(--blue)", `${e.player?.name||""}→${e.assist?.name||""}`)),
-  ].join("");
-
-  // Goals list
-  function goalList(goals, align) {
-    if (!goals.length) return `<span style="font-size:10px;color:var(--text-3)">-</span>`;
-    return goals.map(g => {
-      const pen = g.detail === "Penalty" ? " (P)" : g.detail === "Own Goal" ? " (CG)" : "";
-      return `<div style="font-size:10px;color:var(--text-2);text-align:${align}">${escapeHtml(g.player?.name?.split(" ").pop()||"?")} ${g.time?.elapsed||"?"}' ${pen}</div>`;
-    }).join("");
-  }
-
-  const hScore = live?.homeScore ?? hGoals.length;
-  const aScore = live?.awayScore ?? aGoals.length;
-  const minLabel = live?.minute ? `${live.minute}'` : "FIM";
-  const isLive = live?.isLive;
-
-  const html = `
-    <div class="match-timeline" id="matchTimeline">
-      <div style="font-size:9px;font-weight:700;color:${isLive?"var(--red)":"var(--text-3)"};text-transform:uppercase;letter-spacing:0.10em;margin-bottom:10px;display:flex;align-items:center;gap:7px">
-        ${isLive?'<span class="live-dot"></span>':''}
-        ${isLive?'TEMPO REAL':'ENCERRADO'}
-        <span style="font-weight:400;font-size:9px;margin-left:auto;color:var(--text-3)">↻ ${new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span>
-      </div>
-
-      <!-- Placar -->
-      <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:12px">
-        <div style="font-size:12px;font-weight:700;color:var(--text);text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(homeName)}</div>
-        <div style="font-family:var(--font-mono);font-size:28px;font-weight:900;color:var(--text);letter-spacing:0.04em;white-space:nowrap;text-align:center;padding:4px 10px;background:var(--surface-3);border-radius:var(--radius-sm)">
-          ${hScore} <span style="color:var(--text-3);font-size:20px">·</span> ${aScore}
-          ${isLive?`<div style="font-size:10px;color:var(--red);font-weight:700;margin-top:2px">${minLabel}</div>`:`<div style="font-size:10px;color:var(--text-3);margin-top:2px">FIM</div>`}
-        </div>
-        <div style="font-size:12px;font-weight:700;color:var(--text);text-align:left;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(awayName)}</div>
-      </div>
-
-      <!-- Gols -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;font-size:10px">
-        <div style="background:var(--surface-3);border-radius:var(--radius-sm);padding:7px 9px">
-          <div style="font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">⚽ Gols — ${escapeHtml(homeName)}</div>
-          ${goalList(hGoals,"left")}
-        </div>
-        <div style="background:var(--surface-3);border-radius:var(--radius-sm);padding:7px 9px">
-          <div style="font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:5px">⚽ Gols — ${escapeHtml(awayName)}</div>
-          ${goalList(aGoals,"left")}
-        </div>
-      </div>
-
-      <!-- Timeline -->
-      <div style="margin-bottom:8px">
-        <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--text-3);margin-bottom:4px">
-          <span>${escapeHtml(homeName)}</span><span>45'</span><span>90'</span>
-        </div>
-        <div class="tl-track">
-          <div class="tl-half-line"></div>
-          <div class="tl-progress" style="width:${Math.min((currentMin/95)*100,100)}%"></div>
-          ${homeDots}
-        </div>
-        <div class="tl-track" style="margin-top:4px">
-          <div class="tl-half-line"></div>
-          <div class="tl-progress" style="width:${Math.min((currentMin/95)*100,100)}%"></div>
-          ${awayDots}
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--text-3);margin-top:4px">
-          <span>${escapeHtml(awayName)}</span><span></span>
-        </div>
-      </div>
-
-      <!-- Resumo de eventos -->
-      <div style="display:flex;gap:6px;flex-wrap:wrap;font-size:10px">
-        ${hGoals.length+aGoals.length > 0 ? `<span style="background:var(--green-dim);border:1px solid var(--green-line);border-radius:5px;padding:2px 8px;color:var(--green)">⚽ ${hGoals.length+aGoals.length} gols</span>` : ""}
-        ${hCards.length+aCards.length > 0 ? `<span style="background:var(--amber-dim);border:1px solid var(--amber-line);border-radius:5px;padding:2px 8px;color:var(--amber)">🟨 ${hCards.length+aCards.length} cartões</span>` : ""}
-        ${hCorners.length+aCorners.length > 0 ? `<span style="background:var(--blue-dim);border:1px solid var(--blue-line);border-radius:5px;padding:2px 8px;color:var(--blue)">🚩 ${hCorners.length+aCorners.length} escanteios</span>` : ""}
-        ${hSubs.length+aSubs.length > 0 ? `<span style="background:var(--surface-3);border:1px solid var(--border);border-radius:5px;padding:2px 8px;color:var(--text-3)">↕ ${hSubs.length+aSubs.length} subs</span>` : ""}
-      </div>
-    </div>`;
-
-  // Find or create timeline container
-  let container = document.getElementById("matchTimeline");
-  if (container) {
-    container.outerHTML = html;
-  } else {
-    // Insert after liveStatsSection or before first a-box
-    const section = document.getElementById("liveStatsSection");
-    const analysisBody = document.getElementById("analysisBody");
-    if (section) {
-      section.insertAdjacentHTML("afterend", html);
-    } else if (analysisBody) {
-      analysisBody.insertAdjacentHTML("afterbegin", html);
-    }
-  }
+  if (!live) return;
+  // Trigger a full refresh which will also fetch stats
+  refreshModalLiveStats(matchId);
 }
+
 
 function startLiveModule() {
   refreshLiveData();
@@ -4376,7 +4485,7 @@ function filterWCAgenda(filter, btn){
   renderWCAgenda();
 }
 
-function openWC2026(){ document.getElementById("wcOverlay").classList.add("open"); }
+function openWC2026(){ document.getElementById("wcOverlay").classList.add("open"); pushModalState("wcOverlay"); }
 function closeWC2026(){ document.getElementById("wcOverlay").classList.remove("open"); }
 
 document.addEventListener("click", e => {
@@ -4527,6 +4636,7 @@ function openResultados() {
   const overlay = document.getElementById("resultadosOverlay");
   if (!overlay) return;
   overlay.classList.add("open");
+  pushModalState("resultadosOverlay");
   renderResultados();
 }
 
@@ -4709,6 +4819,154 @@ async function renderResultados() {
     body.innerHTML = `<div class="error-state">Erro ao carregar histórico:\n${escapeHtml(e.message||String(e))}</div>`;
   }
 }
+
+
+
+/* ── STANDINGS + SCORERS IN ANALYSIS MODAL ─────────────────────── */
+const modalStandingsCache = {};
+const modalScorersCache = {};
+
+async function fetchTopScorers(leagueId, season) {
+  const key = `${leagueId}_${season}`;
+  if (modalScorersCache[key]) return modalScorersCache[key];
+  try {
+    const res = await fetch(
+      `https://v3.football.api-sports.io/players/topscorers?league=${leagueId}&season=${season}`,
+      { headers: { "x-apisports-key": API_FOOTBALL_KEY } }
+    );
+    const json = await res.json();
+    const data = json.response || [];
+    modalScorersCache[key] = data;
+    return data;
+  } catch(e) { return []; }
+}
+
+function switchStandingsTab(tab, btn) {
+  document.querySelectorAll("#standingsTabSection .h2h-tab").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  const match = getMatchById(state.lastOpenedMatchId);
+  if (!match) return;
+  if (tab === "classificacao") loadModalStandings(match);
+  else loadModalScorers(match);
+}
+
+async function loadModalStandings(match) {
+  const el = document.getElementById("standingsTabContent");
+  if (!el) return;
+  const league = match.league || match.league_name || "";
+  const leagueId = LEAGUE_ID_MAP[normalizeLeagueName(league)];
+  if (!leagueId) {
+    el.innerHTML = `<div class="empty-state">Tabela não disponível para ${escapeHtml(league)}</div>`;
+    return;
+  }
+  const cacheKey = `${leagueId}_${CURRENT_SEASON}`;
+  if (modalStandingsCache[cacheKey]) {
+    el.innerHTML = modalStandingsCache[cacheKey];
+    return;
+  }
+  el.innerHTML = `<div class="loading-state" style="padding:14px">Carregando tabela...</div>`;
+  let standings = await fetchStandings(leagueId, CURRENT_SEASON);
+  if (!standings || !standings.length) standings = await fetchStandings(leagueId, CURRENT_SEASON - 1);
+  if (!standings || !standings.length) {
+    el.innerHTML = `<div class="empty-state">Tabela não encontrada</div>`;
+    return;
+  }
+  const html = `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+    ${renderStandingsGroup(standings[0], leagueId)}
+  </div>`;
+  modalStandingsCache[cacheKey] = html;
+  el.innerHTML = html;
+}
+
+async function loadModalScorers(match) {
+  const el = document.getElementById("standingsTabContent");
+  if (!el) return;
+  const league = match.league || match.league_name || "";
+  const leagueId = LEAGUE_ID_MAP[normalizeLeagueName(league)];
+  if (!leagueId) {
+    el.innerHTML = `<div class="empty-state">Artilheiros não disponíveis para ${escapeHtml(league)}</div>`;
+    return;
+  }
+  el.innerHTML = `<div class="loading-state" style="padding:14px">Carregando artilheiros...</div>`;
+  const scorers = await fetchTopScorers(leagueId, CURRENT_SEASON);
+  if (!scorers.length) {
+    el.innerHTML = `<div class="empty-state">Artilheiros não encontrados</div>`;
+    return;
+  }
+  const rows = scorers.slice(0, 10).map((s, i) => {
+    const p = s.player || {};
+    const stats = s.statistics?.[0] || {};
+    const goals = stats.goals?.total || 0;
+    const assists = stats.goals?.assists || 0;
+    const teamLogo = stats.team?.logo || "";
+    const teamName = stats.team?.name || "";
+    const rankClass = i < 3 ? "top" : "";
+    return `<div class="scorer-row">
+      <span class="scorer-rank ${rankClass}">${i + 1}º</span>
+      ${teamLogo
+        ? `<img src="${escapeHtml(teamLogo)}" class="scorer-logo" onerror="this.style.display='none'">`
+        : `<div class="scorer-logo-fb"></div>`}
+      <div class="scorer-info">
+        <div class="scorer-name">${escapeHtml(p.name || "—")}</div>
+        <div class="scorer-team">${escapeHtml(teamName)}</div>
+      </div>
+      <span class="scorer-goals">${goals}</span>
+      <span class="scorer-assists">${assists > 0 ? `${assists} ast` : ""}</span>
+    </div>`;
+  }).join("");
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:26px auto 1fr auto auto;font-size:8px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;padding:0 4px 8px;border-bottom:1px solid var(--border);gap:8px">
+      <span style="text-align:right">#</span><span></span><span>Jogador</span><span style="text-align:right;color:var(--green)">⚽</span><span>Ast</span>
+    </div>
+    ${rows}`;
+}
+
+async function initModalStandings(match) {
+  // Auto-load on modal open
+  await loadModalStandings(match);
+}
+
+
+/* ── SWIPE DOWN TO CLOSE (mobile) ──────────────────────────────── */
+function addSwipeToClose(overlayId, closeFn) {
+  const panel = document.querySelector(`#${overlayId} .analysis-card, #${overlayId} .wc-panel`);
+  if (!panel) return;
+  let startY = 0; let currentY = 0; let dragging = false;
+  panel.addEventListener("touchstart", e => {
+    startY = e.touches[0].clientY; dragging = true; currentY = startY;
+  }, { passive: true });
+  panel.addEventListener("touchmove", e => {
+    if (!dragging) return;
+    currentY = e.touches[0].clientY;
+    const diff = currentY - startY;
+    if (diff > 0) panel.style.transform = `translateY(${diff * 0.5}px)`;
+  }, { passive: true });
+  panel.addEventListener("touchend", () => {
+    if (!dragging) return;
+    dragging = false;
+    const diff = currentY - startY;
+    panel.style.transform = "";
+    panel.style.transition = "transform 0.2s ease";
+    if (diff > 80) { closeFn(); }
+    setTimeout(() => panel.style.transition = "", 200);
+  });
+}
+
+/* ── ANDROID BACK BUTTON ────────────────────────────────────────── */
+function pushModalState(id) {
+  history.pushState({ modal: id }, "");
+}
+window.addEventListener("popstate", () => {
+  const overlays = ["analysisOverlay","wcOverlay","resultadosOverlay"];
+  for (const id of overlays) {
+    if (document.getElementById(id)?.classList.contains("open")) {
+      if (id === "analysisOverlay") closeAnalysis();
+      else if (id === "wcOverlay") closeWC2026();
+      else if (id === "resultadosOverlay") closeResultados();
+      return;
+    }
+  }
+});
 
 /* ── RADAR FILTERS ───────────────────────────────────────────────── */
 const radarFilters = { mercado: "todos" };
@@ -4999,6 +5257,11 @@ function toggleComoFunciona() {
 }
 
 initialize();
+// Swipe to close — init after overlays are in DOM
+setTimeout(() => {
+  addSwipeToClose("analysisOverlay", closeAnalysis);
+  addSwipeToClose("wcOverlay", closeWC2026);
+}, 500);
 </script>
 </body>
 </html>
