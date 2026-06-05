@@ -2073,7 +2073,23 @@
         <h2 class="analysis-title" id="analysisTitle">—</h2>
         <div class="analysis-sub" id="analysisSubtitle"></div>
       </div>
-      <button class="close-btn" id="closeAnalysisBtn">✕</button>
+      <div style="display:flex;align-items:flex-start;gap:6px;margin-top:8px;flex-shrink:0">
+        <button id="compToggleBtn" onclick="toggleCompPanel()" title="Tabela e Artilheiros"
+          style="height:48px;padding:0 12px;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-body);display:flex;align-items:center;gap:5px;transition:all var(--transition);white-space:nowrap">
+          📊 <span id="compToggleBtnLabel">Tabela</span>
+        </button>
+        <button class="close-btn" id="closeAnalysisBtn">✕</button>
+      </div>
+    </div>
+    <!-- Competition panel — sticky below header -->
+    <div id="compPanel" style="display:none;border-bottom:1px solid var(--border);background:var(--surface-2);flex-shrink:0;max-height:340px;overflow-y:auto">
+      <div style="padding:12px 18px 4px;display:flex;align-items:center;gap:6px">
+        <button class="h2h-tab active" id="tabClassificacao" onclick="switchStandingsTab('classificacao',this)">📊 Tabela</button>
+        <button class="h2h-tab" id="tabArtilheiros" onclick="switchStandingsTab('artilheiros',this)">⚽ Artilheiros</button>
+      </div>
+      <div id="standingsTabContent" style="padding:10px 18px 14px">
+        <div class="loading-state">Carregando...</div>
+      </div>
     </div>
     <div class="analysis-body" id="analysisBody">
       <div class="loading-state">Carregando análise...</div>
@@ -2830,7 +2846,7 @@ function openAnalysis(matchId){
                 <div class="chips" style="margin-bottom:8px">
                   ${chipMarkup(i.tier)}
                   ${marketFamilyChip(i.family)}
-                  ${i.individual?`<span class="chip" style="background:rgba(77,159,255,0.12);border:1px solid rgba(77,159,255,0.25);color:var(--blue);font-size:9px">individual</span>`:""}
+                  ${i.individual && i.market.includes(" — ") ? `<span class="chip" style="background:rgba(77,159,255,0.10);border:1px solid rgba(77,159,255,0.22);color:var(--blue);font-size:9px;font-weight:700">${escapeHtml(i.market.split(" — ").pop().trim())}</span>` : ""}
                 </div>
                 <div class="market-line-name">${formatMarketDisplay(i.market,"market-line-num","market-line-sublabel")}</div>
                 <div class="market-line-copy">${escapeHtml(i.copy)}</div>
@@ -2851,28 +2867,17 @@ function openAnalysis(matchId){
         </div>
       </div>
     </div>
-
-    <!-- ── Classificação + Artilheiros ── -->
-    <div class="a-box" style="margin-top:12px" id="standingsTabSection">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-        <div class="a-box-title" style="margin-bottom:0">Competição</div>
-        <div style="display:flex;gap:5px">
-          <button class="h2h-tab active" id="tabClassificacao" onclick="switchStandingsTab('classificacao',this)">📊 Tabela</button>
-          <button class="h2h-tab" id="tabArtilheiros" onclick="switchStandingsTab('artilheiros',this)">⚽ Artilheiros</button>
-        </div>
-      </div>
-      <div id="standingsTabContent">
-        <div class="loading-state" style="padding:14px">Carregando tabela...</div>
-      </div>
-    </div>
   `;
   state.lastOpenedMatchId=match.id;
   _currentModalMatch = match;
   document.getElementById("analysisOverlay").classList.add("open");
   pushModalState("analysisOverlay");
   lockBodyScroll();
-  // Load standings tab
-  setTimeout(() => initModalStandings(match), 300);
+  // Store match for competition panel (loaded on demand)
+  _currentModalMatch = match;
+  // Reset retry counter for live stats
+  const prevSection = document.getElementById("liveStatsSection");
+  if (prevSection) { prevSection.dataset.retries = "0"; delete prevSection.dataset.retrying; }
   injectLiveStatsInModal(match.id);
   // Also try to load events directly for live/recent matches
   const liveCheck = liveState.data.get(String(match.id));
@@ -3640,10 +3645,15 @@ async function refreshModalLiveStats(matchId) {
   const statsData = await fetchFixtureStats(apiMatchId);
   if (!statsData.length) {
     const section = document.getElementById("liveStatsSection");
-    if (section && !section.dataset.retrying) {
-      section.dataset.retrying = "1";
+    if (!section) return;
+    const tries = Number(section.dataset.retries || 0);
+    if (tries < 2) {
+      section.dataset.retries = tries + 1;
       section.innerHTML = buildLiveModalHtml(matchId, null, null);
-      setTimeout(() => refreshModalLiveStats(matchId), 10000);
+      setTimeout(() => refreshModalLiveStats(matchId), 12000);
+    } else {
+      // After 2 tries, show score only — stats not available for this match
+      section.innerHTML = buildLiveModalHtml(matchId, null, null, true);
     }
     return;
   }
@@ -3656,7 +3666,7 @@ async function refreshModalLiveStats(matchId) {
   section.innerHTML = buildLiveModalHtml(matchId, statsData, events);
 }
 
-function buildLiveModalHtml(matchId, statsData, events) {
+function buildLiveModalHtml(matchId, statsData, events, noStats = false) {
   const live = liveState.data.get(String(matchId));
   const match = getMatchById(matchId);
   const homeName = match?.home_team || statsData?.[0]?.team?.name || "Casa";
@@ -3722,7 +3732,9 @@ function buildLiveModalHtml(matchId, statsData, events) {
       ${statRow("Cartões", cards[0], cards[1])}
     </div>`;
   } else {
-    statsHtml = `<div style="font-size:11px;color:var(--text-3);text-align:center;padding:10px 0;font-style:italic">Aguardando estatísticas...</div>`;
+    statsHtml = noStats
+      ? `<div style="font-size:10px;color:var(--text-3);text-align:center;padding:8px 0;font-style:italic">Estatísticas não disponíveis para esta competição</div>`
+      : `<div style="font-size:11px;color:var(--text-3);text-align:center;padding:10px 0;font-style:italic">⏳ Aguardando estatísticas...</div>`;
   }
 
   // Events section
@@ -4891,6 +4903,79 @@ async function fetchTopScorers(leagueId, season) {
   } catch(e) { return []; }
 }
 
+
+function buildCupBracketHtml(match, league) {
+  const home = normalizeTeamName(match.home_team || "Casa");
+  const away = normalizeTeamName(match.away_team || "Fora");
+  const phase = inferCupPhase(match);
+  const nextOptions = getCupNextOptions(match);
+
+  return `<div style="padding:4px 0">
+    <div style="font-size:9px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:0.10em;margin-bottom:12px">
+      🏆 ${escapeHtml(league)} — Fase eliminatória
+    </div>
+    <div style="background:var(--surface-3);border:1px solid var(--amber-line);border-radius:var(--radius-sm);padding:12px;margin-bottom:12px">
+      <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">${escapeHtml(phase)}</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px">
+        <div style="font-size:13px;font-weight:800;color:var(--text);flex:1">${escapeHtml(home)}</div>
+        <div style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--amber);padding:4px 10px;background:var(--amber-dim);border-radius:5px;flex-shrink:0">vs</div>
+        <div style="font-size:13px;font-weight:800;color:var(--text);flex:1;text-align:right">${escapeHtml(away)}</div>
+      </div>
+    </div>
+    ${nextOptions ? `
+    <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px;font-weight:700">Próxima fase — vencedor enfrenta:</div>
+    <div style="background:var(--surface-3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 12px;font-size:11px;color:var(--text-2);line-height:1.6">
+      ${escapeHtml(nextOptions)}
+    </div>` : ""}
+    <div style="margin-top:12px;font-size:10px;color:var(--text-3);line-height:1.6">
+      Copa eliminatória — classificação por pontos não se aplica. O vencedor desta partida avança para a próxima fase.
+    </div>
+  </div>`;
+}
+
+function inferCupPhase(match) {
+  const league = (match.league || "").toLowerCase();
+  const round = (match.round || "").toLowerCase();
+  if (round.includes("final") && !round.includes("semi") && !round.includes("quart")) return "🏆 FINAL";
+  if (round.includes("semi")) return "🔥 SEMIFINAL";
+  if (round.includes("quart") || round.includes("quarter")) return "⚡ QUARTAS DE FINAL";
+  if (round.includes("oitava") || round.includes("round of 16")) return "🎯 OITAVAS DE FINAL";
+  if (round.includes("16")) return "🎯 OITAVAS DE FINAL";
+  if (round.includes("32")) return "RODADA DE 32";
+  return "Fase eliminatória";
+}
+
+function getCupNextOptions(match) {
+  // Try to infer from round info if available
+  const round = (match.round || "").toLowerCase();
+  if (round.includes("final") && !round.includes("semi")) return null;
+  if (round.includes("semi")) return "Finalista da outra chave";
+  if (round.includes("quart") || round.includes("quarter")) return "Vencedor de outra semifinal";
+  if (round.includes("oitava") || round.includes("round of 16")) return "Vencedor de outro confronto das quartas";
+  return "Vencedor do próximo confronto";
+}
+
+
+function toggleCompPanel() {
+  const panel = document.getElementById("compPanel");
+  const btn   = document.getElementById("compToggleBtn");
+  const label = document.getElementById("compToggleBtnLabel");
+  if (!panel) return;
+  const isOpen = panel.style.display !== "none";
+  panel.style.display = isOpen ? "none" : "block";
+  if (btn) {
+    btn.style.background = isOpen ? "var(--surface-2)" : "var(--green-dim)";
+    btn.style.borderColor = isOpen ? "var(--border)" : "var(--green-line)";
+    btn.style.color = isOpen ? "var(--text-2)" : "var(--green)";
+  }
+  if (label) label.textContent = isOpen ? "Tabela" : "Fechar";
+  if (!isOpen) {
+    // First open — load standings
+    const match = _currentModalMatch;
+    if (match) loadModalStandings(match);
+  }
+}
+
 function switchStandingsTab(tab, btn) {
   document.querySelectorAll("#standingsTabSection .h2h-tab").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
@@ -4910,7 +4995,16 @@ async function loadModalStandings(match) {
   const league = match.league || match.league_name || "";
   const leagueId = LEAGUE_ID_MAP[normalizeLeagueName(league)];
   if (!leagueId) {
-    el.innerHTML = `<div class="empty-state">Tabela não disponível para ${escapeHtml(league)}</div>`;
+    // Check if it's a knockout/cup competition
+    const isCup = /copa|cup|taça|fa |coupe|pokal|coppa|supercopa|supercup|eliminat/i.test(league);
+    const isIntl = /amistoso|friendly|international|nações|nations/i.test(league);
+    if (isIntl) {
+      el.innerHTML = `<div class="empty-state">Amistoso internacional — sem tabela de pontos.</div>`;
+    } else if (isCup) {
+      el.innerHTML = buildCupBracketHtml(match, league);
+    } else {
+      el.innerHTML = `<div class="empty-state">Tabela não disponível para ${escapeHtml(league)}</div>`;
+    }
     return;
   }
   const cacheKey = `${leagueId}_${CURRENT_SEASON}`;
@@ -4938,7 +5032,15 @@ async function loadModalScorers(match) {
   const league = match.league || match.league_name || "";
   const leagueId = LEAGUE_ID_MAP[normalizeLeagueName(league)];
   if (!leagueId) {
-    el.innerHTML = `<div class="empty-state">Artilheiros não disponíveis para ${escapeHtml(league)}</div>`;
+    const isIntl = /amistoso|friendly|international/i.test(league);
+    const isCup = /copa|cup|taça|fa |coupe|pokal|coppa/i.test(league);
+    if (isIntl) {
+      el.innerHTML = `<div class="empty-state">Amistoso internacional — artilheiros por competição não disponíveis.</div>`;
+    } else if (isCup) {
+      el.innerHTML = `<div class="empty-state">Copa eliminatória — artilheiros de toda a competição não disponíveis via API.</div>`;
+    } else {
+      el.innerHTML = `<div class="empty-state">Artilheiros não disponíveis para ${escapeHtml(league)}</div>`;
+    }
     return;
   }
   el.innerHTML = `<div class="loading-state" style="padding:14px">Carregando artilheiros...</div>`;
