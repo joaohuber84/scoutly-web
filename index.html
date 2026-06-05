@@ -2878,6 +2878,8 @@ function openAnalysis(matchId){
   // Reset retry counter for live stats
   const prevSection = document.getElementById("liveStatsSection");
   if (prevSection) { prevSection.dataset.retries = "0"; delete prevSection.dataset.retrying; }
+  // Trigger live data refresh so apiFixtureId gets populated before stats call
+  if (typeof refreshLiveData === 'function') refreshLiveData();
   injectLiveStatsInModal(match.id);
   // Also try to load events directly for live/recent matches
   const liveCheck = liveState.data.get(String(match.id));
@@ -3527,21 +3529,30 @@ async function refreshLiveData() {
     const apiId = Number(m.fixture_id || m.id);
     // Also try to match by home/away team name in live data (last resort)
     const fixture = liveMap.get(apiId) || (() => {
-      // Search liveMap for a match with same teams (normalize + longer match)
+      // Search liveMap for a match with same teams
       const norm = s => (s||"").toLowerCase()
         .normalize("NFD").replace(/[̀-ͯ]/g,"")
         .replace(/[^a-z0-9]/g," ").replace(/\s+/g," ").trim();
       const mHomeN = norm(m.home_team); const mAwayN = norm(m.away_team);
-      // Extract significant words (len >= 3) for fuzzy matching
       const words = s => s.split(" ").filter(w => w.length >= 3);
       const anyWordMatch = (a, b) => words(a).some(w => b.includes(w)) || words(b).some(w => a.includes(w));
+      // Pass 1: word-based name match
       for (const [fid, f] of liveMap) {
         const fHomeN = norm(f.teams?.home?.name);
         const fAwayN = norm(f.teams?.away?.name);
-        const homeMatch = anyWordMatch(fHomeN, mHomeN);
-        const awayMatch = anyWordMatch(fAwayN, mAwayN);
-        if (homeMatch && awayMatch) return f;
+        if (anyWordMatch(fHomeN, mHomeN) && anyWordMatch(fAwayN, mAwayN)) return f;
       }
+      // Pass 2: kickoff time match (±10 min) — handles translated names e.g. Eslováquia/Slovakia
+      const mKickoff = m.kickoff ? new Date(m.kickoff).getTime() : null;
+      if (mKickoff) {
+        for (const [fid, f] of liveMap) {
+          const fTime = f.fixture?.date ? new Date(f.fixture.date).getTime() : null;
+          if (fTime && Math.abs(fTime - mKickoff) <= 10 * 60 * 1000) return f;
+        }
+      }
+      return null;
+    })();
+
       return null;
     })();
     if (fixture) {
@@ -3635,11 +3646,14 @@ function buildLiveIndicatorHtml(live) {
 }
 async function refreshModalLiveStats(matchId) {
   const getApiId = (id) => {
+    // Priority: 1) apiFixtureId cached in liveState, 2) fixture_id from Supabase match, 3) raw id
     const liveEntry = liveState.data.get(String(id));
     if (liveEntry?.apiFixtureId) return liveEntry.apiFixtureId;
     if (liveState.fixtureMap?.get(String(id))) return liveState.fixtureMap.get(String(id));
     const m = getMatchById(id);
-    return m?.fixture_id || id;
+    // m.fixture_id is the API Football fixture ID stored by sync.js
+    // m.id might also be the API fixture ID if sync uses it as primary key
+    return m?.fixture_id || m?.id || id;
   };
   const apiMatchId = getApiId(matchId);
   const statsData = await fetchFixtureStats(apiMatchId);
