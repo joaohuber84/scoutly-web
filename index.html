@@ -1551,13 +1551,50 @@
     #compPanel {
       width: 100%;
       flex-shrink: 0;
-      max-height: 400px;
+      max-height: 420px;
       overflow-y: auto;
+      overscroll-behavior: contain;
       scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
-      animation: slideDown 0.2s ease;
-      border-bottom: 2px solid var(--border);
+      scrollbar-color: var(--surface-4) transparent;
+      animation: slideDown 0.18s ease;
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
     }
+    #compPanel .comp-tabs-bar {
+      position: sticky; top: 0; z-index: 10;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      padding: 10px 16px 0;
+      display: flex; align-items: center; gap: 4px;
+    }
+    #compPanel .comp-tab {
+      padding: 7px 16px; border-radius: 6px 6px 0 0;
+      font-size: 11px; font-weight: 700; cursor: pointer;
+      border: 1px solid var(--border); border-bottom: none;
+      background: var(--surface-2); color: var(--text-3);
+      font-family: var(--font-body); transition: all 0.15s;
+    }
+    #compPanel .comp-tab.active {
+      background: var(--surface); color: var(--text);
+      border-color: var(--border-2);
+    }
+    #compPanel .comp-tab:hover { color: var(--text-2); }
+    .standings-table { border-collapse: collapse; width: 100%; min-width: 360px; font-size: 11px; }
+    .standings-table thead tr { background: var(--surface-3); }
+    .standings-table th {
+      padding: 7px 8px; text-align: center;
+      font-size: 9px; font-weight: 700;
+      color: var(--text-3); text-transform: uppercase;
+      letter-spacing: 0.06em; border-bottom: 1px solid var(--border);
+    }
+    .standings-table th.left { text-align: left; }
+    .standings-table td {
+      padding: 7px 8px; text-align: center;
+      color: var(--text-2); font-size: 11px;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .standings-table td.left { text-align: left; }
+    .standings-table tbody tr:hover { background: var(--surface-2); }
+    .standings-table tbody tr:last-child td { border-bottom: none; }
     @keyframes slideDown {
       from { opacity: 0; transform: translateY(-8px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -2106,12 +2143,12 @@
     </div>
     <!-- Competition panel — sticky below header -->
     <div id="compPanel" style="display:none">
-      <div style="background:var(--surface-3);border-bottom:2px solid var(--border);padding:10px 18px 0;display:flex;align-items:center;gap:6px">
-        <button class="h2h-tab active" id="tabClassificacao" onclick="switchStandingsTab('classificacao',this)" style="border-radius:6px 6px 0 0;padding:7px 14px">📊 Tabela</button>
-        <button class="h2h-tab" id="tabArtilheiros" onclick="switchStandingsTab('artilheiros',this)" style="border-radius:6px 6px 0 0;padding:7px 14px">⚽ Artilheiros</button>
-        <span style="margin-left:auto;font-size:9px;color:var(--text-3);font-weight:600;letter-spacing:0.08em;text-transform:uppercase" id="compPanelLeagueLabel"></span>
+      <div class="comp-tabs-bar">
+        <button class="comp-tab active" id="tabClassificacao" onclick="switchStandingsTab('classificacao',this)">📊 Tabela</button>
+        <button class="comp-tab" id="tabArtilheiros" onclick="switchStandingsTab('artilheiros',this)">⚽ Artilheiros</button>
+        <span style="margin-left:auto;font-size:9px;color:var(--text-3);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;padding-bottom:4px" id="compPanelLeagueLabel"></span>
       </div>
-      <div id="standingsTabContent" style="padding:12px 18px 16px;background:var(--surface-2)">
+      <div id="standingsTabContent" style="padding:14px 16px 18px;background:var(--surface)">
         <div class="loading-state">Carregando...</div>
       </div>
     </div>
@@ -3030,10 +3067,17 @@ function openAnalysis(matchId){
     return `<div class="h2h-scores" ${style}>${scores.map((s, i) => {
       const m = matches[i];
       const cls = scorePillClass(s);
-      const logo = m?.opponentLogo ? `<img src="${escapeHtml(m.opponentLogo)}" style="width:13px;height:13px;object-fit:contain;border-radius:2px;flex-shrink:0" onerror="this.style.display='none'">` : "";
-      const oppName = m?.opponent ? `<span style="max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:0.75">${escapeHtml(m.opponent.split(" ").slice(0,2).join(" "))}</span>` : "";
-      const homeAway = m ? `<span style="opacity:0.5;font-size:7px">${m.isHome?"C":"F"}</span>` : "";
-      return `<span class="h2h-score-pill ${cls}" title="${m?.opponent||""} ${s}" style="display:inline-flex;align-items:center;gap:3px;padding:3px 7px">${logo}${homeAway}<b>${escapeHtml(s)}</b>${oppName}</span>`;
+      const title = m ? `${m.isHome?"Casa":"Fora"} vs ${m.opponent||""}: ${s}` : s;
+      const logoEl = (logo) => logo
+        ? `<img src="${escapeHtml(logo)}" style="width:14px;height:14px;object-fit:contain;flex-shrink:0;border-radius:2px" onerror="this.style.display='none'">`
+        : "";
+      // Casa: [logo adversário] placar  |  Fora: placar [logo adversário]
+      const opLogo = logoEl(m?.opponentLogo || "");
+      const score = `<b style="font-family:var(--font-mono);letter-spacing:0.03em">${escapeHtml(s)}</b>`;
+      const inner = m?.isHome
+        ? `${opLogo}${score}`
+        : `${score}${opLogo}`;
+      return `<span class="h2h-score-pill ${cls}" title="${escapeHtml(title)}" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px">${inner}</span>`;
     }).join("")}</div>`;
   }
   function streakClass(s) {
@@ -5129,7 +5173,7 @@ function toggleCompPanel() {
 }
 
 function switchStandingsTab(tab, btn) {
-  document.querySelectorAll("#standingsTabSection .h2h-tab").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll("#compPanel .comp-tab, #standingsTabSection .h2h-tab").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
   const match = _currentModalMatch || getMatchById(state.lastOpenedMatchId);
   if (!match) {
