@@ -42,7 +42,7 @@ const MAX_INTERNATIONAL_IN_DAILY = 8
 const MAX_BRAZIL_IN_DAILY = 6
 
 const LEAGUE_TIER = {
-  "UEFA Champions League":1,"Libertadores":1,"Copa do Mundo":1,"Eurocopa":1,
+  "UEFA Champions League":1,"Libertadores":1,"Copa do Mundo":1,"FIFA World Cup":1,"FIFA World Cup 2026":1,"Eurocopa":1,
   "Copa América":1,"Brasileirão Série A":1,"Premier League":1,"La Liga":1,
   "Serie A":1,"Bundesliga":1,"Ligue 1":1,"Nations League":1,"Copa do Brasil":1,
   "UEFA Europa League":2,"Sul-Americana":2,"Eredivisie":2,"MLS":2,"Liga Argentina":2,
@@ -93,10 +93,9 @@ const TARGET_COMPETITIONS = [
   { mode:"country", country:"Brazil", type:"league", names:["Serie B","Brasileirão Série B","Campeonato Brasileiro Série B","Brasileiro Série B"], display:"Brasileirão Série B", region:"brazil", priority:88 },
   { mode:"country", country:"Brazil", type:"cup", names:["Copa do Brasil","Copa Do Brasil"], display:"Copa do Brasil", region:"brazil", priority:91 },
   { mode:"country", country:"Brazil", type:"cup", names:["Copa do Nordeste","Copa Nordeste","Nordeste"], display:"Copa do Nordeste", region:"brazil", priority:82 },
-  { mode:"country", country:"Brazil", type:"cup", names:["Copa Verde"], display:"Copa Verde", region:"brazil", priority:75 },
   { mode:"country", country:"Argentina", type:"league", names:["Liga Profesional Argentina","Liga Profesional","Primera División","Primera Division","Superliga"], display:"Liga Argentina", region:"general", priority:84 },
   { mode:"country", country:"Argentina", type:"cup", names:["Copa Argentina","Copa de la Liga Profesional","Copa de la Liga"], display:"Copa Argentina", region:"general", priority:76 },
-  { mode:"country", country:"Chile", type:"league", names:["Primera División","Primera Division","Primera B"], display:"Liga Chilena", region:"general", priority:76 },
+  { mode:"country", country:"Chile", type:"league", names:["Primera División","Primera Division"], display:"Liga Chilena", region:"general", priority:76 },
   { mode:"country", country:"Colombia", type:"league", names:["Liga BetPlay Dimayor","Primera A","Categoría Primera A","Liga Dimayor"], display:"Liga Colombiana", region:"general", priority:76 },
   { mode:"country", country:"Peru", type:"league", names:["Liga 1","Liga 1 Betsson"], display:"Liga Peruana", region:"general", priority:74 },
   { mode:"country", country:"Uruguay", type:"league", names:["Primera División","Primera Division"], display:"Liga Uruguaia", region:"general", priority:74 },
@@ -158,6 +157,7 @@ const TARGET_COMPETITIONS = [
   { mode:"search", search:"Copa America", display:"Copa América", region:"international", priority:98 },
   { mode:"search", search:"UEFA European Championship", display:"Eurocopa", region:"international", priority:98 },
   { mode:"search", search:"FIFA World Cup", display:"Copa do Mundo", region:"international", priority:100 },
+  { mode:"search", search:"FIFA World Cup 2026", display:"Copa do Mundo", region:"international", priority:100 },
   { mode:"search", search:"FIFA Club World Cup", display:"Mundial de Clubes", region:"general", priority:96 },
   { mode:"search", search:"Africa Cup of Nations", display:"Copa Africana", region:"international", priority:90 },
 ]
