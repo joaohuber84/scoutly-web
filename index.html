@@ -877,8 +877,8 @@
     .h2h-streak.boa    { background: rgba(0,179,104,0.08); color: #00c878; border: 1px solid rgba(0,200,120,0.18); }
     .h2h-streak.ma     { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-line); }
     .h2h-streak.irr    { background: var(--surface-3); color: var(--text-3); border: 1px solid var(--border); }
-    .h2h-scores { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 5px; }
-    .h2h-score-pill { padding: 2px 6px; border-radius: 4px; font-family: var(--font-mono); font-size: 9px; font-weight: 600; background: var(--surface-3); border: 1px solid var(--border); color: var(--text-2); }
+    .h2h-scores { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 6px; }
+    .h2h-score-pill { padding: 3px 7px; border-radius: 6px; font-family: var(--font-mono); font-size: 9px; font-weight: 600; background: var(--surface-3); border: 1px solid var(--border); color: var(--text-2); cursor: default; }
     .h2h-score-pill.win  { background: var(--green-dim); border-color: var(--green-line); color: var(--green); }
     .h2h-score-pill.draw { background: var(--amber-dim); border-color: var(--amber-line); color: var(--amber); }
     .h2h-score-pill.loss { background: var(--red-dim);   border-color: var(--red-line);   color: var(--red); }
@@ -1550,14 +1550,13 @@
     /* ─── COMP PANEL ──────────────────────────────────────────────── */
     #compPanel {
       width: 100%;
-      background: var(--surface-2);
-      border-bottom: 1px solid var(--border);
       flex-shrink: 0;
-      max-height: 360px;
+      max-height: 400px;
       overflow-y: auto;
       scrollbar-width: thin;
-      scrollbar-color: var(--surface-3) transparent;
+      scrollbar-color: var(--border) transparent;
       animation: slideDown 0.2s ease;
+      border-bottom: 2px solid var(--border);
     }
     @keyframes slideDown {
       from { opacity: 0; transform: translateY(-8px); }
@@ -2106,12 +2105,13 @@
       </div>
     </div>
     <!-- Competition panel — sticky below header -->
-    <div id="compPanel" style="display:none;border-bottom:1px solid var(--border);background:var(--surface-2);flex-shrink:0;max-height:340px;overflow-y:auto">
-      <div style="padding:12px 18px 4px;display:flex;align-items:center;gap:6px">
-        <button class="h2h-tab active" id="tabClassificacao" onclick="switchStandingsTab('classificacao',this)">📊 Tabela</button>
-        <button class="h2h-tab" id="tabArtilheiros" onclick="switchStandingsTab('artilheiros',this)">⚽ Artilheiros</button>
+    <div id="compPanel" style="display:none">
+      <div style="background:var(--surface-3);border-bottom:2px solid var(--border);padding:10px 18px 0;display:flex;align-items:center;gap:6px">
+        <button class="h2h-tab active" id="tabClassificacao" onclick="switchStandingsTab('classificacao',this)" style="border-radius:6px 6px 0 0;padding:7px 14px">📊 Tabela</button>
+        <button class="h2h-tab" id="tabArtilheiros" onclick="switchStandingsTab('artilheiros',this)" style="border-radius:6px 6px 0 0;padding:7px 14px">⚽ Artilheiros</button>
+        <span style="margin-left:auto;font-size:9px;color:var(--text-3);font-weight:600;letter-spacing:0.08em;text-transform:uppercase" id="compPanelLeagueLabel"></span>
       </div>
-      <div id="standingsTabContent" style="padding:10px 18px 14px">
+      <div id="standingsTabContent" style="padding:12px 18px 16px;background:var(--surface-2)">
         <div class="loading-state">Carregando...</div>
       </div>
     </div>
@@ -3024,10 +3024,17 @@ function openAnalysis(matchId){
     if (gf === ga) return "draw";
     return "loss";
   }
-  function scorePillsHtml(scores, justify = "") {
+  function scorePillsHtml(scores, justify = "", matches = []) {
     if (!scores || !scores.length) return "";
     const style = justify ? `style="justify-content:${justify}"` : "";
-    return `<div class="h2h-scores" ${style}>${scores.map(s=>`<span class="h2h-score-pill ${scorePillClass(s)}">${escapeHtml(s)}</span>`).join("")}</div>`;
+    return `<div class="h2h-scores" ${style}>${scores.map((s, i) => {
+      const m = matches[i];
+      const cls = scorePillClass(s);
+      const logo = m?.opponentLogo ? `<img src="${escapeHtml(m.opponentLogo)}" style="width:13px;height:13px;object-fit:contain;border-radius:2px;flex-shrink:0" onerror="this.style.display='none'">` : "";
+      const oppName = m?.opponent ? `<span style="max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:0.75">${escapeHtml(m.opponent.split(" ").slice(0,2).join(" "))}</span>` : "";
+      const homeAway = m ? `<span style="opacity:0.5;font-size:7px">${m.isHome?"C":"F"}</span>` : "";
+      return `<span class="h2h-score-pill ${cls}" title="${m?.opponent||""} ${s}" style="display:inline-flex;align-items:center;gap:3px;padding:3px 7px">${logo}${homeAway}<b>${escapeHtml(s)}</b>${oppName}</span>`;
+    }).join("")}</div>`;
   }
   function streakClass(s) {
     if (!s) return "irr";
@@ -3055,17 +3062,19 @@ function openAnalysis(matchId){
     const aStreak = a.formStreak || null;
     const hScores = (h.recentScores||[]).slice(0,5);
     const aScores = (a.recentScores||[]).slice(0,5);
+    const hMatches = (h.recentMatches||[]).slice(0,5);
+    const aMatches = (a.recentMatches||[]).slice(0,5);
     const streakSection = (hStreak || aStreak || hScores.length || aScores.length) ? `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
         <div style="text-align:center">
           <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${escapeHtml(homeTeam.length>10?homeTeam.slice(0,10)+".":homeTeam)}</div>
           <span class="h2h-streak ${streakClass(hStreak)}">${escapeHtml(hStreak||"sem dados")}</span>
-          ${scorePillsHtml(hScores)}
+          ${scorePillsHtml(hScores,"",hMatches)}
         </div>
         <div style="text-align:center">
           <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${escapeHtml(awayTeam.length>10?awayTeam.slice(0,10)+".":awayTeam)}</div>
           <span class="h2h-streak ${streakClass(aStreak)}">${escapeHtml(aStreak||"sem dados")}</span>
-          ${scorePillsHtml(aScores)}
+          ${scorePillsHtml(aScores,"",aMatches)}
         </div>
       </div>` : "";
     return `<div class="h2h-rows">${barsHtml}</div>${streakSection}`;
@@ -3086,14 +3095,14 @@ function openAnalysis(matchId){
           <div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;text-align:center">${escapeHtml(homeTeam)}</div>
           <div style="text-align:center;margin-bottom:8px">${hStreak?`<span class="h2h-streak ${streakClass(hStreak)}">${escapeHtml(hStreak)}</span>`:`<span class="h2h-streak irr">sem dados</span>`}</div>
           <div style="font-size:9px;color:var(--text-3);text-align:center;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Últimos resultados</div>
-          ${hScores.length ? scorePillsHtml(hScores,"center") : `<div class="h2h-no-data">—</div>`}
+          ${hScores.length ? scorePillsHtml(hScores,"center",hMatches) : `<div class="h2h-no-data">—</div>`}
           ${h.matches?`<div style="font-size:9px;color:var(--text-3);text-align:center;margin-top:6px">${h.matches} jogo(s) analisado(s)</div>`:""}
         </div>
         <div>
           <div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;text-align:center">${escapeHtml(awayTeam)}</div>
           <div style="text-align:center;margin-bottom:8px">${aStreak?`<span class="h2h-streak ${streakClass(aStreak)}">${escapeHtml(aStreak)}</span>`:`<span class="h2h-streak irr">sem dados</span>`}</div>
           <div style="font-size:9px;color:var(--text-3);text-align:center;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Últimos resultados</div>
-          ${aScores.length ? scorePillsHtml(aScores,"center") : `<div class="h2h-no-data">—</div>`}
+          ${aScores.length ? scorePillsHtml(aScores,"center",aMatches) : `<div class="h2h-no-data">—</div>`}
           ${a.matches?`<div style="font-size:9px;color:var(--text-3);text-align:center;margin-top:6px">${a.matches} jogo(s) analisado(s)</div>`:""}
         </div>
       </div>`;
@@ -3613,7 +3622,7 @@ const LIVE_TIER = {
 };
 const liveState = { data: new Map(), external: new Map(), fixtureMap: new Map(), interval: null, modalInterval: null, statsInterval: null, activeModalId: null };
 const LIVE_REFRESH_MS = 30 * 1000; // 30 segundos
-const LIVE_STATUSES = ["1H","2H","ET","BT","P","LIVE"];
+const LIVE_STATUSES = ["1H","HT","2H","ET","BT","P","LIVE"]; // HT = intervalo
 const FINISHED_STATUSES = ["FT","AET","PEN"];
 function isMatchLive(kickoff) {
   const d = parseDateSafe(kickoff); if (!d) return false;
@@ -3707,7 +3716,7 @@ async function refreshLiveData() {
     const id = f.fixture?.id; if (!id) return;
     if (relevantIds.has(id)) return;
     const short = f.fixture?.status?.short || "";
-    if (!LIVE_STATUSES.includes(short)) return;
+    if (!LIVE_STATUSES.includes(short)) return; // HT is now in LIVE_STATUSES
     const leagueId = f.league?.id;
     const TOP_IDS = new Set([...ALLOWED_LEAGUE_IDS]); // Sync with whitelist
     if (!TOP_IDS.has(leagueId)) return;
@@ -3921,8 +3930,11 @@ function buildLiveModalHtml(matchId, statsData, events, noStats = false) {
   }
 
   const wrapClass = isFinished ? "live-modal-wrap finished" : "live-modal-wrap";
+  const isHalfTime = live?.status === "HT";
   const labelHtml = isFinished
     ? `<div class="live-modal-label" style="color:var(--text-3)">⏱ ENCERRADO</div>`
+    : isHalfTime
+    ? `<div class="live-modal-label" style="color:var(--amber)"><span style="width:7px;height:7px;border-radius:50%;background:var(--amber);display:inline-block"></span>INTERVALO</div>`
     : `<div class="live-modal-label"><span class="live-dot"></span>TEMPO REAL</div>`;
 
   return `<div class="${wrapClass}">
@@ -3937,7 +3949,8 @@ function buildLiveModalHtml(matchId, statsData, events, noStats = false) {
       </div>
       <div class="live-sb-center">
         <div class="live-sb-score">${hScore} <span style="color:var(--text-3);font-size:24px">·</span> ${aScore}</div>
-        ${isLive && minute ? `<div class="live-sb-minute"><span class="live-dot"></span>${minute}'</div>` : ""}
+        ${isLive && live?.status === "HT" ? `<div style="font-size:11px;font-weight:800;color:var(--amber);margin-top:3px;display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--amber);display:inline-block"></span>INTERVALO</div>` : ""}
+        ${isLive && minute && live?.status !== "HT" ? `<div class="live-sb-minute"><span class="live-dot"></span>${minute}'</div>` : ""}
         ${isFinished ? `<div style="font-size:10px;color:var(--text-3);margin-top:2px">FIM DE JOGO</div>` : ""}
       </div>
       <div class="live-sb-team">
@@ -5105,9 +5118,13 @@ function toggleCompPanel() {
   }
   if (label) label.textContent = isOpen ? "Tabela" : "Fechar";
   if (!isOpen) {
-    // First open — load standings
+    // First open — load standings + show league name
     const match = _currentModalMatch;
-    if (match) loadModalStandings(match);
+    if (match) {
+      const lbl = document.getElementById("compPanelLeagueLabel");
+      if (lbl) lbl.textContent = match.league || match.league_name || "";
+      loadModalStandings(match);
+    }
   }
 }
 
