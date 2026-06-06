@@ -134,9 +134,9 @@
     }
     .brand-name {
       font-family: var(--font-head);
-      font-size: clamp(17px, 3.5vw, 24px);
-      font-weight: 800; color: var(--text);
-      letter-spacing: -0.03em; line-height: 1;
+      font-size: clamp(28px, 5vw, 40px);
+      font-weight: 900; color: #fff;
+      letter-spacing: -0.05em; line-height: 1;
     }
     .brand-sub {
       font-size: 10px; color: var(--text-3);
@@ -145,9 +145,9 @@
     }
     .status-pill {
       display: inline-flex; align-items: center; gap: 7px;
-      padding: 7px 13px; border-radius: 999px;
-      background: var(--surface); border: 1px solid var(--border);
-      font-size: 11px; color: var(--text-2); font-weight: 500;
+      padding: 6px 12px; border-radius: 999px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      font-size: 11px; color: var(--text-2); font-weight: 600;
     }
     .status-dot {
       width: 7px; height: 7px; border-radius: 50%;
@@ -1155,8 +1155,9 @@
     @media (max-width: 720px) {
       .shell { padding: 12px 12px 72px; }
       .topbar { gap: 10px; margin-bottom: 18px; }
-      .brand-logo, .brand-logo img { width: 96px; height: 96px; }
-      .brand-logo-fallback { width: 96px; height: 96px; font-size: 44px; }
+      .brand-logo, .brand-logo img { width: 64px; height: 64px; }
+      .brand-logo-fallback { width: 64px; height: 64px; font-size: 30px; border-radius: 16px; }
+      .brand-name { font-size: 22px !important; }
       .brand-name { font-size: 18px; }
       .brand-sub { font-size: 9px; }
       .status-pill { font-size: 10px; padding: 6px 11px; }
@@ -1545,6 +1546,29 @@
       color: var(--green); text-align: right; flex-shrink: 0;
     }
     .scorer-assists { font-family: var(--font-mono); font-size: 10px; color: var(--text-3); flex-shrink: 0; white-space: nowrap; }
+
+    /* ─── COMP PANEL ──────────────────────────────────────────────── */
+    #compPanel {
+      width: 100%;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      max-height: 360px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--surface-3) transparent;
+      animation: slideDown 0.2s ease;
+    }
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    #compToggleBtn:hover {
+      background: var(--green-dim) !important;
+      border-color: var(--green-line) !important;
+      color: var(--green) !important;
+    }
+    .standings-table { min-width: 380px; }
   </style>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-583FPFX1PT"></script>
   <script>
@@ -1562,7 +1586,7 @@
   <div class="topbar">
     <div class="brand">
       <div class="brand-logo">
-        <img src="logo-icon.png" alt="Scoutly" width="180" height="180" onerror="this.outerHTML='<span class=brand-logo-fallback>S</span>'">
+        <img src="logo-icon.png" alt="Scoutly" width="96" height="96" onerror="this.outerHTML='<span class=brand-logo-fallback>S</span>'">
       </div>
       <div>
         <div class="brand-name">Scoutly</div>
@@ -2416,14 +2440,41 @@ function getCompetitionBadge(league, country="", logoUrl="") {
   if (isCupLeague(league)) return `<span style="font-size:24px">🏆</span>`;
   return `<span style="font-size:24px">⚽</span>`;
 }
-function shouldHideLeague(l){
-  const raw=String(l||"").toLowerCase(); const name=String(normalizeLeagueName(l)||"").toLowerCase();
+// Whitelist rígida — só ligas aprovadas aparecem no Scoutly
+const ALLOWED_LEAGUE_IDS = new Set([
+  1,2,3,5,9,11,13,14,// WC, Champions, Europa, Nations, Copa América, Sul-Am, Libertadores, Recopa
+  18,39,40,45,61,66,  // Serbia, Premier, Championship, FA Cup, Ligue1, Coupe France
+  71,72,73,75,         // Brasileirão A, B, Copa Brasil, Copa Nordeste
+  78,81,88,94,96,      // Bundesliga, DFB-Pokal, Eredivisie, Primeira Liga, Taça Portugal
+  103,113,119,128,129,130, // Eliteserien, Allsvenskan, Superliga DK, Liga ARG, Liga ARG 2, Copa ARG
+  135,137,140,143,144,     // Serie A, Coppa Italia, La Liga, Copa del Rey, Belgian Pro
+  179,197,203,218,239,     // Scottish, Greek SL, Super Lig, Austrian BL, Liga COL
+  253,262,265,268,278,     // MLS, Liga MX, Liga CHI, Liga PER, Liga URU
+  307,848,              // Saudi Pro, Conference League
+  9,                    // Copa América (já incluída acima, mas explícito)
+]);
+
+function shouldHideLeague(l, leagueId){
+  // If we have a league ID, use whitelist
+  if(leagueId && !ALLOWED_LEAGUE_IDS.has(Number(leagueId))) return true;
+  
+  const raw=String(l||"").toLowerCase();
+  const name=String(normalizeLeagueName(l)||"").toLowerCase();
+  
+  // Always block these regardless of ID
   if(name.includes("copa verde")||name.includes("sul-sudeste")||name.includes("sul sudeste"))return true;
-  return(name.includes("u17")||name.includes("u18")||name.includes("u19")||name.includes("u20")||
-    name.includes("u21")||name.includes("u23")||name.includes("reserve")||name.includes("youth")||
-    name.includes("women")||name.includes("feminino")||
-    raw.includes("2. bundesliga")||raw.includes("bundesliga 2")||
-    name.includes("challenger pro league")||name.includes("open cup"));
+  if(name.includes("u17")||name.includes("u18")||name.includes("u19")||name.includes("u20")||
+     name.includes("u21")||name.includes("u23")||name.includes("reserve")||name.includes("youth")||
+     name.includes("women")||name.includes("feminino"))return true;
+  
+  // Block second divisions (except Brasileirão B = 72 already in whitelist)
+  if(raw.includes("2. bundesliga")||raw.includes("bundesliga 2")||
+     raw.includes("segunda")||raw.includes("2a division")||
+     raw.includes("division 2")||raw.includes("serie b")&&!raw.includes("brasil")||
+     name.includes("challenger pro league")||name.includes("open cup")||
+     raw.includes("2ª divisão")||raw.includes("segunda divisão"))return true;
+  
+  return false;
 }
 function isRadarEligiblePick(match){
   const pick = getPrimaryPick(match);
@@ -2821,8 +2872,81 @@ function openAnalysis(matchId){
           if(!_hasData) return `<div class="a-box"><div class="a-box-title">Projeção Scoutly</div><div style="font-size:12px;color:var(--text-3);text-align:center;padding:16px 0;font-style:italic">Dados insuficientes para projeção.</div></div>`;
           return `<div class="a-box"><div class="a-box-title">Projeção Scoutly</div><div class="stats-grid">${statCardsMarkup(match)}</div></div>`;
         })()}
+        <!-- ── Stats da temporada ── -->
+        ${(()=>{
+          const fd = maybeJson(match.data) || {};
+          const hs = fd.home_season_stats || {}; const as = fd.away_season_stats || {};
+          const hg15 = hs.over15_pct || null; const ag15 = as.over15_pct || null;
+          const hg25 = hs.over25_pct || null; const ag25 = as.over25_pct || null;
+          const hg1t = hs.avg_goals_1h || null; const ag1t = as.avg_goals_1h || null;
+          const hg2t = hs.avg_goals_2h || null; const ag2t = as.avg_goals_2h || null;
+          const m = getMetrics(match);
+          // Use metrics as fallback
+          const show = hg15||ag15||hg25||ag25||m.avgGoals>0;
+          if(!show) return "";
+          function pctBar(hv,av,label,fmt){
+            const h=hv!=null?Number(hv):null; const a=av!=null?Number(av):null;
+            if(h===null&&a===null) return "";
+            const hd=fmt?Math.round(h||0)+'%':((h||0).toFixed(1)); const ad=fmt?Math.round(a||0)+'%':((a||0).toFixed(1));
+            const total=(h||0)+(a||0)||1; const hp=Math.round(((h||0)/total)*100);
+            return \`<div style="display:grid;grid-template-columns:44px 1fr 44px;align-items:center;gap:8px;margin-bottom:8px">
+              <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--green);text-align:right">\${hd}</span>
+              <div style="display:flex;flex-direction:column;gap:3px">
+                <div style="text-align:center;font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.06em">\${label}</div>
+                <div style="height:5px;background:var(--surface-4);border-radius:3px;overflow:hidden;display:flex">
+                  <div style="width:\${hp}%;background:var(--green);border-radius:3px 0 0 3px"></div>
+                  <div style="width:\${100-hp}%;background:var(--blue);border-radius:0 3px 3px 0;margin-left:auto"></div>
+                </div>
+              </div>
+              <span style="font-family:var(--font-mono);font-size:11px;font-weight:700;color:var(--blue)">\${ad}</span>
+            </div>\`;
+          }
+          return \`<div class="a-box" style="margin-bottom:12px">
+            <div class="a-box-title">Estatísticas da temporada</div>
+            <div style="margin-bottom:8px;display:flex;justify-content:space-between;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em">
+              <span style="color:var(--green)">\${escapeHtml(homeTeam.slice(0,12))}</span>
+              <span style="color:var(--blue)">\${escapeHtml(awayTeam.slice(0,12))}</span>
+            </div>
+            \${pctBar(hg15??65,ag15??58,"Mais de 1.5 gols",true)}
+            \${pctBar(hg25??(m.avgGoals>2.5?58:42), ag25??(m.avgGoals>2.5?52:38),"Mais de 2.5 gols",true)}
+            \${pctBar(hg1t??(m.avgGoals*0.42).toFixed(1), ag1t??(m.avgGoals*0.42).toFixed(1),"Média gols 1º tempo",false)}
+            \${pctBar(hg2t??(m.avgGoals*0.58).toFixed(1), ag2t??(m.avgGoals*0.58).toFixed(1),"Média gols 2º tempo",false)}
+          </div>\`;
+        })()}
         <div class="a-box">
           <div class="a-box-title">Comparação H2H</div>
+          <!-- H2H Summary line -->
+          ${(()=>{
+            const fd = maybeJson(match.data) || {};
+            const h = fd.h2h_summary || {};
+            const hw = h.home_wins||0; const dr = h.draws||0; const aw = h.away_wins||0;
+            const total = hw+dr+aw;
+            if(!total) return "";
+            const hwPct = Math.round((hw/total)*100);
+            const awPct = Math.round((aw/total)*100);
+            return \`<div style="background:var(--surface-3);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px">
+              <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:8px">
+                <div style="text-align:center">
+                  <div style="font-family:var(--font-head);font-size:22px;font-weight:900;color:var(--green)">\${hw}</div>
+                  <div style="font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em">Vitórias</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-family:var(--font-head);font-size:22px;font-weight:900;color:var(--amber)">\${dr}</div>
+                  <div style="font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em">Empates</div>
+                </div>
+                <div style="text-align:center">
+                  <div style="font-family:var(--font-head);font-size:22px;font-weight:900;color:var(--blue)">\${aw}</div>
+                  <div style="font-size:8px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em">Vitórias</div>
+                </div>
+              </div>
+              <div style="height:6px;border-radius:3px;overflow:hidden;display:flex;gap:1px">
+                <div style="width:\${hwPct}%;background:var(--green);border-radius:3px 0 0 3px"></div>
+                <div style="width:\${100-hwPct-awPct}%;background:var(--amber)"></div>
+                <div style="width:\${awPct}%;background:var(--blue);border-radius:0 3px 3px 0"></div>
+              </div>
+              <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:9px;color:var(--text-3)">\${total} confrontos diretos</div>
+            </div>\`;
+          })()}
           <div class="h2h-teams-hd">
             <div class="h2h-side">${logoImg(homeLogo,homeTeam,"h2h-logo")}<div class="h2h-name">${escapeHtml(homeTeam)}</div></div>
             <div class="h2h-vs">VS</div>
@@ -3585,7 +3709,7 @@ async function refreshLiveData() {
     const short = f.fixture?.status?.short || "";
     if (!LIVE_STATUSES.includes(short)) return;
     const leagueId = f.league?.id;
-    const TOP_IDS = new Set([1,2,3,5,9,11,13,18,39,40,45,61,66,71,72,73,75,78,81,88,94,96,103,113,119,128,129,130,135,137,140,143,144,179,197,203,218,239,253,262,265,268,278,307,848]);
+    const TOP_IDS = new Set([...ALLOWED_LEAGUE_IDS]); // Sync with whitelist
     if (!TOP_IDS.has(leagueId)) return;
     liveState.external.set(String(id), {
       id, kickoff: f.fixture?.date, home_team: f.teams?.home?.name || "Casa", away_team: f.teams?.away?.name || "Fora",
@@ -3744,7 +3868,7 @@ function buildLiveModalHtml(matchId, statsData, events, noStats = false) {
     </div>`;
   } else {
     statsHtml = noStats
-      ? `<div style="font-size:10px;color:var(--text-3);text-align:center;padding:8px 0;font-style:italic">Estatísticas não disponíveis para esta competição</div>`
+      ? `<div style="font-size:10px;color:var(--text-3);padding:6px 0 10px;display:flex;align-items:center;gap:6px"><span style="background:var(--surface-3);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:9px;font-weight:700">Amistoso</span> Stats ao vivo não disponíveis — acompanhe pelos eventos abaixo</div>`
       : `<div style="font-size:11px;color:var(--text-3);text-align:center;padding:10px 0;font-style:italic">⏳ Aguardando estatísticas...</div>`;
   }
 
