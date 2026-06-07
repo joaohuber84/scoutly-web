@@ -727,10 +727,35 @@
     }
 
     .analysis-hd {
-      padding: 16px 20px 14px;
+      padding: 14px 18px 14px;
       border-bottom: 1px solid var(--border);
       display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
       flex-shrink: 0; background: var(--surface);
+    }
+    .analysis-hd-actions {
+      display: flex; align-items: flex-start; gap: 6px;
+      flex-shrink: 0; padding-top: 2px;
+    }
+    .hd-action-btn {
+      width: 36px; height: 36px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface-2);
+      color: var(--text-3);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 13px; font-weight: 600;
+      transition: all var(--transition); flex-shrink: 0;
+      font-family: var(--font-body);
+    }
+    .hd-action-btn:hover {
+      background: var(--surface-3);
+      border-color: var(--border-2);
+      color: var(--text);
+    }
+    #compToggleBtn.active-btn {
+      background: var(--green-dim);
+      border-color: var(--green-line);
+      color: var(--green);
     }
     /* drag handle */
     .analysis-hd::before {
@@ -751,12 +776,13 @@
     }
     .analysis-sub img { border-radius: 2px; }
     .close-btn {
-      width: 48px; height: 48px; border-radius: var(--radius-sm);
+      width: 36px; height: 36px; border-radius: var(--radius-sm);
       flex-shrink: 0; background: var(--surface-2); border: 1px solid var(--border);
-      color: var(--text-2); font-size: 14px;
+      color: var(--text-3); font-size: 13px;
       display: flex; align-items: center; justify-content: center;
-      transition: all var(--transition); margin-top: 8px;
+      cursor: pointer; transition: all var(--transition);
     }
+    .close-btn:hover { background: var(--surface-3); border-color: var(--border-2); color: var(--text); }
     .close-btn:hover { background: var(--red-dim); border-color: var(--red-line); color: var(--red); }
 
     /* Scrollable body */
@@ -2133,12 +2159,16 @@
         <h2 class="analysis-title" id="analysisTitle">—</h2>
         <div class="analysis-sub" id="analysisSubtitle"></div>
       </div>
-      <div style="display:flex;align-items:flex-start;gap:6px;margin-top:8px;flex-shrink:0">
-        <button id="compToggleBtn" onclick="toggleCompPanel()" title="Tabela e Artilheiros"
-          style="height:48px;padding:0 12px;border-radius:var(--radius-sm);background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font-body);display:flex;align-items:center;gap:5px;transition:all var(--transition);white-space:nowrap">
-          📊 <span id="compToggleBtnLabel">Tabela</span>
+      <div class="analysis-hd-actions">
+        <button id="compToggleBtn" class="hd-action-btn" onclick="toggleCompPanel()" title="Tabela / Artilheiros">
+          <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="1" y="1" width="5.5" height="5.5" rx="1" fill="currentColor" opacity="0.7"/>
+            <rect x="8.5" y="1" width="5.5" height="5.5" rx="1" fill="currentColor" opacity="0.7"/>
+            <rect x="1" y="8.5" width="5.5" height="5.5" rx="1" fill="currentColor" opacity="0.7"/>
+            <rect x="8.5" y="8.5" width="5.5" height="5.5" rx="1" fill="currentColor"/>
+          </svg>
         </button>
-        <button class="close-btn" id="closeAnalysisBtn">✕</button>
+        <button class="hd-action-btn close-btn" id="closeAnalysisBtn">✕</button>
       </div>
     </div>
     <!-- Competition panel — sticky below header -->
@@ -2157,7 +2187,7 @@
     </div>
     <!-- Footer close button — visible on mobile -->
     <div style="display:none;padding:10px 16px;border-top:1px solid var(--border);flex-shrink:0" id="analysisFooter">
-      <button onclick="closeAnalysis()" style="width:100%;padding:13px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-2);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all 0.15s">✕ Fechar análise</button>
+      <button onclick="closeAnalysis()" style="width:100%;padding:13px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-2);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all 0.15s;letter-spacing:0.02em">✕ Fechar análise</button>
     </div>
   </div>
 </div>
@@ -5156,9 +5186,7 @@ function toggleCompPanel() {
   const isOpen = panel.style.display !== "none";
   panel.style.display = isOpen ? "none" : "block";
   if (btn) {
-    btn.style.background = isOpen ? "var(--surface-2)" : "var(--green-dim)";
-    btn.style.borderColor = isOpen ? "var(--border)" : "var(--green-line)";
-    btn.style.color = isOpen ? "var(--text-2)" : "var(--green)";
+    btn.classList.toggle("active-btn", !isOpen);
   }
   if (label) label.textContent = isOpen ? "Tabela" : "Fechar";
   if (!isOpen) {
