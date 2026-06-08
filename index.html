@@ -710,7 +710,10 @@
       background: rgba(3,5,10,0.88); backdrop-filter: blur(12px);
       display: none; align-items: flex-end; justify-content: center;
       padding: 0;
+      touch-action: none;
+      overscroll-behavior: none;
     }
+    .analysis-overlay.open { touch-action: none; }
     .analysis-overlay.open { display: flex; }
 
     .analysis-card {
@@ -720,6 +723,8 @@
       overflow: hidden; display: flex; flex-direction: column;
       box-shadow: var(--shadow-xl);
       animation: sheet-up 0.28s cubic-bezier(0.32,0.72,0,1);
+      touch-action: pan-y;
+      overscroll-behavior: contain;
     }
     @keyframes sheet-up {
       from { opacity:0; transform: translateY(32px); }
@@ -792,6 +797,7 @@
       scrollbar-width: thin; scrollbar-color: var(--surface-3) transparent;
       overscroll-behavior: contain;
       -webkit-overflow-scrolling: touch;
+      touch-action: pan-y;
     }
     .analysis-body::-webkit-scrollbar { width: 4px; }
     .analysis-body::-webkit-scrollbar-track { background: transparent; }
@@ -1058,7 +1064,7 @@
     @media (max-width: 480px) { .wc-bottom-row { flex-direction: column; align-items: flex-start; } .wc-countdown { width: 100%; } .wc-num { font-size: 16px; } .wc-unit { min-width: 36px; padding: 4px 7px; } }
 
     /* ─── COPA 2026 OVERLAY ───────────────────────────────────────── */
-    .wc-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(3,5,10,0.92); backdrop-filter: blur(14px); display: none; align-items: flex-end; justify-content: center; padding: 0; }
+    .wc-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(3,5,10,0.92); backdrop-filter: blur(14px); display: none; align-items: flex-end; justify-content: center; padding: 0; touch-action: none; overscroll-behavior: none; }
     .wc-overlay.open { display: flex; }
     .wc-panel {
       width: 100%; max-width: 1100px; height: 96vh;
@@ -1066,6 +1072,8 @@
       border-radius: var(--radius-xl) var(--radius-xl) 0 0;
       overflow: hidden; display: flex; flex-direction: column;
       animation: sheet-up 0.28s cubic-bezier(0.32,0.72,0,1);
+      touch-action: pan-y;
+      overscroll-behavior: contain;
     }
     .wc-panel-hd {
       padding: 16px 22px 14px;
@@ -3093,20 +3101,16 @@ function openAnalysis(matchId){
   }
   function scorePillsHtml(scores, justify = "", matches = []) {
     if (!scores || !scores.length) return "";
-    const style = justify ? `style="justify-content:${justify}"` : "";
-    return `<div class="h2h-scores" ${style}>${scores.map((s, i) => {
+    return `<div class="h2h-scores" style="justify-content:center;flex-wrap:wrap;gap:5px">${scores.map((s, i) => {
       const m = matches[i];
       const cls = scorePillClass(s);
       const title = m ? `${m.isHome?"Casa":"Fora"} vs ${m.opponent||""}: ${s}` : s;
-      const logoEl = (logo) => logo
-        ? `<img src="${escapeHtml(logo)}" style="width:14px;height:14px;object-fit:contain;flex-shrink:0;border-radius:2px" onerror="this.style.display='none'">`
-        : "";
-      // Casa: [logo adversário] placar  |  Fora: placar [logo adversário]
-      const opLogo = logoEl(m?.opponentLogo || "");
-      const score = `<b style="font-family:var(--font-mono);letter-spacing:0.03em">${escapeHtml(s)}</b>`;
-      const inner = m?.isHome
-        ? `${opLogo}${score}`
-        : `${score}${opLogo}`;
+      const logo = m?.opponentLogo
+        ? `<img src="${escapeHtml(m.opponentLogo)}" style="width:14px;height:14px;object-fit:contain;flex-shrink:0;border-radius:2px" onerror="this.style.display='none'">`
+        : (m?.opponent ? `<span style="font-size:8px;font-weight:700;opacity:0.6;min-width:16px;text-align:center">${escapeHtml(m.opponent.slice(0,3).toUpperCase())}</span>` : "");
+      const scoreEl = `<b style="font-family:var(--font-mono);letter-spacing:0.03em">${escapeHtml(s)}</b>`;
+      // Logo sempre à esquerda, placar à direita
+      const inner = logo ? `${logo}${scoreEl}` : scoreEl;
       return `<span class="h2h-score-pill ${cls}" title="${escapeHtml(title)}" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px">${inner}</span>`;
     }).join("")}</div>`;
   }
@@ -3143,12 +3147,12 @@ function openAnalysis(matchId){
         <div style="text-align:center">
           <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${escapeHtml(homeTeam.length>10?homeTeam.slice(0,10)+".":homeTeam)}</div>
           <span class="h2h-streak ${streakClass(hStreak)}">${escapeHtml(hStreak||"sem dados")}</span>
-          ${scorePillsHtml(hScores,"",hMatches)}
+          ${scorePillsHtml(hScores,"center",hMatches)}
         </div>
         <div style="text-align:center">
           <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">${escapeHtml(awayTeam.length>10?awayTeam.slice(0,10)+".":awayTeam)}</div>
           <span class="h2h-streak ${streakClass(aStreak)}">${escapeHtml(aStreak||"sem dados")}</span>
-          ${scorePillsHtml(aScores,"",aMatches)}
+          ${scorePillsHtml(aScores,"center",aMatches)}
         </div>
       </div>` : "";
     return `<div class="h2h-rows">${barsHtml}</div>${streakSection}`;
