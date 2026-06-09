@@ -1980,7 +1980,7 @@
       <button class="close-btn" onclick="closeWC2026()" style="margin-top:8px">✕</button>
     </div>
 
-    <div class="wc-panel-body">
+    <div class="wc-panel-body" id="wcPanelBody">
       <!-- TABS -->
       <div class="wc-tabs">
         <button class="wc-tab active" data-wctab="grupos">⚽ Grupos</button>
@@ -5311,36 +5311,34 @@ async function initModalStandings(match) {
 }
 
 
-/* ── SWIPE DOWN TO CLOSE (mobile) ──────────────────────────────── */
-function addSwipeToClose(overlayId, closeFn) {
-  const panel = document.querySelector(`#${overlayId} .analysis-card, #${overlayId} .wc-panel`);
-  if (!panel) return;
-  let startY = 0; let currentY = 0; let dragging = false;
-  panel.addEventListener("touchstart", e => {
-    startY = e.touches[0].clientY; dragging = true; currentY = startY;
+/* ── OVERSCROLL GUARD — prevents Android back gesture in modals ── */
+function addOverscrollGuard(scrollableId) {
+  const el = document.getElementById(scrollableId);
+  if (!el) return;
+  let startY = 0;
+  el.addEventListener("touchstart", e => {
+    startY = e.touches[0].clientY;
   }, { passive: true });
-  panel.addEventListener("touchmove", e => {
-    if (!dragging) return;
-    currentY = e.touches[0].clientY;
-    const diff = currentY - startY;
-    if (diff > 0) panel.style.transform = `translateY(${diff * 0.5}px)`;
-  }, { passive: true });
-  panel.addEventListener("touchend", () => {
-    if (!dragging) return;
-    dragging = false;
-    const diff = currentY - startY;
-    panel.style.transform = "";
-    panel.style.transition = "transform 0.2s ease";
-    if (diff > 80) { closeFn(); }
-    setTimeout(() => panel.style.transition = "", 200);
-  });
+  el.addEventListener("touchmove", e => {
+    const dy = e.touches[0].clientY - startY;
+    // Block overscroll when at top (prevents Android back/history popstate)
+    if (el.scrollTop <= 0 && dy > 0) {
+      e.preventDefault();
+    }
+    // Block overscroll when at bottom
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight && dy < 0) {
+      e.preventDefault();
+    }
+  }, { passive: false });
 }
 
 /* ── ANDROID BACK BUTTON ────────────────────────────────────────── */
 function pushModalState(id) {
-  history.pushState({ modal: id }, "");
+  history.pushState({ modal: id, ts: Date.now() }, "");
 }
-window.addEventListener("popstate", () => {
+window.addEventListener("popstate", (e) => {
+  // Only handle if we pushed this state intentionally
+  if (!e.state?.modal) return;
   const overlays = ["analysisOverlay","wcOverlay","resultadosOverlay"];
   for (const id of overlays) {
     if (document.getElementById(id)?.classList.contains("open")) {
@@ -5659,11 +5657,12 @@ function unlockBodyScroll() {
 }
 
 initialize();
-// Swipe to close — init after overlays are in DOM
+// Overscroll guard — prevent Android back gesture when at scroll boundaries
 setTimeout(() => {
-  addSwipeToClose("analysisOverlay", closeAnalysis);
-  addSwipeToClose("wcOverlay", closeWC2026);
-}, 500);
+  addOverscrollGuard("analysisBody");
+  addOverscrollGuard("wcPanelBody");
+  addOverscrollGuard("resultadosList");
+}, 600);
 </script>
 </body>
 </html>
