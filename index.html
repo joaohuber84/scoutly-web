@@ -2533,25 +2533,18 @@ const ALLOWED_LEAGUE_IDS = new Set([
 const TOP_IDS = new Set([...ALLOWED_LEAGUE_IDS]);
 
 function shouldHideLeague(l, leagueId){
-  // If we have a league ID, use whitelist
-  if(leagueId && !ALLOWED_LEAGUE_IDS.has(Number(leagueId))) return true;
-  
   const raw=String(l||"").toLowerCase();
   const name=String(normalizeLeagueName(l)||"").toLowerCase();
-  
-  // Always block these regardless of ID
   if(name.includes("copa verde")||name.includes("sul-sudeste")||name.includes("sul sudeste"))return true;
   if(name.includes("u17")||name.includes("u18")||name.includes("u19")||name.includes("u20")||
      name.includes("u21")||name.includes("u23")||name.includes("reserve")||name.includes("youth")||
      name.includes("women")||name.includes("feminino"))return true;
-  
-  // Block second divisions (except Brasileirão B = 72 already in whitelist)
   if(raw.includes("2. bundesliga")||raw.includes("bundesliga 2")||
      raw.includes("segunda")||raw.includes("2a division")||
-     raw.includes("division 2")||raw.includes("serie b")&&!raw.includes("brasil")||
+     raw.includes("division 2")||
+     (raw.includes("serie b")&&!raw.includes("brasil"))||
      name.includes("challenger pro league")||name.includes("open cup")||
      raw.includes("2ª divisão")||raw.includes("segunda divisão"))return true;
-  
   return false;
 }
 function isRadarEligiblePick(match){
