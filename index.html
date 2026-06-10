@@ -2529,6 +2529,9 @@ const ALLOWED_LEAGUE_IDS = new Set([
   9,                    // Copa América (já incluída acima, mas explícito)
 ]);
 
+// Sync TOP_IDS with whitelist — module level
+const TOP_IDS = new Set([...ALLOWED_LEAGUE_IDS]);
+
 function shouldHideLeague(l, leagueId){
   // If we have a league ID, use whitelist
   if(leagueId && !ALLOWED_LEAGUE_IDS.has(Number(leagueId))) return true;
@@ -3796,7 +3799,6 @@ async function refreshLiveData() {
     const short = f.fixture?.status?.short || "";
     if (!LIVE_STATUSES.includes(short)) return; // HT is now in LIVE_STATUSES
     const leagueId = f.league?.id;
-    const TOP_IDS = new Set([...ALLOWED_LEAGUE_IDS]); // Sync with whitelist
     if (!TOP_IDS.has(leagueId)) return;
     liveState.external.set(String(id), {
       id, kickoff: f.fixture?.date, home_team: f.teams?.home?.name || "Casa", away_team: f.teams?.away?.name || "Fora",
