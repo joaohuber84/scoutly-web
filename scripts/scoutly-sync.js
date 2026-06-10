@@ -930,7 +930,7 @@ async function clearFutureWindow() {
 }
 
 async function upsertMatch(match) {
-  const{error}=await supabase.from("matches").upsert({ id:match.id,kickoff:match.kickoff,league:match.league,country:match.country||null,region:match.region||null,priority:match.priority||null,home_team:match.home_team||null,away_team:match.away_team||null,home_logo:match.home_logo||null,away_logo:match.away_logo||null,probabilities:match.probabilities||null,markets:match.markets||null,metrics:match.metrics||null,pick:match.pick||null,probability:match.probability||null,insight:match.insight||null,updated_at:new Date().toISOString() },{onConflict:"id"})
+  const{error}=await supabase.from("matches").upsert({ id:match.id,kickoff:match.kickoff,league:match.league,league_id:match.league_id||null,country:match.country||null,region:match.region||null,priority:match.priority||null,home_team:match.home_team||null,away_team:match.away_team||null,home_logo:match.home_logo||null,away_logo:match.away_logo||null,probabilities:match.probabilities||null,markets:match.markets||null,metrics:match.metrics||null,pick:match.pick||null,probability:match.probability||null,insight:match.insight||null,updated_at:new Date().toISOString() },{onConflict:"id"})
   if(error)throw error
 }
 
