@@ -2577,7 +2577,7 @@ function getMatchById(id){
   return null;
 }
 function getRadarEligibleMatches(){
-  return state.matches.filter(m=>isStillRelevantForRadar(m.kickoff)&&!shouldHideLeague(m.league));
+  return state.matches.filter(m=>isStillRelevantForRadar(m.kickoff)&&!shouldHideLeague(m.league, m.league_id));
 }
 function getMetrics(match){
   const metrics=maybeJson(match.metrics)||{};
@@ -3298,7 +3298,7 @@ function buildRadarSnapshot(){
   const eligible=getRadarEligibleMatches();const nowTs=Date.now();
   const fromDaily=state.dailyPicks.map(item=>{
     const m=getMatchById(item.match_id);
-    if(!m||!isStillRelevantForRadar(m.kickoff)||shouldHideLeague(m.league))return null;
+    if(!m||!isStillRelevantForRadar(m.kickoff)||shouldHideLeague(m.league, m.league_id))return null;
     const pick=getPrimaryPick(m)||item.market;
     if(!isRadarEligiblePick(m))return null;
     return{...m,league:normalizeLeagueName(m.league),home_team:normalizeTeamName(m.home_team),away_team:normalizeTeamName(m.away_team),
@@ -3463,7 +3463,7 @@ function renderAgenda() {
     const d = parseDateSafe(m.kickoff);
     if (!d) return false;
     if (d < todayStart || d > todayEnd) return false;
-    if (shouldHideLeague(m.league)) return false;
+    if (shouldHideLeague(m.league, m.league_id)) return false;
     if (liveIds.has(String(m.id))) return false;
     const d2 = parseDateSafe(m.kickoff);
     if (d2 && (now - d2) / 60000 >= 0) return false;
@@ -3512,7 +3512,7 @@ function updateAgendaLiveIndicators() {
 /* ══ FIX 1 APLICADO: buildCompetitions sem filtro de pick ══ */
 function buildCompetitions(){
   const map=new Map();
-  state.matches.filter(m=>isCompetitionVisible(m.kickoff)&&!shouldHideLeague(m.league)).forEach(match=>{
+  state.matches.filter(m=>isCompetitionVisible(m.kickoff)&&!shouldHideLeague(m.league, m.league_id)).forEach(match=>{
     const league=normalizeLeagueName(match.league||"");const country=match.country||inferCountryFromLeague(league);
     if(!map.has(league))map.set(league,{league,country,count:0,matches:[],kickoff:match.kickoff,logo_url:match.league_logo||match.league_image||""});
     const item=map.get(league);
@@ -3561,7 +3561,7 @@ function openCompetition(league){
   state.selectedLeague=league;
   const comp=state.competitions.find(c=>c.league===league);
   const matches=(comp?.matches||[])
-    .filter(m=>isCompetitionVisible(m.kickoff)&&!shouldHideLeague(m.league))
+    .filter(m=>isCompetitionVisible(m.kickoff)&&!shouldHideLeague(m.league, m.league_id))
     // Todos os jogos aparecem nas competições — pick é opcional
     .sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
   document.getElementById("competitionsWrap")?.classList.add("hidden");
@@ -4213,12 +4213,12 @@ async function loadMatches(){
   const aMap=new Map((analysisData||[]).map(i=>[String(i.match_id),i]));
   state.matches=(matchesData||[]).map(match=>{
     const nl=normalizeLeagueName(match.league);const s=sMap.get(String(match.id))||{};const a=aMap.get(String(match.id))||{};
-    return{...match,...a,...s,id:match.id,match_id:match.id,
+    return{...match,...a,...s,id:match.id,match_id:match.id,league_id:match.league_id||null,
       home_team:normalizeTeamName(match.home_team),away_team:normalizeTeamName(match.away_team),
       league:nl,country:match.country||a.country||inferCountryFromLeague(nl),
       kickoff:match.kickoff||a.kickoff||match.date,home_logo:match.home_logo,away_logo:match.away_logo,
       probabilities:a.probabilities||match.probabilities,metrics:a.metrics||match.metrics,markets:a.markets||match.markets};
-  }).filter(m=>m.home_team&&m.away_team&&m.league&&!shouldHideLeague(m.league));
+  }).filter(m=>m.home_team&&m.away_team&&m.league&&!shouldHideLeague(m.league, m.league_id));
 }
 
 /* ══ FIX 4 APLICADO: LEAGUE_ID_MAP com Copa da Turquia: 80 ══ */
