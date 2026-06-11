@@ -156,8 +156,9 @@ const TARGET_COMPETITIONS = [
   { mode:"search", search:"World Cup - Qualification CONCACAF", display:"Eliminatórias CONCACAF", region:"international", priority:88 },
   { mode:"search", search:"Copa America", display:"Copa América", region:"international", priority:98 },
   { mode:"search", search:"UEFA European Championship", display:"Eurocopa", region:"international", priority:98 },
-  { mode:"search", search:"FIFA World Cup", display:"Copa do Mundo", region:"international", priority:100 },
-  { mode:"search", search:"FIFA World Cup 2026", display:"Copa do Mundo", region:"international", priority:100 },
+  { mode:"id", leagueId:1, season:2026, display:"Copa do Mundo 2026", region:"international", priority:100 },
+  { mode:"search", search:"FIFA World Cup", season:2026, display:"Copa do Mundo", region:"international", priority:100 },
+  { mode:"search", search:"World Cup", season:2026, display:"Copa do Mundo", region:"international", priority:100 },
   { mode:"search", search:"FIFA Club World Cup", display:"Mundial de Clubes", region:"general", priority:96 },
   { mode:"search", search:"Africa Cup of Nations", display:"Copa Africana", region:"international", priority:90 },
 ]
@@ -353,7 +354,8 @@ async function resolveCountryCompetitions(target) {
   return leagues.filter(item => {
     const rawName = String(item?.league?.name || "")
     const leagueType = String(item?.league?.type || "").toLowerCase()
-    const seasonCurrent = item?.seasons?.find(s => s.current) || item?.seasons?.[0]
+    const seasonCurrent = item?.seasons?.find(s => s.current) || 
+      item?.seasons?.sort((a,b) => b.year - a.year)?.[0]
     if (!seasonCurrent) return false
     if (target.type && leagueType !== target.type) return false
     if (hasForbiddenMarker(rawName)) return false
@@ -384,7 +386,10 @@ async function resolveCountryCompetitions(target) {
 async function resolveSearchCompetition(target) {
   const leagues = await api("/leagues", { search: target.search })
   const items = leagues.map(item => {
-    const currentSeason = item?.seasons?.find(s => s.current) || item?.seasons?.[0]
+    // Use explicit target.season if provided, then current, then fallback
+    const currentSeason = (target.season ? { year: target.season } : null) ||
+      item?.seasons?.find(s => s.current) ||
+      item?.seasons?.sort((a,b) => b.year - a.year)?.[0]
     if (!currentSeason) return null
     const country = item?.country?.name || null
     const rawName = String(item?.league?.name || "").trim()
@@ -413,7 +418,16 @@ async function resolveTargetCompetitions() {
   const resolved = []
   for (const target of TARGET_COMPETITIONS) {
     try {
-      const items = target.mode === "country" ? await resolveCountryCompetitions(target) : await resolveSearchCompetition(target)
+      let items
+      if (target.mode === "id") {
+        // Direct league ID — no search needed, just use provided leagueId + season
+        items = [{ leagueId: target.leagueId, season: target.season, country: target.country||null,
+          rawName: target.display, display: target.display, region: target.region, priority: target.priority }]
+      } else if (target.mode === "country") {
+        items = await resolveCountryCompetitions(target)
+      } else {
+        items = await resolveSearchCompetition(target)
+      }
       resolved.push(...items)
     } catch (err) {
       console.error(`Falha resolvendo ${target.display || target.search || target.country}:`, err.message)
