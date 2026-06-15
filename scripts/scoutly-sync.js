@@ -158,7 +158,6 @@ const TARGET_COMPETITIONS = [
   { mode:"search", search:"UEFA European Championship", display:"Eurocopa", region:"international", priority:98 },
   { mode:"id", leagueId:1, season:2026, display:"Copa do Mundo 2026", region:"international", priority:100 },
   { mode:"search", search:"FIFA World Cup", season:2026, display:"Copa do Mundo", region:"international", priority:100 },
-  { mode:"search", search:"World Cup", season:2026, display:"Copa do Mundo", region:"international", priority:100 },
   { mode:"search", search:"FIFA Club World Cup", display:"Mundial de Clubes", region:"general", priority:96 },
   { mode:"search", search:"Africa Cup of Nations", display:"Copa Africana", region:"international", priority:90 },
 ]
