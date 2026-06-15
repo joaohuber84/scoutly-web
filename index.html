@@ -2263,7 +2263,7 @@ const TEAM_NAME_MAP = {
 };
 
 const LEAGUE_ALIASES = {
-  "UEFA Europa Conference League":"UEFA Conference League",
+  "Copa do Mundo 2026":"Copa do Mundo","FIFA World Cup":"Copa do Mundo","FIFA World Cup 2026":"Copa do Mundo","UEFA Europa Conference League":"UEFA Conference League",
   "Europa Conference League":"UEFA Conference League",
   "Conference League":"UEFA Conference League",
   "Bundesliga":"Bundesliga","German Bundesliga":"Bundesliga","1. Bundesliga":"Bundesliga",
@@ -3849,14 +3849,14 @@ function buildLiveIndicatorHtml(live) {
 }
 async function refreshModalLiveStats(matchId) {
   const getApiId = (id) => {
-    // Priority: 1) apiFixtureId cached in liveState, 2) fixture_id from Supabase match, 3) raw id
+    // Priority 1: cached apiFixtureId from liveState (most reliable)
     const liveEntry = liveState.data.get(String(id));
     if (liveEntry?.apiFixtureId) return liveEntry.apiFixtureId;
+    // Priority 2: fixtureMap cache
     if (liveState.fixtureMap?.get(String(id))) return liveState.fixtureMap.get(String(id));
-    const m = getMatchById(id);
-    // m.fixture_id is the API Football fixture ID stored by sync.js
-    // m.id might also be the API fixture ID if sync uses it as primary key
-    return m?.fixture_id || m?.id || id;
+    // Priority 3: The match ID in Supabase IS the API fixture ID (sync uses API id as PK)
+    // so return the ID directly — it's already the API fixture ID
+    return Number(id) > 0 ? id : null;
   };
   const apiMatchId = getApiId(matchId);
   const statsData = await fetchFixtureStats(apiMatchId);
