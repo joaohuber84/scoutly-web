@@ -89,7 +89,13 @@ function buildMatchLabel(row){return`${row.home_team} x ${row.away_team}`}
 function compareByKickoff(a,b){const aTime=getKickoffMs(a.kickoff),bTime=getKickoffMs(b.kickoff);if(aTime!==bTime)return aTime-bTime;if(b.main_score!==a.main_score)return b.main_score-a.main_score;return String(a.league||"").localeCompare(String(b.league||""))}
 function compareByScoreThenKickoff(a,b){if(b.main_score!==a.main_score)return b.main_score-a.main_score;if(b.main_probability!==a.main_probability)return b.main_probability-a.main_probability;return compareByKickoff(a,b)}
 function safeLeague(row){return row.league||"Liga"}
-function hasMinimumAnalysis(row){const values=[row.expected_home_goals,row.expected_away_goals,row.expected_home_shots,row.expected_away_shots,row.expected_home_sot,row.expected_away_sot,row.expected_corners,row.expected_cards,row.over25_prob,row.btts_prob,row.prob_shots,row.prob_sot,row.prob_cards];return values.some((v)=>v!==null&&Number(v)>0)}
+function hasMinimumAnalysis(row){
+  // Tier 1 leagues always pass — Copa do Mundo, Premier League, etc.
+  const tier = getLeagueTierScore(row.league);
+  if (tier >= 90) return true;
+  const values=[row.expected_home_goals,row.expected_away_goals,row.expected_home_shots,row.expected_away_shots,row.expected_home_sot,row.expected_away_sot,row.expected_corners,row.expected_cards,row.over25_prob,row.btts_prob,row.prob_shots,row.prob_sot,row.prob_cards];
+  return values.some((v)=>v!==null&&Number(v)>0)
+}
 function getStrengthLabel(score){if(score>=0.78)return"Forte";if(score>=0.7)return"Boa";return"Moderada"}
 function getRhythmLabel(avgShots){const shots=toNumber(avgShots);if(shots>=24)return"Alto";if(shots>=16)return"Moderado";return"Baixo"}
 function marketFamily(market){const m=String(market||"").trim().toLowerCase();if(!m)return"outro";if(m.includes("escanteio"))return"escanteios";if(m.includes("finaliza")&&m.includes("no gol"))return"sot";if(m.includes("finaliza"))return"shots";if(m.includes("cart"))return"cards";if(m.includes("ambas"))return"btts";if(m.includes("dupla chance")||m.includes("empate")||m.includes("vitória")||m.includes("vitoria"))return"resultado";if(m.includes("gol"))return"gols";return"outro"}
@@ -135,8 +141,23 @@ function mergeMatchRow(matchRow,analysisMap){
   const cornersProb=clamp(toNumber(analysis.prob_corners,0)||toNumber(markets.corners,0),0,1)
   const under25Prob=clamp(1-over25Prob,0,1)
   const under35Prob=clamp(toNumber(markets.under35,0)||clamp(1-Math.max(over25Prob-0.18,0),0,1),0,1)
-  const confidenceScore=clamp(toNumber(matchRow.confidence_score,0)||toNumber(matchRow.probability,0)||over25Prob||over15Prob,0,1)
-  return{id:matchRow.id,kickoff:matchRow.kickoff,league:matchRow.league,country:matchRow.country,region:matchRow.region,priority:toNumber(matchRow.priority,0),home_team:matchRow.home_team,away_team:matchRow.away_team,home_logo:matchRow.home_logo,away_logo:matchRow.away_logo,metrics,markets,probabilities,home_strength:round1(toNumber(analysis.home_strength,0)),away_strength:round1(toNumber(analysis.away_strength,0)),avg_goals:avgGoals,avg_corners:avgCorners,avg_shots:avgShots,avg_shots_on_target:avgShotsOnTarget,avg_cards:avgCards,avg_fouls:null,over15_prob:round2(over15Prob),over25_prob:round2(over25Prob),under25_prob:round2(under25Prob),under35_prob:round2(under35Prob),btts_prob:round2(bttsProb),prob_corners:round2(cornersProb),prob_shots:round2(shotsProb),prob_sot:round2(sotProb),prob_cards:round2(cardsProb),home_win_prob:round2(homeWinProb),draw_prob:round2(drawProb),away_win_prob:round2(awayWinProb),expected_home_goals:round2(expectedHomeGoals),expected_away_goals:round2(expectedAwayGoals),expected_home_shots:round2(expectedHomeShots),expected_away_shots:round2(expectedAwayShots),expected_home_sot:round2(expectedHomeSOT),expected_away_sot:round2(expectedAwaySOT),expected_corners:round2(expectedCorners),expected_cards:round2(expectedCards),confidence_score:round2(confidenceScore),best_pick_1:analysis.best_pick_1||matchRow.pick||null,best_pick_2:analysis.best_pick_2||null,best_pick_3:analysis.best_pick_3||null,aggressive_pick:analysis.aggressive_pick||null,analysis_text:analysis.analysis_text||matchRow.insight||null,game_profile:matchRow.game_profile||null}
+  // Copa do Mundo defaults when form data is empty
+  const leagueTier = getLeagueTierScore(matchRow.league);
+  const hasData = avgGoals > 0 || avgShots > 0 || over25Prob > 0;
+  const isTopIntl = leagueTier >= 90 && !hasData;
+  const finalAvgGoals    = isTopIntl ? 2.35 : avgGoals;
+  const finalAvgShots    = isTopIntl ? 22   : avgShots;
+  const finalAvgSOT      = isTopIntl ? 7    : avgShotsOnTarget;
+  const finalAvgCorners  = isTopIntl ? 9.5  : avgCorners;
+  const finalAvgCards    = isTopIntl ? 3.2  : avgCards;
+  const finalOver25      = isTopIntl ? 0.51 : over25Prob;
+  const finalBtts        = isTopIntl ? 0.46 : bttsProb;
+  const finalShotsProb   = isTopIntl ? 0.55 : shotsProb;
+  const finalSOTProb     = isTopIntl ? 0.52 : sotProb;
+  const finalCardsProb   = isTopIntl ? 0.48 : cardsProb;
+  const finalCornersProb = isTopIntl ? 0.54 : cornersProb;
+  const confidenceScore=clamp(toNumber(matchRow.confidence_score,0)||toNumber(matchRow.probability,0)||over25Prob||over15Prob||(isTopIntl?0.52:0),0,1)
+  return{id:matchRow.id,kickoff:matchRow.kickoff,league:matchRow.league,country:matchRow.country,region:matchRow.region,priority:toNumber(matchRow.priority,0),home_team:matchRow.home_team,away_team:matchRow.away_team,home_logo:matchRow.home_logo,away_logo:matchRow.away_logo,metrics,markets,probabilities,home_strength:round1(toNumber(analysis.home_strength,0)),away_strength:round1(toNumber(analysis.away_strength,0)),avg_goals:isTopIntl?finalAvgGoals:avgGoals,avg_corners:isTopIntl?finalAvgCorners:avgCorners,avg_shots:isTopIntl?finalAvgShots:avgShots,avg_shots_on_target:isTopIntl?finalAvgSOT:avgShotsOnTarget,avg_cards:isTopIntl?finalAvgCards:avgCards,avg_fouls:null,over15_prob:round2(isTopIntl?0.67:over15Prob),over25_prob:round2(isTopIntl?finalOver25:over25Prob),under25_prob:round2(isTopIntl?1-finalOver25:under25Prob),under35_prob:round2(isTopIntl?0.49:under35Prob),btts_prob:round2(isTopIntl?finalBtts:bttsProb),prob_corners:round2(isTopIntl?finalCornersProb:cornersProb),prob_shots:round2(isTopIntl?finalShotsProb:shotsProb),prob_sot:round2(isTopIntl?finalSOTProb:sotProb),prob_cards:round2(isTopIntl?finalCardsProb:cardsProb),home_win_prob:round2(homeWinProb),draw_prob:round2(drawProb),away_win_prob:round2(awayWinProb),expected_home_goals:round2(expectedHomeGoals),expected_away_goals:round2(expectedAwayGoals),expected_home_shots:round2(expectedHomeShots),expected_away_shots:round2(expectedAwayShots),expected_home_sot:round2(expectedHomeSOT),expected_away_sot:round2(expectedAwaySOT),expected_corners:round2(expectedCorners),expected_cards:round2(expectedCards),confidence_score:round2(confidenceScore),best_pick_1:analysis.best_pick_1||matchRow.pick||null,best_pick_2:analysis.best_pick_2||null,best_pick_3:analysis.best_pick_3||null,aggressive_pick:analysis.aggressive_pick||null,analysis_text:analysis.analysis_text||matchRow.insight||null,game_profile:matchRow.game_profile||null}
 }
 
 async function loadActiveMatches(){
