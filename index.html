@@ -2896,8 +2896,11 @@ function openAnalysis(matchId){
   const awayTeam=normalizeTeamName(match.away_team);
   const homeLogo=match.home_logo||"";
   const awayLogo=match.away_logo||"";
-  const primaryPick=getPrimaryPick(match);
-  const primaryTier=getMatchTier(match);
+  const rawPrimaryPick = getPrimaryPick(match);
+  const isCopaWC = (match.league||"").includes("Copa do Mundo") || (match.league||"").includes("FIFA World Cup");
+  const hasMetrics = (match.avg_goals||0)>0 || (match.over25_prob||0)>0;
+  const primaryPick = rawPrimaryPick || (isCopaWC ? "Mais de 1.5 gols" : "Mercado em revisão");
+  const primaryTier = getMatchTier(match);
   const detectedMarkets=getDetectedMarkets(match);
   const insight=getInsight(match);
   const metrics=getMetrics(match);
@@ -2941,7 +2944,8 @@ function openAnalysis(matchId){
       <div class="a-col">
         ${(()=>{ const _m=getMetrics(match); const _hasData=_m.avgGoals>0||_m.avgShots>0||_m.avgCorners>0;
           if(!_hasData) return `<div class="a-box"><div class="a-box-title">Projeção Scoutly</div><div style="font-size:12px;color:var(--text-3);text-align:center;padding:16px 0;font-style:italic">Dados insuficientes para projeção.</div></div>`;
-          return `<div class="a-box"><div class="a-box-title">Projeção Scoutly</div><div class="stats-grid">${statCardsMarkup(match)}</div></div>`;
+          return `<div class="a-box"><div class="a-box-title">Projeção Scoutly</div><div class="stats-grid">${statCardsMarkup(match)}
+    ${isCopaWC && !hasMetrics ? `<div style="background:var(--amber-dim);border:1px solid var(--amber-line);border-radius:var(--radius-sm);padding:8px 12px;font-size:10px;color:var(--amber);margin-top:8px;display:flex;align-items:center;gap:6px"><span>⚠️</span><span>Projeções baseadas em médias históricas da Copa do Mundo — dados de forma limitados para estas seleções.</span></div>` : ""}</div></div>`;
         })()}
         <!-- ── Stats da temporada ── -->
         ${(()=>{
