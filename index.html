@@ -2597,11 +2597,41 @@ function getMetrics(match){
   const awayCorners = toNumber(match.expected_away_corners,null) ?? toNumber(match.away_corners,null);
   const homeCards = toNumber(match.expected_home_cards,null) ?? toNumber(match.home_yellow_cards,null);
   const awayCards = toNumber(match.expected_away_cards,null) ?? toNumber(match.away_yellow_cards,null);
-  return { avgGoals, avgCorners, avgShots, avgSOT, avgCards, avgFouls, over25Prob, pH, pD, pA,
-    homeGoals:eHG, awayGoals:eAG, homeShots:eHS, awayShots:eAS, homeSOT:eHSOT, awaySOT:eASOT,
-    homeCorners, awayCorners, homeCards, awayCards };
+  // Copa do Mundo: apply historical defaults when data is missing
+  const isWC = (match.league||"").includes("Copa do Mundo")||(match.league||"").includes("FIFA World Cup");
+  const noData = (avgGoals===null||avgGoals===0) && (over25Prob===null||over25Prob===0);
+  const D = isWC && noData; // use defaults flag
+  return {
+    avgGoals:   D ? 2.35  : avgGoals,
+    avgCorners: D ? 9.5   : avgCorners,
+    avgShots:   D ? 22    : avgShots,
+    avgSOT:     D ? 7     : avgSOT,
+    avgCards:   D ? 3.2   : avgCards,
+    avgFouls,
+    over25Prob: D ? 0.51  : over25Prob,
+    pH: D ? 0.37 : pH,
+    pD: D ? 0.29 : pD,
+    pA: D ? 0.34 : pA,
+    homeGoals: D ? 1.2  : eHG,
+    awayGoals: D ? 1.15 : eAG,
+    homeShots: D ? 11   : eHS,
+    awayShots: D ? 11   : eAS,
+    homeSOT:   D ? 3.5  : eHSOT,
+    awaySOT:   D ? 3.5  : eASOT,
+    homeCorners, awayCorners, homeCards, awayCards,
+    _usingDefaults: D
+  };
 }
-function getPrimaryPick(m){ return m.best_pick_1||m.best_pick||m.pick||m.safe_pick||"Mercado em revisão"; }
+function getPrimaryPick(m){
+  const pick = m.best_pick_1||m.best_pick||m.pick||m.safe_pick||"";
+  if (pick && pick !== "Mercado em revisão") return pick;
+  // Copa do Mundo fallback — use historical default when no pick
+  const league = m.league || "";
+  if (league.includes("Copa do Mundo") || league.includes("FIFA World Cup") || league.includes("Copa do Mundo 2026")) {
+    return "Mais de 1.5 gols";
+  }
+  return pick || "Mercado em revisão";
+}
 function getMatchProbability(m){
   const d=toNumber(m.probability,null)??toNumber(m.main_probability,null)??toNumber(m.confidence_score,null);
   if(d!==null)return d>1?clamp(d/100):clamp(d);
