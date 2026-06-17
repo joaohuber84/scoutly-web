@@ -559,8 +559,12 @@ async function collectProfileFromFixtures(teamId, fixturesSubset) {
       date: fixture.fixture?.date || null
     })
   }
-  const statsRows = rows.filter(r => r.shots > 0 || r.shotsOnTarget > 0 || r.corners > 0 || r.fouls > 0 || r.cards > 0)
-  return { matches:rows.length, statsMatches:statsRows.length, avgGoalsFor:round(weightedAverage(rows,"goalsFor")), avgGoalsAgainst:round(weightedAverage(rows,"goalsAgainst")), avgShots:round(weightedAverage(statsRows,"shots")), avgShotsOnTarget:round(weightedAverage(statsRows,"shotsOnTarget")), avgCorners:round(weightedAverage(statsRows,"corners")), avgCards:round(weightedAverage(statsRows,"cards")), avgFouls:round(weightedAverage(statsRows,"fouls")), recentScores:rows.map(r=>r.scoreLabel).slice(0,5),
+  // Only keep rows where the API returned at least some data
+  // But if very few valid rows, fall back to all rows with at least goals
+  const strictRows = rows.filter(r => r.shots > 0 || r.shotsOnTarget > 0 || r.corners > 0 || r.fouls > 0 || r.cards > 0)
+  const statsRows = strictRows.length >= 3 ? strictRows : rows.filter(r => r.goalsFor !== null || r.goalsAgainst !== null)
+  return { matches:rows.length, statsMatches:statsRows.length, avgGoalsFor:round(weightedAverage(rows,"goalsFor")), avgGoalsAgainst:round(weightedAverage(rows,"goalsAgainst")), avgShots:round(weightedAverage(statsRows,"shots")), avgShotsOnTarget:round(weightedAverage(statsRows,"shotsOnTarget")), avgCorners:(()=>{ const v=round(weightedAverage(statsRows,"corners")); return v>0?v:null; })(),
+    avgCards:round(weightedAverage(statsRows,"cards")), avgFouls:round(weightedAverage(statsRows,"fouls")), recentScores:rows.map(r=>r.scoreLabel).slice(0,5),
     recentMatches:rows.slice(0,5).map(r=>({score:r.scoreLabel,opponent:r.opponent,opponentLogo:r.opponentLogo,isHome:r.isHome,date:r.date})),
     formStreak:detectFormStreak(fixturesSubset,teamId) }
 }
@@ -650,8 +654,8 @@ function buildExpectedMetrics(homeProfile, awayProfile, h2hProfile = null) {
   const expectedShots = clamp(round(expectedHomeShots+expectedAwayShots),8,42)
   const expectedSOT = clamp(round(expectedHomeSOT+expectedAwaySOT),2,16)
   const pressureFactor = expectedShots>=24?0.45:expectedShots>=20?0.25:0.10
-  const expectedCorners = clamp(round(homeProfile.avgCorners*1.00+awayProfile.avgCorners*0.95+expectedShots*0.020+expectedSOT*0.015+pressureFactor),7.5,16.5)
-  const expectedCards = clamp(round(homeProfile.avgCards*0.95+awayProfile.avgCards*0.95+(homeProfile.avgFouls+awayProfile.avgFouls)*0.025),1.2,7.0)
+  const expectedCorners = clamp(round(homeProfile.avgCorners*0.50+awayProfile.avgCorners*0.46+expectedShots*0.050+expectedSOT*0.045+pressureFactor),4.5,13.2)
+  const expectedCards = clamp(round(homeProfile.avgCards*0.50+awayProfile.avgCards*0.50+(homeProfile.avgFouls+awayProfile.avgFouls)*0.025),1.2,7.0)
   const expectedFouls = clamp(round(homeProfile.avgFouls*0.52+awayProfile.avgFouls*0.48),8,30)
   return { expectedGoals, expectedHomeGoals, expectedAwayGoals, expectedHomeShots, expectedAwayShots, expectedHomeSOT, expectedAwaySOT, expectedShots, expectedSOT, expectedCorners, expectedCards, expectedFouls }
 }
