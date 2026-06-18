@@ -1782,6 +1782,15 @@
   </div>
 
 
+  <!-- ══ COPA DO MUNDO PICKS ══════════════════════════════════════════ -->
+  <div id="copaPicksSection" style="display:none;margin-bottom:16px">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+      <span style="font-size:9px;font-weight:700;color:var(--green);letter-spacing:0.12em;text-transform:uppercase">🌍 Copa do Mundo 2026</span>
+      <span id="copaPicksCount" style="font-size:10px;color:var(--text-3);background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:2px 8px"></span>
+    </div>
+    <div id="copaPicksList" class="radar-grid"></div>
+  </div>
+
   <!-- ══ RADAR ════════════════════════════════════════════════════════ -->
   <div class="radar-panel-full">
     <div class="radar-full-head">
@@ -3406,6 +3415,22 @@ function renderTicket(){
   el.innerHTML=`<div class="ticket-legs">${state.currentTicket.map((i,idx)=>ticketLegMarkup(i,idx)).join("")}</div><div class="ticket-footer"><div class="ticket-confidence">Confiança geral: ${escapeHtml(probabilityToTier(avgProb))}</div><div class="ticket-hint">Bilhete montado automaticamente com base no radar ativo.</div></div>`;
   if (liveState.data.size > 0) updateLiveIndicators();
 }
+function renderCopaSection() {
+  const sec = document.getElementById("copaPicksSection");
+  const list = document.getElementById("copaPicksList");
+  const cnt = document.getElementById("copaPicksCount");
+  if (!sec || !list) return;
+  const snap = buildRadarSnapshot();
+  const items = snap.filter(m => {
+    const lg = (m.league||"").toLowerCase();
+    return lg.includes("copa do mundo") || lg.includes("fifa world cup");
+  });
+  if (!items.length) { sec.style.display = "none"; return; }
+  sec.style.display = "block";
+  if (cnt) cnt.textContent = `${items.length} pick${items.length>1?"s":""}`;
+  list.innerHTML = items.map((m, i) => radarItemV2Html(m, i)).join("");
+}
+
 function renderRadar(){
   const list=document.getElementById("radarList"); if(!list)return;
   const allItems=buildRadarSnapshot();
@@ -4529,8 +4554,62 @@ async function loadAssertiveness() {
       const correct = items.filter(i => i.correct === true).length;
       return { pct: Math.round((correct / items.length) * 100), correct, total: items.length };
     }
-    
-  } catch(e) { console.error("loadAssertiveness error:", e); }
+    function chipClass(pct) { if (pct === null) return "low"; if (pct >= 65) return "good"; if (pct >= 55) return "ok"; return "low"; }
+    const weekData  = data.filter(i => new Date(i.created_at) >= weekAgo);
+    const monthData = data.filter(i => new Date(i.created_at) >= monthAgo);
+    const totalRes = calcRate(data);
+    const weekRes  = calcRate(weekData);
+    const monthRes = calcRate(monthData);
+    const roiUnits = data.reduce((acc, i) => acc + (i.correct ? 1 : -1), 0);
+    const roiPct   = Math.round((roiUnits / data.length) * 100);
+    const families = {
+      "⚽ Gols":         data.filter(i => { const m=String(i.market||"").toLowerCase(); return(m.includes("gol")&&!m.includes("escanteio"))||m.includes("ambas"); }),
+      "🚩 Escanteios":   data.filter(i => String(i.market||"").toLowerCase().includes("escanteio")),
+      "🎯 Finalizações": data.filter(i => { const m=String(i.market||"").toLowerCase(); return m.includes("finaliz")||m.includes("no gol"); }),
+      "🟨 Cartões":      data.filter(i => String(i.market||"").toLowerCase().includes("cart")),
+      "🛡️ Dupla Chance": data.filter(i => String(i.market||"").toLowerCase().includes("dupla")),
+    };
+    function bar(pct, cls="") {
+      return `<div class="assert-stat-bar"><div class="assert-stat-fill${cls?" "+cls:""}" style="width:${Math.min(pct,100)}%"></div></div>`;
+    }
+    const acertosEm10 = Math.round(totalRes.pct / 10);
+    if (badgeEl) badgeEl.textContent = `${data.length} picks avaliados`;
+    heroEl.innerHTML = `
+      <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;line-height:1.6">
+        Picks gerados <strong style="color:var(--text-2)">automaticamente pelo radar</strong> e verificados após o encerramento de cada partida. Sem seleção manual.
+      </div>
+      <div class="assert-hero">
+        <div class="assert-big-num">
+          <div class="assert-big-pct">${totalRes.pct}%</div>
+          <div class="assert-big-label">de acerto</div>
+          <div class="assert-big-sub">${acertosEm10} de cada 10 jogos</div>
+        </div>
+        <div class="assert-stats">
+          ${weekRes ? `<div class="assert-stat-row"><span class="assert-stat-label">Últimos 7 dias</span>${bar(weekRes.pct)}<span class="assert-stat-val">${weekRes.pct}% <span style="font-size:9px;color:var(--text-3)">(${weekRes.correct}/${weekRes.total})</span></span></div>` : ""}
+          ${monthRes ? `<div class="assert-stat-row"><span class="assert-stat-label">Últimos 30 dias</span>${bar(monthRes.pct)}<span class="assert-stat-val">${monthRes.pct}% <span style="font-size:9px;color:var(--text-3)">(${monthRes.correct}/${monthRes.total})</span></span></div>` : ""}
+          <div class="assert-stat-row" style="margin-top:4px;padding-top:8px;border-top:1px solid var(--border)">
+            <span class="assert-stat-label" style="font-size:10px">ROI simulado (stake flat)</span>
+            <span class="assert-stat-val" style="color:${roiPct>=0?"var(--green)":"var(--red)"}">${roiPct>=0?"+":""}${roiPct}%${roiPct>=0?" 💰":""}</span>
+          </div>
+        </div>
+      </div>
+      <div class="assert-divider"></div>
+      <div style="margin-top:8px">
+        <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:7px;font-weight:700">Acerto por tipo de aposta</div>
+        <div class="assert-markets">
+          ${Object.entries(families).filter(([,items])=>items.length>=2).map(([label,items])=>{
+            const r = calcRate(items); if(!r) return "";
+            const cls = chipClass(r.pct);
+            return `<div class="assert-market-chip ${cls}">${label} <span class="mpct">${r.pct}%</span> <span style="font-size:9px;color:var(--text-3)">${r.correct}/${r.total}</span></div>`;
+          }).join("")}
+          ${Object.entries(families).filter(([,items])=>items.length>=2).length===0
+            ? `<span style="font-size:11px;color:var(--text-3)">Crescendo a cada jogo avaliado</span>` : ""}
+        </div>
+      </div>`;
+  } catch(e) {
+    console.error("Erro assertividade:", e);
+    if (heroEl) heroEl.innerHTML = `<div class="assert-loading">Histórico indisponível</div>`;
+  }
 }
 
 /* ── TEAM PANEL ───────────────────────────────────────────────────── */
@@ -4814,7 +4893,7 @@ function startWorldCupCountdown(){
 
 /* ── REFRESH & INIT ───────────────────────────────────────────────── */
 function refreshUIOnly(){
-  renderRadar(); renderAgenda(); renderCompetitions();
+  renderCopaSection(); renderRadar(); renderAgenda(); renderCompetitions();
   if(liveState.data.size>0) renderLiveSection();
   if(state.selectedLeague) openCompetition(state.selectedLeague);
   const ov=document.getElementById("analysisOverlay");
@@ -4827,7 +4906,7 @@ async function refreshAllData(silent=false){
   try{ await loadDailyPicks(); }catch(e){ errors.daily_picks=e.message||JSON.stringify(e); }
   try{ await loadMatches(); }catch(e){ errors.matches=e.message||JSON.stringify(e); }
   if(Object.keys(errors).length){ renderLoadError(errors); return false; }
-  renderRadar(); renderAgenda(); renderCompetitions();
+  renderCopaSection(); renderRadar(); renderAgenda(); renderCompetitions();
   if(liveState.data.size>0) renderLiveSection();
   if(state.selectedLeague) openCompetition(state.selectedLeague);
   const ov=document.getElementById("analysisOverlay");
