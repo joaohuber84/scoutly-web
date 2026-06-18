@@ -1036,32 +1036,24 @@
     .btn-feedback-cancel { padding: 10px 16px; border-radius: var(--radius-sm); background: var(--surface-3); border: 1px solid var(--border); color: var(--text-2); font-size: 12px; }
     .feedback-success { text-align: center; padding: 18px 0; font-size: 13px; color: var(--green); font-weight: 700; }
 
-    /* ─── COPA DO MUNDO 2026 TEASER ───────────────────────────────── */
-    .worldcup-teaser {
-      background: linear-gradient(135deg, rgba(0,179,104,0.07), rgba(0,179,104,0.03));
+    /* ─── COPA BANNER ────────────────────────────────────────────────── */
+    .copa-banner {
+      display: flex; align-items: center; gap: 10px;
+      background: linear-gradient(90deg, rgba(0,179,104,0.08), rgba(0,179,104,0.03));
       border: 1px solid var(--green-line);
-      border-radius: var(--radius-xl); padding: 16px 18px;
-      margin-bottom: 16px;
-      display: flex; flex-direction: column; gap: 14px;
-      cursor: pointer; transition: border-color var(--transition);
+      border-radius: var(--radius-lg);
+      padding: 12px 18px;
     }
-    .worldcup-teaser:hover { border-color: rgba(0,179,104,0.35); }
-    .wc-top-row { display: flex; align-items: flex-start; gap: 13px; }
-    .wc-logo-img { width: 48px; height: 48px; object-fit: contain; flex-shrink: 0; border-radius: 8px; }
-    .wc-text-block { flex: 1; min-width: 0; }
-    .wc-badge { display: inline-flex; align-items: center; gap: 5px; background: var(--green-dim); border: 1px solid var(--green-line); border-radius: 5px; padding: 2px 9px; font-family: var(--font-mono); font-size: 8px; font-weight: 700; color: var(--green); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 5px; }
-    .wc-title { font-family: var(--font-head); font-size: clamp(14px,3vw,17px); font-weight: 800; color: #fff; letter-spacing: -0.02em; line-height: 1.1; margin-bottom: 4px; }
-    .wc-title span { color: var(--green); }
-    .wc-desc { font-size: 11px; color: var(--text-3); line-height: 1.5; }
-    .wc-explore { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; font-size: 10px; font-weight: 700; color: var(--green); }
-    .wc-bottom-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-    .wc-countdown { display: flex; align-items: center; gap: 4px; }
-    .wc-unit { display: flex; flex-direction: column; align-items: center; background: var(--surface-3); border: 1px solid var(--green-line); border-radius: 7px; padding: 5px 9px; min-width: 40px; }
-    .wc-num { font-family: var(--font-mono); font-size: 18px; font-weight: 900; color: var(--green); line-height: 1; letter-spacing: -0.02em; }
-    .wc-lbl { font-family: var(--font-mono); font-size: 7px; font-weight: 700; color: rgba(0,179,104,0.5); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
-    .wc-sep { font-family: var(--font-mono); font-size: 16px; font-weight: 900; color: rgba(0,179,104,0.35); padding-bottom: 10px; }
-    .wc-start { font-family: var(--font-mono); font-size: 9px; font-weight: 600; color: var(--text-3); letter-spacing: 0.05em; }
-    @media (max-width: 480px) { .wc-bottom-row { flex-direction: column; align-items: flex-start; } .wc-countdown { width: 100%; } .wc-num { font-size: 16px; } .wc-unit { min-width: 36px; padding: 4px 7px; } }
+    .copa-banner-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 3px rgba(0,179,104,0.25);
+      animation: live-pulse 1.5s ease infinite; flex-shrink: 0;
+    }
+    .copa-banner-text {
+      font-size: 13px; font-weight: 700; color: var(--text);
+      letter-spacing: -0.01em;
+    }
 
     /* ─── COPA 2026 OVERLAY ───────────────────────────────────────── */
     .wc-overlay { position: fixed; inset: 0; z-index: 200; background: rgba(3,5,10,0.92); backdrop-filter: blur(14px); display: none; align-items: flex-end; justify-content: center; padding: 0; touch-action: none; overscroll-behavior: none; }
@@ -1639,6 +1631,21 @@
       color: var(--green) !important;
     }
     .standings-table { min-width: 380px; }
+
+    .standings-mg-tabs {
+      display: flex; gap: 4px; flex-wrap: wrap;
+      padding: 0 0 10px 0; border-bottom: 1px solid var(--border); margin-bottom: 10px;
+    }
+    .standings-mg-tab {
+      padding: 4px 10px; border-radius: 5px; font-size: 10px; font-weight: 700;
+      border: 1px solid var(--border); background: var(--surface-2);
+      color: var(--text-3); cursor: pointer; font-family: var(--font-body);
+      transition: all 0.15s; letter-spacing: 0.04em;
+    }
+    .standings-mg-tab.active {
+      background: var(--green-dim); border-color: var(--green-line); color: var(--green);
+    }
+    .standings-mg-tab:hover { color: var(--text); border-color: var(--border-2); }
   </style>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-583FPFX1PT"></script>
   <script>
@@ -1742,30 +1749,10 @@
   </div>
 
   <!-- ══ TEASER COPA DO MUNDO 2026 ══════════════════════════════════ -->
-  <div class="worldcup-teaser" onclick="openWC2026()">
-    <div class="wc-top-row">
-      <img src="https://assets.football-logos.cc/logos/tournaments/1500x1500/fifa-world-cup-2026.31d2489d.png" class="wc-logo-img" alt="Copa do Mundo 2026" onerror="this.style.display='none'">
-      <div class="wc-text-block">
-        <div class="wc-badge">⚽ Copa do Mundo 2026</div>
-        <div class="wc-title">Scoutly na <span>Copa do Mundo 2026</span></div>
-        <div class="wc-desc">48 seleções · 3 países · 16 cidades · 104 jogos</div>
-        <div class="wc-explore">Ver grupos, agenda, quiz e curiosidades →</div>
-      </div>
-    </div>
-    <div class="wc-bottom-row">
-      <div class="wc-countdown">
-        <div class="wc-unit"><div class="wc-num" id="wcDays">--</div><div class="wc-lbl">dias</div></div>
-        <div class="wc-sep">:</div>
-        <div class="wc-unit"><div class="wc-num" id="wcHours">--</div><div class="wc-lbl">horas</div></div>
-        <div class="wc-sep">:</div>
-        <div class="wc-unit"><div class="wc-num" id="wcMins">--</div><div class="wc-lbl">min</div></div>
-        <div class="wc-sep">:</div>
-        <div class="wc-unit"><div class="wc-num" id="wcSecs">--</div><div class="wc-lbl">seg</div></div>
-      </div>
-      <div class="wc-start">Início: 11 de junho de 2026</div>
-    </div>
+  <div class="copa-banner" id="copaBanner">
+    <span class="copa-banner-dot"></span>
+    <span class="copa-banner-text">🌍 Copa do Mundo 2026 — picks em tempo real</span>
   </div>
-
 
   <!-- ══ ASSERTIVIDADE ════════════════════════════════════════════════ -->
   <div class="assert-bar" id="assertBar">
@@ -3961,25 +3948,15 @@ function buildLiveModalHtml(matchId, statsData, events, noStats = false) {
   // Stats section
   let statsHtml = "";
   if (statsData && statsData.length) {
-    // Detect home/away order — API doesn't guarantee team order
-    let h = 0; let a = 1;
-    if (statsData.length >= 2) {
-      const t0 = (statsData[0]?.team?.name || "").toLowerCase();
-      const normHome = (homeName || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
-      const normT0   = t0.normalize("NFD").replace(/[̀-ͯ]/g,"");
-      // If first team doesn't look like home team, swap
-      if (normHome.length > 3 && !normT0.includes(normHome.slice(0,5)) && !normHome.includes(normT0.slice(0,5))) {
-        h = 1; a = 0;
-      }
-    }
-    const gs  = (i,t) => getStat(statsData,i,t);
+    // API-Football: index 0 = home team, index 1 = away team (always)
+        const gs  = (i,t) => getStat(statsData,i,t);
     const gn  = (i,t) => safeNum(getStat(statsData,i,t));
-    const cards = [gn(h,"Yellow Cards")+gn(h,"Red Cards"), gn(a,"Yellow Cards")+gn(a,"Red Cards")];
+    const cards = [gn(0,"Yellow Cards")+gn(0,"Red Cards"), gn(1,"Yellow Cards")+gn(1,"Red Cards")];
     statsHtml = `<div class="live-stat-rows">
-      ${statRow("Escanteios", gs(h,"Corner Kicks"), gs(a,"Corner Kicks"))}
-      ${statRow("Finalizações", gs(h,"Total Shots"), gs(a,"Total Shots"))}
-      ${statRow("No gol", gs(h,"Shots on Goal"), gs(a,"Shots on Goal"))}
-      ${statRow("Posse %", gs(h,"Ball Possession").replace("%",""), gs(a,"Ball Possession").replace("%",""))}
+      ${statRow("Escanteios", gs(0,"Corner Kicks"), gs(1,"Corner Kicks"))}
+      ${statRow("Finalizações", gs(0,"Total Shots"), gs(1,"Total Shots"))}
+      ${statRow("No gol", gs(0,"Shots on Goal"), gs(1,"Shots on Goal"))}
+      ${statRow("Posse %", gs(0,"Ball Possession").replace("%",""), gs(1,"Ball Possession").replace("%",""))}
       ${statRow("Cartões", cards[0], cards[1])}
     </div>`;
   } else {
@@ -4552,63 +4529,7 @@ async function loadAssertiveness() {
       const correct = items.filter(i => i.correct === true).length;
       return { pct: Math.round((correct / items.length) * 100), correct, total: items.length };
     }
-    function chipClass(pct) { if (pct === null) return "low"; if (pct >= 65) return "good"; if (pct >= 55) return "ok"; return "low"; }
-    const weekData  = data.filter(i => new Date(i.created_at) >= weekAgo);
-    const monthData = data.filter(i => new Date(i.created_at) >= monthAgo);
-    const totalRes = calcRate(data);
-    const weekRes  = calcRate(weekData);
-    const monthRes = calcRate(monthData);
-    const roiUnits = data.reduce((acc, i) => acc + (i.correct ? 1 : -1), 0);
-    const roiPct   = Math.round((roiUnits / data.length) * 100);
-    const families = {
-      "⚽ Gols":         data.filter(i => { const m=String(i.market||"").toLowerCase(); return(m.includes("gol")&&!m.includes("escanteio"))||m.includes("ambas"); }),
-      "🚩 Escanteios":   data.filter(i => String(i.market||"").toLowerCase().includes("escanteio")),
-      "🎯 Finalizações": data.filter(i => { const m=String(i.market||"").toLowerCase(); return m.includes("finaliz")||m.includes("no gol"); }),
-      "🟨 Cartões":      data.filter(i => String(i.market||"").toLowerCase().includes("cart")),
-      "🛡️ Dupla Chance": data.filter(i => String(i.market||"").toLowerCase().includes("dupla")),
-    };
-    function bar(pct, cls="") {
-      return `<div class="assert-stat-bar"><div class="assert-stat-fill${cls?" "+cls:""}" style="width:${Math.min(pct,100)}%"></div></div>`;
-    }
-    const acertosEm10 = Math.round(totalRes.pct / 10);
-    if (badgeEl) badgeEl.textContent = `${data.length} picks avaliados`;
-    heroEl.innerHTML = `
-      <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;line-height:1.6">
-        Picks gerados <strong style="color:var(--text-2)">automaticamente pelo radar</strong> e verificados após o encerramento de cada partida. Sem seleção manual.
-      </div>
-      <div class="assert-hero">
-        <div class="assert-big-num">
-          <div class="assert-big-pct">${totalRes.pct}%</div>
-          <div class="assert-big-label">de acerto</div>
-          <div class="assert-big-sub">${acertosEm10} de cada 10 jogos</div>
-        </div>
-        <div class="assert-stats">
-          ${weekRes ? `<div class="assert-stat-row"><span class="assert-stat-label">Últimos 7 dias</span>${bar(weekRes.pct)}<span class="assert-stat-val">${weekRes.pct}% <span style="font-size:9px;color:var(--text-3)">(${weekRes.correct}/${weekRes.total})</span></span></div>` : ""}
-          ${monthRes ? `<div class="assert-stat-row"><span class="assert-stat-label">Últimos 30 dias</span>${bar(monthRes.pct)}<span class="assert-stat-val">${monthRes.pct}% <span style="font-size:9px;color:var(--text-3)">(${monthRes.correct}/${monthRes.total})</span></span></div>` : ""}
-          <div class="assert-stat-row" style="margin-top:4px;padding-top:8px;border-top:1px solid var(--border)">
-            <span class="assert-stat-label" style="font-size:10px">ROI simulado (stake flat)</span>
-            <span class="assert-stat-val" style="color:${roiPct>=0?"var(--green)":"var(--red)"}">${roiPct>=0?"+":""}${roiPct}%${roiPct>=0?" 💰":""}</span>
-          </div>
-        </div>
-      </div>
-      <div class="assert-divider"></div>
-      <div style="margin-top:8px">
-        <div style="font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:7px;font-weight:700">Acerto por tipo de aposta</div>
-        <div class="assert-markets">
-          ${Object.entries(families).filter(([,items])=>items.length>=2).map(([label,items])=>{
-            const r = calcRate(items); if(!r) return "";
-            const cls = chipClass(r.pct);
-            return `<div class="assert-market-chip ${cls}">${label} <span class="mpct">${r.pct}%</span> <span style="font-size:9px;color:var(--text-3)">${r.correct}/${r.total}</span></div>`;
-          }).join("")}
-          ${Object.entries(families).filter(([,items])=>items.length>=2).length===0
-            ? `<span style="font-size:11px;color:var(--text-3)">Crescendo a cada jogo avaliado</span>` : ""}
-        </div>
-      </div>`;
-  } catch(e) {
-    console.error("Erro assertividade:", e);
-    if (heroEl) heroEl.innerHTML = `<div class="assert-loading">Histórico indisponível</div>`;
-  }
-}
+    
 
 /* ── TEAM PANEL ───────────────────────────────────────────────────── */
 function closeTeamPanel(e) {
@@ -4941,9 +4862,7 @@ async function initialize(){
   loadAssertiveness();
   startLiveModule();
   startAutoRefresh();
-  startWorldCupCountdown();
-  renderWCGroups();
-  renderWCAgenda();
+  // Copa teaser removed — overlay still available
 }
 
 /* ── RESULTADOS VERIFICADOS ───────────────────────────────────────── */
@@ -5233,6 +5152,15 @@ function toggleCompPanel() {
   }
 }
 
+
+function switchModalGroup(idx, leagueId, e) {
+  document.querySelectorAll(".standings-mg-tab").forEach(b => b.classList.remove("active"));
+  if (e?.target) e.target.classList.add("active");
+  const content = document.getElementById("modalGroupContent");
+  if (content && window._modalStandings?.[idx]) {
+    content.innerHTML = renderStandingsGroup(window._modalStandings[idx], window._modalLeagueId || leagueId);
+  }
+}
 function switchStandingsTab(tab, btn) {
   document.querySelectorAll("#compPanel .comp-tab, #standingsTabSection .h2h-tab").forEach(b => b.classList.remove("active"));
   btn.classList.add("active");
@@ -5276,9 +5204,37 @@ async function loadModalStandings(match) {
     el.innerHTML = `<div class="empty-state">Tabela não encontrada</div>`;
     return;
   }
-  const html = `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
-    ${renderStandingsGroup(standings[0], leagueId)}
-  </div>`;
+  // For group-stage competitions (Copa, Euros), find the group containing home/away team
+  let activeGroup = 0;
+  if (standings.length > 1) {
+    const home = (match.home_team || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+    const away = (match.away_team || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+    const foundIdx = standings.findIndex(group =>
+      group.some(t => {
+        const tn = (t.team?.name || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"");
+        return tn.includes(home.slice(0,5)) || home.includes(tn.slice(0,5)) ||
+               tn.includes(away.slice(0,5)) || away.includes(tn.slice(0,5));
+      })
+    );
+    if (foundIdx >= 0) activeGroup = foundIdx;
+  }
+  // Render with group tabs if multiple groups
+  let content;
+  if (standings.length > 1) {
+    const tabs = standings.map((g, i) => {
+      const gName = g[0]?.group || `Grupo ${i+1}`;
+      // Extract just the group letter/number
+      const label = gName.replace(/^(Group|Grupo|Gruppe)\s*/i, "").trim() || String.fromCharCode(65+i);
+      return `<button onclick="switchModalGroup(${i},${leagueId},event)" class="standings-mg-tab${i===activeGroup?" active":""}" data-gi="${i}">${escapeHtml(label)}</button>`;
+    }).join("");
+    content = `<div class="standings-mg-tabs">${tabs}</div><div id="modalGroupContent">${renderStandingsGroup(standings[activeGroup], leagueId)}</div>`;
+    // Store all groups for tab switching
+    window._modalStandings = standings;
+    window._modalLeagueId = leagueId;
+  } else {
+    content = renderStandingsGroup(standings[0], leagueId);
+  }
+  const html = `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">${content}</div>`;
   modalStandingsCache[cacheKey] = html;
   el.innerHTML = html;
 }
