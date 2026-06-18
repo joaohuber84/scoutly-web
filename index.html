@@ -1782,15 +1782,6 @@
   </div>
 
 
-  <!-- ══ COPA DO MUNDO PICKS ══════════════════════════════════════════ -->
-  <div id="copaPicksSection" style="display:none;margin-bottom:16px">
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-      <span style="font-size:9px;font-weight:700;color:var(--green);letter-spacing:0.12em;text-transform:uppercase">🌍 Copa do Mundo 2026</span>
-      <span id="copaPicksCount" style="font-size:10px;color:var(--text-3);background:var(--surface-2);border:1px solid var(--border);border-radius:20px;padding:2px 8px"></span>
-    </div>
-    <div id="copaPicksList" class="radar-grid"></div>
-  </div>
-
   <!-- ══ RADAR ════════════════════════════════════════════════════════ -->
   <div class="radar-panel-full">
     <div class="radar-full-head">
@@ -3415,55 +3406,6 @@ function renderTicket(){
   el.innerHTML=`<div class="ticket-legs">${state.currentTicket.map((i,idx)=>ticketLegMarkup(i,idx)).join("")}</div><div class="ticket-footer"><div class="ticket-confidence">Confiança geral: ${escapeHtml(probabilityToTier(avgProb))}</div><div class="ticket-hint">Bilhete montado automaticamente com base no radar ativo.</div></div>`;
   if (liveState.data.size > 0) updateLiveIndicators();
 }
-function renderCopaSection() {
-  const sec = document.getElementById("copaPicksSection");
-  const list = document.getElementById("copaPicksList");
-  const cnt = document.getElementById("copaPicksCount");
-  if (!sec || !list) return;
-  const snap = buildRadarSnapshot();
-  const items = snap.filter(m => {
-    const lg = (m.league||"").toLowerCase();
-    return lg.includes("copa do mundo") || lg.includes("fifa world cup");
-  });
-  if (!items.length) { sec.style.display = "none"; return; }
-  sec.style.display = "block";
-  if (cnt) cnt.textContent = `${items.length} pick${items.length>1?"s":""}`;
-  // Render Copa items using same pattern as renderRadar
-  list.innerHTML = items.map(item => {
-    const pick = item.radar_market || getPrimaryPick(item) || "";
-    const tier = getMatchTier(item);
-    const chips = getDetectedMarkets(item);
-    const logoH = item.home_logo ? `<img src="${escapeHtml(item.home_logo)}" width="16" height="16" style="object-fit:contain;border-radius:2px" onerror="this.style.display='none'">` : "";
-    const logoA = item.away_logo ? `<img src="${escapeHtml(item.away_logo)}" width="16" height="16" style="object-fit:contain;border-radius:2px" onerror="this.style.display='none'">` : "";
-    const kickoffStr = item.kickoff ? formatKickoff(item.kickoff) : "";
-    const chipHtml = chips.slice(0,2).map(c=>`<span class="chip chip-${chipClass(c)}">${escapeHtml(c)}</span>`).join("");
-    return `<div class="radar-item-v2 tier-${tier}" data-match-id="${escapeHtml(String(item.id||""))}">
-      <div class="ri2-rank">🌍</div>
-      <div class="ri2-main">
-        <div class="ri2-header">
-          <div class="ri2-league">${logoH||logoA||""}${escapeHtml(normalizeLeagueName(item.league||""))}</div>
-          <div class="ri2-kickoff">${escapeHtml(kickoffStr)}</div>
-        </div>
-        <div class="ri2-teams">
-          <span class="ri2-home-name">${escapeHtml(normalizeTeamName(item.home_team||""))}</span>
-          <span class="ri2-vs">×</span>
-          <span class="ri2-away-name">${escapeHtml(normalizeTeamName(item.away_team||""))}</span>
-        </div>
-      </div>
-      <div class="ri2-right">
-        <div class="ri2-market-num">${escapeHtml(pick)}</div>
-        <div class="ri2-chips">${chipHtml}</div>
-      </div>
-    </div>`;
-  }).join("");
-  list.querySelectorAll(".radar-item-v2").forEach(el => {
-    el.addEventListener("click", () => {
-      const id = el.dataset.matchId;
-      if (id) openAnalysis(id);
-    });
-  });
-}
-
 function renderRadar(){
   const list=document.getElementById("radarList"); if(!list)return;
   const allItems=buildRadarSnapshot();
@@ -4926,7 +4868,7 @@ function startWorldCupCountdown(){
 
 /* ── REFRESH & INIT ───────────────────────────────────────────────── */
 function refreshUIOnly(){
-  renderCopaSection(); renderRadar(); renderAgenda(); renderCompetitions();
+  renderRadar(); renderAgenda(); renderCompetitions();
   if(liveState.data.size>0) renderLiveSection();
   if(state.selectedLeague) openCompetition(state.selectedLeague);
   const ov=document.getElementById("analysisOverlay");
@@ -4939,7 +4881,7 @@ async function refreshAllData(silent=false){
   try{ await loadDailyPicks(); }catch(e){ errors.daily_picks=e.message||JSON.stringify(e); }
   try{ await loadMatches(); }catch(e){ errors.matches=e.message||JSON.stringify(e); }
   if(Object.keys(errors).length){ renderLoadError(errors); return false; }
-  renderCopaSection(); renderRadar(); renderAgenda(); renderCompetitions();
+  renderRadar(); renderAgenda(); renderCompetitions();
   if(liveState.data.size>0) renderLiveSection();
   if(state.selectedLeague) openCompetition(state.selectedLeague);
   const ov=document.getElementById("analysisOverlay");
