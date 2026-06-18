@@ -4530,6 +4530,8 @@ async function loadAssertiveness() {
       return { pct: Math.round((correct / items.length) * 100), correct, total: items.length };
     }
     
+  } catch(e) { console.error("loadAssertiveness error:", e); }
+}
 
 /* ── TEAM PANEL ───────────────────────────────────────────────────── */
 function closeTeamPanel(e) {
