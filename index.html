@@ -3428,7 +3428,40 @@ function renderCopaSection() {
   if (!items.length) { sec.style.display = "none"; return; }
   sec.style.display = "block";
   if (cnt) cnt.textContent = `${items.length} pick${items.length>1?"s":""}`;
-  list.innerHTML = items.map((m, i) => radarItemV2Html(m, i)).join("");
+  // Render Copa items using same pattern as renderRadar
+  list.innerHTML = items.map(item => {
+    const pick = item.radar_market || getPrimaryPick(item) || "";
+    const tier = getMatchTier(item);
+    const chips = getDetectedMarkets(item);
+    const logoH = item.home_logo ? `<img src="${escapeHtml(item.home_logo)}" width="16" height="16" style="object-fit:contain;border-radius:2px" onerror="this.style.display='none'">` : "";
+    const logoA = item.away_logo ? `<img src="${escapeHtml(item.away_logo)}" width="16" height="16" style="object-fit:contain;border-radius:2px" onerror="this.style.display='none'">` : "";
+    const kickoffStr = item.kickoff ? formatKickoff(item.kickoff) : "";
+    const chipHtml = chips.slice(0,2).map(c=>`<span class="chip chip-${chipClass(c)}">${escapeHtml(c)}</span>`).join("");
+    return `<div class="radar-item-v2 tier-${tier}" data-match-id="${escapeHtml(String(item.id||""))}">
+      <div class="ri2-rank">🌍</div>
+      <div class="ri2-main">
+        <div class="ri2-header">
+          <div class="ri2-league">${logoH||logoA||""}${escapeHtml(normalizeLeagueName(item.league||""))}</div>
+          <div class="ri2-kickoff">${escapeHtml(kickoffStr)}</div>
+        </div>
+        <div class="ri2-teams">
+          <span class="ri2-home-name">${escapeHtml(normalizeTeamName(item.home_team||""))}</span>
+          <span class="ri2-vs">×</span>
+          <span class="ri2-away-name">${escapeHtml(normalizeTeamName(item.away_team||""))}</span>
+        </div>
+      </div>
+      <div class="ri2-right">
+        <div class="ri2-market-num">${escapeHtml(pick)}</div>
+        <div class="ri2-chips">${chipHtml}</div>
+      </div>
+    </div>`;
+  }).join("");
+  list.querySelectorAll(".radar-item-v2").forEach(el => {
+    el.addEventListener("click", () => {
+      const id = el.dataset.matchId;
+      if (id) openAnalysis(id);
+    });
+  });
 }
 
 function renderRadar(){
