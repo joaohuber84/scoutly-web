@@ -3885,10 +3885,10 @@ async function refreshModalLiveStats(matchId) {
     const section = document.getElementById("liveStatsSection");
     if (!section) return;
     const tries = Number(section.dataset.retries || 0);
-    if (tries < 2) {
+    if (tries < 4) {
       section.dataset.retries = tries + 1;
       section.innerHTML = buildLiveModalHtml(matchId, null, null);
-      setTimeout(() => refreshModalLiveStats(matchId), 12000);
+      setTimeout(() => refreshModalLiveStats(matchId), 8000);
     } else {
       // After 2 tries, show score only — stats not available for this match
       section.innerHTML = buildLiveModalHtml(matchId, null, null, true);
@@ -3960,8 +3960,15 @@ function buildLiveModalHtml(matchId, statsData, events, noStats = false) {
       ${statRow("Cartões", cards[0], cards[1])}
     </div>`;
   } else {
+    const isTrulyFriendly = (match?.league||"").toLowerCase().includes("amistoso") || 
+                              (match?.league||"").toLowerCase().includes("friendl");
     statsHtml = noStats
-      ? `<div style="font-size:10px;color:var(--text-3);padding:6px 0 10px;display:flex;align-items:center;gap:6px"><span style="background:var(--surface-3);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:9px;font-weight:700">Amistoso</span> Stats ao vivo não disponíveis — acompanhe pelos eventos abaixo</div>`
+      ? `<div style="font-size:10px;color:var(--text-3);padding:6px 0 10px;display:flex;align-items:center;gap:6px">
+          ${isTrulyFriendly 
+            ? `<span style="background:var(--surface-3);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:9px;font-weight:700">Amistoso</span>` 
+            : `<span style="font-size:11px">📊</span>`}
+          <span>Stats ao vivo não disponíveis — acompanhe pelos eventos abaixo</span>
+        </div>`
       : `<div style="font-size:11px;color:var(--text-3);text-align:center;padding:10px 0;font-style:italic">⏳ Aguardando estatísticas...</div>`;
   }
 
@@ -4111,6 +4118,9 @@ function injectLiveStatsInModal(matchId) {
         liveState.activeModalId = null;
         return;
       }
+      // Reset retry counter so stats can be fetched again each cycle
+      const sec = document.getElementById("liveStatsSection");
+      if (sec) delete sec.dataset.retries;
       refreshModalLiveStats(matchId);
       const apiId2 = (() => { const m = getMatchById(matchId); return m?.fixture_id || matchId; })();
       fetchMatchEvents(apiId2).then(events => {
