@@ -1646,6 +1646,55 @@
       background: var(--green-dim); border-color: var(--green-line); color: var(--green);
     }
     .standings-mg-tab:hover { color: var(--text); border-color: var(--border-2); }
+
+    /* ─── LEAD CAPTURE BANNER ──────────────────────────────────────── */
+    .lead-banner {
+      background: linear-gradient(135deg, rgba(0,179,104,0.07) 0%, rgba(0,179,104,0.03) 100%);
+      border: 1px solid var(--green-line);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      display: flex; align-items: center; gap: 18px;
+      flex-wrap: wrap;
+    }
+    .lead-banner-left { flex: 1; min-width: 200px; }
+    .lead-banner-title {
+      font-size: 14px; font-weight: 800; color: var(--text);
+      letter-spacing: -0.02em; margin-bottom: 3px;
+    }
+    .lead-banner-sub {
+      font-size: 11px; color: var(--text-3); line-height: 1.5;
+    }
+    .lead-banner-form {
+      display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+    }
+    .lead-banner-input {
+      flex: 1; min-width: 180px;
+      background: var(--surface-2); border: 1px solid var(--border-2);
+      border-radius: var(--radius-sm); padding: 10px 14px;
+      font-size: 13px; color: var(--text); font-family: var(--font-body);
+      outline: none; transition: border-color 0.15s;
+    }
+    .lead-banner-input::placeholder { color: var(--text-3); }
+    .lead-banner-input:focus { border-color: var(--green-line); }
+    .lead-banner-btn {
+      background: var(--green); color: #000;
+      border: none; border-radius: var(--radius-sm);
+      padding: 10px 18px; font-size: 12px; font-weight: 800;
+      font-family: var(--font-body); cursor: pointer;
+      white-space: nowrap; transition: opacity 0.15s;
+      letter-spacing: 0.01em;
+    }
+    .lead-banner-btn:hover { opacity: 0.85; }
+    .lead-banner-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .lead-banner-success {
+      font-size: 13px; color: var(--green); font-weight: 700;
+      display: flex; align-items: center; gap: 6px;
+    }
+    @media (max-width: 600px) {
+      .lead-banner { flex-direction: column; align-items: stretch; gap: 12px; }
+      .lead-banner-form { flex-direction: column; }
+      .lead-banner-input, .lead-banner-btn { width: 100%; }
+    }
   </style>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-583FPFX1PT"></script>
   <script>
@@ -1749,6 +1798,21 @@
   </div>
 
   <!-- ══ TEASER COPA DO MUNDO 2026 ══════════════════════════════════ -->
+  <!-- ══ LEAD CAPTURE ══════════════════════════════════════════════ -->
+  <div class="lead-banner" id="leadBanner">
+    <div class="lead-banner-left">
+      <div class="lead-banner-title">🚀 Scoutly Pro — em breve</div>
+      <div class="lead-banner-sub">Picks exclusivos, acesso antecipado e bilhete do dia.<br>Deixe seu email e seja o primeiro a saber quando abrir.</div>
+    </div>
+    <div id="leadBannerForm" class="lead-banner-form">
+      <input type="email" id="leadEmailInput" class="lead-banner-input"
+        placeholder="seu@email.com" autocomplete="email" inputmode="email">
+      <button class="lead-banner-btn" id="leadSubmitBtn" onclick="submitLead()">
+        Quero acesso antecipado
+      </button>
+    </div>
+  </div>
+
   <div class="copa-banner" id="copaBanner">
     <span class="copa-banner-dot"></span>
     <span class="copa-banner-text">🌍 Copa do Mundo 2026 — picks em tempo real</span>
@@ -5822,6 +5886,69 @@ setTimeout(() => {
   addOverscrollGuard("wcPanelBody");
   addOverscrollGuard("resultadosList");
 }, 600);
+
+/* ── LEAD CAPTURE ──────────────────────────────────────────────── */
+(function() {
+  // Hide banner if already submitted
+  if (localStorage.getItem("scoutly_lead_submitted") === "1") {
+    const b = document.getElementById("leadBanner");
+    if (b) b.style.display = "none";
+  }
+})();
+
+async function submitLead() {
+  const input = document.getElementById("leadEmailInput");
+  const btn = document.getElementById("leadSubmitBtn");
+  const formEl = document.getElementById("leadBannerForm");
+  if (!input || !btn) return;
+
+  const email = (input.value || "").trim().toLowerCase();
+  const emailRx = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRx.test(email)) {
+    input.style.borderColor = "var(--red)";
+    input.focus();
+    setTimeout(() => input.style.borderColor = "", 1500);
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Salvando...";
+
+  try {
+    const { error } = await supabaseClient
+      .from("leads")
+      .upsert({ email, source: "website_banner" }, { onConflict: "email" });
+
+    if (error && error.code !== "23505") throw error;
+
+    // Success
+    localStorage.setItem("scoutly_lead_submitted", "1");
+    if (formEl) {
+      formEl.innerHTML = `<div class="lead-banner-success">
+        <span style="font-size:18px">✅</span>
+        <span>Anotado! Você será o primeiro a saber.</span>
+      </div>`;
+    }
+    setTimeout(() => {
+      const b = document.getElementById("leadBanner");
+      if (b) { b.style.transition = "opacity 0.5s"; b.style.opacity = "0";
+        setTimeout(() => b.style.display = "none", 500); }
+    }, 3000);
+  } catch(e) {
+    console.error("Lead error:", e);
+    btn.disabled = false;
+    btn.textContent = "Quero acesso antecipado";
+    input.style.borderColor = "var(--red)";
+    setTimeout(() => input.style.borderColor = "", 2000);
+  }
+}
+
+// Enter key submits
+document.addEventListener("DOMContentLoaded", () => {
+  const inp = document.getElementById("leadEmailInput");
+  if (inp) inp.addEventListener("keydown", e => { if (e.key === "Enter") submitLead(); });
+});
+
 </script>
 </body>
 </html>
