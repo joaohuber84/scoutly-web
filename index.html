@@ -2218,7 +2218,7 @@ const supabaseClient = window.supabase.createClient(
 const MATCH_END_GRACE_MINUTES = 5;
 const RADAR_LOOKAHEAD_HOURS   = 48;
 const RADAR_MIN_ITEMS  = 10;
-const RADAR_MAX_ITEMS  = 15;
+const RADAR_MAX_ITEMS  = 12;
 const RADAR_MAX_PER_LEAGUE = 3;
 const TICKET_SIZE      = 3;
 const AUTO_UI_REFRESH_MS   = 60000;
@@ -3331,6 +3331,59 @@ function fillRadarShortage(base,source){
   if(res.length<RADAR_MIN_ITEMS){for(const i of source){if(res.length>=RADAR_MAX_ITEMS)break;if(ids.has(String(i.id)))continue;res.push(i);ids.add(String(i.id));}}
   return res;
 }
+
+/* ── RADAR LEAGUE TIERS ─────────────────────────────────────────────
+   S = Elite (sempre entram, prioridade máxima)
+   A = Alta qualidade (entram se houver vaga após S)
+   B = Demais ligas aprovadas (completam se precisar)
+   X = Bloqueado do radar (nunca entram)
+─────────────────────────────────────────────────────────────────── */
+const RADAR_TIER_S = new Set([
+  "Copa do Mundo","FIFA World Cup","Copa do Mundo 2026",
+  "Brasileirão Série A","Brasileirão Série B","Brasileirao Serie A","Brasileirao Serie B",
+  "Libertadores","Copa Libertadores","CONMEBOL Libertadores",
+  "Sul-Americana","Copa Sul-Americana","CONMEBOL Sudamericana",
+  "UEFA Champions League","Champions League",
+  "Premier League","La Liga","Bundesliga","Serie A","Ligue 1",
+  "Copa do Brasil",
+]);
+const RADAR_TIER_A = new Set([
+  "Liga do Chile","Primera División Chile","Chilean Primera Division",
+  "Primera División","Argentine Primera Division","Liga Profesional Argentina",
+  "MLS","Major League Soccer",
+  "Eredivisie","Primeira Liga","Liga Portugal","Super Lig",
+  "UEFA Europa League","Europa League",
+  "Eurocopa","UEFA Euro","Copa América",
+]);
+const RADAR_BLOCKED = new Set([
+  "Amistosos Internacionais","International Friendlies","Club Friendlies",
+  "Amistosos","Friendlies",
+]);
+
+function getLeagueRadarTier(league) {
+  if (!league) return "B";
+  const n = normalizeLeagueName(league);
+  if (RADAR_BLOCKED.has(n) ||
+      n.toLowerCase().includes("amistoso") ||
+      n.toLowerCase().includes("friendl") ||
+      n.toLowerCase().includes(" ii ") ||
+      n.toLowerCase().includes("reserv") ||
+      n.toLowerCase().includes("u21") ||
+      n.toLowerCase().includes("u23")) return "X";
+  if (RADAR_TIER_S.has(n)) return "S";
+  if (RADAR_TIER_A.has(n)) return "A";
+  // Check by partial match for Brasileirão variants
+  const nl = n.toLowerCase();
+  if (nl.includes("brasileir") || nl.includes("copa do mundo") ||
+      nl.includes("libertadores") || nl.includes("sul-americana") ||
+      nl.includes("champions") || nl.includes("premier league") ||
+      nl.includes("bundesliga") || nl.includes("la liga") ||
+      nl.includes("serie a") || nl.includes("ligue 1")) return "S";
+  if (nl.includes("chile") || nl.includes("argentina") ||
+      nl.includes("mls") || nl.includes("europa league") ||
+      nl.includes("eredivisie") || nl.includes("primeira liga")) return "A";
+  return "B";
+}
 function buildRadarSnapshot(){
   const eligible=getRadarEligibleMatches();const nowTs=Date.now();
   const fromDaily=state.dailyPicks.map(item=>{
@@ -3368,11 +3421,33 @@ function buildRadarSnapshot(){
     if(pa!==pb)return pa-pb;
     return(new Date(a.kickoff).getTime())-(new Date(b.kickoff).getTime());
   });
-  let _amist=0;
-  merged=merged.filter(i=>{
-    const ia=(i.league||"").toLowerCase().includes("amistoso")||(i.league||"").toLowerCase().includes("friendl");
-    if(ia){_amist++;return _amist<=2;}return true;
-  }).slice(0,RADAR_MAX_ITEMS);
+  // Tier-based ordering + blocking
+  const tierOrder = {"S":0,"A":1,"B":2,"X":99};
+  merged = merged
+    .filter(i => getLeagueRadarTier(i.league) !== "X")
+    .sort((a, b) => {
+      // 1. Today before future
+      const ts=startOfDay(new Date()).getTime(), te=endOfDay(new Date()).getTime();
+      const ta=new Date(a.kickoff).getTime(), tb=new Date(b.kickoff).getTime();
+      const aT=ta>=ts&&ta<=te, bT=tb>=ts&&tb<=te;
+      if (aT!==bT) return aT?-1:1;
+      // 2. Tier S before A before B
+      const pa=tierOrder[getLeagueRadarTier(a.league)]||2;
+      const pb=tierOrder[getLeagueRadarTier(b.league)]||2;
+      if (pa!==pb) return pa-pb;
+      // 3. Kickoff time
+      if (ta!==tb) return ta-tb;
+      return (a.radar_rank||999)-(b.radar_rank||999);
+    });
+  // Cap per tier: unlimited S, max 4 A, max 2 B, 0 X
+  const tierCaps = {"S":99,"A":4,"B":2};
+  const tierCounts = {"S":0,"A":0,"B":0};
+  merged = merged.filter(i => {
+    const t = getLeagueRadarTier(i.league);
+    if (!tierCaps[t]) return false;
+    tierCounts[t] = (tierCounts[t]||0) + 1;
+    return tierCounts[t] <= tierCaps[t];
+  }).slice(0, RADAR_MAX_ITEMS);
   state.lastRadarSnapshot=merged.map((i,idx)=>({...i,visualRank:idx+1}));
   return state.lastRadarSnapshot;
 }
