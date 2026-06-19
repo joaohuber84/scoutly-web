@@ -2246,7 +2246,27 @@ const TEAM_NAME_MAP = {
   "Greece":"Grécia","Poland":"Polônia","Japan":"Japão","Morocco":"Marrocos",
   "Tunisia":"Tunísia","Algeria":"Argélia","Egypt":"Egito","Iceland":"Islândia",
   "Uruguay":"Uruguai","Costa Rica":"Costa Rica","Panama":"Panamá","Hungary":"Hungria",
-  "Qatar":"Catar","Mali":"Mali","Ghana":"Gana"
+  "Qatar":"Catar","Mali":"Mali","Ghana":"Gana",
+  "Brazil":"Brasil","Canada":"Canadá","Colombia":"Colômbia","Uruguay":"Uruguai",
+  "Ecuador":"Equador","Peru":"Peru","Bolivia":"Bolívia","Venezuela":"Venezuela",
+  "Paraguay":"Paraguay","Honduras":"Honduras","Haiti":"Haiti","Cuba":"Cuba",
+  "El Salvador":"El Salvador","Guatemala":"Guatemala","Jamaica":"Jamaica",
+  "Trinidad and Tobago":"Trinidad e Tobago","Panama":"Panamá",
+  "Italy":"Itália","Czechia":"República Tcheca","Ukraine":"Ucrânia",
+  "Romania":"Romênia","Bulgaria":"Bulgária","Türkiye":"Turquia",
+  "Albania":"Albânia","Bosnia and Herzegovina":"Bósnia e Herzegovina",
+  "North Macedonia":"Macedônia do Norte","Georgia":"Geórgia","Luxembourg":"Luxemburgo",
+  "Finland":"Finlândia","Armenia":"Armênia","Azerbaijan":"Azerbaijão",
+  "Estonia":"Estônia","Latvia":"Letônia","Lithuania":"Lituânia","Belarus":"Bielorrússia",
+  "Moldova":"Moldávia","Cyprus":"Chipre","Malta":"Malta",
+  "Nigeria":"Nigéria","Cameroon":"Camarões","South Africa":"África do Sul",
+  "Côte d'Ivoire":"Costa do Marfim","Senegal":"Senegal","Angola":"Angola",
+  "Cape Verde":"Cabo Verde","Mozambique":"Moçambique","Kenya":"Quênia",
+  "Australia":"Austrália","New Zealand":"Nova Zelândia","China PR":"China",
+  "India":"Índia","Indonesia":"Indonésia","Thailand":"Tailândia","Vietnam":"Vietnã",
+  "Iraq":"Iraque","Syria":"Síria","UAE":"Emirados Árabes",
+  "United Arab Emirates":"Emirados Árabes","Jordan":"Jordânia",
+  "Uzbekistan":"Uzbequistão","Kazakhstan":"Cazaquistão"
 };
 
 const LEAGUE_ALIASES = {
@@ -3339,7 +3359,20 @@ function buildRadarSnapshot(){
     const fb=balanceRadarByLeague(futureItems.filter(i=>!merged.some(m=>String(m.id)===String(i.id))));
     merged=fillRadarShortage(merged,fb);merged=fillRadarShortage(merged,futureItems);
   }
-  merged=merged.sort((a,b)=>{const ta=new Date(a.kickoff).getTime(),tb=new Date(b.kickoff).getTime();const ts=startOfDay(new Date()).getTime(),te=endOfDay(new Date()).getTime();const aT=ta>=ts&&ta<=te,bT=tb>=ts&&tb<=te;if(aT!==bT)return aT?-1:1;if(ta!==tb)return ta-tb;return(a.radar_rank||999)-(b.radar_rank||999);}).slice(0,RADAR_MAX_ITEMS);
+  merged=merged.sort((a,b)=>{const ta=new Date(a.kickoff).getTime(),tb=new Date(b.kickoff).getTime();const ts=startOfDay(new Date()).getTime(),te=endOfDay(new Date()).getTime();const aT=ta>=ts&&ta<=te,bT=tb>=ts&&tb<=te;if(aT!==bT)return aT?-1:1;if(ta!==tb)return ta-tb;return(a.radar_rank||999)-(b.radar_rank||999);});
+  // Copa do Mundo first, amistosos last, max 2 amistosos total
+  merged=merged.sort((a,b)=>{
+    const la=(a.league||"").toLowerCase(),lb=(b.league||"").toLowerCase();
+    const pa=la.includes("copa do mundo")||la.includes("fifa world cup")?0:la.includes("amistoso")||la.includes("friendl")?99:1;
+    const pb=lb.includes("copa do mundo")||lb.includes("fifa world cup")?0:lb.includes("amistoso")||lb.includes("friendl")?99:1;
+    if(pa!==pb)return pa-pb;
+    return(new Date(a.kickoff).getTime())-(new Date(b.kickoff).getTime());
+  });
+  let _amist=0;
+  merged=merged.filter(i=>{
+    const ia=(i.league||"").toLowerCase().includes("amistoso")||(i.league||"").toLowerCase().includes("friendl");
+    if(ia){_amist++;return _amist<=2;}return true;
+  }).slice(0,RADAR_MAX_ITEMS);
   state.lastRadarSnapshot=merged.map((i,idx)=>({...i,visualRank:idx+1}));
   return state.lastRadarSnapshot;
 }
