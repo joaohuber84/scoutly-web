@@ -1739,6 +1739,65 @@
       .lead-banner-form { flex-direction: column; }
       .lead-banner-input, .lead-banner-btn { width: 100%; }
     }
+
+    /* ─── LEGAL MODAL ───────────────────────────────────────────────── */
+    .legal-overlay {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(3,5,10,0.90); backdrop-filter: blur(10px);
+      display: none; align-items: flex-end; justify-content: center;
+      touch-action: none; overscroll-behavior: none;
+    }
+    .legal-overlay.open { display: flex; }
+    .legal-panel {
+      width: 100%; max-width: 760px; height: 90vh;
+      background: var(--surface); border: 1px solid var(--border-2);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      overflow: hidden; display: flex; flex-direction: column;
+      box-shadow: var(--shadow-xl);
+      touch-action: pan-y; overscroll-behavior: contain;
+    }
+    .legal-panel-hd {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-bottom: 1px solid var(--border);
+      flex-shrink: 0; gap: 10px;
+    }
+    .legal-panel-tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+    .legal-tab {
+      padding: 7px 14px; border-radius: var(--radius-sm);
+      font-size: 12px; font-weight: 700; cursor: pointer;
+      border: 1px solid var(--border); background: var(--surface-2);
+      color: var(--text-3); font-family: var(--font-body); transition: all 0.15s;
+    }
+    .legal-tab.active { background: var(--green-dim); border-color: var(--green-line); color: var(--green); }
+    .legal-tab:hover { color: var(--text); }
+    .legal-panel-body {
+      flex: 1; overflow-y: auto; padding: 24px 22px 40px;
+      touch-action: pan-y; overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+    .legal-panel-body h1 { font-family: var(--font-head); font-size: 24px; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 6px; color: var(--text); }
+    .legal-panel-body .legal-sub { font-size: 12.5px; color: var(--text-3); margin-bottom: 28px; }
+    .legal-panel-body h2 { font-family: var(--font-head); font-size: 15px; font-weight: 800; margin: 26px 0 10px; color: var(--text); }
+    .legal-panel-body p, .legal-panel-body li { font-size: 13.5px; color: var(--text-2); line-height: 1.65; margin-bottom: 11px; }
+    .legal-panel-body ul { padding-left: 18px; margin-bottom: 14px; }
+    .legal-panel-body strong { color: var(--text); font-weight: 700; }
+    .legal-pipeline { display: flex; flex-direction: column; gap: 8px; margin: 18px 0; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }
+    .legal-pipeline-step { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .legal-pipeline-step:last-child { border-bottom: none; }
+    .legal-pipeline-icon { width: 32px; height: 32px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .legal-pipeline-icon.sync { background: var(--blue-dim); border: 1px solid var(--blue-line); }
+    .legal-pipeline-icon.brain { background: var(--amber-dim); border: 1px solid var(--amber-line); }
+    .legal-pipeline-icon.you { background: var(--green-dim); border: 1px solid var(--green-line); }
+    .legal-pipeline-title { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 2px; }
+    .legal-pipeline-desc { font-size: 11.5px; color: var(--text-2); line-height: 1.5; }
+    .legal-box { border-radius: var(--radius); padding: 14px 16px; margin: 18px 0; font-size: 12.5px; color: var(--text-2); line-height: 1.6; }
+    .legal-box.amber { background: var(--amber-dim); border: 1px solid var(--amber-line); }
+    .legal-box.amber strong { color: var(--amber); }
+    .legal-box.green { background: var(--green-dim); border: 1px solid var(--green-line); }
+    .legal-box.green strong { color: var(--green); }
+    .legal-box.red { background: var(--red-dim); border: 1px solid var(--red-line); }
+    .legal-box .title { font-size: 12px; font-weight: 800; color: var(--red); display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+    .legal-age-badge { display: inline-flex; align-items: center; gap: 6px; background: var(--amber-dim); border: 1px solid var(--amber-line); border-radius: 20px; padding: 5px 12px; font-size: 11.5px; font-weight: 700; color: var(--amber); margin-bottom: 14px; }
   </style>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-583FPFX1PT"></script>
   <script>
@@ -1973,6 +2032,15 @@
     <div class="about-note">As análises não garantem resultados e devem ser utilizadas como apoio à tomada de decisão. Jogue com responsabilidade.</div>
   </div>
 
+  <!-- ══ FOOTER LINKS ══════════════════════════════════════════════ -->
+  <div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;padding:24px 0 8px;border-top:1px solid var(--border);margin-top:8px;font-size:12px">
+    <a onclick="openLegalModal('sobre')" style="color:var(--text-3);text-decoration:none;cursor:pointer">Sobre</a>
+    <a onclick="openLegalModal('privacidade')" style="color:var(--text-3);text-decoration:none;cursor:pointer">Privacidade</a>
+    <a onclick="openLegalModal('termos')" style="color:var(--text-3);text-decoration:none;cursor:pointer">Termos de uso</a>
+    <a href="https://instagram.com/scoutlypro" target="_blank" style="color:var(--text-3);text-decoration:none">Instagram</a>
+  </div>
+  <div style="text-align:center;font-size:11px;color:var(--text-3);padding-bottom:24px">🔞 Conteúdo destinado a maiores de 18 anos · Jogue com responsabilidade</div>
+
   </div>
 
 </div><!-- /shell -->
@@ -2040,6 +2108,22 @@
     </div>
   </div>
 </div>
+
+<!-- ══ LEGAL MODAL (Sobre / Privacidade / Termos) ══════════════════ -->
+<div class="legal-overlay" id="legalOverlay" onclick="if(event.target===this)closeLegalModal()">
+  <div class="legal-panel">
+    <div class="legal-panel-hd">
+      <div class="legal-panel-tabs">
+        <button class="legal-tab" id="legalTabSobre" onclick="switchLegalTab('sobre')">Sobre</button>
+        <button class="legal-tab" id="legalTabPrivacidade" onclick="switchLegalTab('privacidade')">Privacidade</button>
+        <button class="legal-tab" id="legalTabTermos" onclick="switchLegalTab('termos')">Termos de uso</button>
+      </div>
+      <button class="hd-action-btn" onclick="closeLegalModal()">✕</button>
+    </div>
+    <div class="legal-panel-body" id="legalPanelBody"></div>
+  </div>
+</div>
+
 
 <!-- ══ COPA 2026 OVERLAY ══════════════════════════════════════════════ -->
 <div class="wc-overlay" id="wcOverlay">
@@ -5922,9 +6006,9 @@ setTimeout(() => {
 
 /* ── LEAD CAPTURE ──────────────────────────────────────────────── */
 (function() {
-  // Hide banner if already submitted
+  // Hide lead form if already submitted
   if (localStorage.getItem("scoutly_lead_submitted") === "1") {
-    const b = document.getElementById("leadBanner");
+    const b = document.getElementById("leadSection");
     if (b) b.style.display = "none";
   }
 })();
@@ -5963,7 +6047,7 @@ async function submitLead() {
       </div>`;
     }
     setTimeout(() => {
-      const b = document.getElementById("leadBanner");
+      const b = document.getElementById("leadSection");
       if (b) { b.style.transition = "opacity 0.5s"; b.style.opacity = "0";
         setTimeout(() => b.style.display = "none", 500); }
     }, 3000);
@@ -5981,6 +6065,120 @@ document.addEventListener("DOMContentLoaded", () => {
   const inp = document.getElementById("leadEmailInput");
   if (inp) inp.addEventListener("keydown", e => { if (e.key === "Enter") submitLead(); });
 });
+
+
+/* ── LEGAL MODAL (Sobre / Privacidade / Termos) ──────────────────── */
+const LEGAL_CONTENT = {
+  sobre: `
+    <h1>Sobre o Scoutly</h1>
+    <div class="legal-sub">Radar inteligente de oportunidades — dados reais, sem achismo.</div>
+    <p>O Scoutly nasceu de uma ideia simples: <strong>apostar com base em dados é diferente de apostar no feeling.</strong> Criamos um sistema que cruza estatísticas reais de futebol — gols, escanteios, finalizações, forma recente dos times — e identifica os mercados com maior consistência matemática antes de cada partida.</p>
+    <p>Não somos tipsters. Não damos "macetes" nem promessas de ganho garantido. Somos uma ferramenta de análise: você usa o Scoutly como apoio para tomar suas próprias decisões, com mais informação e menos intuição.</p>
+    <h2>Como funciona</h2>
+    <div class="legal-pipeline">
+      <div class="legal-pipeline-step">
+        <div class="legal-pipeline-icon sync">🔄</div>
+        <div><div class="legal-pipeline-title">Sync</div><div class="legal-pipeline-desc">Coleta dados reais de partidas via API-Football — estatísticas de times, histórico de confrontos, forma recente em casa e fora.</div></div>
+      </div>
+      <div class="legal-pipeline-step">
+        <div class="legal-pipeline-icon brain">🧠</div>
+        <div><div class="legal-pipeline-title">Brain</div><div class="legal-pipeline-desc">Processa os dados e identifica os mercados com maior consistência estatística — gols, escanteios, cartões, finalizações — para cada confronto.</div></div>
+      </div>
+      <div class="legal-pipeline-step">
+        <div class="legal-pipeline-icon you">🎯</div>
+        <div><div class="legal-pipeline-title">Você usa</div><div class="legal-pipeline-desc">As análises ficam disponíveis no radar para você consultar e decidir com mais informação antes de apostar.</div></div>
+      </div>
+    </div>
+    <h2>Por trás do projeto</h2>
+    <p>O Scoutly é desenvolvido e mantido por um único fundador apaixonado por futebol e por dados. O projeto está em fase Beta — gratuito, em constante evolução, e construído com feedback direto de quem usa todos os dias.</p>
+    <div class="legal-box amber"><strong>Importante:</strong> o Scoutly é uma ferramenta de análise estatística, não uma garantia de resultado. Apostas esportivas envolvem risco. Use as informações com responsabilidade e dentro do seu orçamento.</div>
+  `,
+  privacidade: `
+    <h1>Política de Privacidade</h1>
+    <div class="legal-sub">Última atualização: junho de 2026</div>
+    <p>Esta política explica de forma simples e direta como o Scoutly trata as informações de quem usa a plataforma. Nosso compromisso é com a transparência: coletamos o mínimo necessário e nunca vendemos seus dados.</p>
+    <h2>O que coletamos</h2>
+    <ul>
+      <li><strong>Dados de navegação:</strong> através do Google Analytics, coletamos informações anônimas de uso — páginas visitadas, tempo de sessão, dispositivo — para entender como melhorar o site.</li>
+      <li><strong>Email (opcional):</strong> se você se cadastra para acesso antecipado ao Scoutly Pro, armazenamos seu email exclusivamente para esse fim.</li>
+    </ul>
+    <p>O Scoutly <strong>não exige login, cadastro ou cartão de crédito</strong> para usar o radar gratuito. A análise de partidas é 100% pública e acessível sem fornecer nenhum dado pessoal.</p>
+    <h2>Como usamos suas informações</h2>
+    <div class="legal-box green">O email cadastrado para acesso antecipado é usado <strong>somente</strong> para avisar sobre o lançamento do Scoutly Pro e novidades relevantes da plataforma. Não enviamos spam, não compartilhamos com terceiros, e você pode pedir remoção a qualquer momento.</div>
+    <h2>Compartilhamento de dados</h2>
+    <p>O Scoutly <strong>não vende, aluga ou compartilha</strong> seus dados pessoais com terceiros para fins de marketing. As únicas exceções são:</p>
+    <ul>
+      <li>Provedores de infraestrutura essenciais ao funcionamento do site (hospedagem, banco de dados), que têm acesso técnico mas não usam os dados para fins próprios.</li>
+      <li>Obrigação legal, caso exigido por autoridade competente.</li>
+    </ul>
+    <h2>Seus direitos</h2>
+    <p>Você pode, a qualquer momento:</p>
+    <ul>
+      <li>Solicitar a exclusão do seu email da nossa lista de contatos</li>
+      <li>Pedir esclarecimentos sobre quais dados temos armazenados sobre você</li>
+    </ul>
+    <p>Para isso, envie uma mensagem pelo Instagram <strong>@scoutlypro</strong>.</p>
+    <h2>Cookies e ferramentas de terceiros</h2>
+    <p>Usamos Google Analytics para entender o tráfego do site. Essa ferramenta pode usar cookies para diferenciar visitantes. Você pode desativar cookies nas configurações do seu navegador a qualquer momento, sem prejudicar o uso do Scoutly.</p>
+    <div class="legal-box green"><strong>Resumo direto:</strong> coletamos pouco, usamos só pro que prometemos, e nunca vendemos seus dados. Se tiver qualquer dúvida, é só chamar no Instagram.</div>
+  `,
+  termos: `
+    <h1>Termos de Uso</h1>
+    <div class="legal-sub">Última atualização: junho de 2026</div>
+    <div class="legal-age-badge">🔞 Conteúdo destinado a maiores de 18 anos</div>
+    <p>Ao acessar e usar o Scoutly (scoutlypro.app), você concorda com os termos descritos abaixo. Leia com atenção.</p>
+    <h2>O que é o Scoutly</h2>
+    <p>O Scoutly é uma ferramenta de <strong>análise estatística de futebol</strong>. Coletamos dados públicos de partidas (estatísticas, histórico, forma dos times) e processamos essas informações para identificar tendências e mercados com maior consistência matemática.</p>
+    <div class="legal-box red">
+      <div class="title">⚠️ Não somos uma casa de apostas</div>
+      <p style="margin-bottom:0">O Scoutly não processa apostas, não movimenta dinheiro e não tem qualquer vínculo operacional com casas de apostas. Somos uma ferramenta de informação e análise — o que você faz com essa informação é de sua inteira responsabilidade.</p>
+    </div>
+    <h2>Natureza das informações</h2>
+    <p>Todas as análises, picks e estatísticas apresentadas no Scoutly são geradas por processamento automatizado de dados históricos e estatísticos. <strong>Não constituem garantia de resultado.</strong> Resultados esportivos têm fatores imprevisíveis que nenhum sistema estatístico pode capturar com certeza absoluta.</p>
+    <h2>Responsabilidade do usuário</h2>
+    <ul>
+      <li>Você é maior de 18 anos e tem capacidade legal para tomar suas próprias decisões financeiras.</li>
+      <li>Qualquer decisão de apostar, e os valores envolvidos, são de sua exclusiva responsabilidade.</li>
+      <li>O Scoutly não se responsabiliza por perdas financeiras decorrentes do uso das informações apresentadas.</li>
+      <li>Recomendamos fortemente que você aposte apenas valores que pode perder, dentro do seu orçamento pessoal.</li>
+    </ul>
+    <h2>Jogo responsável</h2>
+    <p>Se você sente que está perdendo o controle sobre suas apostas, procure ajuda. No Brasil, você pode buscar orientação através de serviços especializados em saúde mental e dependência. O equilíbrio entre entretenimento e responsabilidade é fundamental.</p>
+    <h2>Uso gratuito e Beta</h2>
+    <p>O Scoutly está atualmente em fase Beta, com acesso gratuito. Funcionalidades podem mudar, ser adicionadas ou removidas sem aviso prévio enquanto o produto evolui. Futuramente, alguns recursos podem se tornar parte de um plano pago (Scoutly Pro) — quando isso acontecer, comunicaremos com antecedência.</p>
+    <h2>Propriedade intelectual</h2>
+    <p>A marca Scoutly, o logotipo, o design e a metodologia de análise são de propriedade do criador da plataforma. É proibida a reprodução não autorizada para fins comerciais.</p>
+    <h2>Alterações nos termos</h2>
+    <p>Estes termos podem ser atualizados periodicamente. O uso continuado do Scoutly após mudanças implica concordância com a versão vigente.</p>
+  `
+};
+
+function openLegalModal(tab) {
+  const overlay = document.getElementById("legalOverlay");
+  if (!overlay) return;
+  overlay.classList.add("open");
+  document.body.style.overflow = "hidden";
+  switchLegalTab(tab || "sobre");
+  pushModalState("legal");
+}
+
+function closeLegalModal() {
+  const overlay = document.getElementById("legalOverlay");
+  if (!overlay) return;
+  overlay.classList.remove("open");
+  document.body.style.overflow = "";
+}
+
+function switchLegalTab(tab) {
+  document.querySelectorAll(".legal-tab").forEach(b => b.classList.remove("active"));
+  const btn = document.getElementById("legalTab" + tab.charAt(0).toUpperCase() + tab.slice(1));
+  if (btn) btn.classList.add("active");
+  const body = document.getElementById("legalPanelBody");
+  if (body && LEGAL_CONTENT[tab]) {
+    body.innerHTML = LEGAL_CONTENT[tab];
+    body.scrollTop = 0;
+  }
+}
 
 </script>
 </body>
