@@ -2018,21 +2018,7 @@
   </div>
 
 
-  <!-- ══ SOBRE ════════════════════════════════════════════════════════ -->
-  <div class="about-card">
-    <h3 class="about-title">Sobre o Scoutly</h3>
-    <p class="about-text">Radar inteligente que analisa dados reais de partidas para identificar oportunidades em apostas de futebol. Cruzamos estatísticas de gols, escanteios, finalizações, chutes no gol e cartões para destacar mercados com maior coerência estatística.</p>
-    <div class="about-list">
-      <div class="about-item">Picks gerados automaticamente — sem seleção manual</div>
-      <div class="about-item">Radar do dia organizado por horário e liga</div>
-      <div class="about-item">Histórico verificado com taxa de acerto por mercado e semana</div>
-      <div class="about-item">Análise completa com projeção, H2H e probabilidades</div>
-      <div class="about-item">Copa 2026: forma das seleções em tempo real</div>
-    </div>
-    <div class="about-note">As análises não garantem resultados e devem ser utilizadas como apoio à tomada de decisão. Jogue com responsabilidade.</div>
-  </div>
-
-  <!-- ══ FOOTER LINKS ══════════════════════════════════════════════ -->
+    <!-- ══ FOOTER LINKS ══════════════════════════════════════════════ -->
   <div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;padding:24px 0 8px;border-top:1px solid var(--border);margin-top:8px;font-size:12px">
     <a onclick="openLegalModal('sobre')" style="color:var(--text-3);text-decoration:none;cursor:pointer">Sobre</a>
     <a onclick="openLegalModal('privacidade')" style="color:var(--text-3);text-decoration:none;cursor:pointer">Privacidade</a>
@@ -2397,9 +2383,9 @@ const supabaseClient = window.supabase.createClient(
 );
 
 const MATCH_END_GRACE_MINUTES = 5;
-const RADAR_LOOKAHEAD_HOURS   = 48;
+const RADAR_LOOKAHEAD_HOURS   = 168; // 7 dias
 const RADAR_MIN_ITEMS  = 10;
-const RADAR_MAX_ITEMS  = 12;
+const RADAR_MAX_ITEMS  = 15;
 const RADAR_MAX_PER_LEAGUE = 3;
 const TICKET_SIZE      = 3;
 const AUTO_UI_REFRESH_MS   = 60000;
@@ -3542,28 +3528,33 @@ const RADAR_BLOCKED = new Set([
 ]);
 
 function getLeagueRadarTier(league) {
-  if (!league) return "B";
+  if (!league) return 3;
   const n = normalizeLeagueName(league);
-  if (RADAR_BLOCKED.has(n) ||
-      n.toLowerCase().includes("amistoso") ||
-      n.toLowerCase().includes("friendl") ||
-      n.toLowerCase().includes(" ii ") ||
-      n.toLowerCase().includes("reserv") ||
-      n.toLowerCase().includes("u21") ||
-      n.toLowerCase().includes("u23")) return "X";
-  if (RADAR_TIER_S.has(n)) return "S";
-  if (RADAR_TIER_A.has(n)) return "A";
-  // Check by partial match for Brasileirão variants
   const nl = n.toLowerCase();
-  if (nl.includes("brasileir") || nl.includes("copa do mundo") ||
+  // Tier 0: Copa do Mundo — prioridade absoluta, acima de tudo
+  if (nl.includes("copa do mundo") || nl.includes("fifa world cup")) return 0;
+  // Blocked: amistosos, reservas, sub-categorias
+  if (RADAR_BLOCKED.has(n) || nl.includes("amistoso") || nl.includes("friendl") ||
+      nl.includes(" ii ") || nl.includes("reserv") || nl.includes("u21") || nl.includes("u23")) return 99;
+  // Tier 1 (S): elite — Brasileirão A/B, Libertadores, Champions, top-5 europeu
+  if (RADAR_TIER_S.has(n) || nl.includes("brasileir") ||
       nl.includes("libertadores") || nl.includes("sul-americana") ||
       nl.includes("champions") || nl.includes("premier league") ||
       nl.includes("bundesliga") || nl.includes("la liga") ||
-      nl.includes("serie a") || nl.includes("ligue 1")) return "S";
-  if (nl.includes("chile") || nl.includes("argentina") ||
+      nl.includes("serie a") || nl.includes("ligue 1")) return 1;
+  // Tier 2 (A): alta qualidade — Chile, Argentina, MLS, Europa League etc
+  if (RADAR_TIER_A.has(n) || nl.includes("chile") || nl.includes("argentina") ||
       nl.includes("mls") || nl.includes("europa league") ||
-      nl.includes("eredivisie") || nl.includes("primeira liga")) return "A";
-  return "B";
+      nl.includes("eredivisie") || nl.includes("primeira liga")) return 2;
+  // Tier 3 (B): demais ligas aprovadas na whitelist
+  return 3;
+}
+
+function getDayOffset(kickoff) {
+  const d = parseDateSafe(kickoff); if (!d) return 999;
+  const ts = startOfDay(new Date()).getTime();
+  const dayMs = 86400000;
+  return Math.floor((startOfDay(d).getTime() - ts) / dayMs);
 }
 function buildRadarSnapshot(){
   const eligible=getRadarEligibleMatches();const nowTs=Date.now();
@@ -3575,126 +3566,53 @@ function buildRadarSnapshot(){
     return{...m,league:normalizeLeagueName(m.league),home_team:normalizeTeamName(m.home_team),away_team:normalizeTeamName(m.away_team),
       radar_market:pick,radar_probability:Number(item.probability||getMatchProbability(m)),
       radar_rank:Number(item.rank||999),source:"daily"};
-  }).filter(Boolean).sort((a,b)=>{const ta=new Date(a.kickoff).getTime(),tb=new Date(b.kickoff).getTime();const as=ta<=nowTs,bs=tb<=nowTs;if(as!==bs)return as?-1:1;if(a.radar_rank!==b.radar_rank)return a.radar_rank-b.radar_rank;return ta-tb;});
+  }).filter(Boolean);
   const fallback=eligible.filter(m=>!fromDaily.some(i=>String(i.id)===String(m.id))&&isRadarEligiblePick(m))
-    .sort((a,b)=>{const ta=new Date(a.kickoff).getTime(),tb=new Date(b.kickoff).getTime();const as=ta<=nowTs,bs=tb<=nowTs;if(as!==bs)return as?-1:1;const pd=getMatchProbability(b)-getMatchProbability(a);if(Math.abs(pd)>0.0001)return pd;return ta-tb;})
-    .slice(0,80).map((m,idx)=>({...m,league:normalizeLeagueName(m.league),home_team:normalizeTeamName(m.home_team),away_team:normalizeTeamName(m.away_team),radar_market:getPrimaryPick(m),radar_probability:getMatchProbability(m),radar_rank:fromDaily.length+idx+1,source:"fallback"}));
-  const pool=[...fromDaily,...fallback].sort((a,b)=>{
-    const ta=new Date(a.kickoff).getTime(),tb=new Date(b.kickoff).getTime();
-    const ts=startOfDay(new Date()).getTime(),te=endOfDay(new Date()).getTime();
-    const aT=ta>=ts&&ta<=te,bT=tb>=ts&&tb<=te;
-    if(aT!==bT)return aT?-1:1;const as=ta<=nowTs,bs=tb<=nowTs;if(as!==bs)return as?-1:1;
-    if(ta!==tb)return ta-tb;if(a.radar_rank!==b.radar_rank)return a.radar_rank-b.radar_rank;
-    return getMatchProbability(b)-getMatchProbability(a);
-  });
-  const{todayItems,futureItems}=splitRadarPoolsByDay(pool);
-  let merged=balanceRadarByLeague(todayItems);merged=fillRadarShortage(merged,todayItems);
-  if(merged.length<RADAR_MAX_ITEMS){
-    const fb=balanceRadarByLeague(futureItems.filter(i=>!merged.some(m=>String(m.id)===String(i.id))));
-    merged=fillRadarShortage(merged,fb);merged=fillRadarShortage(merged,futureItems);
+    .map((m,idx)=>({...m,league:normalizeLeagueName(m.league),home_team:normalizeTeamName(m.home_team),away_team:normalizeTeamName(m.away_team),
+      radar_market:getPrimaryPick(m),radar_probability:getMatchProbability(m),radar_rank:fromDaily.length+idx+1,source:"fallback"}));
+
+  const pool=[...fromDaily,...fallback];
+
+  // ── Ordenação única: dia (hoje→7 dias) → tier (Copa→S→A→B) → horário ──
+  function sortKey(i){
+    return [getDayOffset(i.kickoff), getLeagueRadarTier(i.league), new Date(i.kickoff).getTime(), i.radar_rank||999];
   }
-  merged=merged.sort((a,b)=>{const ta=new Date(a.kickoff).getTime(),tb=new Date(b.kickoff).getTime();const ts=startOfDay(new Date()).getTime(),te=endOfDay(new Date()).getTime();const aT=ta>=ts&&ta<=te,bT=tb>=ts&&tb<=te;if(aT!==bT)return aT?-1:1;if(ta!==tb)return ta-tb;return(a.radar_rank||999)-(b.radar_rank||999);});
-  // Copa do Mundo first, amistosos last, max 2 amistosos total
-  merged=merged.sort((a,b)=>{
-    const la=(a.league||"").toLowerCase(),lb=(b.league||"").toLowerCase();
-    const pa=la.includes("copa do mundo")||la.includes("fifa world cup")?0:la.includes("amistoso")||la.includes("friendl")?99:1;
-    const pb=lb.includes("copa do mundo")||lb.includes("fifa world cup")?0:lb.includes("amistoso")||lb.includes("friendl")?99:1;
-    if(pa!==pb)return pa-pb;
-    return(new Date(a.kickoff).getTime())-(new Date(b.kickoff).getTime());
-  });
-  // Tier-based ordering + blocking
-  const tierOrder = {"S":0,"A":1,"B":2,"X":99};
-  merged = merged
-    .filter(i => getLeagueRadarTier(i.league) !== "X")
-    .sort((a, b) => {
-      // 1. Today before future
-      const ts=startOfDay(new Date()).getTime(), te=endOfDay(new Date()).getTime();
-      const ta=new Date(a.kickoff).getTime(), tb=new Date(b.kickoff).getTime();
-      const aT=ta>=ts&&ta<=te, bT=tb>=ts&&tb<=te;
-      if (aT!==bT) return aT?-1:1;
-      // 2. Tier S before A before B
-      const pa=tierOrder[getLeagueRadarTier(a.league)]||2;
-      const pb=tierOrder[getLeagueRadarTier(b.league)]||2;
-      if (pa!==pb) return pa-pb;
-      // 3. Kickoff time
-      if (ta!==tb) return ta-tb;
-      return (a.radar_rank||999)-(b.radar_rank||999);
-    });
-  // Cap per tier: unlimited S, max 4 A, max 2 B, 0 X
-  const tierCaps = {"S":99,"A":4,"B":2};
-  const tierCounts = {"S":0,"A":0,"B":0};
-  merged = merged.filter(i => {
-    const t = getLeagueRadarTier(i.league);
-    if (!tierCaps[t]) return false;
-    tierCounts[t] = (tierCounts[t]||0) + 1;
-    return tierCounts[t] <= tierCaps[t];
-  }).slice(0, RADAR_MAX_ITEMS);
+  function compareItems(a,b){
+    const ka=sortKey(a), kb=sortKey(b);
+    for(let i=0;i<ka.length;i++){ if(ka[i]!==kb[i]) return ka[i]-kb[i]; }
+    return 0;
+  }
+
+  // Pool elegível (sem amistosos/bloqueados) ordenado
+  const cleanPool=pool.filter(i=>getLeagueRadarTier(i.league)!==99).sort(compareItems);
+
+  // Preenche respeitando limite por liga (máx 3) até completar RADAR_MAX_ITEMS
+  function fillFrom(source, base){
+    const ids=new Set(base.map(i=>String(i.id)));
+    const counts=new Map(); base.forEach(i=>{const l=i.league;counts.set(l,(counts.get(l)||0)+1);});
+    const res=[...base];
+    for(const i of source){
+      if(res.length>=RADAR_MAX_ITEMS)break;
+      if(ids.has(String(i.id)))continue;
+      const l=i.league; const cur=counts.get(l)||0;
+      if(cur>=RADAR_MAX_PER_LEAGUE)continue;
+      res.push(i); ids.add(String(i.id)); counts.set(l,cur+1);
+    }
+    return res;
+  }
+
+  let merged=fillFrom(cleanPool,[]);
+
+  // Última instância: se mesmo com 7 dias de busca não completou 15, libera amistosos
+  if(merged.length<RADAR_MAX_ITEMS){
+    const amistosoPool=pool.filter(i=>getLeagueRadarTier(i.league)===99).sort(compareItems);
+    merged=fillFrom(amistosoPool,merged);
+  }
+
   state.lastRadarSnapshot=merged.map((i,idx)=>({...i,visualRank:idx+1}));
   return state.lastRadarSnapshot;
 }
-function buildTicketFromRadarSnapshot(radarItems,seed=0){
-  const pool=uniqueByMatchAndMarket(radarItems.map(i=>normalizeTicketPick({match_id:i.id,market:i.radar_market,probability:i.radar_probability})).filter(Boolean));
-  const usedM=new Set(),usedF=new Set();const ticket=[];
-  const sorted=[...pool].sort((a,b)=>{const ts=startOfDay(new Date()).getTime(),te=endOfDay(new Date()).getTime();const at=new Date(a.kickoff).getTime(),bt=new Date(b.kickoff).getTime();const aT=at>=ts&&at<=te,bT=bt>=ts&&bt<=te;if(aT!==bT)return aT?-1:1;const fp=marketPriority(a.family)-marketPriority(b.family);if(fp)return fp;if(at!==bt)return at-bt;return b.probability-a.probability;});
-  if(!sorted.length)return[];
-  const offset=seed%sorted.length;const rot=[...sorted.slice(offset),...sorted.slice(0,offset)];
-  for(const i of rot){if(usedM.has(i.match_id)||usedF.has(i.family))continue;ticket.push(i);usedM.add(i.match_id);usedF.add(i.family);if(ticket.length>=TICKET_SIZE)break;}
-  if(ticket.length<TICKET_SIZE)for(const i of rot){if(usedM.has(i.match_id))continue;ticket.push(i);usedM.add(i.match_id);if(ticket.length>=TICKET_SIZE)break;}
-  return ticket.sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
-}
-function replaceTicketLines(current,candidates,targets){
-  const out=current.length?[...current]:[];const used=new Set(out.map(getLineSignature).filter(Boolean));const q=candidates.filter(Boolean);
-  for(const idx of targets){const prev=getLineSignature(out[idx]);const rep=q.find(c=>{const s=getLineSignature(c);return s&&s!==prev&&!used.has(s);});if(rep){if(prev)used.delete(prev);out[idx]=rep;used.add(getLineSignature(rep));}}
-  return out.filter(Boolean);
-}
-function forceDifferentTicket(base,pool){
-  const curSig=getTicketSignature(base);const cands=[...pool];
-  for(let a=0;a<cands.length;a++){const rot=[...cands.slice(a),...cands.slice(0,a)];const trial=[];const usedM=new Set();const usedF=new Set();
-    for(const i of rot){if(usedM.has(i.match_id)||usedF.has(i.family))continue;trial.push(i);usedM.add(i.match_id);usedF.add(i.family);if(trial.length>=TICKET_SIZE)break;}
-    if(trial.length<TICKET_SIZE)for(const i of rot){if(usedM.has(i.match_id))continue;trial.push(i);usedM.add(i.match_id);if(trial.length>=TICKET_SIZE)break;}
-    const sig=getTicketSignature(trial);if(sig&&sig!==curSig)return trial.sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
-  }
-  return base;
-}
-function generateTicket(forceRotate=true){
-  const radarItems=buildRadarSnapshot();
-  if(!state.ticketRotationIndex)state.ticketRotationIndex=0;
-  if(forceRotate)state.ticketRotationIndex+=1;
-  const radarPool=uniqueByMatchAndMarket(radarItems.map(i=>normalizeTicketPick({match_id:i.id,market:i.radar_market,probability:i.radar_probability})).filter(Boolean));
-  const radarTicket=buildTicketFromRadarSnapshot(radarItems,state.ticketRotationIndex);
-  if(radarTicket.length){
-    let next=state.currentTicket.length?[...state.currentTicket]:[...radarTicket];
-    if(!state.currentTicket.length)next=[...radarTicket];
-    else if(forceRotate)next=replaceTicketLines(next,radarPool,getTicketRotationPattern(state.ticketRotationIndex));
-    const seen=new Set();const cleaned=[];
-    next.forEach(i=>{if(!i)return;const k=`${i.match_id}::${i.market}`;if(seen.has(k))return;seen.add(k);cleaned.push(i);});
-    for(const i of radarPool){if(cleaned.length>=TICKET_SIZE)break;const k=`${i.match_id}::${i.market}`;if(seen.has(k))continue;seen.add(k);cleaned.push(i);}
-    next=cleaned.slice(0,TICKET_SIZE).sort((a,b)=>new Date(a.kickoff)-new Date(b.kickoff));
-    if(forceRotate&&getTicketSignature(next)===state.lastTicketSignature)next=forceDifferentTicket(next,radarPool);
-    state.currentTicket=next;state.lastTicketSignature=getTicketSignature(state.currentTicket);
-    renderTicket();return;
-  }
-  const poolRaw=buildDailyTicketPool();const pool=uniqueByMatchAndMarket(poolRaw.length?poolRaw:buildFallbackTicketPool());
-  const usedM=new Set();const usedF=new Set();const picks=[];
-  const offset=pool.length?state.ticketRotationIndex%pool.length:0;
-  const rot=[...pool.slice(offset),...pool.slice(0,offset)];
-  for(const i of rot){if(usedM.has(i.match_id)||usedF.has(i.family))continue;picks.push(i);usedM.add(i.match_id);usedF.add(i.family);if(picks.length>=TICKET_SIZE)break;}
-  if(picks.length<TICKET_SIZE)for(const i of rot){if(usedM.has(i.match_id))continue;picks.push(i);usedM.add(i.match_id);if(picks.length>=TICKET_SIZE)break;}
-  let final=picks;
-  if(forceRotate&&getTicketSignature(final)===state.lastTicketSignature)final=forceDifferentTicket(final,pool);
-  state.currentTicket=final;state.lastTicketSignature=getTicketSignature(state.currentTicket);
-  renderTicket();
-}
-function ticketLegMarkup(item,index){
-  return `<div class="ticket-leg"><div class="ticket-leg-num">${index+1}</div><div class="ticket-teams">${teamBadge(item,"home")}<div class="team-names">${escapeHtml(item.home_team)} × ${escapeHtml(item.away_team)}</div>${teamBadge(item,"away")}</div><div class="chips">${chipMarkup(item.tier)}${marketFamilyChip(item.family)}</div><div class="ticket-market">${formatMarketDisplay(item.market,"ticket-market-num","ticket-market-label")}</div><div class="ticket-meta">${getLeagueBadge(item.league,item.country||inferCountryFromLeague(item.league))} ${escapeHtml(getLeagueDisplay(item.league))} · ${escapeHtml(formatKickoff(item.kickoff))}</div></div>`;
-}
-function renderTicket(){
-  const el=document.getElementById("ticketContainer"); if(!el)return;
-  if(!state.currentTicket.length){el.innerHTML=`<div class="loading-state">Montando bilhete...</div>`;return;}
-  const avgProb=state.currentTicket.reduce((a,i)=>a+Number(i.probability||0),0)/state.currentTicket.length;
-  el.innerHTML=`<div class="ticket-legs">${state.currentTicket.map((i,idx)=>ticketLegMarkup(i,idx)).join("")}</div><div class="ticket-footer"><div class="ticket-confidence">Confiança geral: ${escapeHtml(probabilityToTier(avgProb))}</div><div class="ticket-hint">Bilhete montado automaticamente com base no radar ativo.</div></div>`;
-  if (liveState.data.size > 0) updateLiveIndicators();
-}
+
 function renderRadar(){
   const list=document.getElementById("radarList"); if(!list)return;
   const allItems=buildRadarSnapshot();
