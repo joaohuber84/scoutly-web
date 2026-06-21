@@ -2383,10 +2383,17 @@ const supabaseClient = window.supabase.createClient(
 );
 
 const MATCH_END_GRACE_MINUTES = 5;
-const RADAR_LOOKAHEAD_HOURS   = 168; // 7 dias
+const RADAR_LOOKAHEAD_DAYS    = 1; // hoje (0) + amanhã (1)
 const RADAR_MIN_ITEMS  = 10;
-const RADAR_MAX_ITEMS  = 15;
+const RADAR_MAX_ITEMS  = 60;
 const RADAR_MAX_PER_LEAGUE = 3;
+// Ligas prioritárias: entram TODOS os jogos analisados de hoje/amanhã, sem teto de quantidade
+const RADAR_UNCAPPED_LEAGUES = new Set([
+  "Copa do Mundo",
+  "Copa do Brasil",
+  "Brasileirão Série A",
+  "Brasileirão Série B",
+]);
 const TICKET_SIZE      = 3;
 const AUTO_UI_REFRESH_MS   = 60000;
 const AUTO_DATA_REFRESH_MS = 4 * 60 * 60 * 1000;
@@ -2729,8 +2736,9 @@ function isRadarEligiblePick(match){
 function isStillRelevantForRadar(v){
   const d=parseDateSafe(v); if(!d)return false;
   const now=new Date();
-  return new Date(d.getTime()+MATCH_END_GRACE_MINUTES*60000)>now &&
-         d<=new Date(now.getTime()+RADAR_LOOKAHEAD_HOURS*3600000);
+  if(new Date(d.getTime()+MATCH_END_GRACE_MINUTES*60000)<=now)return false; // já acabou
+  const offset=getDayOffset(v); // 0 = hoje, 1 = amanhã
+  return offset>=0 && offset<=RADAR_LOOKAHEAD_DAYS;
 }
 function isStillRelevantForTicket(v){ return isStillRelevantForRadar(v); }
 function isCompetitionVisible(v){
@@ -3575,9 +3583,9 @@ function buildRadarSnapshot(){
 
   const pool=[...fromDaily,...fallback];
 
-  // ── Ordenação única: dia (hoje→7 dias) → tier (Copa→S→A→B) → horário ──
+  // ── Ordenação única: dia (hoje/amanhã) → horário → liga só como desempate ──
   function sortKey(i){
-    return [getDayOffset(i.kickoff), getLeagueRadarTier(i.league), new Date(i.kickoff).getTime(), i.radar_rank||999];
+    return [getDayOffset(i.kickoff), new Date(i.kickoff).getTime(), getLeagueRadarTier(i.league), i.radar_rank||999];
   }
   function compareItems(a,b){
     const ka=sortKey(a), kb=sortKey(b);
@@ -3588,7 +3596,8 @@ function buildRadarSnapshot(){
   // Pool elegível (sem amistosos/bloqueados) ordenado
   const cleanPool=pool.filter(i=>getLeagueRadarTier(i.league)!==99).sort(compareItems);
 
-  // Preenche respeitando limite por liga (máx 3) até completar RADAR_MAX_ITEMS
+  // Preenche respeitando limite por liga (máx 3), exceto ligas prioritárias (RADAR_UNCAPPED_LEAGUES),
+  // que entram inteiras — até completar RADAR_MAX_ITEMS
   function fillFrom(source, base){
     const ids=new Set(base.map(i=>String(i.id)));
     const counts=new Map(); base.forEach(i=>{const l=i.league;counts.set(l,(counts.get(l)||0)+1);});
@@ -3597,7 +3606,8 @@ function buildRadarSnapshot(){
       if(res.length>=RADAR_MAX_ITEMS)break;
       if(ids.has(String(i.id)))continue;
       const l=i.league; const cur=counts.get(l)||0;
-      if(cur>=RADAR_MAX_PER_LEAGUE)continue;
+      const cap=RADAR_UNCAPPED_LEAGUES.has(l)?Infinity:RADAR_MAX_PER_LEAGUE;
+      if(cur>=cap)continue;
       res.push(i); ids.add(String(i.id)); counts.set(l,cur+1);
     }
     return res;
