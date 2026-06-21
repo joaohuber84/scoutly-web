@@ -25,7 +25,9 @@ const API_BASE = "https://v3.football.api-sports.io"
  *   2. Filtra os que ainda não foram avaliados (não existem em pick_results)
  *   3. Busca o resultado real na API-Football
  *   4. Avalia cada mercado previsto contra o resultado
- *   5. Salva em pick_results com correct = true/false
+ *   5. Salva em pick_results com correct = true/false (avaliado) ou null (não verificável —
+ *      jogo encerrado mas o texto do mercado não foi reconhecido pelo parser; fica registrado
+ *      para auditoria, mas não entra na taxa de acerto pública)
  *
  * Mercados suportados:
  *   - Mais de X gols / Menos de X gols
@@ -345,7 +347,7 @@ async function run() {
     return
   }
 
-  let evaluated = 0, correct = 0, incorrect = 0, skipped = 0
+  let evaluated = 0, correct = 0, incorrect = 0, skipped = 0, naoAvaliavel = 0
 
   for (const pick of pending) {
     console.log(`\n⚽ ${pick.home_team} x ${pick.away_team} [${pick.league}]`)
@@ -399,8 +401,14 @@ async function run() {
       const result = evaluateMarket(pick.market, fixture, statsArray)
 
       if (result === null) {
-        console.log(`   ❓ Mercado não avaliável — pulando`)
-        skipped++
+        // Jogo encerrado e com dados disponíveis, mas o mercado não pôde ser avaliado
+        // (texto não reconhecido pelo parser). Diferente do "pulando" acima: aqui já
+        // sabemos o resultado final, então registramos como NÃO VERIFICÁVEL (correct=null)
+        // em vez de simplesmente sumir — fica auditável e não entra na taxa de acerto pública.
+        console.log(`   ❓ Mercado não avaliável — registrado como NÃO VERIFICÁVEL (não conta na taxa de acerto)`)
+        const checkedAt = new Date().toISOString()
+        await saveResult(pick, null, homeGoals, awayGoals, checkedAt)
+        naoAvaliavel++
         continue
       }
 
@@ -427,7 +435,8 @@ async function run() {
   console.log(`   Avaliados: ${evaluated}`)
   console.log(`   ✅ Acertos: ${correct}`)
   console.log(`   ❌ Erros: ${incorrect}`)
-  console.log(`   ⏭️  Pulados: ${skipped}`)
+  console.log(`   ❓ Não verificáveis (registrados, fora da taxa de acerto): ${naoAvaliavel}`)
+  console.log(`   ⏳ Pendentes (jogo não encerrado / fixture indisponível, tenta de novo depois): ${skipped}`)
   console.log(`   🎯 Taxa desta rodada: ${accuracy}%`)
   console.log(`\n✅ Scoutly Verify V1.0 concluído`)
 }

@@ -4732,11 +4732,18 @@ async function loadAssertiveness() {
   const badgeEl = document.getElementById("assertTotalBadge");
   if (!heroEl) return;
   try {
-    const { data, error } = await supabaseClient
+    const { data: rawData, error } = await supabaseClient
       .from("pick_results").select("correct, market, created_at")
       .order("created_at", { ascending: false }).limit(500);
     if (error) throw error;
-    if (!data || !data.length) {
+    if (!rawData || !rawData.length) {
+      heroEl.innerHTML = `<div class="assert-loading">Sem histórico registrado ainda.</div>`; return;
+    }
+    // Picks com correct=null = não verificáveis automaticamente (mercado não reconhecido
+    // ou stats indisponíveis na API) — ficam registrados para auditoria, mas não entram no cálculo
+    const data = rawData.filter(i => i.correct === true || i.correct === false);
+    const naoVerificaveis = rawData.length - data.length;
+    if (!data.length) {
       heroEl.innerHTML = `<div class="assert-loading">Sem histórico registrado ainda.</div>`; return;
     }
     const now = new Date();
@@ -4769,7 +4776,7 @@ async function loadAssertiveness() {
     if (badgeEl) badgeEl.textContent = `${data.length} picks avaliados`;
     heroEl.innerHTML = `
       <div style="font-size:11px;color:var(--text-3);margin-bottom:12px;line-height:1.6">
-        Picks gerados <strong style="color:var(--text-2)">automaticamente pelo radar</strong> e verificados após o encerramento de cada partida. Sem seleção manual.
+        Picks gerados <strong style="color:var(--text-2)">automaticamente pelo radar</strong> e verificados após o encerramento de cada partida. Sem seleção manual.${naoVerificaveis>0?` <span style="opacity:.8">(+${naoVerificaveis} não puderam ser verificados automaticamente e não entram no cálculo)</span>`:""}
       </div>
       <div class="assert-hero">
         <div class="assert-big-num">
@@ -5160,14 +5167,22 @@ async function renderResultados() {
   body.innerHTML = `<div class="loading-state">Carregando histórico...</div>`;
 
   try {
-    const { data, error } = await supabaseClient
+    const { data: rawData, error } = await supabaseClient
       .from("pick_results")
       .select("correct, market, home_team, away_team, created_at")
       .order("created_at", { ascending: false })
       .limit(300);
 
     if (error) throw error;
-    if (!data || !data.length) {
+    if (!rawData || !rawData.length) {
+      body.innerHTML = `<div class="empty-state">Sem histórico registrado ainda. Os resultados aparecerão aqui após as primeiras partidas verificadas.</div>`;
+      return;
+    }
+    // correct=null = não verificável automaticamente (mercado não reconhecido / stats indisponíveis).
+    // Fica gravado no banco para auditoria, mas não entra nas taxas de acerto exibidas aqui.
+    const data = rawData.filter(i => i.correct === true || i.correct === false);
+    const naoVerificaveis = rawData.length - data.length;
+    if (!data.length) {
       body.innerHTML = `<div class="empty-state">Sem histórico registrado ainda. Os resultados aparecerão aqui após as primeiras partidas verificadas.</div>`;
       return;
     }
@@ -5320,7 +5335,7 @@ async function renderResultados() {
 
       <div style="text-align:center;font-size:10px;color:var(--text-3);margin-top:16px;line-height:1.6">
         Todos os picks foram gerados automaticamente pelo radar Scoutly.<br>
-        Nenhum pick é selecionado manualmente após o resultado.
+        Nenhum pick é selecionado manualmente após o resultado.${naoVerificaveis>0?`<br>${naoVerificaveis} pick${naoVerificaveis>1?"s":""} não pôde${naoVerificaveis>1?"ram":""} ser verificado${naoVerificaveis>1?"s":""} automaticamente e não ${naoVerificaveis>1?"entram":"entra"} nestes números.`:""}
       </div>
     `;
 
