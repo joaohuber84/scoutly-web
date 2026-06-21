@@ -2799,9 +2799,11 @@ function getMetrics(match){
 function getPrimaryPick(m){
   const pick = m.best_pick_1||m.best_pick||m.pick||m.safe_pick||"";
   if (pick && pick !== "Mercado em revisão") return pick;
-  // Copa do Mundo fallback — use historical default when no pick
-  const league = m.league || "";
-  if (league.includes("Copa do Mundo") || league.includes("FIFA World Cup") || league.includes("Copa do Mundo 2026")) {
+  // Fallback para qualquer liga aprovada no radar (Copa, Brasileirão, Libertadores, etc)
+  // que ainda não teve análise processada pelo brain — usa leitura histórica segura
+  // em vez de excluir o jogo do radar inteiramente.
+  const tier = getLeagueRadarTier(m.league);
+  if (tier <= 3) {
     return "Mais de 1.5 gols";
   }
   return pick || "Mercado em revisão";
@@ -3601,13 +3603,8 @@ function buildRadarSnapshot(){
     return res;
   }
 
+  // Amistosos NUNCA entram no radar — preferimos menos picks de qualidade a preencher com lixo
   let merged=fillFrom(cleanPool,[]);
-
-  // Última instância: se mesmo com 7 dias de busca não completou 15, libera amistosos
-  if(merged.length<RADAR_MAX_ITEMS){
-    const amistosoPool=pool.filter(i=>getLeagueRadarTier(i.league)===99).sort(compareItems);
-    merged=fillFrom(amistosoPool,merged);
-  }
 
   state.lastRadarSnapshot=merged.map((i,idx)=>({...i,visualRank:idx+1}));
   return state.lastRadarSnapshot;
