@@ -915,14 +915,11 @@ function hasMinimumMatchData(homeContext, awayContext) {
          isUsableTeamProfile(buildSideProfile(awayContext,"away"),awayContext.general)
 }
 
-async function clearFutureWindow() {
+async function clearFutureWindow(freshFixtureIds) {
   const now = new Date().toISOString()
   const { start, end } = getSyncWindowRange()
-  const { error: dailyError } = await supabase
-    .from("daily_picks")
-    .delete()
-    .gte("kickoff", now)
-  if (dailyError) throw new Error(`Supabase delete daily_picks: ${dailyError.message}`)
+
+  // Jogos já encerrados: sempre seguro limpar, não depende do fetch desta rodada
   const { data: oldRows, error: oldError } = await supabase
     .from("matches").select("id").lte("kickoff", now)
   if (oldError) throw new Error(`Supabase select old matches: ${oldError.message}`)
@@ -930,20 +927,44 @@ async function clearFutureWindow() {
   if (oldIds.length) {
     await supabase.from("match_stats").delete().in("match_id", oldIds)
     await supabase.from("match_analysis").delete().in("match_id", oldIds)
+    await supabase.from("daily_picks").delete().in("match_id", oldIds)
     const { error } = await supabase.from("matches").delete().in("id", oldIds)
     if (error) throw new Error(`Supabase delete old matches: ${error.message}`)
   }
+
+  // [FIX] Jogos futuros: antes apagava TODOS os jogos da janela antes de saber se o
+  // fetch desta rodada tinha funcionado. Se uma competição (ex: Copa do Mundo) falhasse
+  // na chamada à API-Football, seus jogos simplesmente sumiam do banco até o próximo
+  // sync bem-sucedido — sem nenhuma rede de segurança.
+  // Agora só limpa+reinsere os IDs que REALMENTE vieram no fetch desta rodada. Quem
+  // falhou mantém os dados da última rodada bem-sucedida intactos, em vez de sumir.
   const { data: futureRows, error: futureError } = await supabase
     .from("matches").select("id").gte("kickoff", start.toISOString()).lte("kickoff", end.toISOString())
   if (futureError) throw new Error(`Supabase select future matches: ${futureError.message}`)
-  const futureIds = (futureRows || []).map(x => x.id)
-  if (futureIds.length) {
-    await supabase.from("match_stats").delete().in("match_id", futureIds)
-    await supabase.from("match_analysis").delete().in("match_id", futureIds)
-    const { error } = await supabase.from("matches").delete().in("id", futureIds)
+  const currentFutureIds = new Set((futureRows || []).map(x => x.id))
+  const futureIdsToClear = (futureRows || []).map(x => x.id).filter(id => freshFixtureIds.has(id))
+  if (futureIdsToClear.length) {
+    await supabase.from("match_stats").delete().in("match_id", futureIdsToClear)
+    await supabase.from("match_analysis").delete().in("match_id", futureIdsToClear)
+    const { error } = await supabase.from("matches").delete().in("id", futureIdsToClear)
     if (error) throw new Error(`Supabase delete future matches: ${error.message}`)
   }
-  return oldIds.length + futureIds.length
+
+  // daily_picks futuros: mesma lógica de preservação — só limpa picks de jogos que vão
+  // ser regerados nesta rodada, ou picks órfãos cujo jogo já não existe mais em matches.
+  // Picks de competições que falharam no fetch ficam intactos no radar.
+  const { data: futurePickRows, error: pickSelectError } = await supabase
+    .from("daily_picks").select("id, match_id").gte("kickoff", now)
+  if (pickSelectError) throw new Error(`Supabase select future daily_picks: ${pickSelectError.message}`)
+  const pickIdsToDelete = (futurePickRows || [])
+    .filter(p => freshFixtureIds.has(p.match_id) || !currentFutureIds.has(p.match_id))
+    .map(p => p.id)
+  if (pickIdsToDelete.length) {
+    const { error: dailyError } = await supabase.from("daily_picks").delete().in("id", pickIdsToDelete)
+    if (dailyError) throw new Error(`Supabase delete daily_picks: ${dailyError.message}`)
+  }
+
+  return futureIdsToClear.length
 }
 
 async function upsertMatch(match) {
@@ -965,7 +986,8 @@ async function buildAndStoreMatches(fixtureLists) {
   const{start,end}=getSyncWindowRange()
   const allFixtures=uniqBy(fixtureLists.flat().filter(f=>{ const kickoff=f?.fixture?.date; if(!kickoff)return false; const dt=new Date(kickoff); return!isNaN(dt.getTime())&&dt>=start&&dt<=end }),(x)=>x?.fixture?.id)
   console.log(`📅 Fixtures na janela ativa: ${allFixtures.length}`)
-  const cleared=await clearFutureWindow()
+  const freshFixtureIds=new Set(allFixtures.map(f=>f?.fixture?.id).filter(Boolean))
+  const cleared=await clearFutureWindow(freshFixtureIds)
   console.log(`🧹 Limpeza prévia concluída: ${cleared}`)
   const stored=[]
   for(const fixture of allFixtures){
@@ -1083,7 +1105,14 @@ async function run() {
   for(const comp of competitions){
     const list=await fetchFixturesForCompetition(comp)
     fixtureLists.push(list)
-    if(list.length>0)console.log(`📌 ${comp.display}: ${list.length} fixture(s)`)
+    if(list.length>0){
+      console.log(`📌 ${comp.display}: ${list.length} fixture(s)`)
+    } else if(comp.priority>=95){
+      // Competição de alta prioridade voltou zerada — provável falha na API (rate limit,
+      // erro transitório, etc). Os dados antigos dela são preservados (ver clearFutureWindow),
+      // mas isso merece atenção: ficará desatualizada até um sync que funcione.
+      console.log(`⚠️  ALERTA: ${comp.display} (prioridade ${comp.priority}) voltou com 0 fixtures nesta rodada — dados antigos preservados, mas não atualizados`)
+    }
   }
   const storedMatches=await buildAndStoreMatches(fixtureLists)
   const picksCount=await rebuildDailyPicks(storedMatches)
