@@ -1,6 +1,10 @@
 name: Scoutly Sync
 
 on:
+  schedule:
+    # Roda a cada 2 horas, todos os dias — mantém os dados sempre frescos
+    # sem precisar disparar manualmente. Horário em UTC.
+    - cron: '0 */2 * * *'
   workflow_dispatch:
 
 jobs:
@@ -32,4 +36,3 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/scoutly-brain.js
- 
