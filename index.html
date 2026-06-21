@@ -3931,16 +3931,12 @@ function isMatchLive(kickoff) {
 }
 async function fetchLiveFixtures() {
   try {
-    const res = await fetch(`https://v3.football.api-sports.io/fixtures?live=all`, { headers: { "x-apisports-key": API_FOOTBALL_KEY } });
-    const json = await res.json();
-    return json.response || [];
+    return await footballApi("fixtures", { live: "all" });
   } catch (e) { console.error("Live fetch error:", e); return []; }
 }
 async function fetchFixtureStats(fixtureId) {
   try {
-    const res = await fetch(`https://v3.football.api-sports.io/fixtures/statistics?fixture=${fixtureId}`, { headers: { "x-apisports-key": API_FOOTBALL_KEY } });
-    const json = await res.json();
-    return json.response || [];
+    return await footballApi("fixtures/statistics", { fixture: fixtureId });
   } catch (e) { console.error("Stats fetch error:", e); return []; }
 }
 function getStat(stats, teamIndex, type) {
@@ -4337,12 +4333,7 @@ function injectLiveStatsInModal(matchId) {
 /* ── MATCH EVENTS + TIMELINE ─────────────────────────────────── */
 async function fetchMatchEvents(fixtureId) {
   try {
-    const res = await fetch(
-      `https://v3.football.api-sports.io/fixtures/events?fixture=${fixtureId}`,
-      { headers: { "x-apisports-key": API_FOOTBALL_KEY } }
-    );
-    const json = await res.json();
-    return json.response || [];
+    return await footballApi("fixtures/events", { fixture: fixtureId });
   } catch(e) { console.error("Events fetch error:", e); return []; }
 }
 
@@ -4555,7 +4546,14 @@ function getLeagueBadgeWC(size=16){
 }
 
 const CURRENT_SEASON = new Date().getFullYear();
-const API_FOOTBALL_KEY = "705f52b4ec1295f3c369365c2d71cb71";
+const FOOTBALL_PROXY_URL = "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/football-proxy";
+
+async function footballApi(endpoint, params = {}) {
+  const qs = new URLSearchParams({ endpoint, ...params });
+  const res = await fetch(`${FOOTBALL_PROXY_URL}?${qs.toString()}`);
+  const json = await res.json();
+  return json.response || [];
+}
 
 function getZoneRules(leagueId) {
   const zones = {
@@ -4611,13 +4609,9 @@ function getPosZoneTitle(pos, leagueId) {
 
 async function fetchStandings(leagueId, season) {
   try {
-    const res = await fetch(
-      `https://v3.football.api-sports.io/standings?league=${leagueId}&season=${season}`,
-      { headers: { "x-apisports-key": API_FOOTBALL_KEY } }
-    );
-    const data = await res.json();
-    if (!data?.response?.length) return null;
-    return data.response[0]?.league?.standings || null;
+    const response = await footballApi("standings", { league: leagueId, season });
+    if (!response?.length) return null;
+    return response[0]?.league?.standings || null;
   } catch(e) { console.error("Standings fetch error:", e); return null; }
 }
 
@@ -5336,12 +5330,7 @@ async function fetchTopScorers(leagueId, season) {
   const key = `${leagueId}_${season}`;
   if (modalScorersCache[key]) return modalScorersCache[key];
   try {
-    const res = await fetch(
-      `https://v3.football.api-sports.io/players/topscorers?league=${leagueId}&season=${season}`,
-      { headers: { "x-apisports-key": API_FOOTBALL_KEY } }
-    );
-    const json = await res.json();
-    const data = json.response || [];
+    const data = await footballApi("players/topscorers", { league: leagueId, season });
     modalScorersCache[key] = data;
     return data;
   } catch(e) { return []; }
@@ -5719,12 +5708,8 @@ async function fetchWCSelData(team) {
 
   try {
     // Busca últimos 10 jogos
-    const res = await fetch(
-      `https://v3.football.api-sports.io/fixtures?team=${teamId}&last=10`,
-      { headers: { "x-apisports-key": API_FOOTBALL_KEY } }
-    );
-    const json = await res.json();
-    const fixtures = (json.response || []).sort((a,b) =>
+    const rawFixtures = await footballApi("fixtures", { team: teamId, last: 10 });
+    const fixtures = rawFixtures.sort((a,b) =>
       new Date(b.fixture.date) - new Date(a.fixture.date)
     );
 
