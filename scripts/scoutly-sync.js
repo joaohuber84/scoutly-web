@@ -439,21 +439,34 @@ async function fetchFixturesForCompetition(comp) {
   const cacheKey = `${comp.leagueId}:${comp.season}`
   if (competitionFixturesCache.has(cacheKey)) return competitionFixturesCache.get(cacheKey)
   const { start, end } = getSyncWindowRange()
-  try {
-    const fixtures = await api("/fixtures", { league: comp.leagueId, season: comp.season, from: isoDate(start), to: isoDate(end), timezone: TIMEZONE })
-    const cleaned = fixtures.filter(f => {
-      if (hasForbiddenMarker(f?.teams?.home?.name || "") || hasForbiddenMarker(f?.teams?.away?.name || "") || hasForbiddenMarker(f?.league?.name || "")) return false
-      if (normalizeText(f?.league?.name || "").includes("open cup")) return false
-      if (normalizeText(comp.display).includes("amistosos") && isClubFriendlyFixture(f)) return false
-      return true
-    }).map(f => ({ ...f, __comp: comp }))
-    competitionFixturesCache.set(cacheKey, cleaned)
-    return cleaned
-  } catch (err) {
-    console.error(`Falha buscando fixtures de ${comp.display}:`, err.message)
-    competitionFixturesCache.set(cacheKey, [])
-    return []
+  // Competições de prioridade alta (Copa do Mundo, Brasileirão A/B, Copa do Brasil, ...) tentam
+  // de novo em caso de falha transitória (rate limit, erro de rede pontual) — o sync faz uma
+  // sequência longa de chamadas à API (70+ competições), então um soluço isolado é esperado de
+  // vez em quando. Sem retry, esse soluço apagava a competição inteira até o próximo sync.
+  const maxAttempts = comp.priority >= 95 ? 3 : 1
+  let lastErr = null
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const fixtures = await api("/fixtures", { league: comp.leagueId, season: comp.season, from: isoDate(start), to: isoDate(end), timezone: TIMEZONE })
+      const cleaned = fixtures.filter(f => {
+        if (hasForbiddenMarker(f?.teams?.home?.name || "") || hasForbiddenMarker(f?.teams?.away?.name || "") || hasForbiddenMarker(f?.league?.name || "")) return false
+        if (normalizeText(f?.league?.name || "").includes("open cup")) return false
+        if (normalizeText(comp.display).includes("amistosos") && isClubFriendlyFixture(f)) return false
+        return true
+      }).map(f => ({ ...f, __comp: comp }))
+      competitionFixturesCache.set(cacheKey, cleaned)
+      return cleaned
+    } catch (err) {
+      lastErr = err
+      if (attempt < maxAttempts) {
+        console.warn(`⚠️  Tentativa ${attempt}/${maxAttempts} falhou buscando fixtures de ${comp.display}: ${err.message} — tentando de novo...`)
+        await sleep(REQUEST_DELAY_MS * 4)
+      }
+    }
   }
+  console.error(`Falha buscando fixtures de ${comp.display}:`, lastErr?.message)
+  competitionFixturesCache.set(cacheKey, [])
+  return []
 }
 
 function isCompletedFixture(f) {
