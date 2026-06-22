@@ -26,7 +26,12 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 
 const TIMEZONE = "America/Sao_Paulo"
 const PAST_GRACE_HOURS = 3
-const RADAR_SIZE = 15
+const RADAR_SIZE = 40
+// Ligas prioritárias: sem limite de jogos por liga no radar (Copa do Mundo pode ter 4+ jogos/dia)
+const RADAR_UNCAPPED_LEAGUES = new Set([
+  "Copa do Mundo","Copa do Mundo 2026","FIFA World Cup","FIFA World Cup 2026","World Cup",
+  "Copa do Brasil","Brasileirão Série A","Brasileirão Série B",
+])
 const TICKET_MIN_SIZE = 2
 const TICKET_MAX_SIZE = 3
 
@@ -38,7 +43,8 @@ const LEAGUE_TIER = {
   "Liga Argentina":1,"Copa Argentina":1,"Primeira Liga":1,"Taça de Portugal":1,
   "Liga MX":1,"Copa MX":1,"MLS":1,"Saudi Pro League":1,
   "UEFA Champions League":2,"UEFA Europa League":2,"UEFA Conference League":2,
-  "Libertadores":2,"Sul-Americana":2,"Copa do Mundo":1,"FIFA World Cup":1,"Eurocopa":1,
+  "Libertadores":2,"Sul-Americana":2,
+  "Copa do Mundo":1,"Copa do Mundo 2026":1,"FIFA World Cup":1,"FIFA World Cup 2026":1,"World Cup":1,"Eurocopa":1,
   "Copa América":2,"Nations League":2,"Mundial de Clubes":2,
   "CONCACAF Champions Cup":2,"Eliminatórias Sul-Americanas":2,
   "Eliminatórias Europeias":2,"Eliminatórias Africanas":2,
@@ -320,7 +326,7 @@ function chooseRadar(analyses){
   const pool=[...sortPool(today),...sortPool(future)]
   function buildRadarPass(pool,allowedTiers,currentRadar,currentUsed){
     const radar=[...currentRadar];const usedMatchIds=new Set(currentUsed.matchIds);const usedExactMarkets={...currentUsed.exactMarkets};const usedFamilies={...currentUsed.families};const usedLeagues={...currentUsed.leagues}
-    for(const item of pool){if(radar.length>=RADAR_SIZE)break;if(usedMatchIds.has(item.match_id))continue;const tier=LEAGUE_TIER[String(item.league||"")]??4;if(!allowedTiers.includes(tier))continue;const exactMarketCount=usedExactMarkets[item.main_pick]||0;const familyCount=usedFamilies[item.main_family]||0;const leagueCount=usedLeagues[item.league]||0;if(exactMarketCount>=2)continue;if(leagueCount>=2)continue;if(item.main_family==="gols"&&familyCount>=4)continue;if(item.main_family==="resultado"&&familyCount>=3)continue;if(item.main_family==="escanteios"&&familyCount>=3)continue;if(item.main_family==="cards"&&familyCount>=3)continue;if(item.main_family==="btts"&&familyCount>=2)continue;if(item.main_family==="shots"&&familyCount>=2)continue;if(item.main_family==="sot"&&familyCount>=2)continue;radar.push(item);usedMatchIds.add(item.match_id);usedExactMarkets[item.main_pick]=exactMarketCount+1;usedFamilies[item.main_family]=familyCount+1;usedLeagues[item.league]=leagueCount+1}
+    for(const item of pool){if(radar.length>=RADAR_SIZE)break;if(usedMatchIds.has(item.match_id))continue;const tier=LEAGUE_TIER[String(item.league||"")]??4;if(!allowedTiers.includes(tier))continue;const exactMarketCount=usedExactMarkets[item.main_pick]||0;const familyCount=usedFamilies[item.main_family]||0;const leagueCount=usedLeagues[item.league]||0;if(exactMarketCount>=2)continue;const leagueCap=RADAR_UNCAPPED_LEAGUES.has(String(item.league||""))?Infinity:2;if(leagueCount>=leagueCap)continue;if(item.main_family==="gols"&&familyCount>=4)continue;if(item.main_family==="resultado"&&familyCount>=3)continue;if(item.main_family==="escanteios"&&familyCount>=3)continue;if(item.main_family==="cards"&&familyCount>=3)continue;if(item.main_family==="btts"&&familyCount>=2)continue;if(item.main_family==="shots"&&familyCount>=2)continue;if(item.main_family==="sot"&&familyCount>=2)continue;radar.push(item);usedMatchIds.add(item.match_id);usedExactMarkets[item.main_pick]=exactMarketCount+1;usedFamilies[item.main_family]=familyCount+1;usedLeagues[item.league]=leagueCount+1}
     return{radar,used:{matchIds:Array.from(usedMatchIds),exactMarkets:usedExactMarkets,families:usedFamilies,leagues:usedLeagues}}
   }
   const pass1=buildRadarPass(pool,[1],[],{matchIds:[],exactMarkets:{},families:{},leagues:{}})
