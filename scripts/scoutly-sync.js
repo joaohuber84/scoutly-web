@@ -876,6 +876,10 @@ function normalizeLeagueByTeams(comp, fixture) {
   let leagueDisplay=comp.display; let country=comp.country||fixture?.league?.country||null
   const leagueNameRaw=fixture?.league?.name||""; const leagueId=fixture?.league?.id||comp?.leagueId||null
   const normLeague=normalizeText(leagueNameRaw); const normCountry=normalizeText(country)
+  // ── Nomes canônicos das competições internacionais ──
+  if(leagueId===1||normLeague.includes("world cup")||normLeague.includes("copa do mundo")){leagueDisplay="Copa do Mundo";country="World"}
+  if(leagueId===4||normLeague.includes("euro ")&&!normLeague.includes("league")){leagueDisplay="Eurocopa";country="World"}
+  if(leagueId===9||normLeague.includes("copa america")){leagueDisplay="Copa América";country="World"}
   if(leagueId===218){leagueDisplay="Austrian Bundesliga";country="Austria"}
   if(leagueId===203){leagueDisplay="Super Lig";country="Turkey"}
   if(normLeague.includes("nordeste")){leagueDisplay="Copa do Nordeste";country="Brazil"}

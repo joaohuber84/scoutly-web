@@ -5392,7 +5392,6 @@ function buildCupBracketHtml(match, league) {
 }
 
 function inferCupPhase(match) {
-  const league = (match.league || "").toLowerCase();
   const round = (match.round || "").toLowerCase();
   if (round.includes("final") && !round.includes("semi") && !round.includes("quart")) return "🏆 FINAL";
   if (round.includes("semi")) return "🔥 SEMIFINAL";
@@ -5400,6 +5399,7 @@ function inferCupPhase(match) {
   if (round.includes("oitava") || round.includes("round of 16")) return "🎯 OITAVAS DE FINAL";
   if (round.includes("16")) return "🎯 OITAVAS DE FINAL";
   if (round.includes("32")) return "RODADA DE 32";
+  if (!round) return "Fase eliminatória";
   return "Fase eliminatória";
 }
 
@@ -5646,29 +5646,63 @@ function applyRadarFilters(items) {
 // Team IDs — use WC_TEAM_IDS_CLEAN below
 
 // Correct IDs — clean version without arithmetic
+// IDs confirmados via API-Football (standings league=1, season=2026) em 21/06/2026
 const WC_TEAM_IDS_CLEAN = {
   // Sul-América
-  "Brasil":6, "Argentina":26, "Uruguai":24, "Colômbia":20,
-  "Peru":21, "Equador":23, "Chile":7, "Paraguai":29, "Venezuela":46,
+  "Brasil":6, "Brazil":6,
+  "Argentina":26,
+  "Uruguai":7, "Uruguay":7,
+  "Colômbia":8, "Colombia":8,
+  "Equador":2382, "Ecuador":2382,
+  "Paraguai":2380, "Paraguay":2380,
   // Europa
-  "França":2, "Alemanha":25, "Espanha":9, "Inglaterra":10, "Portugal":27,
-  "Holanda":8, "Bélgica":5, "Itália":3, "Croácia":14, "Suíça":17,
-  "Áustria":44, "Escócia":12, "Dinamarca":119, "Suécia":16, "Noruega":103,
-  "Polônia":24, "Sérvia":18, "Romênia":39, "Eslováquia":36, "Albânia":51,
-  "República Tcheca":48, "Hungria":53, "Turquia":56, "Bósnia":110,
-  "Coreia do Sul":30, "Japão":35,
+  "França":2, "France":2,
+  "Alemanha":25, "Germany":25,
+  "Espanha":9, "Spain":9,
+  "Inglaterra":10, "England":10,
+  "Portugal":27,
+  "Holanda":1118, "Netherlands":1118,
+  "Bélgica":1, "Belgium":1,
+  "Croácia":3, "Croatia":3,
+  "Suíça":15, "Switzerland":15,
+  "Áustria":775, "Austria":775,
+  "Escócia":1108, "Scotland":1108,
+  "Suécia":5, "Sweden":5,
+  "Noruega":1090, "Norway":1090,
+  "Turquia":777, "Türkiye":777,
+  "Bósnia":1113, "Bosnia":1113, "Bosnia & Herzegovina":1113,
+  // Ásia
+  "Coreia do Sul":17, "South Korea":17,
+  "Japão":12, "Japan":12,
+  "Irã":22, "Iran":22,
+  "Arábia Saudita":23, "Saudi Arabia":23,
+  "Jordânia":1548, "Jordan":1548,
+  "Uzbequistão":1568, "Uzbekistan":1568,
+  "Iraque":1567, "Iraq":1567,
+  "Catar":1569, "Qatar":1569,
+  // Oceania
+  "Austrália":20, "Australia":20,
+  "Nova Zelândia":4673, "New Zealand":4673,
   // África
-  "Marrocos":47, "Senegal":45, "Nigéria":49, "Egito":101, "Argélia":102,
-  "Camarões":103, "Tunísia":104, "Costa do Marfim":105, "RD Congo":106,
-  "Gana":107, "África do Sul":108, "Namíbia":109, "Angola":111,
-  // Ásia/Oceania
-  "Irã":62, "Arábia Saudita":146, "Jordânia":63,
-  "Uzbequistão":115, "Quirguistão":116, "Austrália":25, "Catar":42,
+  "Marrocos":31, "Morocco":31,
+  "Senegal":13,
+  "Egito":32, "Egypt":32,
+  "Argélia":1532, "Algeria":1532,
+  "Tunísia":28, "Tunisia":28,
+  "Costa do Marfim":1501, "Ivory Coast":1501,
+  "RD Congo":1508, "Congo DR":1508,
+  "Gana":1504, "Ghana":1504,
+  "África do Sul":1531, "South Africa":1531,
+  "Cabo Verde":1533, "Cape Verde Islands":1533,
   // CONCACAF
-  "Estados Unidos":29, "EUA":29, "Canadá":33, "México":16,
-  "Costa Rica":65, "Panamá":67, "Haiti":69, "Curaçao":70,
-  // Outros
-  "Nova Zelândia":100, "Cabo Verde":111, "Iraque":113,
+  "Estados Unidos":2384, "EUA":2384, "USA":2384,
+  "Canadá":5529, "Canada":5529,
+  "México":16, "Mexico":16,
+  "Panamá":11, "Panama":11,
+  "Haiti":2386,
+  "Curaçao":5530,
+  // República Tcheca (grupo)
+  "República Tcheca":770, "Czechia":770,
 };
 
 // Session cache para não rebuscar
@@ -5926,7 +5960,7 @@ initialize();
 setTimeout(() => {
   addOverscrollGuard("analysisBody");
   addOverscrollGuard("wcPanelBody");
-  addOverscrollGuard("resultadosList");
+  addOverscrollGuard("resultadosBody");
 }, 600);
 
 /* ── LEAD CAPTURE ──────────────────────────────────────────────── */
