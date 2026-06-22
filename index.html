@@ -6035,15 +6035,20 @@ async function submitLead() {
 
     localStorage.setItem("scoutly_lead_submitted", "1");
 
-    // Dispara email de boas-vindas em background (não bloqueia a UI)
-    fetch(`https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/send-welcome-email`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-internal-secret": "scoutly_internal_2026"
-      },
-      body: JSON.stringify({ email, position })
-    }).catch(() => {});
+    // Dispara email de boas-vindas
+    try {
+      const emailRes = await fetch(`https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/send-welcome-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-secret": "scoutly_internal_2026"
+        },
+        body: JSON.stringify({ email, position })
+      });
+      if (!emailRes.ok) console.warn("Email dispatch failed:", await emailRes.text());
+    } catch(emailErr) {
+      console.warn("Email dispatch error:", emailErr);
+    }
 
     if (formEl) {
       formEl.innerHTML = `<div class="lead-banner-success">
