@@ -4376,6 +4376,17 @@ function startLiveModule() {
 const SHARE_URL = "https://scoutlypro.app";
 const SHARE_TEXT = "🎯 Conhece o Scoutly? Radar inteligente de apostas esportivas — analisa jogos, gera picks com estatística real e mostra ao vivo o que está rolando. Acesse grátis!";
 function openShareMenu() { document.getElementById("shareMenuOverlay").classList.add("open"); }
+function handleShare() {
+  const url = "https://scoutlypro.app";
+  const text = "Radar inteligente de picks pra Copa do Mundo — 79% de acerto verificado. Gratuito agora, vagas de fundador com 50% off.";
+  // Em mobile, tenta o menu nativo do sistema primeiro
+  if (navigator.share) {
+    navigator.share({ title: "Scoutly", text, url }).catch(() => {});
+    return;
+  }
+  // Em desktop, abre o menu de compartilhamento customizado
+  document.getElementById("shareMenuOverlay").classList.add("open");
+}
 function closeShareMenu() { document.getElementById("shareMenuOverlay").classList.remove("open"); }
 function closeShareIfOutside(e) { if (e.target === document.getElementById("shareMenuOverlay")) closeShareMenu(); }
 function shareTo(platform) {
