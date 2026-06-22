@@ -6014,15 +6014,12 @@ async function submitLead() {
   btn.textContent = "Salvando...";
 
   try {
-    const { data, error } = await supabaseClient
-      .from("leads")
-      .upsert({ email, source: "website_banner" }, { onConflict: "email" })
-      .select("position")
-      .single();
+    // Usa função RPC que faz upsert e retorna posição sem precisar de SELECT policy
+    const { data: position, error } = await supabaseClient
+      .rpc("register_lead", { p_email: email, p_source: "website_banner" });
 
-    if (error && error.code !== "23505") throw error;
+    if (error) throw error;
 
-    const position = data?.position || 0;
     const isFounder = position <= 100;
 
     localStorage.setItem("scoutly_lead_submitted", "1");
