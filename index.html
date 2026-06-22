@@ -1892,14 +1892,15 @@
     </div>
     <div class="top-cta-right" id="leadSection">
       <div id="leadBannerForm" class="top-cta-form">
-        <span class="top-cta-pro-label">✨ Scoutly Pro — em breve</span>
+        <span class="top-cta-pro-label">🔥 <span id="founderCountLabel">Vagas de Fundador — em breve</span></span>
         <div class="top-cta-inputs">
           <input type="email" id="leadEmailInput" class="lead-banner-input"
             placeholder="seu@email.com" autocomplete="email" inputmode="email">
           <button class="lead-banner-btn" id="leadSubmitBtn" onclick="submitLead()">
-            Garantir acesso
+            Garantir vaga
           </button>
         </div>
+        <span style="font-size:10px;color:var(--text-3);line-height:1.4" id="founderSubLabel">Fundadores ganham 50% off na anuidade</span>
       </div>
     </div>
   </div>
@@ -5965,12 +5966,34 @@ setTimeout(() => {
 
 /* ── LEAD CAPTURE ──────────────────────────────────────────────── */
 (function() {
-  // Hide lead form if already submitted
   if (localStorage.getItem("scoutly_lead_submitted") === "1") {
     const b = document.getElementById("leadSection");
     if (b) b.style.display = "none";
   }
+  // Carrega contagem de fundadores ao abrir a página
+  loadFounderCount();
 })();
+
+async function loadFounderCount() {
+  try {
+    const { data, error } = await supabaseClient
+      .from("leads").select("position", { count: "exact", head: false })
+      .order("position", { ascending: false }).limit(1);
+    const total = (data && data[0]?.position) || 0;
+    const remaining = Math.max(0, 100 - total);
+    const label = document.getElementById("founderCountLabel");
+    const sub = document.getElementById("founderSubLabel");
+    if (label) {
+      if (remaining > 0) {
+        label.textContent = `🔥 ${remaining} vagas de Fundador restantes`;
+        label.style.color = remaining <= 20 ? "var(--amber)" : "var(--text-2)";
+      } else {
+        label.textContent = "Lista de espera — Scoutly Pro";
+        if (sub) sub.textContent = "Seja avisado em primeira mão do lançamento";
+      }
+    }
+  } catch(e) { /* silencioso */ }
+}
 
 async function submitLead() {
   const input = document.getElementById("leadEmailInput");
@@ -5991,29 +6014,48 @@ async function submitLead() {
   btn.textContent = "Salvando...";
 
   try {
-    const { error } = await supabaseClient
+    const { data, error } = await supabaseClient
       .from("leads")
-      .upsert({ email, source: "website_banner" }, { onConflict: "email" });
+      .upsert({ email, source: "website_banner" }, { onConflict: "email" })
+      .select("position")
+      .single();
 
     if (error && error.code !== "23505") throw error;
 
-    // Success
+    const position = data?.position || 0;
+    const isFounder = position <= 100;
+
     localStorage.setItem("scoutly_lead_submitted", "1");
+
+    // Dispara email de boas-vindas em background (não bloqueia a UI)
+    fetch(`https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/send-welcome-email`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-internal-secret": "scoutly_internal_2026"
+      },
+      body: JSON.stringify({ email, position })
+    }).catch(() => {});
+
     if (formEl) {
       formEl.innerHTML = `<div class="lead-banner-success">
-        <span style="font-size:18px">✅</span>
-        <span>Anotado! Você será o primeiro a saber.</span>
+        <span style="font-size:18px">${isFounder ? "🎯" : "✅"}</span>
+        <div>
+          <div style="font-weight:700;color:var(--text)">${isFounder ? `Fundador #${position} garantido!` : "Você está na lista!"}</div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:2px">${isFounder ? "50% off na anuidade quando lançarmos 🎉" : "Te avisamos no lançamento"}</div>
+        </div>
       </div>`;
     }
+
     setTimeout(() => {
       const b = document.getElementById("leadSection");
       if (b) { b.style.transition = "opacity 0.5s"; b.style.opacity = "0";
         setTimeout(() => b.style.display = "none", 500); }
-    }, 3000);
+    }, 5000);
   } catch(e) {
     console.error("Lead error:", e);
     btn.disabled = false;
-    btn.textContent = "Quero acesso antecipado";
+    btn.textContent = "Garantir vaga";
     input.style.borderColor = "var(--red)";
     setTimeout(() => input.style.borderColor = "", 2000);
   }
