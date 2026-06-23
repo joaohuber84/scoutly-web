@@ -2773,9 +2773,26 @@ function getMetrics(match){
   const avgCards = eCA ?? toNumber(metrics.cards,null) ?? toNumber(match.avg_cards,null) ?? toNumber(markets.cards,null);
   const avgFouls = toNumber(metrics.fouls,null) ?? toNumber(match.avg_fouls,null) ?? toNumber(markets.fouls,null);
   const over25Prob = toNumber(match.prob_over25,null) ?? toNumber(match.over25_prob,null) ?? toNumber(markets.over25,null);
-  const pH = toNumber(probabilities.home,null) ?? toNumber(match.home_win_prob,null) ?? toNumber(match.home_result_prob,null) ?? 0;
-  const pD = toNumber(probabilities.draw,null) ?? toNumber(match.draw_prob,null) ?? toNumber(match.draw_result_prob,null) ?? 0;
-  const pA = toNumber(probabilities.away,null) ?? toNumber(match.away_win_prob,null) ?? toNumber(match.away_result_prob,null) ?? 0;
+  const pH_raw = toNumber(probabilities.home,null) ?? toNumber(match.home_win_prob,null) ?? toNumber(match.home_result_prob,null);
+  const pD_raw = toNumber(probabilities.draw,null) ?? toNumber(match.draw_prob,null) ?? toNumber(match.draw_result_prob,null);
+  const pA_raw = toNumber(probabilities.away,null) ?? toNumber(match.away_win_prob,null) ?? toNumber(match.away_result_prob,null);
+  let pH = pH_raw ?? 0, pD = pD_raw ?? 0, pA = pA_raw ?? 0;
+  // Se todos zerados, deriva das forças relativas (home_strength / away_strength do match_analysis)
+  if (pH === 0 && pD === 0 && pA === 0) {
+    const hs = toNumber(match.home_strength, null);
+    const as_ = toNumber(match.away_strength, null);
+    if (hs !== null && as_ !== null && (hs + as_) > 0) {
+      const total = hs + as_;
+      const rawH = hs / total; // proporção bruta de força do mandante
+      // Estima empates: ~25-28% base, reduz para jogos desequilibrados
+      const drawEst = Math.max(0.18, 0.28 - Math.abs(rawH - 0.5) * 0.25);
+      pH = Math.round((rawH * (1 - drawEst)) * 100) / 100;
+      pA = Math.round(((1 - rawH) * (1 - drawEst)) * 100) / 100;
+      pD = Math.round((1 - pH - pA) * 100) / 100;
+    } else if (isWC) {
+      pH = 0.37; pD = 0.29; pA = 0.34; // padrões históricos de Copa
+    }
+  }
   const homeCorners = toNumber(match.expected_home_corners,null) ?? toNumber(match.home_corners,null);
   const awayCorners = toNumber(match.expected_away_corners,null) ?? toNumber(match.away_corners,null);
   const homeCards = toNumber(match.expected_home_cards,null) ?? toNumber(match.home_yellow_cards,null);
@@ -2822,7 +2839,15 @@ function getMatchProbability(m){
   if(d!==null)return d>1?clamp(d/100):clamp(d);
   const p=maybeJson(m.probabilities)||{};
   const max=[p.home,p.draw,p.away].filter(v=>v!=null).map(Number).sort((a,b)=>b-a)[0];
-  return max!==undefined?clamp(max):0.62;
+  if(max!==undefined)return clamp(max);
+  // Deriva da força relativa quando não há probability direta
+  const hs=toNumber(m.home_strength,null), as_=toNumber(m.away_strength,null);
+  if(hs!==null&&as_!==null&&(hs+as_)>0){
+    const rawH=hs/(hs+as_);
+    // Probabilidade do pick principal é proporcional à dominância do favorito
+    return clamp(0.55+Math.abs(rawH-0.5)*0.4);
+  }
+  return 0.62;
 }
 function probabilityToTier(prob){
   const p=Number(prob||0);
@@ -3078,11 +3103,11 @@ function getDetectedMarkets(match){
     const tier=items.length===0?"Boa":"Moderada";
     items.push({market:alt,tier,family:f,copy:buildAlternativeCopy(match,alt)});
     usedFamilies.add(f);
-    if(items.length>=2)break;
+    if(items.length>=3)break;
   }
-  if(items.length < 2){
+  if(items.length < 3){
     for(const ind of individuals){
-      if(items.length >= 2)break;
+      if(items.length >= 3)break;
       if(usedFamilies.has(ind.family))continue;
       const tier=probabilityToTier(ind.confidence);
       // Extract team name from market string (e.g. "Mais de 4.5 Chutes no Gol — Holanda")
@@ -3093,7 +3118,7 @@ function getDetectedMarkets(match){
       usedFamilies.add(ind.family);
     }
   }
-  return items.slice(0,2);
+  return items.slice(0,3);
 }
 function statCardsMarkup(match){
   const m=getMetrics(match);
@@ -3208,8 +3233,33 @@ function openAnalysis(matchId){
           <!-- H2H Summary line -->
           ${(()=>{
             const fd = maybeJson(match.data) || {};
-            const h = fd.h2h_summary || {};
-            const hw = h.home_wins||0; const dr = h.draws||0; const aw = h.away_wins||0;
+            // O brain salva em fd.h2h (não fd.h2h_summary)
+            const h2hRaw = fd.h2h || fd.h2h_summary || null;
+            if (!h2hRaw) return "";
+            // Calcula wins/draws/losses a partir dos scores recentes
+            let hw = 0, dr = 0, aw = 0;
+            const scores = h2hRaw.recentScores || [];
+            for (const s of scores) {
+              const m2 = s.match(/(\d+)-(\d+)/);
+              if (!m2) continue;
+              const g1 = parseInt(m2[1]), g2 = parseInt(m2[2]);
+              // Identifica qual time está listado primeiro (antes do placar)
+              const scoreIdx = s.indexOf(m2[0]);
+              const firstPart = s.slice(0, scoreIdx).toLowerCase().trim();
+              const homeNorm = homeTeam.toLowerCase().slice(0,5);
+              const homeFirst = firstPart.includes(homeNorm);
+              const homeGoals = homeFirst ? g1 : g2;
+              const awayGoals = homeFirst ? g2 : g1;
+              if (homeGoals > awayGoals) hw++;
+              else if (homeGoals < awayGoals) aw++;
+              else dr++;
+            }
+            // Fallback: usa campos diretos se tiver (h2h_summary clássico)
+            if (!scores.length) {
+              hw = h2hRaw.home_wins || 0;
+              dr = h2hRaw.draws || 0;
+              aw = h2hRaw.away_wins || 0;
+            }
             const total = hw+dr+aw;
             if(!total) return "";
             const hwPct = Math.round((hw/total)*100);
