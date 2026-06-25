@@ -156,8 +156,9 @@ const TARGET_COMPETITIONS = [
   { mode:"search", search:"World Cup - Qualification CONCACAF", display:"Eliminatórias CONCACAF", region:"international", priority:88 },
   { mode:"search", search:"Copa America", display:"Copa América", region:"international", priority:98 },
   { mode:"search", search:"UEFA European Championship", display:"Eurocopa", region:"international", priority:98 },
-  { mode:"id", leagueId:1, season:2026, display:"Copa do Mundo 2026", region:"international", priority:100 },
-  { mode:"search", search:"FIFA World Cup", season:2026, display:"Copa do Mundo", region:"international", priority:100 },
+  // Copa do Mundo gerenciada exclusivamente pelo copa-sync.js (roda a cada hora)
+  // { mode:"id", leagueId:1, season:2026, display:"Copa do Mundo 2026", region:"international", priority:100 },
+  // { mode:"search", search:"FIFA World Cup", season:2026, display:"Copa do Mundo", region:"international", priority:100 },
   { mode:"search", search:"FIFA Club World Cup", display:"Mundial de Clubes", region:"general", priority:96 },
   { mode:"search", search:"Africa Cup of Nations", display:"Copa Africana", region:"international", priority:90 },
 ]
@@ -949,17 +950,16 @@ async function clearFutureWindow(freshFixtureIds) {
     if (error) throw new Error(`Supabase delete old matches: ${error.message}`)
   }
 
-  // [FIX] Jogos futuros: antes apagava TODOS os jogos da janela antes de saber se o
-  // fetch desta rodada tinha funcionado. Se uma competição (ex: Copa do Mundo) falhasse
-  // na chamada à API-Football, seus jogos simplesmente sumiam do banco até o próximo
-  // sync bem-sucedido — sem nenhuma rede de segurança.
-  // Agora só limpa+reinsere os IDs que REALMENTE vieram no fetch desta rodada. Quem
-  // falhou mantém os dados da última rodada bem-sucedida intactos, em vez de sumir.
+  // [FIX DEFINITIVO] Copa do Mundo é gerenciada exclusivamente pelo copa-sync.js
+  // (roda a cada hora). O sync principal NÃO deve deletar/reinserir Copa — quando
+  // isso acontecia, a reinserção falhava e a Copa desaparecia do banco a cada 2h.
   const { data: futureRows, error: futureError } = await supabase
-    .from("matches").select("id").gte("kickoff", start.toISOString()).lte("kickoff", end.toISOString())
+    .from("matches").select("id, league").gte("kickoff", start.toISOString()).lte("kickoff", end.toISOString())
   if (futureError) throw new Error(`Supabase select future matches: ${futureError.message}`)
   const currentFutureIds = new Set((futureRows || []).map(x => x.id))
-  const futureIdsToClear = (futureRows || []).map(x => x.id).filter(id => freshFixtureIds.has(id))
+  const futureIdsToClear = (futureRows || [])
+    .filter(r => freshFixtureIds.has(r.id) && r.league !== "Copa do Mundo")
+    .map(r => r.id)
   if (futureIdsToClear.length) {
     await supabase.from("match_stats").delete().in("match_id", futureIdsToClear)
     await supabase.from("match_analysis").delete().in("match_id", futureIdsToClear)
