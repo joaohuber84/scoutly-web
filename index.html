@@ -4496,7 +4496,10 @@ async function loadMatches(){
   const aMap=new Map((analysisData||[]).map(i=>[String(i.match_id),i]));
   state.matches=(matchesData||[]).map(match=>{
     const nl=normalizeLeagueName(match.league);const s=sMap.get(String(match.id))||{};const a=aMap.get(String(match.id))||{};
-    return{...match,...a,...s,id:match.id,match_id:match.id,league_id:match.league_id||null,
+    // Desestrutura 'a' explicitamente para excluir o campo 'id' do match_analysis
+    // (que é um auto-increment próprio da tabela e não deve sobrescrever o match.id)
+    const {id: _aId, created_at: _aCreated, ...aSafe}=a;
+    return{...match,...aSafe,...s,id:match.id,match_id:match.id,league_id:match.league_id||null,
       home_team:normalizeTeamName(match.home_team),away_team:normalizeTeamName(match.away_team),
       league:nl,country:match.country||a.country||inferCountryFromLeague(nl),
       kickoff:match.kickoff||a.kickoff||match.date,home_logo:match.home_logo,away_logo:match.away_logo,
