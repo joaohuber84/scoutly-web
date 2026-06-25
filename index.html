@@ -2759,6 +2759,7 @@ function getRadarEligibleMatches(){
   return state.matches.filter(m=>isStillRelevantForRadar(m.kickoff)&&!shouldHideLeague(m.league, m.league_id));
 }
 function getMetrics(match){
+  const isWC = (match.league||"").includes("Copa do Mundo")||(match.league||"").includes("FIFA World Cup");
   const metrics=maybeJson(match.metrics)||{};
   const markets=maybeJson(match.markets)||{};
   const probabilities=maybeJson(match.probabilities)||{};
@@ -2798,7 +2799,6 @@ function getMetrics(match){
   const homeCards = toNumber(match.expected_home_cards,null) ?? toNumber(match.home_yellow_cards,null);
   const awayCards = toNumber(match.expected_away_cards,null) ?? toNumber(match.away_yellow_cards,null);
   // Copa do Mundo: apply historical defaults when data is missing
-  const isWC = (match.league||"").includes("Copa do Mundo")||(match.league||"").includes("FIFA World Cup");
   const noData = (avgGoals===null||avgGoals===0) && (over25Prob===null||over25Prob===0);
   const D = isWC && noData; // use defaults flag
   return {
