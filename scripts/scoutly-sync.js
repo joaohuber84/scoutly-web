@@ -607,14 +607,70 @@ async function buildH2HProfile(homeTeamId, awayTeamId) {
   }
 }
 
-async function buildTeamContext(teamId) {
-  if (teamContextCache.has(teamId)) return teamContextCache.get(teamId)
+async function fetchTeamStatisticsFromDB(teamId, leagueId) {
+  // Busca estatísticas de liga específica do banco (populado pelo team-stats-sync)
+  // Muito mais preciso que calcular de match_stats genéricos
+  const { data, error } = await supabase
+    .from('team_statistics')
+    .select('*')
+    .eq('team_id', teamId)
+    .eq('league_id', leagueId)
+    .eq('season', 2026)
+    .single()
+  return error ? null : data
+}
+
+async function buildTeamContext(teamId, leagueId = null) {
+  const cacheKey = `${teamId}:${leagueId || 'any'}`
+  if (teamContextCache.has(cacheKey)) return teamContextCache.get(cacheKey)
+
   const allFixtures = await fetchRecentFinishedFixtures(teamId, MAX_RECENT_FIXTURES_FETCH)
-  const general = await collectProfileFromFixtures(teamId, allFixtures.slice(0, FORM_LIMIT_GENERAL))
-  const home = await collectProfileFromFixtures(teamId, splitVenueFixtures(allFixtures, teamId, true, FORM_LIMIT_HOME_AWAY))
-  const away = await collectProfileFromFixtures(teamId, splitVenueFixtures(allFixtures, teamId, false, FORM_LIMIT_HOME_AWAY))
+
+  // [FIX ESCANTEIOS] Filtra amistosos do perfil — amistosos têm ~4.4 escanteios vs
+  // ~9.4 no Brasileirão. Misturar eles contamina as projeções de escanteios/cartões.
+  const competitiveFixtures = allFixtures.filter(f => {
+    const leagueName = normalizeText(f?.league?.name || '')
+    return !leagueName.includes('friend') && !leagueName.includes('amistoso') &&
+           !leagueName.includes('club friendly') && f?.league?.id !== 667
+  })
+
+  // Usa fixtures competitivos se tiver pelo menos 3; caso contrário usa tudo
+  const fixtures = competitiveFixtures.length >= 3 ? competitiveFixtures : allFixtures
+
+  const general = await collectProfileFromFixtures(teamId, fixtures.slice(0, FORM_LIMIT_GENERAL))
+  const home    = await collectProfileFromFixtures(teamId, splitVenueFixtures(fixtures, teamId, true, FORM_LIMIT_HOME_AWAY))
+  const away    = await collectProfileFromFixtures(teamId, splitVenueFixtures(fixtures, teamId, false, FORM_LIMIT_HOME_AWAY))
+
+  // [MELHORIA] Enriquece com estatísticas de liga específica quando disponível
+  // Especialmente para corners e cards que são muito sensíveis ao tipo de competição
+  let leagueStats = null
+  if (leagueId) {
+    try { leagueStats = await fetchTeamStatisticsFromDB(teamId, leagueId) } catch {}
+  }
+
+  if (leagueStats) {
+    // Substitui corners e cards com dados de liga real (muito mais precisos)
+    const blendLeague = (leagueVal, calcVal) =>
+      leagueVal != null ? round(leagueVal * 0.75 + (calcVal || 0) * 0.25) : calcVal
+
+    const cornersForAvg = blendLeague(leagueStats.corners_for_avg, general.avgCorners)
+    const cornersAgainstAvg = blendLeague(leagueStats.corners_against_avg, null)
+    const cardsAvg = blendLeague(
+      leagueStats.cards_yellow_avg != null ? leagueStats.cards_yellow_avg + (leagueStats.cards_red_avg || 0) : null,
+      general.avgCards
+    )
+
+    general.avgCorners = cornersForAvg
+    general.avgCornersAgainst = cornersAgainstAvg
+    general.avgCards = cardsAvg || general.avgCards
+    general.avgShots = blendLeague(leagueStats.shots_avg, general.avgShots) || general.avgShots
+    general.avgShotsOnTarget = blendLeague(leagueStats.shots_on_target_avg, general.avgShotsOnTarget) || general.avgShotsOnTarget
+    general._leagueStats = true
+    console.log(`   📊 Liga stats: corners ${cornersForAvg} for/${cornersAgainstAvg} against, cards ${cardsAvg}`)
+  }
+
   const payload = { general, home, away }
-  teamContextCache.set(teamId, payload)
+  teamContextCache.set(cacheKey, payload)
   return payload
 }
 
@@ -985,7 +1041,7 @@ async function clearFutureWindow(freshFixtureIds) {
 }
 
 async function upsertMatch(match) {
-  const{error}=await supabase.from("matches").upsert({ id:match.id,kickoff:match.kickoff,league:match.league,country:match.country||null,region:match.region||null,priority:match.priority||null,home_team:match.home_team||null,away_team:match.away_team||null,home_logo:match.home_logo||null,away_logo:match.away_logo||null,probabilities:match.probabilities||null,markets:match.markets||null,metrics:match.metrics||null,pick:match.pick||null,probability:match.probability||null,insight:match.insight||null,updated_at:new Date().toISOString() },{onConflict:"id"})
+  const{error}=await supabase.from("matches").upsert({ id:match.id,kickoff:match.kickoff,league:match.league,country:match.country||null,region:match.region||null,priority:match.priority||null,home_team:match.home_team||null,away_team:match.away_team||null,home_logo:match.home_logo||null,away_logo:match.away_logo||null,referee:match.referee||null,probabilities:match.probabilities||null,markets:match.markets||null,metrics:match.metrics||null,pick:match.pick||null,probability:match.probability||null,insight:match.insight||null,updated_at:new Date().toISOString() },{onConflict:"id"})
   if(error)throw error
 }
 
@@ -1019,13 +1075,15 @@ async function buildAndStoreMatches(fixtureLists) {
         id:fixture?.fixture?.id,kickoff:fixture?.fixture?.date||null,league:leagueDisplay,country,region:comp.region,priority:comp.priority||70,
         home_team:fixture?.teams?.home?.name||null,away_team:fixture?.teams?.away?.name||null,
         home_logo:fixture?.teams?.home?.logo||null,away_logo:fixture?.teams?.away?.logo||null,
+        referee:fixture?.fixture?.referee||null,
         probabilities:null,markets:null,metrics:null,pick:null,probability:null,insight:null,
       }
       await upsertMatch(baseMatchPayload)
       const homeTeamId=fixture?.teams?.home?.id; const awayTeamId=fixture?.teams?.away?.id
+      const leagueIdForStats=fixture?.league?.id||comp?.leagueId||null
       if(!homeTeamId||!awayTeamId){ stored.push(baseMatchPayload); console.log(`🟡 Sem análise (time_id ausente): ${leagueDisplay} | ${baseMatchPayload.home_team} x ${baseMatchPayload.away_team}`); continue }
-      const homeContext=await buildTeamContext(homeTeamId)
-      const awayContext=await buildTeamContext(awayTeamId)
+      const homeContext=await buildTeamContext(homeTeamId,leagueIdForStats)
+      const awayContext=await buildTeamContext(awayTeamId,leagueIdForStats)
       if(!hasMinimumMatchData(homeContext,awayContext)){ stored.push(baseMatchPayload); console.log(`🟡 Sem análise (dados mínimos insuficientes): ${leagueDisplay} | ${baseMatchPayload.home_team} x ${baseMatchPayload.away_team}`); continue }
       const homeProfile=buildSideProfile(homeContext,"home")
       const awayProfile=buildSideProfile(awayContext,"away")

@@ -1,0 +1,23 @@
+name: Team Stats Sync
+
+on:
+  schedule:
+    # Roda 1x por dia às 05:00 UTC (02:00 Brasília)
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  team-stats-sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install
+      - name: Sync team statistics
+        env:
+          APISPORTS_KEY: ${{ secrets.APISPORTS_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: node scripts/team-stats-sync.js
