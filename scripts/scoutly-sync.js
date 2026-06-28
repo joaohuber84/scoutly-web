@@ -770,7 +770,11 @@ function buildExpectedMetrics(homeProfile, awayProfile, h2hProfile = null) {
   const expectedShots = clamp(round(expectedHomeShots+expectedAwayShots),8,42)
   const expectedSOT = clamp(round(expectedHomeSOT+expectedAwaySOT),2,16)
   const pressureFactor = expectedShots>=24?0.45:expectedShots>=20?0.25:0.10
-  const expectedCorners = clamp(round(homeProfile.avgCorners*0.50+awayProfile.avgCorners*0.46+expectedShots*0.050+expectedSOT*0.045+pressureFactor),4.5,13.2)
+  // SOMA dos escanteios dos dois times (cada avgCorners = corners POR TIME por jogo)
+  // Ex: Juventude 5.2 + Ceará 5.4 = 10.6 total esperados (correto)
+  // Fórmula anterior fazia média ponderada → resultado ~6.8 (errado)
+  const rawCorners = (homeProfile.avgCorners||0) + (awayProfile.avgCorners||0)
+  const expectedCorners = clamp(round(rawCorners > 0 ? rawCorners : expectedShots*0.25+expectedSOT*0.18+pressureFactor*2), 5.0, 14.0)
   const expectedCards = clamp(round(homeProfile.avgCards*0.50+awayProfile.avgCards*0.50+(homeProfile.avgFouls+awayProfile.avgFouls)*0.025),1.2,7.0)
   const expectedFouls = clamp(round(homeProfile.avgFouls + awayProfile.avgFouls), 16, 42)
   return { expectedGoals, expectedHomeGoals, expectedAwayGoals, expectedHomeShots, expectedAwayShots, expectedHomeSOT, expectedAwaySOT, expectedShots, expectedSOT, expectedCorners, expectedCards, expectedFouls }
