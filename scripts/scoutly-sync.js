@@ -1100,8 +1100,20 @@ async function upsertMatchStats(row) {
   if(error)throw error
 }
 
+async function fetchRefereeStats(refereeName) {
+  if (!refereeName) return null
+  const lastName = refereeName.split('. ').pop()?.split(' ')[0] || refereeName
+  const { data } = await supabase
+    .from('referee_stats')
+    .select('name, avg_yellow_cards, avg_fouls, avg_cards_total')
+    .ilike('name', `%${lastName}%`)
+    .limit(1)
+    .single()
+  return data || null
+}
+
 async function upsertMatchAnalysis(row) {
-  const{error}=await supabase.from("match_analysis").upsert({ match_id:row.match_id,home_strength:row.home_strength,away_strength:row.away_strength,expected_home_goals:row.expected_home_goals,expected_away_goals:row.expected_away_goals,expected_home_shots:row.expected_home_shots,expected_away_shots:row.expected_away_shots,expected_home_sot:row.expected_home_sot,expected_away_sot:row.expected_away_sot,expected_corners:row.expected_corners,expected_cards:row.expected_cards,prob_over25:row.prob_over25,prob_btts:row.prob_btts,prob_corners:row.prob_corners,prob_shots:row.prob_shots,prob_sot:row.prob_sot,prob_cards:row.prob_cards,best_pick_1:row.best_pick_1,best_pick_2:row.best_pick_2,best_pick_3:row.best_pick_3,aggressive_pick:row.aggressive_pick,analysis_text:row.analysis_text,data:row.form_data||null,created_at:new Date().toISOString() },{onConflict:"match_id"})
+  const{error}=await supabase.from("match_analysis").upsert({ match_id:row.match_id,home_strength:row.home_strength,away_strength:row.away_strength,expected_home_goals:row.expected_home_goals,expected_away_goals:row.expected_away_goals,expected_home_shots:row.expected_home_shots,expected_away_shots:row.expected_away_shots,expected_home_sot:row.expected_home_sot,expected_away_sot:row.expected_away_sot,expected_corners:row.expected_corners,expected_cards:row.expected_cards,prob_over25:row.prob_over25,prob_btts:row.prob_btts,prob_corners:row.prob_corners,prob_shots:row.prob_shots,prob_sot:row.prob_sot,prob_cards:row.prob_cards,best_pick_1:row.best_pick_1,best_pick_2:row.best_pick_2,best_pick_3:row.best_pick_3,aggressive_pick:row.aggressive_pick,analysis_text:row.analysis_text,data:row.form_data||null,referee_name:row.referee_name||null,referee_avg_cards:row.referee_avg_cards||null,referee_avg_fouls:row.referee_avg_fouls||null,created_at:new Date().toISOString() },{onConflict:"match_id"})
   if(error)throw error
 }
 
@@ -1166,7 +1178,9 @@ async function buildAndStoreMatches(fixtureLists) {
         away_form_away:{matches:awayContext.away.matches,avgGoalsFor:awayContext.away.avgGoalsFor,avgGoalsAgainst:awayContext.away.avgGoalsAgainst,avgShots:awayContext.away.avgShots,avgCorners:awayContext.away.avgCorners,avgCards:awayContext.away.avgCards,recentScores:awayContext.away.recentScores,recentMatches:awayContext.away.recentMatches||[],formStreak:awayContext.away.formStreak},
         h2h:h2hProfile?{matches:h2hProfile.matches,homeAvgGoalsFor:h2hProfile.homeAvgGoalsFor,homeAvgGoalsAgainst:h2hProfile.homeAvgGoalsAgainst,awayAvgGoalsFor:h2hProfile.awayAvgGoalsFor,awayAvgGoalsAgainst:h2hProfile.awayAvgGoalsAgainst,recentScores:h2hProfile.recentScores}:null,
       }
-      await upsertMatchAnalysis({ match_id:analyzedMatchPayload.id,home_strength:round(homeProfile.avgGoalsFor*1.4+homeProfile.avgShotsOnTarget*0.55+homeProfile.avgCorners*0.25),away_strength:round(awayProfile.avgGoalsFor*1.35+awayProfile.avgShotsOnTarget*0.52+awayProfile.avgCorners*0.23),expected_home_goals:round(metricsExp.expectedHomeGoals),expected_away_goals:round(metricsExp.expectedAwayGoals),expected_home_shots:round(metricsExp.expectedHomeShots),expected_away_shots:round(metricsExp.expectedAwayShots),expected_home_sot:round(metricsExp.expectedHomeSOT),expected_away_sot:round(metricsExp.expectedAwaySOT),expected_corners:round(metricsExp.expectedCorners),expected_cards:round(metricsExp.expectedCards),prob_over25:round(probabilities.over25),prob_btts:round(probabilities.btts),prob_corners:round(probabilities.corners),prob_shots:round(probabilities.shots),prob_sot:round(probabilities.sot),prob_cards:round(probabilities.cards),best_pick_1:mainPick.market,best_pick_2:pick2,best_pick_3:pick3,aggressive_pick:candidates.find(x=>x.market==="Mais de 2.5 gols"||x.market==="Ambas marcam"||x.market.includes("Mais de 8.5 escanteios")||x.market.includes("Mais de 19.5 finalizações")||x.market.includes("Mais de 6.5 finalizações no gol"))?.market||null,analysis_text:insight,form_data:formData })
+      const refereeName = analyzedMatchPayload.referee || null
+      const refStats = refereeName ? await fetchRefereeStats(refereeName) : null
+      await upsertMatchAnalysis({ match_id:analyzedMatchPayload.id,home_strength:round(homeProfile.avgGoalsFor*1.4+homeProfile.avgShotsOnTarget*0.55+homeProfile.avgCorners*0.25),away_strength:round(awayProfile.avgGoalsFor*1.35+awayProfile.avgShotsOnTarget*0.52+awayProfile.avgCorners*0.23),expected_home_goals:round(metricsExp.expectedHomeGoals),expected_away_goals:round(metricsExp.expectedAwayGoals),expected_home_shots:round(metricsExp.expectedHomeShots),expected_away_shots:round(metricsExp.expectedAwayShots),expected_home_sot:round(metricsExp.expectedHomeSOT),expected_away_sot:round(metricsExp.expectedAwaySOT),expected_corners:round(metricsExp.expectedCorners),expected_cards:round(metricsExp.expectedCards),prob_over25:round(probabilities.over25),prob_btts:round(probabilities.btts),prob_corners:round(probabilities.corners),prob_shots:round(probabilities.shots),prob_sot:round(probabilities.sot),prob_cards:round(probabilities.cards),best_pick_1:mainPick.market,best_pick_2:pick2,best_pick_3:pick3,aggressive_pick:candidates.find(x=>x.market==="Mais de 2.5 gols"||x.market==="Ambas marcam"||x.market.includes("Mais de 8.5 escanteios")||x.market.includes("Mais de 19.5 finalizações")||x.market.includes("Mais de 6.5 finalizações no gol"))?.market||null,analysis_text:insight,form_data:formData,referee_name:refStats?.name||refereeName||null,referee_avg_cards:refStats?.avg_yellow_cards||null,referee_avg_fouls:refStats?.avg_fouls||null })
       stored.push({...analyzedMatchPayload,game_profile:gameProfile})
       console.log(`✅ ${leagueDisplay} | ${analyzedMatchPayload.home_team} x ${analyzedMatchPayload.away_team} | ${mainPick.market}${h2hProfile?` [H2H: ${h2hProfile.matches}]`:""}`)
     }catch(err){
