@@ -624,50 +624,76 @@ async function buildTeamContext(teamId, leagueId = null) {
   const cacheKey = `${teamId}:${leagueId || 'any'}`
   if (teamContextCache.has(cacheKey)) return teamContextCache.get(cacheKey)
 
-  const allFixtures = await fetchRecentFinishedFixtures(teamId, MAX_RECENT_FIXTURES_FETCH)
-
-  // [FIX ESCANTEIOS] Filtra amistosos do perfil — amistosos têm ~4.4 escanteios vs
-  // ~9.4 no Brasileirão. Misturar eles contamina as projeções de escanteios/cartões.
-  const competitiveFixtures = allFixtures.filter(f => {
-    const leagueName = normalizeText(f?.league?.name || '')
-    return !leagueName.includes('friend') && !leagueName.includes('amistoso') &&
-           !leagueName.includes('club friendly') && f?.league?.id !== 667
-  })
-
-  // Usa fixtures competitivos se tiver pelo menos 3; caso contrário usa tudo
-  const fixtures = competitiveFixtures.length >= 3 ? competitiveFixtures : allFixtures
-
-  const general = await collectProfileFromFixtures(teamId, fixtures.slice(0, FORM_LIMIT_GENERAL))
-  const home    = await collectProfileFromFixtures(teamId, splitVenueFixtures(fixtures, teamId, true, FORM_LIMIT_HOME_AWAY))
-  const away    = await collectProfileFromFixtures(teamId, splitVenueFixtures(fixtures, teamId, false, FORM_LIMIT_HOME_AWAY))
-
-  // [MELHORIA] Enriquece com estatísticas de liga específica quando disponível
-  // Especialmente para corners e cards que são muito sensíveis ao tipo de competição
+  // ── FONTE PRIMÁRIA: team_statistics do banco ──────────────────────────────
+  // Populado pelo team-stats-sync (roda 1x/dia). Dados de liga específica,
+  // muito mais precisos que calcular de fixtures genéricos.
+  // Elimina 10 chamadas API por time → sync passa de 40min para <5min.
   let leagueStats = null
   if (leagueId) {
     try { leagueStats = await fetchTeamStatisticsFromDB(teamId, leagueId) } catch {}
   }
 
-  if (leagueStats) {
-    // Substitui corners e cards com dados de liga real (muito mais precisos)
-    const blendLeague = (leagueVal, calcVal) =>
-      leagueVal != null ? round(leagueVal * 0.75 + (calcVal || 0) * 0.25) : calcVal
+  if (leagueStats && leagueStats.matches_played >= 3) {
+    // Temos dados de liga real — usa direto, sem precisar buscar fixtures na API
+    const goalsFor     = safeNumber(leagueStats.goals_for_avg, 0)
+    const goalsAgainst = safeNumber(leagueStats.goals_against_avg, 0)
+    const cornersFor   = safeNumber(leagueStats.corners_for_avg, 0)
+    const cornersAga   = safeNumber(leagueStats.corners_against_avg, 0)
+    const shots        = safeNumber(leagueStats.shots_avg, 0)
+    const shotsOT      = safeNumber(leagueStats.shots_on_target_avg, 0)
+    const yellowCards  = safeNumber(leagueStats.cards_yellow_avg, 0)
+    const redCards     = safeNumber(leagueStats.cards_red_avg, 0)
+    const cards        = round(yellowCards + redCards)
+    const form         = leagueStats.form || null
 
-    const cornersForAvg = blendLeague(leagueStats.corners_for_avg, general.avgCorners)
-    const cornersAgainstAvg = blendLeague(leagueStats.corners_against_avg, null)
-    const cardsAvg = blendLeague(
-      leagueStats.cards_yellow_avg != null ? leagueStats.cards_yellow_avg + (leagueStats.cards_red_avg || 0) : null,
-      general.avgCards
-    )
+    // Forma para exibição (converte "WWDLL" em array de resultados)
+    const formStreak = (() => {
+      if (!form) return "sem dados"
+      const counts = { W: 0, D: 0, L: 0 }
+      for (const c of form) counts[c] = (counts[c] || 0) + 1
+      if (counts.W >= 4) return "em alta"
+      if (counts.L >= 4) return "em queda"
+      if (counts.W >= 3) return "boa fase"
+      if (counts.L >= 3) return "má fase"
+      return "irregular"
+    })()
 
-    general.avgCorners = cornersForAvg
-    general.avgCornersAgainst = cornersAgainstAvg
-    general.avgCards = cardsAvg || general.avgCards
-    general.avgShots = blendLeague(leagueStats.shots_avg, general.avgShots) || general.avgShots
-    general.avgShotsOnTarget = blendLeague(leagueStats.shots_on_target_avg, general.avgShotsOnTarget) || general.avgShotsOnTarget
-    general._leagueStats = true
-    console.log(`   📊 Liga stats: corners ${cornersForAvg} for/${cornersAgainstAvg} against, cards ${cardsAvg}`)
+    const profile = {
+      matches: leagueStats.matches_played,
+      statsMatches: leagueStats.matches_played,
+      avgGoalsFor: goalsFor,
+      avgGoalsAgainst: goalsAgainst,
+      avgShots: shots || null,
+      avgShotsOnTarget: shotsOT || null,
+      avgCorners: cornersFor || null,
+      avgCornersAgainst: cornersAga || null,
+      avgCards: cards,
+      avgFouls: safeNumber(leagueStats.fouls_avg, 0),
+      recentScores: [],
+      recentMatches: [],
+      formStreak,
+      _source: 'league_stats',
+    }
+
+    const payload = { general: profile, home: profile, away: profile }
+    teamContextCache.set(cacheKey, payload)
+    console.log(`   ✅ ${teamId} via league_stats (${leagueStats.matches_played}j): corners ${cornersFor}/${cornersAga}, cards ${cards}`)
+    return payload
   }
+
+  // ── FALLBACK: fixtures da API (quando não há league_stats) ────────────────
+  // Filtra amistosos pois têm ~4.4 corners vs ~9.4 em ligas competitivas
+  const allFixtures = await fetchRecentFinishedFixtures(teamId, MAX_RECENT_FIXTURES_FETCH)
+  const competitiveFixtures = allFixtures.filter(f => {
+    const ln = normalizeText(f?.league?.name || '')
+    return !ln.includes('friend') && !ln.includes('amistoso') &&
+           !ln.includes('club friendly') && f?.league?.id !== 667
+  })
+  const fixtures = competitiveFixtures.length >= 3 ? competitiveFixtures : allFixtures
+
+  const general = await collectProfileFromFixtures(teamId, fixtures.slice(0, FORM_LIMIT_GENERAL))
+  const home    = await collectProfileFromFixtures(teamId, splitVenueFixtures(fixtures, teamId, true,  FORM_LIMIT_HOME_AWAY))
+  const away    = await collectProfileFromFixtures(teamId, splitVenueFixtures(fixtures, teamId, false, FORM_LIMIT_HOME_AWAY))
 
   const payload = { general, home, away }
   teamContextCache.set(cacheKey, payload)

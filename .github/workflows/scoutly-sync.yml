@@ -2,35 +2,28 @@ name: Scoutly Sync
 
 on:
   schedule:
-    # Roda a cada 2 horas, todos os dias — mantém os dados sempre frescos
-    # sem precisar disparar manualmente. Horário em UTC.
-    - cron: '0 */2 * * *'
+    # 06:00 UTC = 03:00 Brasília — atualiza os dados da manhã
+    - cron: '0 6 * * *'
+    # 23:00 UTC = 20:00 Brasília — atualiza antes dos jogos da noite
+    - cron: '0 23 * * *'
   workflow_dispatch:
 
 jobs:
   sync:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-         node-version: "22"
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run Scoutly sync
+          node-version: "22"
+      - run: npm install
+      - name: Run Scoutly Sync
         env:
           APISPORTS_KEY: ${{ secrets.APISPORTS_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/scoutly-sync.js
-
-      - name: Run Scoutly brain
+      - name: Run Scoutly Brain
         env:
           APISPORTS_KEY: ${{ secrets.APISPORTS_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}

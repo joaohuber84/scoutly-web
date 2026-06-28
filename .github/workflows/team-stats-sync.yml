@@ -2,7 +2,7 @@ name: Team Stats Sync
 
 on:
   schedule:
-    # Roda 1x por dia às 05:00 UTC (02:00 Brasília)
+    # 05:00 UTC = 02:00 Brasília — roda antes do sync principal
     - cron: '0 5 * * *'
   workflow_dispatch:
 
