@@ -2139,6 +2139,8 @@
       <!-- TABS -->
       <div class="wc-tabs">
         <button class="wc-tab active" data-wctab="grupos">⚽ Grupos</button>
+        <button class="wc-tab" data-wctab="classificacao">📊 Classificação</button>
+        <button class="wc-tab" data-wctab="artilheiros">🥅 Artilheiros</button>
         <button class="wc-tab" data-wctab="agenda">📅 Agenda</button>
         <button class="wc-tab" data-wctab="curiosidades">🌍 Curiosidades</button>
         <button class="wc-tab" data-wctab="quiz">🎯 Quiz</button>
@@ -2158,6 +2160,20 @@
           </div>
         </div>
         <div class="wc-groups-grid" id="wcGroupsGrid"></div>
+      </div>
+
+      <!-- CLASSIFICAÇÃO -->
+      <div class="wc-tab-content" id="wctab-classificacao">
+        <div id="wcStandingsContent" style="min-height:120px">
+          <div class="loading-state" style="padding:20px;text-align:center;color:var(--text-3)">Toque para carregar a tabela…</div>
+        </div>
+      </div>
+
+      <!-- ARTILHEIROS -->
+      <div class="wc-tab-content" id="wctab-artilheiros">
+        <div id="wcScorersContent" style="min-height:120px">
+          <div class="loading-state" style="padding:20px;text-align:center;color:var(--text-3)">Toque para carregar artilheiros…</div>
+        </div>
       </div>
 
       <!-- AGENDA -->
@@ -5081,13 +5097,144 @@ document.addEventListener("click", e => {
   if(tabId==="quiz") initWCQuiz();
   if(tabId==="agenda") renderWCAgenda();
   if(tabId==="grupos") renderWCGroups();
+  if(tabId==="classificacao") loadWCStandings();
+  if(tabId==="artilheiros") loadWCScorers();
 });
 
 document.addEventListener("click", e => {
   if(e.target.id==="wcOverlay") closeWC2026();
 });
 
-/* ── QUIZ ─────────────────────────────────────────────────────────── */
+/* ── CLASSIFICAÇÃO E ARTILHEIROS DA COPA ──────────────────────────────── */
+let _wcStandingsCache = null;
+let _wcScorersCache = null;
+
+async function loadWCStandings() {
+  const el = document.getElementById("wcStandingsContent");
+  if (!el) return;
+  if (_wcStandingsCache) { el.innerHTML = _wcStandingsCache; return; }
+
+  el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-3)">Carregando tabela…</div>`;
+  try {
+    const data = await footballApi("standings", { league: 1, season: 2026 });
+    const groups = data?.[0]?.league?.standings || [];
+    if (!groups.length) { el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-3)">Tabela ainda não disponível.</div>`; return; }
+
+    // Tabs de grupo (A-L)
+    const groupTabs = groups.map((g, i) => {
+      const letter = String.fromCharCode(65 + i);
+      return `<button class="standings-tab${i===0?" active":""}" onclick="switchWCGroup(${i},this)" style="min-width:28px;text-align:center">Grupo ${letter}</button>`;
+    }).join("");
+
+    const renderGroup = (g) => {
+      return `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <table class="standings-table" style="min-width:340px">
+        <thead><tr>
+          <th class="left">#</th><th class="left">Seleção</th>
+          <th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>PTS</th><th>Forma</th>
+        </tr></thead>
+        <tbody>${g.map(t=>{
+          const all=t.all||{};
+          const logo=t.team?.logo?`<img src="${escapeHtml(t.team.logo)}" width="16" height="16" style="border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`:""
+          const form=(t.form||"").slice(-3).split("").map(f=>`<span style="display:inline-block;width:14px;height:14px;border-radius:3px;font-size:8px;font-weight:800;line-height:14px;text-align:center;background:${f==="W"?"var(--green)":f==="D"?"var(--amber)":"var(--red)"};color:#000">${f==="W"?"V":f==="D"?"E":"D"}</span>`).join("")
+          return `<tr>
+            <td class="left" style="font-weight:800;color:${t.rank<=2?"var(--green)":"var(--text-2)"}">${t.rank}</td>
+            <td class="left"><div style="display:flex;align-items:center;gap:7px">${logo}<span style="font-size:12px">${escapeHtml(t.team?.name||"-")}</span></div></td>
+            <td>${all.played||0}</td><td>${all.win||0}</td><td>${all.draw||0}</td><td>${all.lose||0}</td>
+            <td>${all.goals?.for||0}</td><td>${all.goals?.against||0}</td>
+            <td style="font-weight:800;color:var(--text)">${t.points||0}</td>
+            <td><div style="display:flex;gap:2px">${form}</div></td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table>
+      </div>
+      <div style="margin-top:6px;font-size:10px;color:var(--text-3)">
+        <span style="color:var(--green)">●</span> Classificado às oitavas
+      </div>`;
+    };
+
+    window._wcGroupsData = groups;
+    const html = `<div class="standings-tabs" style="margin-bottom:12px;flex-wrap:wrap">${groupTabs}</div>
+      <div id="wcGroupContent">${renderGroup(groups[0])}</div>`;
+    el.innerHTML = html;
+    _wcStandingsCache = html;
+  } catch(e) {
+    el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-3)">Erro ao carregar tabela. Tente novamente.</div>`;
+  }
+}
+
+function switchWCGroup(idx, btn) {
+  document.querySelectorAll(".standings-tab").forEach(b => b.classList.remove("active"));
+  if (btn) btn.classList.add("active");
+  const content = document.getElementById("wcGroupContent");
+  if (content && window._wcGroupsData?.[idx]) {
+    const g = window._wcGroupsData[idx];
+    const all = g[0]?.all||{};
+    content.innerHTML = `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <table class="standings-table" style="min-width:340px">
+        <thead><tr>
+          <th class="left">#</th><th class="left">Seleção</th>
+          <th>J</th><th>V</th><th>E</th><th>D</th><th>GP</th><th>GC</th><th>PTS</th><th>Forma</th>
+        </tr></thead>
+        <tbody>${g.map(t=>{
+          const a=t.all||{};
+          const logo=t.team?.logo?`<img src="${escapeHtml(t.team.logo)}" width="16" height="16" style="border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">`:""
+          const form=(t.form||"").slice(-3).split("").map(f=>`<span style="display:inline-block;width:14px;height:14px;border-radius:3px;font-size:8px;font-weight:800;line-height:14px;text-align:center;background:${f==="W"?"var(--green)":f==="D"?"var(--amber)":"var(--red)"};color:#000">${f==="W"?"V":f==="D"?"E":"D"}</span>`).join("")
+          return `<tr>
+            <td class="left" style="font-weight:800;color:${t.rank<=2?"var(--green)":"var(--text-2)"}">${t.rank}</td>
+            <td class="left"><div style="display:flex;align-items:center;gap:7px">${logo}<span style="font-size:12px">${escapeHtml(t.team?.name||"-")}</span></div></td>
+            <td>${a.played||0}</td><td>${a.win||0}</td><td>${a.draw||0}</td><td>${a.lose||0}</td>
+            <td>${a.goals?.for||0}</td><td>${a.goals?.against||0}</td>
+            <td style="font-weight:800;color:var(--text)">${t.points||0}</td>
+            <td><div style="display:flex;gap:2px">${form}</div></td>
+          </tr>`;
+        }).join("")}</tbody>
+      </table></div>
+      <div style="margin-top:6px;font-size:10px;color:var(--text-3)"><span style="color:var(--green)">●</span> Classificado às oitavas</div>`;
+  }
+}
+
+async function loadWCScorers() {
+  const el = document.getElementById("wcScorersContent");
+  if (!el) return;
+  if (_wcScorersCache) { el.innerHTML = _wcScorersCache; return; }
+
+  el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-3)">Carregando artilheiros…</div>`;
+  try {
+    const data = await footballApi("players/topscorers", { league: 1, season: 2026 });
+    if (!data?.length) { el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-3)">Artilheiros ainda não disponíveis.</div>`; return; }
+
+    const rows = data.slice(0,20).map((item, i) => {
+      const p = item.player || {};
+      const s = item.statistics?.[0] || {};
+      const goals = s.goals?.total || 0;
+      const assists = s.goals?.assists || 0;
+      const photo = p.photo ? `<img src="${escapeHtml(p.photo)}" width="28" height="28" style="border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'">` : `<div style="width:28px;height:28px;border-radius:50%;background:var(--surface-3);flex-shrink:0"></div>`;
+      const flag = s.team?.logo ? `<img src="${escapeHtml(s.team.logo)}" width="14" height="14" style="border-radius:2px;object-fit:cover" onerror="this.style.display='none'">` : "";
+      return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+        <div style="width:20px;text-align:center;font-size:12px;font-weight:800;color:${i<3?"var(--amber)":"var(--text-3)"}">${i+1}</div>
+        ${photo}
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(p.name||"-")}</div>
+          <div style="display:flex;align-items:center;gap:4px;margin-top:2px">${flag}<span style="font-size:10px;color:var(--text-3)">${escapeHtml(s.team?.name||"")}</span></div>
+        </div>
+        <div style="text-align:center;min-width:36px">
+          <div style="font-size:18px;font-weight:900;color:var(--green)">${goals}</div>
+          <div style="font-size:9px;color:var(--text-3);text-transform:uppercase">gols</div>
+        </div>
+        ${assists>0?`<div style="text-align:center;min-width:28px"><div style="font-size:14px;font-weight:800;color:var(--blue)">${assists}</div><div style="font-size:9px;color:var(--text-3)">assist</div></div>`:""}
+      </div>`;
+    }).join("");
+
+    const html = `<div style="padding:4px 0">${rows}</div>`;
+    el.innerHTML = html;
+    _wcScorersCache = html;
+  } catch(e) {
+    el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-3)">Erro ao carregar artilheiros. Tente novamente.</div>`;
+  }
+}
+
+/* ── fim CLASSIFICAÇÃO E ARTILHEIROS ──────────────────────────────────── */
 const WC_QUIZ = [
   { q:"Quantas seleções participam da Copa do Mundo 2026?", opts:["32","40","48","56"], answer:2 },
   { q:"Onde será a final da Copa do Mundo 2026?", opts:["Rose Bowl, Los Angeles","Azteca, México","MetLife Stadium, Nova Jersey","AT&T Stadium, Dallas"], answer:2 },
