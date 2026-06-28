@@ -624,19 +624,23 @@ async function buildTeamContext(teamId, leagueId = null) {
   const cacheKey = `${teamId}:${leagueId || 'any'}`
   if (teamContextCache.has(cacheKey)) return teamContextCache.get(cacheKey)
 
-  // ── FONTE PRIMÁRIA: team_statistics do banco ──────────────────────────────
   let leagueStats = null
   if (leagueId) {
     try { leagueStats = await fetchTeamStatisticsFromDB(teamId, leagueId) } catch {}
   }
 
   if (leagueStats && leagueStats.matches_played >= 3) {
-    const goalsFor     = safeNumber(leagueStats.goals_for_avg, 0)
-    const goalsAgainst = safeNumber(leagueStats.goals_against_avg, 0)
-    const yellowCards  = safeNumber(leagueStats.cards_yellow_avg, 0)
-    const redCards     = safeNumber(leagueStats.cards_red_avg, 0)
-    const cards        = round(yellowCards + redCards)
-    const form         = leagueStats.form || null
+    const goalsFor    = safeNumber(leagueStats.goals_for_avg, 0)
+    const goalsAgainst= safeNumber(leagueStats.goals_against_avg, 0)
+    const yellowCards = safeNumber(leagueStats.cards_yellow_avg, 0)
+    const redCards    = safeNumber(leagueStats.cards_red_avg, 0)
+    const cards       = round(yellowCards + redCards)
+    const cornersFor  = safeNumber(leagueStats.corners_for_avg, 0)
+    const cornersAga  = safeNumber(leagueStats.corners_against_avg, 0)
+    const shots       = safeNumber(leagueStats.shots_avg, 0)
+    const shotsOT     = safeNumber(leagueStats.shots_on_target_avg, 0)
+    const avgFouls    = safeNumber(leagueStats.fouls_avg, 0)
+    const form        = leagueStats.form || null
 
     const formStreak = (() => {
       if (!form) return "sem dados"
@@ -649,76 +653,34 @@ async function buildTeamContext(teamId, leagueId = null) {
       return "irregular"
     })()
 
-    // Escanteios/chutes/faltas da API de fixtures quando team_statistics não tem
-    // (a API /teams/statistics não retorna shots, corners e fouls para muitas ligas)
-    let cornersFor   = safeNumber(leagueStats.corners_for_avg, 0)
-    let cornersAga   = safeNumber(leagueStats.corners_against_avg, 0)
-    let shots        = safeNumber(leagueStats.shots_avg, 0)
-    let shotsOT      = safeNumber(leagueStats.shots_on_target_avg, 0)
-    let avgFouls     = safeNumber(leagueStats.fouls_avg, 0)
-    let recentScores = []
-    let recentMatches = []
-
-    if (!cornersFor || !shots) {
-      // Busca API de fixtures apenas para métricas ausentes (corners, shots, fouls)
-      try {
-        const allFixtures = await fetchRecentFinishedFixtures(teamId, MAX_RECENT_FIXTURES_FETCH)
-        const competitiveFixtures = allFixtures.filter(f => {
-          const ln = normalizeText(f?.league?.name || '')
-          return !ln.includes('friend') && !ln.includes('amistoso') && !ln.includes('club friendly') && f?.league?.id !== 667
-        })
-        const fixtures = competitiveFixtures.length >= 3 ? competitiveFixtures : allFixtures
-        const apiProfile = await collectProfileFromFixtures(teamId, fixtures.slice(0, FORM_LIMIT_GENERAL))
-        if (!cornersFor && apiProfile.avgCorners) cornersFor = apiProfile.avgCorners
-        if (!cornersAga && apiProfile.avgCornersAgainst) cornersAga = apiProfile.avgCornersAgainst
-        if (!shots && apiProfile.avgShots) shots = apiProfile.avgShots
-        if (!shotsOT && apiProfile.avgShotsOnTarget) shotsOT = apiProfile.avgShotsOnTarget
-        if (!avgFouls && apiProfile.avgFouls) avgFouls = apiProfile.avgFouls
-        recentScores = apiProfile.recentScores || []
-        recentMatches = apiProfile.recentMatches || []
-        console.log(`   📊 ${teamId}: corners API=${apiProfile.avgCorners}, shots API=${apiProfile.avgShots}`)
-      } catch(e) { console.warn(`   ⚠️ API fallback falhou para ${teamId}:`, e.message) }
-    }
-
     const profile = {
       matches: leagueStats.matches_played,
-      statsMatches: leagueStats.matches_played,
-      avgGoalsFor: goalsFor,
-      avgGoalsAgainst: goalsAgainst,
-      avgShots: shots || null,
-      avgShotsOnTarget: shotsOT || null,
-      avgCorners: cornersFor || null,
-      avgCornersAgainst: cornersAga || null,
-      avgCards: cards,
-      avgFouls: avgFouls || 0,
-      recentScores,
-      recentMatches,
-      formStreak,
-      _source: 'hybrid',
+      avgGoalsFor: goalsFor, avgGoalsAgainst: goalsAgainst,
+      avgShots: shots || null, avgShotsOnTarget: shotsOT || null,
+      avgCorners: cornersFor || null, avgCornersAgainst: cornersAga || null,
+      avgCards: cards, avgFouls: avgFouls,
+      recentScores: [], recentMatches: [], formStreak,
     }
-
     const payload = { general: profile, home: profile, away: profile }
     teamContextCache.set(cacheKey, payload)
     return payload
   }
 
-  // ── FALLBACK COMPLETO: fixtures da API ────────────────────────────────────
+  // Fallback: API (apenas para times sem dados no banco)
   const allFixtures = await fetchRecentFinishedFixtures(teamId, MAX_RECENT_FIXTURES_FETCH)
-  const competitiveFixtures = allFixtures.filter(f => {
+  const competitive = allFixtures.filter(f => {
     const ln = normalizeText(f?.league?.name || '')
-    return !ln.includes('friend') && !ln.includes('amistoso') &&
-           !ln.includes('club friendly') && f?.league?.id !== 667
+    return !ln.includes('friend') && !ln.includes('amistoso') && f?.league?.id !== 667
   })
-  const fixtures = competitiveFixtures.length >= 3 ? competitiveFixtures : allFixtures
-
+  const fixtures = competitive.length >= 3 ? competitive : allFixtures
   const general = await collectProfileFromFixtures(teamId, fixtures.slice(0, FORM_LIMIT_GENERAL))
   const home    = await collectProfileFromFixtures(teamId, splitVenueFixtures(fixtures, teamId, true,  FORM_LIMIT_HOME_AWAY))
   const away    = await collectProfileFromFixtures(teamId, splitVenueFixtures(fixtures, teamId, false, FORM_LIMIT_HOME_AWAY))
-
   const payload = { general, home, away }
   teamContextCache.set(cacheKey, payload)
   return payload
 }
+
 
 function blendValue(primary, fallback, primaryWeight = 0.68) {
   return safeNumber(primary,0)*primaryWeight + safeNumber(fallback,0)*(1-primaryWeight)
