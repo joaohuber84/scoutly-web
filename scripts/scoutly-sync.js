@@ -752,7 +752,7 @@ function buildExpectedMetrics(homeProfile, awayProfile, h2hProfile = null) {
   const pressureFactor = expectedShots>=24?0.45:expectedShots>=20?0.25:0.10
   const expectedCorners = clamp(round(homeProfile.avgCorners*0.50+awayProfile.avgCorners*0.46+expectedShots*0.050+expectedSOT*0.045+pressureFactor),4.5,13.2)
   const expectedCards = clamp(round(homeProfile.avgCards*0.50+awayProfile.avgCards*0.50+(homeProfile.avgFouls+awayProfile.avgFouls)*0.025),1.2,7.0)
-  const expectedFouls = clamp(round(homeProfile.avgFouls*0.52+awayProfile.avgFouls*0.48),8,30)
+  const expectedFouls = clamp(round(homeProfile.avgFouls + awayProfile.avgFouls), 16, 42)
   return { expectedGoals, expectedHomeGoals, expectedAwayGoals, expectedHomeShots, expectedAwayShots, expectedHomeSOT, expectedAwaySOT, expectedShots, expectedSOT, expectedCorners, expectedCards, expectedFouls }
 }
 
