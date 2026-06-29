@@ -2,37 +2,21 @@ name: Copa Sync
 
 on:
   schedule:
-    # Roda a cada hora — garante que os jogos da Copa nunca sumam do banco
-    # mesmo que o sync principal falhe pontualmente.
-    - cron: '30 * * * *'
+    - cron: '30 * * * *'  # A cada hora, no minuto :30
   workflow_dispatch:
 
 jobs:
   copa-sync:
     runs-on: ubuntu-latest
-
+    timeout-minutes: 5
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Run Copa Sync
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: npm install
+      - name: Copa Sync
         env:
           APISPORTS_KEY: ${{ secrets.APISPORTS_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/copa-sync.js
-
-      - name: Run Brain (gera picks para jogos da Copa recém-inseridos)
-        env:
-          APISPORTS_KEY: ${{ secrets.APISPORTS_KEY }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: node scripts/scoutly-brain.js

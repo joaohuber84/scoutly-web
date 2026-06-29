@@ -672,14 +672,13 @@ async function buildTeamContext(teamId, leagueId = null) {
       return "irregular"
     })()
 
-    // Busca últimos 6 jogos apenas para exibição do H2H (1 chamada API, sem estatísticas)
-    let recentScores = [], recentMatches = []
-    try {
-      const recentFixtures = await fetchRecentFinishedFixtures(teamId, 6)
-      const extracted = extractRecentScoresFromFixtures(teamId, recentFixtures)
-      recentScores  = extracted.recentScores
-      recentMatches = extracted.recentMatches
-    } catch {}
+    // recentScores são populados pelo team-stats-sync (semanal) via campo recent_form_json
+    // O sync principal não faz chamadas extras de API para isso — mantém velocidade
+    const recentData   = (() => {
+      try { return JSON.parse(leagueStats.recent_form_json || '{}') } catch { return {} }
+    })()
+    const recentScores  = recentData.scores  || []
+    const recentMatches = recentData.matches || []
 
     const profile = {
       matches: leagueStats.matches_played,

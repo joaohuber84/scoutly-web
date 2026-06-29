@@ -185,6 +185,30 @@ async function run() {
         const csf = await fetchCornersShootsFouls(team.id, league.leagueId)
         await sleep(DELAY)
 
+        // Fase 3: últimos 6 jogos para exibição H2H (salvo no banco, sync não precisa chamar API)
+        let recentFormJson = null
+        try {
+          const recentFixtures = await apiGet(`/fixtures?team=${team.id}&league=${league.leagueId}&season=${SEASON}&status=FT&last=6`)
+          await sleep(DELAY)
+          const scores = [], matches = []
+          for (const f of recentFixtures) {
+            const isHome  = f.teams?.home?.id === team.id
+            const myGoals = isHome ? f.goals?.home : f.goals?.away
+            const ogGoals = isHome ? f.goals?.away : f.goals?.home
+            if (myGoals === null || myGoals === undefined) continue
+            const label = `${myGoals}-${ogGoals}`
+            scores.push(label)
+            matches.push({
+              score: label,
+              opponent: isHome ? f.teams?.away?.name : f.teams?.home?.name,
+              opponentLogo: isHome ? f.teams?.away?.logo : f.teams?.home?.logo,
+              isHome,
+              date: f.fixture?.date
+            })
+          }
+          recentFormJson = JSON.stringify({ scores, matches })
+        } catch {}
+
         const row = {
           team_id:              team.id,
           league_id:            league.leagueId,
@@ -198,6 +222,7 @@ async function run() {
           shots_avg:            csf.shotsFor,
           shots_on_target_avg:  csf.shotsOnTarget,
           fouls_avg:            csf.foulsCommitted,
+          recent_form_json:     recentFormJson,
           updated_at:           new Date().toISOString(),
         }
 

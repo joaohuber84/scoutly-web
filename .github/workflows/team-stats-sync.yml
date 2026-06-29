@@ -2,20 +2,19 @@ name: Team Stats Sync
 
 on:
   schedule:
-    # 05:00 UTC = 02:00 Brasília — roda antes do sync principal
-    - cron: '0 5 * * *'
+    - cron: '0 7 * * 0'  # Domingo às 04:00 BRT (07:00 UTC)
   workflow_dispatch:
 
 jobs:
   team-stats-sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
+        with: { node-version: "22" }
       - run: npm install
-      - name: Sync team statistics
+      - name: Team Stats Sync
         env:
           APISPORTS_KEY: ${{ secrets.APISPORTS_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
