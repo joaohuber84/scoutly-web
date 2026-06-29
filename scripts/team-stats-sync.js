@@ -2,11 +2,10 @@
 /**
  * team-stats-sync.js — Sincroniza estatísticas de times por liga/temporada
  *
- * Usa /teams/statistics da API-Football que retorna médias reais de gols,
- * escanteios, cartões e finalizações dentro de uma liga específica.
- * Muito mais preciso que calcular dos match_stats (que mistura amistosos).
+ * Fase 1: /teams/statistics → gols, cartões, forma
+ * Fase 2: /fixtures recent  → corners, shots, fouls (que a API não dá via statistics)
  *
- * Roda 1x por dia via team-stats-sync.yml
+ * Roda 1x por dia às 05:00 UTC via team-stats-sync.yml
  */
 
 const { createClient } = require('@supabase/supabase-js')
@@ -18,7 +17,6 @@ const SEASON       = 2026
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 
-// Ligas que monitoramos + seus IDs na API
 const TARGET_LEAGUES = [
   { leagueId: 1,   name: 'Copa do Mundo' },
   { leagueId: 71,  name: 'Brasileirão Série A' },
@@ -30,25 +28,27 @@ const TARGET_LEAGUES = [
   { leagueId: 135, name: 'Serie A' },
   { leagueId: 78,  name: 'Bundesliga' },
   { leagueId: 61,  name: 'Ligue 1' },
+  { leagueId: 88,  name: 'Eredivisie' },
+  { leagueId: 253, name: 'MLS' },
 ]
 
-const REQUEST_DELAY_MS = 400
+const DELAY = 350
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)) }
+function safe(v, d = 0) { const n = parseFloat(v); return isNaN(n) ? d : n }
+function round(v, d = 2) { return Math.round(v * 10**d) / 10**d }
 
-function safe(v, def = 0) {
-  const n = parseFloat(v)
-  return isNaN(n) ? def : n
+async function apiGet(path) {
+  const res = await fetch(`https://v3.football.api-sports.io${path}`, {
+    headers: { 'x-apisports-key': API_KEY }
+  })
+  const json = await res.json()
+  return json?.response || []
 }
 
-function round(v, d = 2) { return Math.round(v * 10 ** d) / 10 ** d }
-
 async function fetchTeamsInLeague(leagueId) {
-  const url = `https://v3.football.api-sports.io/standings?league=${leagueId}&season=${SEASON}`
-  const res = await fetch(url, { headers: { 'x-apisports-key': API_KEY } })
-  if (!res.ok) throw new Error(`API standings error ${res.status}`)
-  const data = await res.json()
-  const groups = data?.response?.[0]?.league?.standings || []
+  const data = await apiGet(`/standings?league=${leagueId}&season=${SEASON}`)
+  const groups = data?.[0]?.league?.standings || []
   const teams = []
   for (const group of groups) {
     for (const entry of group) {
@@ -58,62 +58,81 @@ async function fetchTeamsInLeague(leagueId) {
   return teams
 }
 
-async function fetchTeamStats(teamId, leagueId) {
-  const url = `https://v3.football.api-sports.io/teams/statistics?team=${teamId}&league=${leagueId}&season=${SEASON}`
-  const res = await fetch(url, { headers: { 'x-apisports-key': API_KEY } })
-  if (!res.ok) throw new Error(`API team stats error ${res.status} for team ${teamId}`)
-  const data = await res.json()
-  return data?.response || null
+async function fetchTeamStatsFromAPI(teamId, leagueId) {
+  const data = await apiGet(`/teams/statistics?team=${teamId}&league=${leagueId}&season=${SEASON}`)
+  return data?.[0] || null
 }
 
-async function upsertTeamStats(row) {
-  const { error } = await supabase.from('team_statistics').upsert(row, { onConflict: 'team_id,league_id,season' })
-  if (error) throw new Error(`Upsert failed for team ${row.team_id}: ${error.message}`)
+// NOVO: busca corners, shots e fouls de jogos reais recentes
+async function fetchCornersShootsFouls(teamId, leagueId) {
+  const fixtures = await apiGet(`/fixtures?team=${teamId}&league=${leagueId}&season=${SEASON}&status=FT&last=10`)
+  if (!fixtures.length) return { cornersFor: null, cornersAgainst: null, shotsFor: null, shotsOnTarget: null, foulsCommitted: null }
+
+  let totalCornersFor = 0, totalCornersAgainst = 0
+  let totalShots = 0, totalShotsOT = 0, totalFouls = 0
+  let gamesWithCorners = 0, gamesWithShots = 0, gamesWithFouls = 0
+
+  for (const f of fixtures.slice(0, 10)) {
+    try {
+      const stats = await apiGet(`/fixtures/statistics?fixture=${f.fixture.id}&team=${teamId}`)
+      await sleep(120)
+      const s = stats?.[0]?.statistics || []
+      const get = (label) => {
+        const item = s.find(x => x.type?.toLowerCase() === label.toLowerCase())
+        return item ? safe(item.value, 0) : null
+      }
+      const corners = get('Corner Kicks')
+      const shots   = get('Total Shots')
+      const sot     = get('Shots on Goal')
+      const fouls   = get('Fouls')
+
+      // corners against = total corners in match - corners for
+      // We need both teams' stats for that
+      const allStats = await apiGet(`/fixtures/statistics?fixture=${f.fixture.id}`)
+      await sleep(120)
+      let totalCornersInMatch = 0
+      for (const ts of allStats) {
+        const cs = ts.statistics?.find(x => x.type === 'Corner Kicks')
+        if (cs) totalCornersInMatch += safe(cs.value, 0)
+      }
+
+      if (corners !== null) {
+        totalCornersFor += corners
+        totalCornersAgainst += Math.max(0, totalCornersInMatch - corners)
+        gamesWithCorners++
+      }
+      if (shots !== null) { totalShots += shots; totalShotsOT += safe(sot, 0); gamesWithShots++ }
+      if (fouls !== null) { totalFouls += fouls; gamesWithFouls++ }
+    } catch {}
+  }
+
+  return {
+    cornersFor:      gamesWithCorners > 0 ? round(totalCornersFor / gamesWithCorners) : null,
+    cornersAgainst:  gamesWithCorners > 0 ? round(totalCornersAgainst / gamesWithCorners) : null,
+    shotsFor:        gamesWithShots > 0   ? round(totalShots / gamesWithShots) : null,
+    shotsOnTarget:   gamesWithShots > 0   ? round(totalShotsOT / gamesWithShots) : null,
+    foulsCommitted:  gamesWithFouls > 0   ? round(totalFouls / gamesWithFouls) : null,
+  }
 }
 
-function extractStats(s) {
+function extractFromAPIStats(s) {
   if (!s) return {}
-  const goals    = s.goals || {}
-  const shots    = s.shots || {}
-  const cards    = s.cards || {}
-  const corners  = s.corners || {}
-  const fouls    = s.fouls || {}
   const fixtures = s.fixtures || {}
+  const goals    = s.goals || {}
+  const cards    = s.cards || {}
 
   const played = safe(fixtures.played?.total, 0)
-  const playedHome = safe(fixtures.played?.home, 0)
-  const playedAway = safe(fixtures.played?.away, 0)
-
   if (!played) return {}
 
-  const totalGoalsFor = safe(goals.for?.total?.total, 0)
-  const totalGoalsAgainst = safe(goals.against?.total?.total, 0)
+  const goalsFor     = safe(goals.for?.total?.total, 0)
+  const goalsAgainst = safe(goals.against?.total?.total, 0)
   const homeGoalsFor = safe(goals.for?.total?.home, 0)
-  const homeGoalsAgainst = safe(goals.against?.total?.home, 0)
   const awayGoalsFor = safe(goals.for?.total?.away, 0)
-  const awayGoalsAgainst = safe(goals.against?.total?.away, 0)
+  const homeGoalsAga = safe(goals.against?.total?.home, 0)
+  const awayGoalsAga = safe(goals.against?.total?.away, 0)
+  const playedHome   = safe(fixtures.played?.home, 1)
+  const playedAway   = safe(fixtures.played?.away, 1)
 
-  // Gols médias
-  const goalsForAvg = played > 0 ? round(totalGoalsFor / played) : null
-  const goalsAgainstAvg = played > 0 ? round(totalGoalsAgainst / played) : null
-  const homeGoalsForAvg = playedHome > 0 ? round(homeGoalsFor / playedHome) : null
-  const homeGoalsAgainstAvg = playedHome > 0 ? round(homeGoalsAgainst / playedHome) : null
-  const awayGoalsForAvg = playedAway > 0 ? round(awayGoalsFor / playedAway) : null
-  const awayGoalsAgainstAvg = playedAway > 0 ? round(awayGoalsAgainst / playedAway) : null
-
-  // Escanteios
-  const cornersForAvg = safe(corners.for?.average?.total, null)
-  const cornersAgainstAvg = safe(corners.against?.average?.total, null)
-  const homeCornersForAvg = safe(corners.for?.average?.home, null)
-  const homeCornersAgainstAvg = safe(corners.against?.average?.home, null)
-  const awayCornersForAvg = safe(corners.for?.average?.away, null)
-  const awayCornersAgainstAvg = safe(corners.against?.average?.away, null)
-
-  // Chutes
-  const shotsAvg = safe(shots.total?.average, null)
-  const shotsOnTargetAvg = safe(shots.on?.average, null)
-
-  // Cartões
   const yellowAvg = cards.yellow ? round(
     Object.values(cards.yellow).reduce((sum, v) => sum + safe(v?.total, 0), 0) / played
   ) : null
@@ -121,103 +140,83 @@ function extractStats(s) {
     Object.values(cards.red).reduce((sum, v) => sum + safe(v?.total, 0), 0) / played
   ) : null
 
-  // Faltas
-  const foulsAvg = fouls.committed ? round(
-    Object.values(fouls.committed).reduce((sum, v) => sum + safe(v?.total, 0), 0) / played
-  ) : null
-
-  // Percentuais de gols
-  const over15Count = Object.values(goals.for?.minute || {}).reduce((sum, v) => {
-    return sum // complexo de calcular diretamente, pula por ora
-  }, 0)
-
-  // Clean sheets
-  const cleanSheets = safe(fixtures.wins?.total, 0)
-  const cleanSheetPct = played > 0 ? round(safe(s.clean_sheet?.total, 0) / played * 100) : null
-
-  // Forma
-  const form = s.form || null
-
   return {
-    goals_for_avg: goalsForAvg,
-    goals_against_avg: goalsAgainstAvg,
-    home_goals_for_avg: homeGoalsForAvg,
-    home_goals_against_avg: homeGoalsAgainstAvg,
-    away_goals_for_avg: awayGoalsForAvg,
-    away_goals_against_avg: awayGoalsAgainstAvg,
-    corners_for_avg: cornersForAvg > 0 ? cornersForAvg : null,
-    corners_against_avg: cornersAgainstAvg > 0 ? cornersAgainstAvg : null,
-    home_corners_for_avg: homeCornersForAvg > 0 ? homeCornersForAvg : null,
-    home_corners_against_avg: homeCornersAgainstAvg > 0 ? homeCornersAgainstAvg : null,
-    away_corners_for_avg: awayCornersForAvg > 0 ? awayCornersForAvg : null,
-    away_corners_against_avg: awayCornersAgainstAvg > 0 ? awayCornersAgainstAvg : null,
-    shots_avg: shotsAvg > 0 ? shotsAvg : null,
-    shots_on_target_avg: shotsOnTargetAvg > 0 ? shotsOnTargetAvg : null,
+    goals_for_avg:           played ? round(goalsFor / played) : null,
+    goals_against_avg:       played ? round(goalsAgainst / played) : null,
+    home_goals_for_avg:      playedHome ? round(homeGoalsFor / playedHome) : null,
+    away_goals_for_avg:      playedAway ? round(awayGoalsFor / playedAway) : null,
+    home_goals_against_avg:  playedHome ? round(homeGoalsAga / playedHome) : null,
+    away_goals_against_avg:  playedAway ? round(awayGoalsAga / playedAway) : null,
     cards_yellow_avg: yellowAvg,
-    cards_red_avg: redAvg,
-    fouls_avg: foulsAvg,
-    clean_sheet_pct: cleanSheetPct,
-    matches_played: played,
-    form: form ? form.slice(-5) : null,
+    cards_red_avg:    redAvg,
+    matches_played:   played,
+    form:             (s.form || '').slice(-5) || null,
+    clean_sheet_pct:  played ? round(safe(s.clean_sheet?.total, 0) / played * 100) : null,
   }
 }
 
 async function run() {
   console.log('📊 Team Stats Sync iniciado —', new Date().toISOString())
-
-  let totalTeams = 0, totalOk = 0, totalFail = 0
+  let totalOk = 0, totalFail = 0
 
   for (const league of TARGET_LEAGUES) {
-    console.log(`\n🏆 ${league.name} (league_id=${league.leagueId})`)
-
+    console.log(`\n🏆 ${league.name} (id=${league.leagueId})`)
     let teams
     try {
       teams = await fetchTeamsInLeague(league.leagueId)
-      console.log(`   ${teams.length} times encontrados`)
-      await sleep(REQUEST_DELAY_MS)
-    } catch (err) {
-      console.error(`   ❌ Falha buscando times: ${err.message}`)
+      await sleep(DELAY)
+      console.log(`   ${teams.length} times`)
+    } catch (e) {
+      console.error(`   ❌ standings: ${e.message}`)
       continue
     }
 
     for (const team of teams) {
-      totalTeams++
       try {
-        const stats = await fetchTeamStats(team.id, league.leagueId)
-        await sleep(REQUEST_DELAY_MS)
+        // Fase 1: stats básicas (gols, cartões, forma)
+        const apiStats = await fetchTeamStatsFromAPI(team.id, league.leagueId)
+        await sleep(DELAY)
 
-        if (!stats || !stats.fixtures?.played?.total) {
-          console.log(`   ⏭️  ${team.name}: sem dados`)
-          continue
+        const base = apiStats ? extractFromAPIStats(apiStats) : {}
+        if (!base.matches_played) { console.log(`   ⏭️  ${team.name}: sem jogos`); continue }
+
+        // Fase 2: corners, shots, fouls de fixtures reais
+        console.log(`   🔍 ${team.name}: buscando corners/shots/fouls...`)
+        const csf = await fetchCornersShootsFouls(team.id, league.leagueId)
+        await sleep(DELAY)
+
+        const row = {
+          team_id:              team.id,
+          league_id:            league.leagueId,
+          season:               SEASON,
+          team_name:            team.name,
+          league:               league.name,
+          logo:                 team.logo,
+          ...base,
+          corners_for_avg:      csf.cornersFor,
+          corners_against_avg:  csf.cornersAgainst,
+          shots_avg:            csf.shotsFor,
+          shots_on_target_avg:  csf.shotsOnTarget,
+          fouls_avg:            csf.foulsCommitted,
+          updated_at:           new Date().toISOString(),
         }
 
-        const extracted = extractStats(stats)
-        if (!Object.keys(extracted).length) continue
+        const { error } = await supabase
+          .from('team_statistics')
+          .upsert(row, { onConflict: 'team_id,league_id,season' })
 
-        await upsertTeamStats({
-          team_id: team.id,
-          league_id: league.leagueId,
-          season: SEASON,
-          team_name: team.name,
-          league: league.name,
-          logo: team.logo,
-          ...extracted,
-          updated_at: new Date().toISOString(),
-        })
+        if (error) throw error
 
         totalOk++
-        console.log(`   ✅ ${team.name}: corners ${extracted.corners_for_avg ?? '?'} for / ${extracted.corners_against_avg ?? '?'} against`)
-      } catch (err) {
+        console.log(`   ✅ ${team.name}: gols=${base.goals_for_avg} corners=${csf.cornersFor} shots=${csf.shotsFor} fouls=${csf.foulsCommitted}`)
+      } catch (e) {
         totalFail++
-        console.error(`   ❌ ${team.name}: ${err.message}`)
+        console.error(`   ❌ ${team.name}: ${e.message}`)
       }
     }
   }
 
-  console.log(`\n📊 Resumo: ${totalOk}/${totalTeams} times atualizados, ${totalFail} falhas`)
+  console.log(`\n📊 Concluído: ${totalOk} ok, ${totalFail} falhas`)
 }
 
-run().catch(err => {
-  console.error('❌ Team Stats Sync falhou:', err.message)
-  process.exit(1)
-})
+run().catch(e => { console.error('❌ Fatal:', e.message); process.exit(1) })

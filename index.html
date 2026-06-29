@@ -3272,7 +3272,7 @@ function openAnalysis(matchId){
           </div>`;
         })()}
         <div class="a-box">
-          <div class="a-box-title">Comparação H2H</div>
+          <div class="a-box-title">Comparação H2H <span style="font-size:10px;font-weight:400;color:var(--text-3);margin-left:6px">valores por time · projeção = total do jogo</span></div>
           <!-- H2H Summary line -->
           ${(()=>{
             const fd = maybeJson(match.data) || {};
@@ -4272,7 +4272,7 @@ function buildLiveModalHtml(matchId, statsData, events, noStats = false) {
           ${isTrulyFriendly 
             ? `<span style="background:var(--surface-3);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-size:9px;font-weight:700">Amistoso</span>` 
             : `<span style="font-size:11px">📊</span>`}
-          <span>Stats ao vivo não disponíveis — acompanhe pelos eventos abaixo</span>
+          <span>Estatísticas detalhadas disponíveis ao encerramento do jogo</span>
         </div>`
       : `<div style="font-size:11px;color:var(--text-3);text-align:center;padding:10px 0;font-style:italic">⏳ Aguardando estatísticas...</div>`;
   }
