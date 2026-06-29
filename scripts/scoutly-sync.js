@@ -620,6 +620,25 @@ async function fetchTeamStatisticsFromDB(teamId, leagueId) {
   return error ? null : data
 }
 
+// Extrai scores recentes de fixtures já buscados (sem chamadas extras de API)
+// Retorna { recentScores: string[], recentMatches: {score,opponent,opponentLogo,isHome}[] }
+function extractRecentScoresFromFixtures(teamId, fixtures) {
+  const recentScores = []
+  const recentMatches = []
+  for (const f of (fixtures || []).slice(0, 6)) {
+    const isHome   = f.teams?.home?.id === teamId
+    const myGoals  = isHome ? f.goals?.home  : f.goals?.away
+    const oppGoals = isHome ? f.goals?.away  : f.goals?.home
+    if (myGoals === null || myGoals === undefined) continue
+    const scoreLabel  = `${myGoals}-${oppGoals}`
+    const opponent    = isHome ? (f.teams?.away?.name  || '?') : (f.teams?.home?.name  || '?')
+    const opponentLogo = isHome ? (f.teams?.away?.logo || null) : (f.teams?.home?.logo || null)
+    recentScores.push(scoreLabel)
+    recentMatches.push({ score: scoreLabel, opponent, opponentLogo, isHome, date: f.fixture?.date })
+  }
+  return { recentScores, recentMatches }
+}
+
 async function buildTeamContext(teamId, leagueId = null) {
   const cacheKey = `${teamId}:${leagueId || 'any'}`
   if (teamContextCache.has(cacheKey)) return teamContextCache.get(cacheKey)
@@ -653,13 +672,22 @@ async function buildTeamContext(teamId, leagueId = null) {
       return "irregular"
     })()
 
+    // Busca últimos 6 jogos apenas para exibição do H2H (1 chamada API, sem estatísticas)
+    let recentScores = [], recentMatches = []
+    try {
+      const recentFixtures = await fetchRecentFinishedFixtures(teamId, 6)
+      const extracted = extractRecentScoresFromFixtures(teamId, recentFixtures)
+      recentScores  = extracted.recentScores
+      recentMatches = extracted.recentMatches
+    } catch {}
+
     const profile = {
       matches: leagueStats.matches_played,
       avgGoalsFor: goalsFor, avgGoalsAgainst: goalsAgainst,
       avgShots: shots || null, avgShotsOnTarget: shotsOT || null,
       avgCorners: cornersFor || null, avgCornersAgainst: cornersAga || null,
       avgCards: cards, avgFouls: avgFouls,
-      recentScores: [], recentMatches: [], formStreak,
+      recentScores, recentMatches, formStreak,
     }
     const payload = { general: profile, home: profile, away: profile }
     teamContextCache.set(cacheKey, payload)
