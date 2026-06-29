@@ -15,21 +15,25 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
       - run: npm install
+
       - name: Sync
         env:
           APISPORTS_KEY: ${{ secrets.APISPORTS_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/scoutly-sync.js
+
       - name: Brain
         env:
           APISPORTS_KEY: ${{ secrets.APISPORTS_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/scoutly-brain.js
-      - name: Popular árbitros
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Árbitros — buscar nomes dos jogos de hoje
         run: |
           curl -s "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/populate-referees" || true
+
+      - name: Árbitros — stats de todas as ligas
+        run: |
+          curl -s "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/run-referee-sync" || true
