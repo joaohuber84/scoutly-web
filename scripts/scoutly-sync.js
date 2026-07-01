@@ -672,13 +672,23 @@ async function buildTeamContext(teamId, leagueId = null) {
       return "irregular"
     })()
 
-    // recentScores são populados pelo team-stats-sync (semanal) via campo recent_form_json
-    // O sync principal não faz chamadas extras de API para isso — mantém velocidade
-    const recentData   = (() => {
+    // Resultados recentes: tenta recent_form_json (semanal via team-stats-sync)
+    // Se vazio, busca via API (1 chamada por time — rápido, não busca estatísticas)
+    let recentScores = [], recentMatches = []
+    const recentData = (() => {
       try { return JSON.parse(leagueStats.recent_form_json || '{}') } catch { return {} }
     })()
-    const recentScores  = recentData.scores  || []
-    const recentMatches = recentData.matches || []
+    if (recentData.scores?.length) {
+      recentScores  = recentData.scores
+      recentMatches = recentData.matches || []
+    } else {
+      try {
+        const recentFixtures = await fetchRecentFinishedFixtures(teamId, 6)
+        const extracted = extractRecentScoresFromFixtures(teamId, recentFixtures)
+        recentScores  = extracted.recentScores
+        recentMatches = extracted.recentMatches
+      } catch {}
+    }
 
     const profile = {
       matches: leagueStats.matches_played,
