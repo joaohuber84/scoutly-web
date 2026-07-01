@@ -2366,17 +2366,6 @@
     </div>
     <!-- Footer close button — visible on mobile -->
     <div style="display:none;padding:10px 16px 14px;border-top:1px solid var(--border);flex-shrink:0" id="analysisFooter">
-      <!-- CTA Afiliados -->
-      <div style="display:flex;gap:8px;margin-bottom:10px">
-        <a href="https://www.betano.com.br" target="_blank" rel="noopener sponsored"
-           style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:linear-gradient(135deg,#1a1f3a,#252b50);border:1px solid rgba(255,200,0,.25);border-radius:var(--radius-sm);text-decoration:none;font-size:11px;font-weight:700;color:#ffd700;letter-spacing:.03em">
-          <span style="font-size:14px">⚡</span> Apostar na Betano
-        </a>
-        <a href="https://www.esportivabet.com" target="_blank" rel="noopener sponsored"
-           style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:linear-gradient(135deg,#0d2a1a,#1a4a2a);border:1px solid rgba(0,200,80,.25);border-radius:var(--radius-sm);text-decoration:none;font-size:11px;font-weight:700;color:#00c853;letter-spacing:.03em">
-          <span style="font-size:14px">🎯</span> Esportivabet
-        </a>
-      </div>
       <button onclick="closeAnalysis()" style="width:100%;padding:13px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text-2);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font-body);transition:all 0.15s;letter-spacing:0.02em">✕ Fechar análise</button>
     </div>
   </div>
@@ -3383,6 +3372,19 @@ function openAnalysis(matchId){
             <div class="mkt-ind"><div class="mkt-ind-label">BTTS</div><div class="mkt-ind-val" style="color:var(--blue)">${bttsPct}%</div></div>
           </div>
         </div>
+        <div class="a-box" style="padding:12px 16px">
+          <div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:8px">Onde apostar</div>
+          <div style="display:flex;gap:8px">
+            <a href="https://www.betano.com.br" target="_blank" rel="noopener sponsored"
+               style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:linear-gradient(135deg,#1a1f3a,#252b50);border:1px solid rgba(255,200,0,.3);border-radius:var(--radius-sm);text-decoration:none;font-size:12px;font-weight:700;color:#ffd700">
+              ⚡ Betano
+            </a>
+            <a href="https://www.esportivabet.com" target="_blank" rel="noopener sponsored"
+               style="flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 8px;background:linear-gradient(135deg,#0d2a1a,#1a4a2a);border:1px solid rgba(0,200,80,.3);border-radius:var(--radius-sm);text-decoration:none;font-size:12px;font-weight:700;color:#00c853">
+              🎯 Esportivabet
+            </a>
+          </div>
+        </div>
       </div>
     </div>
   `;
@@ -4274,6 +4276,7 @@ function buildLiveModalHtml(matchId, statsData, events, noStats = false) {
       ${statRow("No gol", gs(0,"Shots on Goal"), gs(1,"Shots on Goal"))}
       ${statRow("Posse %", gs(0,"Ball Possession").replace("%",""), gs(1,"Ball Possession").replace("%",""))}
       ${statRow("Cartões", cards[0], cards[1])}
+      ${gn(0,"Fouls")+gn(1,"Fouls") > 0 ? statRow("Faltas", gs(0,"Fouls"), gs(1,"Fouls")) : ""}
     </div>`;
   } else {
     const isTrulyFriendly = (match?.league||"").toLowerCase().includes("amistoso") || 
