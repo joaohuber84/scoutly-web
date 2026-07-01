@@ -1102,8 +1102,37 @@ async function fetchRefereeStats(refereeName) {
 }
 
 async function upsertMatchAnalysis(row) {
-  const{error}=await supabase.from("match_analysis").upsert({ match_id:row.match_id,home_strength:row.home_strength,away_strength:row.away_strength,expected_home_goals:row.expected_home_goals,expected_away_goals:row.expected_away_goals,expected_home_shots:row.expected_home_shots,expected_away_shots:row.expected_away_shots,expected_home_sot:row.expected_home_sot,expected_away_sot:row.expected_away_sot,expected_corners:row.expected_corners,expected_cards:row.expected_cards,prob_over25:row.prob_over25,prob_btts:row.prob_btts,prob_corners:row.prob_corners,prob_shots:row.prob_shots,prob_sot:row.prob_sot,prob_cards:row.prob_cards,best_pick_1:row.best_pick_1,best_pick_2:row.best_pick_2,best_pick_3:row.best_pick_3,aggressive_pick:row.aggressive_pick,analysis_text:row.analysis_text,data:row.form_data||null,referee_name:row.referee_name||null,referee_avg_cards:row.referee_avg_cards||null,referee_avg_fouls:row.referee_avg_fouls||null,created_at:new Date().toISOString() },{onConflict:"match_id"})
-  if(error)throw error
+  // Usa SQL nativo para preservar referee_name/avg_cards/avg_fouls existentes
+  // quando o sync não tem dados do árbitro (COALESCE = mantém valor anterior)
+  const { error } = await supabase.rpc('upsert_match_analysis', {
+    p_match_id: row.match_id,
+    p_home_strength: row.home_strength ?? null,
+    p_away_strength: row.away_strength ?? null,
+    p_expected_home_goals: row.expected_home_goals ?? null,
+    p_expected_away_goals: row.expected_away_goals ?? null,
+    p_expected_home_shots: row.expected_home_shots ?? null,
+    p_expected_away_shots: row.expected_away_shots ?? null,
+    p_expected_home_sot: row.expected_home_sot ?? null,
+    p_expected_away_sot: row.expected_away_sot ?? null,
+    p_expected_corners: row.expected_corners ?? null,
+    p_expected_cards: row.expected_cards ?? null,
+    p_prob_over25: row.prob_over25 ?? null,
+    p_prob_btts: row.prob_btts ?? null,
+    p_prob_corners: row.prob_corners ?? null,
+    p_prob_shots: row.prob_shots ?? null,
+    p_prob_sot: row.prob_sot ?? null,
+    p_prob_cards: row.prob_cards ?? null,
+    p_best_pick_1: row.best_pick_1 ?? null,
+    p_best_pick_2: row.best_pick_2 ?? null,
+    p_best_pick_3: row.best_pick_3 ?? null,
+    p_aggressive_pick: row.aggressive_pick ?? null,
+    p_analysis_text: row.analysis_text ?? null,
+    p_form_data: row.form_data ?? null,
+    p_referee_name: row.referee_name ?? null,
+    p_referee_avg_cards: row.referee_avg_cards ?? null,
+    p_referee_avg_fouls: row.referee_avg_fouls ?? null,
+  })
+  if (error) throw error
 }
 
 async function buildAndStoreMatches(fixtureLists) {
