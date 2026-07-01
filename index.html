@@ -2788,7 +2788,11 @@ function getMetrics(match){
   const avgShots = eHS!==null||eAS!==null ? (eHS||0)+(eAS||0) : toNumber(metrics.shots,null)??toNumber(match.avg_shots,null)??toNumber(markets.shots,null);
   const avgSOT = eHSOT!==null||eASOT!==null ? (eHSOT||0)+(eASOT||0) : toNumber(metrics.shots_on_target,null)??toNumber(match.avg_shots_on_target,null)??toNumber(metrics.sot,null);
   const avgCards = eCA ?? toNumber(metrics.cards,null) ?? toNumber(match.avg_cards,null) ?? toNumber(markets.cards,null);
-  const avgFouls = toNumber(metrics.fouls,null) ?? toNumber(match.avg_fouls,null) ?? toNumber(markets.fouls,null);
+  const _fd = maybeJson(match.data) || {};
+  const _hFouls = toNumber(_fd?.home_form_general?.avgFouls, null);
+  const _aFouls = toNumber(_fd?.away_form_general?.avgFouls, null);
+  const avgFouls = toNumber(metrics.fouls,null) ?? toNumber(match.avg_fouls,null) ?? toNumber(markets.fouls,null) ??
+    (_hFouls != null && _aFouls != null ? _hFouls + _aFouls : (_hFouls ?? _aFouls));
   const over25Prob = toNumber(match.prob_over25,null) ?? toNumber(match.over25_prob,null) ?? toNumber(markets.over25,null);
   const pH_raw = toNumber(probabilities.home,null) ?? toNumber(match.home_win_prob,null) ?? toNumber(match.home_result_prob,null);
   const pD_raw = toNumber(probabilities.draw,null) ?? toNumber(match.draw_prob,null) ?? toNumber(match.draw_result_prob,null);
