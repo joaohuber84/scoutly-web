@@ -3490,6 +3490,8 @@ function openAnalysis(matchId){
     const aStreak = a.formStreak || null;
     const hScores = (h.recentScores||[]).slice(0,5);
     const aScores = (a.recentScores||[]).slice(0,5);
+    const hMatchesFt = (h.recentMatches||[]).slice(0,5);  // FIX: define local, não usa outer scope
+    const aMatchesFt = (a.recentMatches||[]).slice(0,5);
     if (!hStreak && !aStreak && !hScores.length && !aScores.length) {
       return `<div class="h2h-no-data">Dados de forma não disponíveis.</div>`;
     }
@@ -3499,14 +3501,14 @@ function openAnalysis(matchId){
           <div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;text-align:center">${escapeHtml(homeTeam)}</div>
           <div style="text-align:center;margin-bottom:8px">${hStreak?`<span class="h2h-streak ${streakClass(hStreak)}">${escapeHtml(hStreak)}</span>`:`<span class="h2h-streak irr">sem dados</span>`}</div>
           <div style="font-size:9px;color:var(--text-3);text-align:center;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Últimos resultados</div>
-          ${hScores.length ? scorePillsHtml(hScores,"center",hMatches) : `<div class="h2h-no-data">—</div>`}
+          ${hScores.length ? scorePillsHtml(hScores,"center",hMatchesFt) : `<div class="h2h-no-data">—</div>`}
           ${h.matches?`<div style="font-size:9px;color:var(--text-3);text-align:center;margin-top:6px">${h.matches} jogo(s) analisado(s)</div>`:""}
         </div>
         <div>
           <div style="font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;text-align:center">${escapeHtml(awayTeam)}</div>
           <div style="text-align:center;margin-bottom:8px">${aStreak?`<span class="h2h-streak ${streakClass(aStreak)}">${escapeHtml(aStreak)}</span>`:`<span class="h2h-streak irr">sem dados</span>`}</div>
           <div style="font-size:9px;color:var(--text-3);text-align:center;margin-bottom:5px;text-transform:uppercase;letter-spacing:.06em">Últimos resultados</div>
-          ${aScores.length ? scorePillsHtml(aScores,"center",aMatches) : `<div class="h2h-no-data">—</div>`}
+          ${aScores.length ? scorePillsHtml(aScores,"center",aMatchesFt) : `<div class="h2h-no-data">—</div>`}
           ${a.matches?`<div style="font-size:9px;color:var(--text-3);text-align:center;margin-top:6px">${a.matches} jogo(s) analisado(s)</div>`:""}
         </div>
       </div>`;
@@ -3529,12 +3531,16 @@ function openAnalysis(matchId){
         </div>`;
       } else { content.innerHTML = renderH2HBars(hForm, aForm); }
     } else if (tab === "casa") {
-      const hHome = formData?.home_form_home||null; const aHome = formData?.away_form_home||null;
+      // FIX: fallback para general quando home não tem split home/away (Copa, Série B)
+      const hHome = formData?.home_form_home || formData?.home_form_general || null;
+      const aHome = formData?.away_form_home || formData?.away_form_general || null;
       if (hHome && metrics.homeSOT !== null && hHome.avgShotsOnTarget == null) hHome.avgShotsOnTarget = metrics.homeSOT;
       if (aHome && metrics.awaySOT !== null && aHome.avgShotsOnTarget == null) aHome.avgShotsOnTarget = metrics.awaySOT;
       content.innerHTML = renderH2HBars(hHome, aHome);
     } else if (tab === "fora") {
-      const hAway = formData?.home_form_away||null; const aAway = formData?.away_form_away||null;
+      // FIX: fallback para general quando não tem split
+      const hAway = formData?.home_form_away || formData?.home_form_general || null;
+      const aAway = formData?.away_form_away || formData?.away_form_general || null;
       if (hAway && metrics.homeSOT !== null && hAway.avgShotsOnTarget == null) hAway.avgShotsOnTarget = metrics.homeSOT;
       if (aAway && metrics.awaySOT !== null && aAway.avgShotsOnTarget == null) aAway.avgShotsOnTarget = metrics.awaySOT;
       content.innerHTML = renderH2HBars(hAway, aAway);
