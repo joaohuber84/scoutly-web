@@ -1169,6 +1169,8 @@ async function buildAndStoreMatches(fixtureLists) {
         probabilities:null,markets:null,metrics:null,pick:null,probability:null,insight:null,
       }
       await upsertMatch(baseMatchPayload)
+      // Amistosos: só salva o jogo, não analisa — evita 500+ chamadas API desnecessárias
+      if (leagueDisplay === "Amistosos Internacionais") { stored.push(baseMatchPayload); continue }
       const homeTeamId=fixture?.teams?.home?.id; const awayTeamId=fixture?.teams?.away?.id
       const leagueIdForStats=fixture?.league?.id||comp?.leagueId||null
       if(!homeTeamId||!awayTeamId){ stored.push(baseMatchPayload); console.log(`🟡 Sem análise (time_id ausente): ${leagueDisplay} | ${baseMatchPayload.home_team} x ${baseMatchPayload.away_team}`); continue }
