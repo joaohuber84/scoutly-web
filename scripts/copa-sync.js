@@ -80,9 +80,10 @@ async function refreshCopaAnalysis(fixtures) {
       ])
 
       // Busca jogos recentes de cada time (1 chamada por time)
+      // Busca jogos recentes em QUALQUER liga (não só Copa) para ter ao menos 5 resultados
       const [hFixRes, aFixRes] = await Promise.all([
-        fetch(`https://v3.football.api-sports.io/fixtures?team=${home.id}&league=${LEAGUE_ID}&season=${SEASON}&status=FT&last=6`, { headers: { "x-apisports-key": API_KEY } }),
-        fetch(`https://v3.football.api-sports.io/fixtures?team=${away.id}&league=${LEAGUE_ID}&season=${SEASON}&status=FT&last=6`, { headers: { "x-apisports-key": API_KEY } }),
+        fetch(`https://v3.football.api-sports.io/fixtures?team=${home.id}&last=10&status=FT`, { headers: { "x-apisports-key": API_KEY } }),
+        fetch(`https://v3.football.api-sports.io/fixtures?team=${away.id}&last=10&status=FT`, { headers: { "x-apisports-key": API_KEY } }),
       ])
       const hFix = (await hFixRes.json())?.response || []
       const aFix = (await aFixRes.json())?.response || []
