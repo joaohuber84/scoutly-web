@@ -2,8 +2,8 @@ name: Scoutly Sync
 
 on:
   schedule:
-    - cron: '0 9 * * *'   # 06:00 BRT (09:00 UTC)
-    - cron: '0 1 * * *'   # 22:00 BRT (01:00 UTC)
+    - cron: '0 9 * * *'   # 06:00 BRT
+    - cron: '0 1 * * *'   # 22:00 BRT
   workflow_dispatch:
 
 jobs:
@@ -30,10 +30,11 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/scoutly-brain.js
 
-      - name: Árbitros — buscar nomes dos jogos de hoje
+      - name: Preenche análises faltando
+        run: |
+          curl -s "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/fill-missing-analysis" || true
+
+      - name: Árbitros
         run: |
           curl -s "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/populate-referees" || true
-
-      - name: Árbitros — stats de todas as ligas
-        run: |
           curl -s "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/run-referee-sync" || true
