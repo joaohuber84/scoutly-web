@@ -4198,6 +4198,10 @@ function buildLiveIndicatorHtml(live) {
   return "";
 }
 async function refreshModalLiveStats(matchId) {
+  // Evita chamadas paralelas — se já está buscando, ignora
+  if (liveState._fetchingStats) return;
+  liveState._fetchingStats = true;
+  try {
   const getApiId = (id) => {
     // Priority 1: cached apiFixtureId from liveState (most reliable)
     const liveEntry = liveState.data.get(String(id));
@@ -4231,6 +4235,7 @@ async function refreshModalLiveStats(matchId) {
   // Fetch events too
   const events = await fetchMatchEvents(apiMatchId);
   section.innerHTML = buildLiveModalHtml(matchId, statsData, events);
+  } finally { liveState._fetchingStats = false; }
 }
 
 function buildLiveModalHtml(matchId, statsData, events, noStats = false) {
@@ -4694,9 +4699,18 @@ const FOOTBALL_PROXY_URL = "https://zngdcatlxlxamceqpxij.supabase.co/functions/v
 
 async function footballApi(endpoint, params = {}) {
   const qs = new URLSearchParams({ endpoint, ...params });
-  const res = await fetch(`${FOOTBALL_PROXY_URL}?${qs.toString()}`);
-  const json = await res.json();
-  return json.response || [];
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000); // 8s timeout
+  try {
+    const res = await fetch(`${FOOTBALL_PROXY_URL}?${qs.toString()}`, { signal: controller.signal });
+    const json = await res.json();
+    return json.response || [];
+  } catch(e) {
+    if (e.name === 'AbortError') console.warn(`footballApi timeout: ${endpoint}`);
+    return [];
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 function getZoneRules(leagueId) {
