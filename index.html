@@ -3155,7 +3155,15 @@ function statCardsMarkup(match){
 
 function refereeCardMarkup(match){
   const name = match.referee || match.referee_name || null;
-  if(!name) return "";
+  const isFuture = match.kickoff && new Date(match.kickoff) > new Date();
+  // Se jogo futuro e sem árbitro: mostra card "a confirmar"
+  if(!name) {
+    if(!isFuture) return "";
+    return `<div class="a-box" style="margin-top:0">
+      <div class="a-box-title">🟡 Árbitro da Partida</div>
+      <div style="font-size:12px;color:var(--text-3);padding:4px 0">A ser confirmado pela federação</div>
+    </div>`;
+  }
   const avgCards = toNumber(match.referee_avg_cards,null);
   const avgFouls = toNumber(match.referee_avg_fouls,null);
   const cardColor = avgCards==null?"var(--text-3)":avgCards>=5?"var(--red)":avgCards>=3.5?"var(--amber)":"var(--green)";

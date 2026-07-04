@@ -2,21 +2,26 @@ name: Copa Sync
 
 on:
   schedule:
-    - cron: '30 * * * *'  # A cada hora, no minuto :30
+    - cron: '30 * * * *'  # A cada hora, no :30
   workflow_dispatch:
 
 jobs:
   copa-sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
       - run: npm install
-      - name: Copa Sync
+
+      - name: Copa Sync + Análise
         env:
           APISPORTS_KEY: ${{ secrets.APISPORTS_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/copa-sync.js
+
+      - name: Árbitros Copa (busca próximos 5 dias ordenado por kickoff)
+        run: |
+          curl -s "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/populate-referees" || true
