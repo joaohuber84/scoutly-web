@@ -2,7 +2,8 @@ name: Copa Sync
 
 on:
   schedule:
-    - cron: '30 * * * *'  # A cada hora, no :30
+    - cron: '0 * * * *'   # Todo hora no :00
+    - cron: '30 * * * *'  # Todo hora no :30
   workflow_dispatch:
 
 jobs:
@@ -22,6 +23,6 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/copa-sync.js
 
-      - name: Árbitros Copa (busca próximos 5 dias ordenado por kickoff)
+      - name: Árbitros todos os jogos
         run: |
           curl -s "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/populate-referees" || true
