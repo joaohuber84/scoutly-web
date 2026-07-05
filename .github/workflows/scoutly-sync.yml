@@ -9,7 +9,7 @@ on:
 jobs:
   sync:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,9 +32,8 @@ jobs:
 
       - name: Preenche análises faltando
         run: |
-          curl -s "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/fill-missing-analysis" || true
+          curl -s --max-time 30 "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/fill-missing-analysis" || true
 
-      - name: Árbitros
+      - name: Árbitros — busca nomes
         run: |
-          curl -s "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/populate-referees" || true
-          curl -s "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/run-referee-sync" || true
+          curl -s --max-time 60 "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/populate-referees" || true
