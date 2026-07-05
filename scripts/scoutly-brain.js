@@ -60,9 +60,10 @@ const LEAGUE_TIER = {
   "Copa Colombia":4,"Leagues Cup":4,"Copa Sul-Sudeste":4,
 }
 
-// Apenas Copa Sul-Sudeste mantida — sem dados confiáveis na API-Football
+// Amistosos e ligas sem confiabilidade bloqueadas do radar
 const RADAR_BLACKLIST = new Set([
   "Copa Sul-Sudeste",
+  "Amistosos Internacionais",
 ])
 
 function getLeagueTierScore(league) {
@@ -313,8 +314,23 @@ function buildAnalysisFromRow(row){
   const profile=getGameProfile(row)
   const{best,alternatives}=chooseBestAndAlternatives(candidates,row)
   if(!best)return null
+
+  // Para ligas top (tier 1), quando o sync já calculou um pick forte com dados reais,
+  // ele é mais confiável que o brain recalculando. Ex: Brasil x Noruega com 3.79 gols
+  // projetados deve ter "Mais de 2.5 gols" como pick, não "Mais de 1.5 gols"
+  const leagueTier = LEAGUE_TIER[String(row.league||"")] ?? 4
+  const syncPick = row.best_pick_1
+  let finalBest = best
+  if (leagueTier === 1 && syncPick && syncPick !== best.market) {
+    // Verifica se o sync pick tem candidato válido com probabilidade razoável
+    const syncCandidate = candidates.find(c => c.market === syncPick)
+    if (syncCandidate && syncCandidate.probability >= 0.52) {
+      finalBest = syncCandidate
+    }
+  }
+
   const aggressivePick=alternatives.find((x)=>String(x.subfamily||"").includes("gols_over")||String(x.subfamily||"").includes("corners_over")||String(x.subfamily||"").includes("cards_over"))?.market||row.aggressive_pick||null
-  return{match_id:row.id,home_team:row.home_team,away_team:row.away_team,league:safeLeague(row),kickoff:row.kickoff,home_logo:row.home_logo,away_logo:row.away_logo,avg_goals:round1(row.avg_goals),avg_corners:round1(row.avg_corners),avg_shots:Math.round(toNumber(row.avg_shots)),avg_shots_on_target:Math.round(toNumber(row.avg_shots_on_target)),avg_cards:round1(row.avg_cards),avg_fouls:null,home_strength:round1(row.home_strength),away_strength:round1(row.away_strength),home_win_prob:round2(row.home_win_prob),draw_prob:round2(row.draw_prob),away_win_prob:round2(row.away_win_prob),over25_prob:round2(row.over25_prob),under25_prob:round2(row.under25_prob),under35_prob:round2(row.under35_prob),btts_prob:round2(row.btts_prob),prob_corners:round2(row.prob_corners),prob_shots:round2(row.prob_shots),prob_sot:round2(row.prob_sot),prob_cards:round2(row.prob_cards),game_profile:profile,main_pick:best.market,main_probability:round2(best.probability),main_score:round2(best.score),main_family:best.family,main_subfamily:best.subfamily,main_macro:best.macro,strength:getStrengthLabel(best.score),rhythm:getRhythmLabel(row.avg_shots),insight:buildInsight(row,best,profile),best_pick_1:best.market,best_pick_2:alternatives[0]?.market||null,best_pick_3:alternatives[1]?.market||null,aggressive_pick:aggressivePick,alternatives_count:alternatives.filter(Boolean).length}
+  return{match_id:row.id,home_team:row.home_team,away_team:row.away_team,league:safeLeague(row),kickoff:row.kickoff,home_logo:row.home_logo,away_logo:row.away_logo,avg_goals:round1(row.avg_goals),avg_corners:round1(row.avg_corners),avg_shots:Math.round(toNumber(row.avg_shots)),avg_shots_on_target:Math.round(toNumber(row.avg_shots_on_target)),avg_cards:round1(row.avg_cards),avg_fouls:null,home_strength:round1(row.home_strength),away_strength:round1(row.away_strength),home_win_prob:round2(row.home_win_prob),draw_prob:round2(row.draw_prob),away_win_prob:round2(row.away_win_prob),over25_prob:round2(row.over25_prob),under25_prob:round2(row.under25_prob),under35_prob:round2(row.under35_prob),btts_prob:round2(row.btts_prob),prob_corners:round2(row.prob_corners),prob_shots:round2(row.prob_shots),prob_sot:round2(row.prob_sot),prob_cards:round2(row.prob_cards),game_profile:profile,main_pick:finalBest.market,main_probability:round2(finalBest.probability),main_score:round2(finalBest.score),main_family:finalBest.family,main_subfamily:finalBest.subfamily,main_macro:finalBest.macro,strength:getStrengthLabel(finalBest.score),rhythm:getRhythmLabel(row.avg_shots),insight:buildInsight(row,finalBest,profile),best_pick_1:finalBest.market,best_pick_2:alternatives[0]?.market||null,best_pick_3:alternatives[1]?.market||null,aggressive_pick:aggressivePick,alternatives_count:alternatives.filter(Boolean).length}
 }
 
 function chooseRadar(analyses){
