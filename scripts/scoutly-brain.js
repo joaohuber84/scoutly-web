@@ -106,7 +106,7 @@ function hasMinimumAnalysis(row){
 function getStrengthLabel(score){if(score>=0.78)return"Forte";if(score>=0.7)return"Boa";return"Moderada"}
 function getRhythmLabel(avgShots){const shots=toNumber(avgShots);if(shots>=24)return"Alto";if(shots>=16)return"Moderado";return"Baixo"}
 function marketFamily(market){const m=String(market||"").trim().toLowerCase();if(!m)return"outro";if(m.includes("escanteio"))return"escanteios";if(m.includes("finaliza")&&m.includes("no gol"))return"sot";if(m.includes("finaliza"))return"shots";if(m.includes("cart"))return"cards";if(m.includes("ambas"))return"btts";if(m.includes("dupla chance")||m.includes("empate")||m.includes("vitória")||m.includes("vitoria"))return"resultado";if(m.includes("gol"))return"gols";return"outro"}
-function pickDynamicOverLine(value,lines){const eligible=lines.filter((line)=>value>=line+0.25);if(!eligible.length)return lines[0];return eligible[eligible.length-1]}
+function pickDynamicOverLine(value,lines,margin=0.25){const eligible=lines.filter((line)=>value>=line+margin);if(!eligible.length)return lines[0];return eligible[eligible.length-1]}
 function pickDynamicUnderLine(value,lines){const eligible=lines.filter((line)=>value<=line-0.25);if(!eligible.length)return lines[lines.length-1];return eligible[0]}
 function buildSubfamily(prefix,side,line){const clean=String(line).replace(".5","5").replace(".","");return`${prefix}_${side}${clean}`}
 
@@ -223,7 +223,10 @@ function buildCornerCandidates(row,profile){
   const candidates=[];const avgCorners=toNumber(row.avg_corners),avgShots=toNumber(row.avg_shots);const avgGoals=toNumber(row.avg_goals),avgSOT=toNumber(row.avg_shots_on_target)
   function add(market,probability,score,subfamily,macro="estatistico"){pushCandidate(candidates,{market,probability,score,family:"escanteios",subfamily,macro})}
   const boostedOverCorners=avgCorners+(avgShots>=20?0.35:0)+(avgShots>=23?0.25:0)+(avgSOT>=7?0.2:0)+(avgGoals>=2.6?0.15:0)+(profile==="estatistico"?0.2:0)+(profile==="volume"?0.18:0)+(profile==="precisao"?0.1:0)
-  if(boostedOverCorners>=6.0){const line=pickDynamicOverLine(boostedOverCorners,CORNER_OVER_LINES);const probability=clamp(0.6+(boostedOverCorners-line)*0.11+(avgShots>=21?0.02:0),0.6,0.91);const score=clamp(0.68+(boostedOverCorners-line)*0.09+(profile==="estatistico"?0.03:0)+(avgSOT>=7?0.02:0),0.6,0.9);add(`Mais de ${line} escanteios`,probability,score,buildSubfamily("corners","over",line))}
+  // Margem de segurança 1.0 para escanteios (antes era 0.25 — muito arriscado)
+  // Ex: projeção 8.7 → 8.5 precisaria de 9.5, usa 7.5 (mais seguro)
+  const boostedMargin = 1.0
+  if(boostedOverCorners>=6.0){const line=pickDynamicOverLine(boostedOverCorners,CORNER_OVER_LINES,boostedMargin);const probability=clamp(0.6+(boostedOverCorners-line)*0.11+(avgShots>=21?0.02:0),0.6,0.91);const score=clamp(0.68+(boostedOverCorners-line)*0.09+(profile==="estatistico"?0.03:0)+(avgSOT>=7?0.02:0),0.6,0.9);add(`Mais de ${line} escanteios`,probability,score,buildSubfamily("corners","over",line))}
   const controlledCorners=avgCorners-(avgShots<=18?0.3:0)-(avgShots<=16?0.2:0)-(avgGoals<=2.1?0.15:0)-(profile==="defensivo"?0.18:0)-(profile==="controlado"?0.2:0)
   if(controlledCorners<=10.6){const referenceUnder=controlledCorners+4.0;const line=pickDynamicUnderLine(referenceUnder,CORNER_UNDER_LINES);const probability=clamp(0.61+(line-referenceUnder)*0.07+(avgShots<=18?0.02:0),0.58,0.89);const score=clamp(0.66+(line-referenceUnder)*0.06+(profile==="controlado"?0.03:0)+(profile==="defensivo"?0.02:0),0.58,0.87);add(`Menos de ${line} escanteios`,probability,score,buildSubfamily("corners","under",line))}
   return candidates
@@ -314,23 +317,8 @@ function buildAnalysisFromRow(row){
   const profile=getGameProfile(row)
   const{best,alternatives}=chooseBestAndAlternatives(candidates,row)
   if(!best)return null
-
-  // Para ligas top (tier 1), quando o sync já calculou um pick forte com dados reais,
-  // ele é mais confiável que o brain recalculando. Ex: Brasil x Noruega com 3.79 gols
-  // projetados deve ter "Mais de 2.5 gols" como pick, não "Mais de 1.5 gols"
-  const leagueTier = LEAGUE_TIER[String(row.league||"")] ?? 4
-  const syncPick = row.best_pick_1
-  let finalBest = best
-  if (leagueTier === 1 && syncPick && syncPick !== best.market) {
-    // Verifica se o sync pick tem candidato válido com probabilidade razoável
-    const syncCandidate = candidates.find(c => c.market === syncPick)
-    if (syncCandidate && syncCandidate.probability >= 0.52) {
-      finalBest = syncCandidate
-    }
-  }
-
   const aggressivePick=alternatives.find((x)=>String(x.subfamily||"").includes("gols_over")||String(x.subfamily||"").includes("corners_over")||String(x.subfamily||"").includes("cards_over"))?.market||row.aggressive_pick||null
-  return{match_id:row.id,home_team:row.home_team,away_team:row.away_team,league:safeLeague(row),kickoff:row.kickoff,home_logo:row.home_logo,away_logo:row.away_logo,avg_goals:round1(row.avg_goals),avg_corners:round1(row.avg_corners),avg_shots:Math.round(toNumber(row.avg_shots)),avg_shots_on_target:Math.round(toNumber(row.avg_shots_on_target)),avg_cards:round1(row.avg_cards),avg_fouls:null,home_strength:round1(row.home_strength),away_strength:round1(row.away_strength),home_win_prob:round2(row.home_win_prob),draw_prob:round2(row.draw_prob),away_win_prob:round2(row.away_win_prob),over25_prob:round2(row.over25_prob),under25_prob:round2(row.under25_prob),under35_prob:round2(row.under35_prob),btts_prob:round2(row.btts_prob),prob_corners:round2(row.prob_corners),prob_shots:round2(row.prob_shots),prob_sot:round2(row.prob_sot),prob_cards:round2(row.prob_cards),game_profile:profile,main_pick:finalBest.market,main_probability:round2(finalBest.probability),main_score:round2(finalBest.score),main_family:finalBest.family,main_subfamily:finalBest.subfamily,main_macro:finalBest.macro,strength:getStrengthLabel(finalBest.score),rhythm:getRhythmLabel(row.avg_shots),insight:buildInsight(row,finalBest,profile),best_pick_1:finalBest.market,best_pick_2:alternatives[0]?.market||null,best_pick_3:alternatives[1]?.market||null,aggressive_pick:aggressivePick,alternatives_count:alternatives.filter(Boolean).length}
+  return{match_id:row.id,home_team:row.home_team,away_team:row.away_team,league:safeLeague(row),kickoff:row.kickoff,home_logo:row.home_logo,away_logo:row.away_logo,avg_goals:round1(row.avg_goals),avg_corners:round1(row.avg_corners),avg_shots:Math.round(toNumber(row.avg_shots)),avg_shots_on_target:Math.round(toNumber(row.avg_shots_on_target)),avg_cards:round1(row.avg_cards),avg_fouls:null,home_strength:round1(row.home_strength),away_strength:round1(row.away_strength),home_win_prob:round2(row.home_win_prob),draw_prob:round2(row.draw_prob),away_win_prob:round2(row.away_win_prob),over25_prob:round2(row.over25_prob),under25_prob:round2(row.under25_prob),under35_prob:round2(row.under35_prob),btts_prob:round2(row.btts_prob),prob_corners:round2(row.prob_corners),prob_shots:round2(row.prob_shots),prob_sot:round2(row.prob_sot),prob_cards:round2(row.prob_cards),game_profile:profile,main_pick:best.market,main_probability:round2(best.probability),main_score:round2(best.score),main_family:best.family,main_subfamily:best.subfamily,main_macro:best.macro,strength:getStrengthLabel(best.score),rhythm:getRhythmLabel(row.avg_shots),insight:buildInsight(row,best,profile),best_pick_1:best.market,best_pick_2:alternatives[0]?.market||null,best_pick_3:alternatives[1]?.market||null,aggressive_pick:aggressivePick,alternatives_count:alternatives.filter(Boolean).length}
 }
 
 function chooseRadar(analyses){
@@ -378,7 +366,7 @@ async function rebuildDailyPicks(radar,ticket){
     .gte("kickoff",now)
   if(deleteError)throw deleteError
   const orderedRadar=[...radar].sort(compareByKickoff)
-  const rows=orderedRadar.map((item,index)=>{const isInTicket=ticket.some((t)=>String(t.match_id)===String(item.match_id));return{rank:index+1,match_id:item.match_id,home_team:item.home_team,away_team:item.away_team,league:item.league,market:item.main_pick,probability:round2(item.main_probability),is_opportunity:isInTicket,home_logo:item.home_logo||null,away_logo:item.away_logo||null,kickoff:item.kickoff||null,created_at:new Date().toISOString()}})
+  const rows=orderedRadar.map((item,index)=>{const isInTicket=ticket.some((t)=>String(t.match_id)===String(item.match_id));return{rank:index+1,match_id:item.match_id,home_team:item.home_team,away_team:item.away_team,league:item.league,market:item.main_pick,probability:round2(item.main_probability),is_opportunity:!isInTicket,home_logo:item.home_logo||null,away_logo:item.away_logo||null,kickoff:item.kickoff||null,created_at:new Date().toISOString()}})
   if(!rows.length){console.log("Nenhuma dica elegível para gravar em daily_picks.");return}
   const{error:insertError}=await supabase.from("daily_picks").insert(rows)
   if(insertError)throw insertError
