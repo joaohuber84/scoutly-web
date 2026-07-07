@@ -318,20 +318,20 @@ async function loadPendingPicks() {
 }
 
 async function saveResult(pick, correct, resultHome, resultAway, checkedAt) {
-  const { error } = await supabase.from("pick_results").insert({
+  const { error } = await supabase.from("pick_results").upsert({
     match_id:   pick.match_id,
     home_team:  pick.home_team,
     away_team:  pick.away_team,
     league:     pick.league,
     kickoff:    pick.kickoff,
     market:     pick.market,
-    predicted:  pick.market,    // o que o radar previu
+    predicted:  pick.market,
     result_home: resultHome,
     result_away: resultAway,
     correct:    correct,
     checked_at: checkedAt,
     created_at: checkedAt,
-  })
+  }, { onConflict: "match_id,market", ignoreDuplicates: false })
   if (error) throw new Error(`Erro ao salvar result match ${pick.match_id}: ${error.message}`)
 }
 
