@@ -144,6 +144,8 @@ async function refreshCopaAnalysis(fixtures) {
       }
 
       // Usa RPC com COALESCE para preservar árbitro existente
+      // PICKS: gerados EXCLUSIVAMENTE pelo Brain (não pelo Copa Sync)
+      // Copa Sync só atualiza métricas e árbitro — nunca picks
       const { error } = await supabase.rpc('upsert_match_analysis', {
         p_match_id: f.id,
         p_home_strength: Math.round((hGFor*1.4 + hCards*0.15) * 100)/100,
@@ -159,7 +161,8 @@ async function refreshCopaAnalysis(fixtures) {
         p_prob_over25:  Math.round(Math.max(0.30, Math.min(0.72, 0.22+(totalG-1.9)*0.22)) * 100)/100,
         p_prob_btts:    Math.round(Math.max(0.30, Math.min(0.62, 0.38+(hGFor*0.25+aGFor*0.25-0.5)*0.12)) * 100)/100,
         p_prob_corners: 0.55, p_prob_shots: 0.57, p_prob_sot: 0.50, p_prob_cards: 0.54,
-        p_best_pick_1: pick1, p_best_pick_2: pick2, p_best_pick_3: pick3,
+        // Picks: null para NUNCA sobrescrever o que o Brain calculou
+        p_best_pick_1: null, p_best_pick_2: null, p_best_pick_3: null,
         p_aggressive_pick: null, p_analysis_text: null,
         p_form_data: formData,
         p_referee_name:      refStats?.name || refName || null,
