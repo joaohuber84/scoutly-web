@@ -244,7 +244,9 @@ function buildShotsCandidates(row,profile){
   const candidates=[];const avgShots=toNumber(row.avg_shots),avgGoals=toNumber(row.avg_goals)
   function add(market,probability,score,subfamily){pushCandidate(candidates,{market,probability,score,family:"shots",subfamily,macro:"volume"})}
   const adjustedShots=avgShots+(avgGoals>=2.3?0.8:0)+(profile==="volume"?0.4:0)
-  if(adjustedShots>=15.8){const line=pickDynamicOverLine(adjustedShots,SHOTS_OVER_LINES);const probability=clamp(0.6+(adjustedShots-line)*0.09,0.56,0.86);const score=clamp(0.64+(adjustedShots-line)*0.08,0.58,0.86);add(`Mais de ${line} finalizações`,probability,score,buildSubfamily("shots","over",line))}
+  // Margem 1.0 para finalizações (igual aos escanteios — evita picks arriscados)
+  const adjustedShotsMargin = 1.0
+  if(adjustedShots>=15.8){const line=pickDynamicOverLine(adjustedShots,SHOTS_OVER_LINES,adjustedShotsMargin);const probability=clamp(0.6+(adjustedShots-line)*0.09,0.56,0.86);const score=clamp(0.64+(adjustedShots-line)*0.08,0.58,0.86);add(`Mais de ${line} finalizações`,probability,score,buildSubfamily("shots","over",line))}
   return candidates
 }
 
@@ -260,7 +262,9 @@ function buildGoalsCandidates(row){
   const candidates=[];const avgGoals=toNumber(row.avg_goals),over25=toNumber(row.over25_prob),under25=toNumber(row.under25_prob)
   function add(market,probability,score,subfamily,macro){pushCandidate(candidates,{market,probability,score,family:"gols",subfamily,macro})}
   if(avgGoals>=2.0){const prob=clamp(over25+0.18,0.62,0.92);add("Mais de 1.5 gols",prob,prob,"gols_over15","ofensivo")}
-  if(avgGoals>=2.2){const prob=clamp(over25,0.6,0.9);add("Mais de 2.5 gols",prob,prob,"gols_over25","ofensivo")}
+  // Margem de segurança: Mais de 2.5 só quando projeção >= 3.0 (não 2.2)
+  // Switzerland x Colombia com 2.60 gols não deve recomendar 2.5
+  if(avgGoals>=3.0){const prob=clamp(over25,0.6,0.9);add("Mais de 2.5 gols",prob,prob,"gols_over25","ofensivo")}
   if(avgGoals<=2.4){const prob=clamp(under25,0.6,0.9);add("Menos de 2.5 gols",prob,prob,"gols_under25","defensivo")}
   if(avgGoals<=3.0){const prob=clamp(row.under35_prob,0.62,0.92);add("Menos de 3.5 gols",prob,prob,"gols_under35","defensivo")}
   return candidates
