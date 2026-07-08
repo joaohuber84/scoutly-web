@@ -3461,15 +3461,20 @@ function openAnalysis(matchId){
     if (!hForm && !aForm) return `<div class="h2h-no-data">Dados não disponíveis.</div>`;
     const h = hForm || {};
     const a = aForm || {};
+    const row = (hv, av, label) => {
+      const hNum = parseFloat(hv); const aNum = parseFloat(av);
+      if ((isNaN(hNum) || hNum === 0) && (isNaN(aNum) || aNum === 0)) return null; // oculta linha vazia
+      return [hv, av, label];
+    };
     const rows = [
-      [formatDecimal(h.avgGoalsFor,1), formatDecimal(a.avgGoalsFor,1), "Gols marcados"],
-      [formatDecimal(h.avgGoalsAgainst,1), formatDecimal(a.avgGoalsAgainst,1), "Gols sofridos"],
-      [formatDecimal(h.avgShots,0), formatDecimal(a.avgShots,0), "Finalizações totais"],
-      [formatDecimal(h.avgShotsOnTarget??h.avgSOT??h.sot??h.shots_on_target??h.shotsOnTarget??h.avg_shots_on_target,0), formatDecimal(a.avgShotsOnTarget??a.avgSOT??a.sot??a.shots_on_target??a.shotsOnTarget??a.avg_shots_on_target,0), "No gol"],
-      [formatDecimal(h.avgCorners,1), formatDecimal(a.avgCorners,1), "Escanteios"],
-      [formatDecimal(h.avgCards,1), formatDecimal(a.avgCards,1), "Cartões"],
-      [formatDecimal(h.avgFouls??h.fouls??h.avg_fouls,1), formatDecimal(a.avgFouls??a.fouls??a.avg_fouls,1), "Faltas"],
-    ];
+      row(formatDecimal(h.avgGoalsFor,1), formatDecimal(a.avgGoalsFor,1), "Gols marcados"),
+      row(formatDecimal(h.avgGoalsAgainst,1), formatDecimal(a.avgGoalsAgainst,1), "Gols sofridos"),
+      row(formatDecimal(h.avgShots,0), formatDecimal(a.avgShots,0), "Finalizações totais"),
+      row(formatDecimal(h.avgShotsOnTarget??h.avgSOT??h.sot??h.shots_on_target??h.shotsOnTarget??h.avg_shots_on_target,0), formatDecimal(a.avgShotsOnTarget??a.avgSOT??a.sot??a.shots_on_target??a.shotsOnTarget??a.avg_shots_on_target,0), "No gol"),
+      row(formatDecimal(h.avgCorners,1), formatDecimal(a.avgCorners,1), "Escanteios"),
+      row(formatDecimal(h.avgCards,1), formatDecimal(a.avgCards,1), "Cartões"),
+      row(formatDecimal(h.avgFouls??h.fouls??h.avg_fouls,1), formatDecimal(a.avgFouls??a.fouls??a.avg_fouls,1), "Faltas"),
+    ].filter(Boolean);
     const barsHtml = rows.map(([hv,av,label]) => h2hBar(hv,av,label)).join("");
     const hStreak = h.formStreak || null;
     const aStreak = a.formStreak || null;
