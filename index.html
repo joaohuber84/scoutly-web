@@ -3475,7 +3475,9 @@ function openAnalysis(matchId){
       row(formatDecimal(h.avgCards,1), formatDecimal(a.avgCards,1), "Cartões"),
       row(formatDecimal(h.avgFouls??h.fouls??h.avg_fouls,1), formatDecimal(a.avgFouls??a.fouls??a.avg_fouls,1), "Faltas"),
     ].filter(Boolean);
-    const barsHtml = rows.map(([hv,av,label]) => h2hBar(hv,av,label)).join("");
+    const statsAvailable = rows.some(r => r[2] !== "Gols marcados" && r[2] !== "Gols sofridos");
+    const statsNote = !statsAvailable ? `<div style="font-size:10px;color:var(--text-3);text-align:center;margin-top:6px">⚠️ Estatísticas detalhadas não disponíveis pela API para esta competição</div>` : "";
+    const barsHtml = rows.map(([hv,av,label]) => h2hBar(hv,av,label)).join("") + statsNote;
     const hStreak = h.formStreak || null;
     const aStreak = a.formStreak || null;
     const hScores = (h.recentScores||[]).slice(0,5);
