@@ -4229,22 +4229,17 @@ async function refreshModalLiveStats(matchId) {
   };
   const apiMatchId = getApiId(matchId);
   const statsData = await fetchFixtureStats(apiMatchId);
-  if (!statsData.length) {
-    const section = document.getElementById("liveStatsSection");
-    if (!section) return;
-    const tries = Number(section.dataset.retries || 0);
-    if (tries < 4) {
-      section.dataset.retries = tries + 1;
-      section.innerHTML = buildLiveModalHtml(matchId, null, null);
-      setTimeout(() => refreshModalLiveStats(matchId), 8000);
-    } else {
-      // After 2 tries, show score only — stats not available for this match
-      section.innerHTML = buildLiveModalHtml(matchId, null, null, true);
-    }
-    return;
-  }
   const section = document.getElementById("liveStatsSection");
   if (!section) return;
+
+  if (!statsData.length) {
+    // Sem stats (ex: Copa 2026) — busca eventos para mostrar gols e placar real
+    const eventsData = await footballApi("fixtures/events", { fixture: apiMatchId }).catch(() => []);
+    section.innerHTML = buildLiveModalHtml(matchId, null, eventsData.length ? eventsData : null, true);
+    // Agenda próxima atualização de score/eventos a cada 30s mesmo sem stats
+    setTimeout(() => { liveState._fetchingStats = false; refreshModalLiveStats(matchId); }, 30000);
+    return;
+  }
   delete section.dataset.retrying;
 
   // Fetch events too
@@ -4510,7 +4505,7 @@ function startLiveModule() {
     if (!liveState.activeModalId) return;
     if (!document.getElementById("analysisOverlay")?.classList.contains("open")) return;
     refreshModalLiveStats(liveState.activeModalId);
-  }, 60 * 1000);
+  }, 30 * 1000); // 30s — mais responsivo para score ao vivo
 }
 const SHARE_URL = "https://scoutlypro.app";
 const SHARE_TEXT = "🎯 Conhece o Scoutly? Radar inteligente de apostas esportivas — analisa jogos, gera picks com estatística real e mostra ao vivo o que está rolando. Acesse grátis!";
