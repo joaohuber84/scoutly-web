@@ -29,7 +29,14 @@ const TARGET_LEAGUES = [
   { leagueId: 78,  name: 'Bundesliga' },
   { leagueId: 61,  name: 'Ligue 1' },
   { leagueId: 88,  name: 'Eredivisie' },
+  { leagueId: 113, name: 'Allsvenskan' },
+  { leagueId: 103, name: 'Eliteserien' },
   { leagueId: 253, name: 'MLS' },
+  { leagueId: 128, name: 'Liga Argentina' },
+  { leagueId: 97,  name: 'Copa Argentina' },
+  { leagueId: 2,   name: 'UEFA Champions League', season: 2026 },
+  { leagueId: 3,   name: 'UEFA Europa League', season: 2026 },
+  { leagueId: 848, name: 'UEFA Conference League', season: 2026 },
 ]
 
 const DELAY = 350
