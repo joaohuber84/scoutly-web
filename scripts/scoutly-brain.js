@@ -222,17 +222,21 @@ function pushCandidate(candidates,item){const family=item.family||marketFamily(i
 function buildCornerCandidates(row,profile){
   const candidates=[];const avgCorners=toNumber(row.avg_corners),avgShots=toNumber(row.avg_shots);const avgGoals=toNumber(row.avg_goals),avgSOT=toNumber(row.avg_shots_on_target)
   function add(market,probability,score,subfamily,macro="estatistico"){pushCandidate(candidates,{market,probability,score,family:"escanteios",subfamily,macro})}
+  // Boost usado APENAS para probabilidade — NÃO para seleção de linha
+  // Antes: boost empurrava 9.3 → 9.65-9.9, gerando 7.5/8.5 para quase todos
   const boostedOverCorners=avgCorners+(avgShots>=20?0.35:0)+(avgShots>=23?0.25:0)+(avgSOT>=7?0.2:0)+(avgGoals>=2.6?0.15:0)+(profile==="estatistico"?0.2:0)+(profile==="volume"?0.18:0)+(profile==="precisao"?0.1:0)
-  // Para pick PRINCIPAL: máximo 7.5 escanteios (90% hit rate histórico)
-  // "Mais de 8.5" só como linha especial quando projeção real é >= 10.5
-  // Razão: João quer picks seguros — 6.5/7.5 tem 90%, 8.5 tem 75%
-  const MAIN_CORNER_LINES = [6.5, 7.5]
-  const boostedMargin = 1.0
-  if(boostedOverCorners>=6.0){
-    const line = boostedOverCorners >= 10.5
-      ? pickDynamicOverLine(boostedOverCorners, CORNER_OVER_LINES, boostedMargin)  // pode usar 8.5
-      : pickDynamicOverLine(boostedOverCorners, MAIN_CORNER_LINES, boostedMargin)  // máximo 7.5
-    const probability=clamp(0.6+(boostedOverCorners-line)*0.11+(avgShots>=21?0.02:0),0.6,0.91);const score=clamp(0.68+(boostedOverCorners-line)*0.09+(profile==="estatistico"?0.03:0)+(avgSOT>=7?0.02:0),0.6,0.9);add(`Mais de ${line} escanteios`,probability,score,buildSubfamily("corners","over",line))
+  // Seleção de linha: usa avg_corners RAW com margem 2.0 (seguro)
+  // Ex: avgCorners=9.3 → 9.3>=8.5(6.5+2) SIM, 9.3>=9.5(7.5+2) NÃO → linha 6.5 ✅
+  // Ex: avgCorners=10.0 → 10.0>=9.5 SIM → linha 7.5 ✅
+  // Ex: avgCorners>=10.5 → pode usar 8.5 (muito raro)
+  const SAFE_MARGIN = 2.0
+  if(avgCorners>=6.0){
+    const line = avgCorners >= 10.5
+      ? pickDynamicOverLine(avgCorners, CORNER_OVER_LINES, SAFE_MARGIN)
+      : pickDynamicOverLine(avgCorners, [6.5, 7.5], SAFE_MARGIN)
+    const probability=clamp(0.6+(boostedOverCorners-line)*0.11+(avgShots>=21?0.02:0),0.6,0.91)
+    const score=clamp(0.68+(boostedOverCorners-line)*0.09+(profile==="estatistico"?0.03:0)+(avgSOT>=7?0.02:0),0.6,0.9)
+    add(`Mais de ${line} escanteios`,probability,score,buildSubfamily("corners","over",line))
   }
   const controlledCorners=avgCorners-(avgShots<=18?0.3:0)-(avgShots<=16?0.2:0)-(avgGoals<=2.1?0.15:0)-(profile==="defensivo"?0.18:0)-(profile==="controlado"?0.2:0)
   if(controlledCorners<=10.6){const referenceUnder=controlledCorners+4.0;const line=pickDynamicUnderLine(referenceUnder,CORNER_UNDER_LINES);const probability=clamp(0.61+(line-referenceUnder)*0.07+(avgShots<=18?0.02:0),0.58,0.89);const score=clamp(0.66+(line-referenceUnder)*0.06+(profile==="controlado"?0.03:0)+(profile==="defensivo"?0.02:0),0.58,0.87);add(`Menos de ${line} escanteios`,probability,score,buildSubfamily("corners","under",line))}
