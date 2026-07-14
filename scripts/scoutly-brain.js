@@ -228,7 +228,7 @@ function buildCornerCandidates(row,profile){
   // Escanteios: máximo 7.5 no pick principal — NUNCA 8.5 (75% hit rate histórico, muito arriscado)
   // João quer apenas linhas seguras: 6.5 (90%) e 7.5 quando muito justificado
   if(avgCorners>=6.0){
-    const line = pickDynamicOverLine(avgCorners, [6.5, 7.5], SAFE_MARGIN)  // 8.5 REMOVIDO
+    const line = pickDynamicOverLine(avgCorners, [6.5, 7.5], 2.0)  // 8.5 REMOVIDO — margem 2.0
     const probability=clamp(0.6+(boostedOverCorners-line)*0.11+(avgShots>=21?0.02:0),0.6,0.91)
     const score=clamp(0.68+(boostedOverCorners-line)*0.09+(profile==="estatistico"?0.03:0)+(avgSOT>=7?0.02:0),0.6,0.9)
     add(`Mais de ${line} escanteios`,probability,score,buildSubfamily("corners","over",line))
