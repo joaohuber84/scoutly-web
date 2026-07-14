@@ -225,15 +225,10 @@ function buildCornerCandidates(row,profile){
   // Boost usado APENAS para probabilidade — NÃO para seleção de linha
   // Antes: boost empurrava 9.3 → 9.65-9.9, gerando 7.5/8.5 para quase todos
   const boostedOverCorners=avgCorners+(avgShots>=20?0.35:0)+(avgShots>=23?0.25:0)+(avgSOT>=7?0.2:0)+(avgGoals>=2.6?0.15:0)+(profile==="estatistico"?0.2:0)+(profile==="volume"?0.18:0)+(profile==="precisao"?0.1:0)
-  // Seleção de linha: usa avg_corners RAW com margem 2.0 (seguro)
-  // Ex: avgCorners=9.3 → 9.3>=8.5(6.5+2) SIM, 9.3>=9.5(7.5+2) NÃO → linha 6.5 ✅
-  // Ex: avgCorners=10.0 → 10.0>=9.5 SIM → linha 7.5 ✅
-  // Ex: avgCorners>=10.5 → pode usar 8.5 (muito raro)
-  const SAFE_MARGIN = 2.0
+  // Escanteios: máximo 7.5 no pick principal — NUNCA 8.5 (75% hit rate histórico, muito arriscado)
+  // João quer apenas linhas seguras: 6.5 (90%) e 7.5 quando muito justificado
   if(avgCorners>=6.0){
-    const line = avgCorners >= 10.5
-      ? pickDynamicOverLine(avgCorners, CORNER_OVER_LINES, SAFE_MARGIN)
-      : pickDynamicOverLine(avgCorners, [6.5, 7.5], SAFE_MARGIN)
+    const line = pickDynamicOverLine(avgCorners, [6.5, 7.5], SAFE_MARGIN)  // 8.5 REMOVIDO
     const probability=clamp(0.6+(boostedOverCorners-line)*0.11+(avgShots>=21?0.02:0),0.6,0.91)
     const score=clamp(0.68+(boostedOverCorners-line)*0.09+(profile==="estatistico"?0.03:0)+(avgSOT>=7?0.02:0),0.6,0.9)
     add(`Mais de ${line} escanteios`,probability,score,buildSubfamily("corners","over",line))
@@ -275,7 +270,9 @@ function buildGoalsCandidates(row){
   if(avgGoals>=2.0){const prob=clamp(over25+0.18,0.62,0.92);add("Mais de 1.5 gols",prob,prob,"gols_over15","ofensivo")}
   // Margem de segurança: Mais de 2.5 só quando projeção >= 3.0 (não 2.2)
   // Switzerland x Colombia com 2.60 gols não deve recomendar 2.5
-  if(avgGoals>=3.0){const prob=clamp(over25,0.6,0.9);add("Mais de 2.5 gols",prob,prob,"gols_over25","ofensivo")}
+  // Mais de 2.5 gols: só quando projeção >= 3.5 (muito conservador)
+  // Com threshold 3.0 ainda aparecia em muitos jogos. 3.5 garante margem real.
+  if(avgGoals>=3.5){const prob=clamp(over25,0.6,0.9);add("Mais de 2.5 gols",prob,prob,"gols_over25","ofensivo")}
   if(avgGoals<=2.4){const prob=clamp(under25,0.6,0.9);add("Menos de 2.5 gols",prob,prob,"gols_under25","defensivo")}
   if(avgGoals<=3.0){const prob=clamp(row.under35_prob,0.62,0.92);add("Menos de 3.5 gols",prob,prob,"gols_under35","defensivo")}
   return candidates
