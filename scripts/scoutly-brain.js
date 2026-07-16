@@ -164,7 +164,11 @@ function mergeMatchRow(matchRow,analysisMap){
   const finalCardsProb   = isTopIntl ? 0.48 : cardsProb;
   const finalCornersProb = isTopIntl ? 0.54 : cornersProb;
   const confidenceScore=clamp(toNumber(matchRow.confidence_score,0)||toNumber(matchRow.probability,0)||over25Prob||over15Prob||(isTopIntl?0.52:0),0,1)
-  return{id:matchRow.id,kickoff:matchRow.kickoff,league:matchRow.league,country:matchRow.country,region:matchRow.region,priority:toNumber(matchRow.priority,0),home_team:matchRow.home_team,away_team:matchRow.away_team,home_logo:matchRow.home_logo,away_logo:matchRow.away_logo,metrics,markets,probabilities,home_strength:round1(toNumber(analysis.home_strength,0)),away_strength:round1(toNumber(analysis.away_strength,0)),avg_goals:isTopIntl?finalAvgGoals:avgGoals,avg_corners:isTopIntl?finalAvgCorners:avgCorners,avg_shots:isTopIntl?finalAvgShots:avgShots,avg_shots_on_target:isTopIntl?finalAvgSOT:avgShotsOnTarget,avg_cards:isTopIntl?finalAvgCards:avgCards,avg_fouls:null,over15_prob:round2(isTopIntl?0.67:over15Prob),over25_prob:round2(isTopIntl?finalOver25:over25Prob),under25_prob:round2(isTopIntl?1-finalOver25:under25Prob),under35_prob:round2(isTopIntl?0.49:under35Prob),btts_prob:round2(isTopIntl?finalBtts:bttsProb),prob_corners:round2(isTopIntl?finalCornersProb:cornersProb),prob_shots:round2(isTopIntl?finalShotsProb:shotsProb),prob_sot:round2(isTopIntl?finalSOTProb:sotProb),prob_cards:round2(isTopIntl?finalCardsProb:cardsProb),home_win_prob:round2(homeWinProb),draw_prob:round2(drawProb),away_win_prob:round2(awayWinProb),expected_home_goals:round2(expectedHomeGoals),expected_away_goals:round2(expectedAwayGoals),expected_home_shots:round2(expectedHomeShots),expected_away_shots:round2(expectedAwayShots),expected_home_sot:round2(expectedHomeSOT),expected_away_sot:round2(expectedAwaySOT),expected_corners:round2(expectedCorners),expected_cards:round2(expectedCards),confidence_score:round2(confidenceScore),best_pick_1:analysis.best_pick_1||matchRow.pick||null,best_pick_2:analysis.best_pick_2||null,best_pick_3:analysis.best_pick_3||null,aggressive_pick:analysis.aggressive_pick||null,analysis_text:analysis.analysis_text||matchRow.insight||null,game_profile:matchRow.game_profile||null}
+  return{id:matchRow.id,kickoff:matchRow.kickoff,league:matchRow.league,country:matchRow.country,region:matchRow.region,priority:toNumber(matchRow.priority,0),home_team:matchRow.home_team,away_team:matchRow.away_team,home_logo:matchRow.home_logo,away_logo:matchRow.away_logo,metrics,markets,probabilities,home_strength:round1(toNumber(analysis.home_strength,0)),away_strength:round1(toNumber(analysis.away_strength,0)),avg_goals:isTopIntl?finalAvgGoals:avgGoals,avg_corners:isTopIntl?finalAvgCorners:avgCorners,avg_shots:isTopIntl?finalAvgShots:avgShots,avg_shots_on_target:isTopIntl?finalAvgSOT:avgShotsOnTarget,avg_cards:isTopIntl?finalAvgCards:avgCards,avg_fouls:null,over15_prob:round2(isTopIntl?0.67:over15Prob),over25_prob:round2(isTopIntl?finalOver25:over25Prob),under25_prob:round2(isTopIntl?1-finalOver25:under25Prob),under35_prob:round2(isTopIntl?0.49:under35Prob),btts_prob:round2(isTopIntl?finalBtts:bttsProb),prob_corners:round2(isTopIntl?finalCornersProb:cornersProb),prob_shots:round2(isTopIntl?finalShotsProb:shotsProb),prob_sot:round2(isTopIntl?finalSOTProb:sotProb),prob_cards:round2(isTopIntl?finalCardsProb:cardsProb),home_win_prob:round2(homeWinProb),draw_prob:round2(drawProb),away_win_prob:round2(awayWinProb),expected_home_goals:round2(expectedHomeGoals),expected_away_goals:round2(expectedAwayGoals),expected_home_shots:round2(expectedHomeShots),expected_away_shots:round2(expectedAwayShots),expected_home_sot:round2(expectedHomeSOT),expected_away_sot:round2(expectedAwaySOT),expected_corners:round2(expectedCorners),expected_cards:round2(expectedCards),confidence_score:round2(confidenceScore),best_pick_1:analysis.best_pick_1||matchRow.pick||null,best_pick_2:analysis.best_pick_2||null,best_pick_3:analysis.best_pick_3||null,aggressive_pick:analysis.aggressive_pick||null,analysis_text:analysis.analysis_text||matchRow.insight||null,game_profile:matchRow.game_profile||null,
+    // Escanteios por time: usa distribuição de chutes como proxy
+    home_avg_corners:isTopIntl?4.9:round1((isTopIntl?finalAvgCorners:avgCorners)*((expectedHomeShots>0&&expectedAwayShots>0)?expectedHomeShots/(expectedHomeShots+expectedAwayShots):0.52)),
+    away_avg_corners:isTopIntl?4.6:round1((isTopIntl?finalAvgCorners:avgCorners)*((expectedHomeShots>0&&expectedAwayShots>0)?expectedAwayShots/(expectedHomeShots+expectedAwayShots):0.48)),
+    referee_avg_cards:toNumber(matchRow.referee_avg_cards,0)}
 }
 
 async function loadActiveMatches(){
@@ -249,21 +253,37 @@ function buildCardsCandidates(row,profile){
   return candidates
 }
 
+// Escanteios por TIME — "Mais de 4.5 escanteios França", "Mais de 3.5 escanteios Argentina"
+// Linhas: 2.5, 3.5, 4.5, 5.5 por time individualmente
+function buildTeamCornersCandidates(row,profile){
+  const candidates=[]
+  function add(market,probability,score,subfamily){pushCandidate(candidates,{market,probability,score,family:"escanteios_time",subfamily,macro:"estatistico"})}
+  const TEAM_LINES=[2.5,3.5,4.5,5.5]
+  const TEAM_MARGIN=1.0
+  const hCorners=toNumber(row.home_avg_corners,0)
+  const aCorners=toNumber(row.away_avg_corners,0)
+  // Casa: só adiciona se tiver margem real (corners projetados > linha + 1.0)
+  if(hCorners>=3.5){const line=pickDynamicOverLine(hCorners,TEAM_LINES,TEAM_MARGIN);const prob=clamp(0.67+(hCorners-line)*0.11,0.64,0.92);const sc=clamp(0.70+(hCorners-line)*0.10,0.67,0.91);add(`Mais de ${line} escanteios ${row.home_team}`,prob,sc,`team_corners_home_${line}`)}
+  // Visitante
+  if(aCorners>=3.5){const line=pickDynamicOverLine(aCorners,TEAM_LINES,TEAM_MARGIN);const prob=clamp(0.65+(aCorners-line)*0.11,0.62,0.90);const sc=clamp(0.68+(aCorners-line)*0.10,0.65,0.89);add(`Mais de ${line} escanteios ${row.away_team}`,prob,sc,`team_corners_away_${line}`)}
+  return candidates
+}
+
 function buildShotsCandidates(row,profile){
   const candidates=[];const avgShots=toNumber(row.avg_shots),avgGoals=toNumber(row.avg_goals)
   function add(market,probability,score,subfamily){pushCandidate(candidates,{market,probability,score,family:"shots",subfamily,macro:"volume"})}
   const adjustedShots=avgShots+(avgGoals>=2.3?0.8:0)+(profile==="volume"?0.4:0)
-  // Margem 1.0 para finalizações (igual aos escanteios — evita picks arriscados)
-  const adjustedShotsMargin = 1.0
-  if(adjustedShots>=15.8){const line=pickDynamicOverLine(adjustedShots,SHOTS_OVER_LINES,adjustedShotsMargin);const probability=clamp(0.6+(adjustedShots-line)*0.09,0.56,0.86);const score=clamp(0.64+(adjustedShots-line)*0.08,0.58,0.86);add(`Mais de ${line} finalizações`,probability,score,buildSubfamily("shots","over",line))}
+  // Threshold alto: só jogo muito ofensivo — margem 2.0
+  if(adjustedShots>=22.0){const line=pickDynamicOverLine(adjustedShots,SHOTS_OVER_LINES,2.0);const probability=clamp(0.60+(adjustedShots-line)*0.08,0.58,0.82);const score=clamp(0.62+(adjustedShots-line)*0.07,0.58,0.80);add(`Mais de ${line} finalizações`,probability,score,buildSubfamily("shots","over",line))}
   return candidates
 }
 
 function buildSOTCandidates(row,profile){
   const candidates=[];const avgSOT=toNumber(row.avg_shots_on_target),avgGoals=toNumber(row.avg_goals)
   function add(market,probability,score,subfamily){pushCandidate(candidates,{market,probability,score,family:"sot",subfamily,macro:"precisao"})}
-  const adjustedSOT=avgSOT+(avgGoals>=2.3?0.4:0)+(profile==="precisao"?0.4:0)
-  if(adjustedSOT>=4.4){const line=pickDynamicOverLine(adjustedSOT,SOT_OVER_LINES);const probability=clamp(0.59+(adjustedSOT-line)*0.08,0.55,0.84);const score=clamp(0.62+(adjustedSOT-line)*0.075,0.56,0.83);add(`Mais de ${line} finalizações no gol`,probability,score,buildSubfamily("sot","over",line))}
+  const adjustedSOT=avgSOT+(avgGoals>=2.5?0.3:0)+(profile==="precisao"?0.2:0)
+  // Threshold mais alto + margem 1.5 — finalizações no gol era assertivo
+  if(adjustedSOT>=6.5){const line=pickDynamicOverLine(adjustedSOT,SOT_OVER_LINES,1.5);const probability=clamp(0.62+(adjustedSOT-line)*0.09,0.60,0.85);const score=clamp(0.65+(adjustedSOT-line)*0.08,0.62,0.84);add(`Mais de ${line} finalizações no gol`,probability,score,buildSubfamily("sot","over",line))}
   return candidates
 }
 
@@ -273,9 +293,8 @@ function buildGoalsCandidates(row){
   if(avgGoals>=2.0){const prob=clamp(over25+0.18,0.62,0.92);add("Mais de 1.5 gols",prob,prob,"gols_over15","ofensivo")}
   // Margem de segurança: Mais de 2.5 só quando projeção >= 3.0 (não 2.2)
   // Switzerland x Colombia com 2.60 gols não deve recomendar 2.5
-  // Mais de 2.5 gols: só quando projeção >= 3.5 (muito conservador)
-  // Com threshold 3.0 ainda aparecia em muitos jogos. 3.5 garante margem real.
-  if(avgGoals>=3.5){const prob=clamp(over25,0.6,0.9);add("Mais de 2.5 gols",prob,prob,"gols_over25","ofensivo")}
+  // Mais de 2.5 gols: REMOVIDO — João não quer, muito arriscado
+  // "A gente não trabalha com esse tipo de risco"
   if(avgGoals<=2.4){const prob=clamp(under25,0.6,0.9);add("Menos de 2.5 gols",prob,prob,"gols_under25","defensivo")}
   if(avgGoals<=3.0){const prob=clamp(row.under35_prob,0.62,0.92);add("Menos de 3.5 gols",prob,prob,"gols_under35","defensivo")}
   return candidates
@@ -306,9 +325,9 @@ function buildMarketCandidates(row,options={}){
   candidates.push(...buildBTTS(row,profile))
   candidates.push(...buildResultCandidates(row,profile))
   candidates.push(...buildCornerCandidates(row,profile))
+  candidates.push(...buildTeamCornersCandidates(row,profile))
   candidates.push(...buildCardsCandidates(row,profile))
-  // buildShotsCandidates REMOVIDO — 29% de acerto histórico, prejudica assertividade
-  // buildSOTCandidates REMOVIDO — mesmo problema
+  candidates.push(...buildShotsCandidates(row,profile))
   candidates.push(...buildSOTCandidates(row,profile))
   candidates=candidates.map((item)=>{let score=toNumber(item.score);if(item.family==="gols")score+=0.03;if(item.family==="resultado")score+=0.025;if(item.family==="escanteios")score+=0.02;if(item.family==="cards")score+=0.015;if(profile==="ofensivo"&&item.macro==="ofensivo")score+=0.02;if(profile==="defensivo"&&item.macro==="defensivo")score+=0.02;if(profile==="estatistico"&&item.family==="escanteios")score+=0.02;if(profile==="disciplinar"&&item.family==="cards")score+=0.02;if(profile==="equilibrado"&&item.family==="resultado")score+=0.015;if(profile==="volume"&&item.family==="shots")score+=0.02;if(profile==="precisao"&&item.family==="sot")score+=0.02;return{...item,score:clamp(score,0,1)}})
   const minProbability=relaxed?0.50:0.56
