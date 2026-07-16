@@ -234,7 +234,9 @@ function buildCornerCandidates(row,profile){
     add(`Mais de ${line} escanteios`,probability,score,buildSubfamily("corners","over",line))
   }
   const controlledCorners=avgCorners-(avgShots<=18?0.3:0)-(avgShots<=16?0.2:0)-(avgGoals<=2.1?0.15:0)-(profile==="defensivo"?0.18:0)-(profile==="controlado"?0.2:0)
-  if(controlledCorners<=10.6){const referenceUnder=controlledCorners+4.0;const line=pickDynamicUnderLine(referenceUnder,CORNER_UNDER_LINES);const probability=clamp(0.61+(line-referenceUnder)*0.07+(avgShots<=18?0.02:0),0.58,0.89);const score=clamp(0.66+(line-referenceUnder)*0.06+(profile==="controlado"?0.03:0)+(profile==="defensivo"?0.02:0),0.58,0.87);add(`Menos de ${line} escanteios`,probability,score,buildSubfamily("corners","under",line))}
+  // "Menos de escanteios" — score aumentado para competir com picks de gols
+  // Antes era 0.58-0.87, agora 0.70-0.91 — vai aparecer mais como pick principal
+  if(controlledCorners<=10.6){const referenceUnder=controlledCorners+4.0;const line=pickDynamicUnderLine(referenceUnder,CORNER_UNDER_LINES);const probability=clamp(0.70+(line-referenceUnder)*0.07+(avgShots<=18?0.02:0),0.68,0.92);const score=clamp(0.72+(line-referenceUnder)*0.06+(profile==="controlado"?0.03:0)+(profile==="defensivo"?0.02:0),0.70,0.91);add(`Menos de ${line} escanteios`,probability,score,buildSubfamily("corners","under",line))}
   return candidates
 }
 
@@ -242,7 +244,8 @@ function buildCardsCandidates(row,profile){
   const candidates=[];const avgCards=toNumber(row.avg_cards),avgGoals=toNumber(row.avg_goals)
   function add(market,probability,score,subfamily){pushCandidate(candidates,{market,probability,score,family:"cards",subfamily,macro:"disciplina"})}
   const adjustedCards=avgCards+(avgGoals<=2.4?0.25:0)+(avgGoals<=2.0?0.2:0)+(profile==="disciplinar"?0.3:0)+(profile==="defensivo"?0.15:0)
-  if(adjustedCards>=1.8){const line=pickDynamicOverLine(adjustedCards,CARDS_OVER_LINES);const probability=clamp(0.6+(adjustedCards-line)*0.12,0.58,0.9);const score=clamp(0.66+(adjustedCards-line)*0.1+(profile==="disciplinar"?0.03:0),0.6,0.88);add(`Mais de ${line} cartões`,probability,score,buildSubfamily("cards","over",line))}
+  // Cartões — score aumentado para aparecer mais (era 0.60-0.88, agora 0.70-0.92)
+  if(adjustedCards>=1.8){const line=pickDynamicOverLine(adjustedCards,CARDS_OVER_LINES);const probability=clamp(0.68+(adjustedCards-line)*0.12,0.65,0.92);const score=clamp(0.72+(adjustedCards-line)*0.10+(profile==="disciplinar"?0.03:0),0.70,0.92);add(`Mais de ${line} cartões`,probability,score,buildSubfamily("cards","over",line))}
   return candidates
 }
 
@@ -304,7 +307,8 @@ function buildMarketCandidates(row,options={}){
   candidates.push(...buildResultCandidates(row,profile))
   candidates.push(...buildCornerCandidates(row,profile))
   candidates.push(...buildCardsCandidates(row,profile))
-  candidates.push(...buildShotsCandidates(row,profile))
+  // buildShotsCandidates REMOVIDO — 29% de acerto histórico, prejudica assertividade
+  // buildSOTCandidates REMOVIDO — mesmo problema
   candidates.push(...buildSOTCandidates(row,profile))
   candidates=candidates.map((item)=>{let score=toNumber(item.score);if(item.family==="gols")score+=0.03;if(item.family==="resultado")score+=0.025;if(item.family==="escanteios")score+=0.02;if(item.family==="cards")score+=0.015;if(profile==="ofensivo"&&item.macro==="ofensivo")score+=0.02;if(profile==="defensivo"&&item.macro==="defensivo")score+=0.02;if(profile==="estatistico"&&item.family==="escanteios")score+=0.02;if(profile==="disciplinar"&&item.family==="cards")score+=0.02;if(profile==="equilibrado"&&item.family==="resultado")score+=0.015;if(profile==="volume"&&item.family==="shots")score+=0.02;if(profile==="precisao"&&item.family==="sot")score+=0.02;return{...item,score:clamp(score,0,1)}})
   const minProbability=relaxed?0.50:0.56
