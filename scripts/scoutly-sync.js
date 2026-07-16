@@ -873,9 +873,9 @@ function buildCornerCandidatesSync(metrics) {
 function buildShotsCandidatesSync(metrics, probs) {
   const candidates=[]; const shots=safeNumber(metrics.expectedShots,0); const base=safeNumber(probs.shots,0)
   const add=(market,prob)=>{ if(!market)return; candidates.push({market,probability:round(prob),score:lineScore(prob,"shots",market),family:"shots"}) }
-  if(shots>=18.5)add("Mais de 17.5 finalizações",clamp(Math.max(base,0.61)+(shots-18.5)*0.02,0.61,0.90))
-  if(shots>=20.0)add("Mais de 19.5 finalizações",clamp(Math.max(base-0.01,0.58)+(shots-20.0)*0.02,0.58,0.87))
-  if(shots>=22.0)add("Mais de 21.5 finalizações",clamp(Math.max(base-0.03,0.55)+(shots-22.0)*0.02,0.55,0.83))
+  // Finalizações totais: threshold muito alto — só jogos extremamente ofensivos
+  // Antes gerava "Mais de 17.5" para maioria dos jogos (18.5+ threshold). Agora 24+.
+  if(shots>=24.0)add("Mais de 21.5 finalizações",clamp(Math.max(base,0.61)+(shots-24.0)*0.02,0.61,0.85))
   return candidates.sort((a,b)=>b.score-a.score)
 }
 
