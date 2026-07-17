@@ -2873,7 +2873,7 @@ function getMatchProbability(m){
 function probabilityToTier(prob){
   const p=Number(prob||0);
   if(p>=0.74)return "Forte"; if(p>=0.66)return "Boa"; if(p>=0.58)return "Moderada";
-  return "Oportunidade extra";
+  return "Moderada"; // nunca mostra "Oportunidade extra" no pick principal
 }
 function getMatchTier(m){ return probabilityToTier(getMatchProbability(m)); }
 function chipClass(tier){

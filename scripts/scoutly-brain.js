@@ -26,7 +26,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
 
 const TIMEZONE = "America/Sao_Paulo"
 const PAST_GRACE_HOURS = 3
-const RADAR_SIZE = 40
+const RADAR_SIZE = 15
 // Ligas prioritárias: sem limite de jogos por liga no radar (Copa do Mundo pode ter 4+ jogos/dia)
 const RADAR_UNCAPPED_LEAGUES = new Set([
   "Copa do Mundo","Copa do Mundo 2026","FIFA World Cup","FIFA World Cup 2026","World Cup",
@@ -226,21 +226,18 @@ function pushCandidate(candidates,item){const family=item.family||marketFamily(i
 function buildCornerCandidates(row,profile){
   const candidates=[];const avgCorners=toNumber(row.avg_corners),avgShots=toNumber(row.avg_shots);const avgGoals=toNumber(row.avg_goals),avgSOT=toNumber(row.avg_shots_on_target)
   function add(market,probability,score,subfamily,macro="estatistico"){pushCandidate(candidates,{market,probability,score,family:"escanteios",subfamily,macro})}
-  // Boost usado APENAS para probabilidade — NÃO para seleção de linha
-  // Antes: boost empurrava 9.3 → 9.65-9.9, gerando 7.5/8.5 para quase todos
   const boostedOverCorners=avgCorners+(avgShots>=20?0.35:0)+(avgShots>=23?0.25:0)+(avgSOT>=7?0.2:0)+(avgGoals>=2.6?0.15:0)+(profile==="estatistico"?0.2:0)+(profile==="volume"?0.18:0)+(profile==="precisao"?0.1:0)
-  // Escanteios: máximo 7.5 no pick principal — NUNCA 8.5 (75% hit rate histórico, muito arriscado)
-  // João quer apenas linhas seguras: 6.5 (90%) e 7.5 quando muito justificado
+  // Score BAIXO para escanteios — não deve dominar radar (antes era 0.68-0.90, ganhava sempre)
+  // Agora score 0.62-0.74 — aparece quando goals/cards não têm dados fortes
   if(avgCorners>=6.0){
-    const line = pickDynamicOverLine(avgCorners, [6.5, 7.5], 2.0)  // 8.5 REMOVIDO — margem 2.0
-    const probability=clamp(0.6+(boostedOverCorners-line)*0.11+(avgShots>=21?0.02:0),0.6,0.91)
-    const score=clamp(0.68+(boostedOverCorners-line)*0.09+(profile==="estatistico"?0.03:0)+(avgSOT>=7?0.02:0),0.6,0.9)
+    const line=pickDynamicOverLine(avgCorners,[6.5,7.5],2.0)
+    const probability=clamp(0.6+(boostedOverCorners-line)*0.11+(avgShots>=21?0.02:0),0.60,0.88)
+    const score=clamp(0.62+(boostedOverCorners-line)*0.05+(profile==="estatistico"?0.01:0),0.60,0.74)
     add(`Mais de ${line} escanteios`,probability,score,buildSubfamily("corners","over",line))
   }
   const controlledCorners=avgCorners-(avgShots<=18?0.3:0)-(avgShots<=16?0.2:0)-(avgGoals<=2.1?0.15:0)-(profile==="defensivo"?0.18:0)-(profile==="controlado"?0.2:0)
-  // "Menos de escanteios" — score aumentado para competir com picks de gols
-  // Antes era 0.58-0.87, agora 0.70-0.91 — vai aparecer mais como pick principal
-  if(controlledCorners<=10.6){const referenceUnder=controlledCorners+4.0;const line=pickDynamicUnderLine(referenceUnder,CORNER_UNDER_LINES);const probability=clamp(0.70+(line-referenceUnder)*0.07+(avgShots<=18?0.02:0),0.68,0.92);const score=clamp(0.72+(line-referenceUnder)*0.06+(profile==="controlado"?0.03:0)+(profile==="defensivo"?0.02:0),0.70,0.91);add(`Menos de ${line} escanteios`,probability,score,buildSubfamily("corners","under",line))}
+  // "Menos de escanteios" — score similar ao over mas ligeiramente maior (90.9% hit rate)
+  if(controlledCorners<=10.6){const referenceUnder=controlledCorners+4.0;const line=pickDynamicUnderLine(referenceUnder,CORNER_UNDER_LINES);const probability=clamp(0.68+(line-referenceUnder)*0.07+(avgShots<=18?0.02:0),0.66,0.90);const score=clamp(0.66+(line-referenceUnder)*0.05+(profile==="controlado"?0.02:0)+(profile==="defensivo"?0.02:0),0.63,0.76);add(`Menos de ${line} escanteios`,probability,score,buildSubfamily("corners","under",line))}
   return candidates
 }
 
