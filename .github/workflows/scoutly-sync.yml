@@ -27,6 +27,9 @@ jobs:
       - name: Árbitros — busca nomes
         run: |
           curl -s --max-time 60 "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/populate-referees" || true
+      - name: Árbitros — stats todas as ligas
+        run: |
+          curl -s --max-time 120 "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/run-referee-sync" || true
 
   brain:
     runs-on: ubuntu-latest
