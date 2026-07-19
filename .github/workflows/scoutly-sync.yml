@@ -22,19 +22,14 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/scoutly-sync.js
       - name: Preenche análises faltando
-        run: |
-          curl -s --max-time 30 "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/fill-missing-analysis" || true
+        run: curl -s --max-time 30 "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/fill-missing-analysis" || true
       - name: Árbitros — busca nomes
-        run: |
-          curl -s --max-time 60 "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/populate-referees" || true
-      - name: Árbitros — stats todas as ligas
-        run: |
-          curl -s --max-time 120 "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/run-referee-sync" || true
+        run: curl -s --max-time 60 "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/populate-referees" || true
 
   brain:
     runs-on: ubuntu-latest
     needs: sync
-    if: ${{ always() }}  # roda mesmo se sync for cancelado por timeout
+    if: ${{ always() }}
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
@@ -47,3 +42,5 @@ jobs:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: node scripts/scoutly-brain.js
+      - name: Árbitros — stats todas as ligas
+        run: curl -s --max-time 300 "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/run-referee-sync" || true
