@@ -62,7 +62,26 @@ async function fetchTeamsInLeague(leagueId) {
       teams.push({ id: entry.team.id, name: entry.team.name, logo: entry.team.logo })
     }
   }
-  return teams
+  if (teams.length) return teams
+  // FALLBACK: competições em formato mata-mata (Champions/Europa/Conference League
+  // nas fases preliminares, Copa do Brasil, Copa do Nordeste) não têm standings de grupo,
+  // então o /standings acima vem vazio e esses times nunca eram sincronizados — H2H e
+  // "últimos 5 jogos" ficavam sempre em branco para esses jogos. Aqui buscamos os times
+  // direto pelos confrontos recentes/futuros da liga.
+  try {
+    const recent = await apiGet(`/fixtures?league=${leagueId}&season=${SEASON}&last=40`)
+    await sleep(DELAY)
+    const upcoming = await apiGet(`/fixtures?league=${leagueId}&season=${SEASON}&next=40`)
+    const seen = new Map()
+    for (const f of [...recent, ...upcoming]) {
+      const home = f.teams?.home, away = f.teams?.away
+      if (home?.id && !seen.has(home.id)) seen.set(home.id, { id: home.id, name: home.name, logo: home.logo })
+      if (away?.id && !seen.has(away.id)) seen.set(away.id, { id: away.id, name: away.name, logo: away.logo })
+    }
+    return [...seen.values()]
+  } catch {
+    return []
+  }
 }
 
 async function fetchTeamStatsFromAPI(teamId, leagueId) {
