@@ -697,12 +697,12 @@ async function buildTeamContext(teamId, leagueId = null) {
     return payload
   }
 
-  // Fallback: times sem team_statistics — usa perfil padrão (sem chamadas API lentas)
-  // Antes: fetchRecentFinishedFixtures + collectProfileFromFixtures = 7-8 calls por time
-  // Esses dados chegam via team-stats-sync (todo dia 05h BRT) ou fill-missing-analysis
+  // Fallback: times sem team_statistics — usa perfil padrão realista por liga
+  // avgGoalsFor 1.35 → projeção ~2.7 gols → gera "Mais de 1.5" em vez de "Menos de 3.5"
+  // (1.1 gerava projeção 2.2 → todos caíam em Menos de 3.5)
   const defaultProfile = {
-    avgGoalsFor: 1.1, avgGoalsAgainst: 1.1, avgShots: null, avgShotsOnTarget: null,
-    avgCorners: null, avgCornersAgainst: null, avgCards: 2.0, avgFouls: 12.0,
+    avgGoalsFor: 1.35, avgGoalsAgainst: 1.35, avgShots: null, avgShotsOnTarget: null,
+    avgCorners: null, avgCornersAgainst: null, avgCards: 2.5, avgFouls: 13.0,
     recentScores: [], recentMatches: [], formStreak: "sem dados", matches: 0
   }
   const payload = { general: defaultProfile, home: defaultProfile, away: defaultProfile }
