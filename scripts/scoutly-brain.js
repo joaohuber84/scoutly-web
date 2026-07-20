@@ -293,7 +293,7 @@ function buildGoalsCandidates(row){
   // Mais de 2.5 gols: REMOVIDO — João não quer, muito arriscado
   // "A gente não trabalha com esse tipo de risco"
   if(avgGoals<=2.4){const prob=clamp(under25,0.6,0.9);add("Menos de 2.5 gols",prob,prob,"gols_under25","defensivo")}
-  if(avgGoals<=3.0){const prob=clamp(row.under35_prob,0.62,0.92);add("Menos de 3.5 gols",prob,prob,"gols_under35","defensivo")}
+  if(avgGoals<=2.6){const rawUnder35=toNumber(row.under35_prob);if(rawUnder35>=0.72){const prob=clamp(rawUnder35,0.72,0.92);add("Menos de 3.5 gols",prob,prob,"gols_under35","defensivo")}}
   return candidates
 }
 
@@ -326,7 +326,7 @@ function buildMarketCandidates(row,options={}){
   candidates.push(...buildCardsCandidates(row,profile))
   candidates.push(...buildShotsCandidates(row,profile))
   candidates.push(...buildSOTCandidates(row,profile))
-  candidates=candidates.map((item)=>{let score=toNumber(item.score);if(item.family==="gols")score+=0.03;if(item.family==="resultado")score+=0.025;if(item.family==="escanteios")score+=0.02;if(item.family==="cards")score+=0.015;if(profile==="ofensivo"&&item.macro==="ofensivo")score+=0.02;if(profile==="defensivo"&&item.macro==="defensivo")score+=0.02;if(profile==="estatistico"&&item.family==="escanteios")score+=0.02;if(profile==="disciplinar"&&item.family==="cards")score+=0.02;if(profile==="equilibrado"&&item.family==="resultado")score+=0.015;if(profile==="volume"&&item.family==="shots")score+=0.02;if(profile==="precisao"&&item.family==="sot")score+=0.02;return{...item,score:clamp(score,0,1)}})
+  candidates=candidates.map((item)=>{let score=toNumber(item.score);if(item.family==="gols")score+=0.01;if(item.family==="resultado")score+=0.025;if(item.family==="escanteios")score+=0.02;if(item.family==="cards")score+=0.015;if(profile==="ofensivo"&&item.macro==="ofensivo")score+=0.02;if(profile==="defensivo"&&item.macro==="defensivo")score+=0.02;if(profile==="estatistico"&&item.family==="escanteios")score+=0.02;if(profile==="disciplinar"&&item.family==="cards")score+=0.02;if(profile==="equilibrado"&&item.family==="resultado")score+=0.015;if(profile==="volume"&&item.family==="shots")score+=0.02;if(profile==="precisao"&&item.family==="sot")score+=0.02;return{...item,score:clamp(score,0,1)}})
   const minProbability=relaxed?0.50:0.56
   const minScore=relaxed?0.50:0.58
   return candidates.filter((c)=>c.probability>=minProbability&&c.score>=minScore).sort((a,b)=>b.score-a.score)
