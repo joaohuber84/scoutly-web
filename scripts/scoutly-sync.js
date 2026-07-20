@@ -680,14 +680,9 @@ async function buildTeamContext(teamId, leagueId = null) {
     if (recentData.scores?.length) {
       recentScores  = recentData.scores
       recentMatches = recentData.matches || []
-    } else {
-      try {
-        const recentFixtures = await fetchRecentFinishedFixtures(teamId, 6)
-        const extracted = extractRecentScoresFromFixtures(teamId, recentFixtures)
-        recentScores  = extracted.recentScores
-        recentMatches = extracted.recentMatches
-      } catch {}
     }
+    // Fallback API para recentScores REMOVIDO — causava 640+ chamadas extras por sync
+    // recentScores ficam vazios até team-stats-sync rodar (todo dia 05h BRT)
 
     const profile = {
       matches: leagueStats.matches_played,
@@ -702,17 +697,15 @@ async function buildTeamContext(teamId, leagueId = null) {
     return payload
   }
 
-  // Fallback: API (apenas para times sem dados no banco)
-  const allFixtures = await fetchRecentFinishedFixtures(teamId, MAX_RECENT_FIXTURES_FETCH)
-  const competitive = allFixtures.filter(f => {
-    const ln = normalizeText(f?.league?.name || '')
-    return !ln.includes('friend') && !ln.includes('amistoso') && f?.league?.id !== 667
-  })
-  const fixtures = competitive.length >= 3 ? competitive : allFixtures
-  const general = await collectProfileFromFixtures(teamId, fixtures.slice(0, FORM_LIMIT_GENERAL))
-  const home    = await collectProfileFromFixtures(teamId, splitVenueFixtures(fixtures, teamId, true,  FORM_LIMIT_HOME_AWAY))
-  const away    = await collectProfileFromFixtures(teamId, splitVenueFixtures(fixtures, teamId, false, FORM_LIMIT_HOME_AWAY))
-  const payload = { general, home, away }
+  // Fallback: times sem team_statistics — usa perfil padrão (sem chamadas API lentas)
+  // Antes: fetchRecentFinishedFixtures + collectProfileFromFixtures = 7-8 calls por time
+  // Esses dados chegam via team-stats-sync (todo dia 05h BRT) ou fill-missing-analysis
+  const defaultProfile = {
+    avgGoalsFor: 1.1, avgGoalsAgainst: 1.1, avgShots: null, avgShotsOnTarget: null,
+    avgCorners: null, avgCornersAgainst: null, avgCards: 2.0, avgFouls: 12.0,
+    recentScores: [], recentMatches: [], formStreak: "sem dados", matches: 0
+  }
+  const payload = { general: defaultProfile, home: defaultProfile, away: defaultProfile }
   teamContextCache.set(cacheKey, payload)
   return payload
 }
