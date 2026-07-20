@@ -816,7 +816,7 @@ function lineScore(prob, family, market) {
   let score = safeNumber(prob,0)
   if (market==="Mais de 1.5 gols") score+=0.04
   if (market==="Mais de 2.5 gols") score+=0.02
-  if (market==="Menos de 3.5 gols") score+=0.03
+  if (market==="Menos de 3.5 gols") score+=0.01
   if (market==="Menos de 2.5 gols") score+=0.01
   if (family==="dupla_chance") score+=0.015
   if (family==="resultado") score+=0.008
@@ -921,7 +921,7 @@ function buildCandidateMarkets(payload) {
   if(probabilities.over25>=0.66)add("Mais de 2.5 gols",probabilities.over25,"gols")
   if(probabilities.over15>=0.76)add("Mais de 1.5 gols",probabilities.over15,"gols")
   if(under25>=0.74)add("Menos de 2.5 gols",under25,"gols")
-  if(probabilities.under35>=0.80)add("Menos de 3.5 gols",probabilities.under35,"gols")
+  if(probabilities.under35>=0.85)add("Menos de 3.5 gols",probabilities.under35,"gols")
   if(probabilities.btts>=0.63)add("Ambas marcam",probabilities.btts,"ambas")
   if(bttsNo>=0.72)add("Ambas não marcam",bttsNo,"ambas")
   buildShotsCandidatesSync(metrics,probabilities).forEach(i=>candidates.push(i))
@@ -945,7 +945,7 @@ function buildCandidateMarkets(payload) {
 }
 
 function chooseMainPick(candidates) {
-  if(!candidates.length)return{market:"Menos de 3.5 gols",probability:0.6,score:0.6,family:"gols"}
+  if(!candidates.length)return{market:"Mais de 1.5 gols",probability:0.6,score:0.6,family:"gols"}
   return[...candidates].sort((a,b)=>b.score-a.score)[0]
 }
 
