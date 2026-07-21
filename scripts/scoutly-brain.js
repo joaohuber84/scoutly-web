@@ -115,11 +115,15 @@ async function loadBaseTables(){
   if(matchesError)throw matchesError
   const{data:analysis,error:analysisError}=await supabase.from("match_analysis").select(`match_id,home_strength,away_strength,expected_home_goals,expected_away_goals,expected_home_shots,expected_away_shots,expected_home_sot,expected_away_sot,expected_corners,expected_cards,prob_over25,prob_btts,prob_corners,prob_shots,prob_sot,prob_cards,best_pick_1,best_pick_2,best_pick_3,aggressive_pick,analysis_text`)
   if(analysisError)throw analysisError
-  return{matches:matches||[],analysis:analysis||[]}
+  const{data:teamStats,error:teamStatsError}=await supabase.from("team_statistics").select("team_name")
+  if(teamStatsError)throw teamStatsError
+  const teamsWithRealStats=new Set((teamStats||[]).map((r)=>r.team_name))
+  return{matches:matches||[],analysis:analysis||[],teamsWithRealStats}
 }
 
-function mergeMatchRow(matchRow,analysisMap){
+function mergeMatchRow(matchRow,analysisMap,teamsWithRealStats){
   const analysis=analysisMap.get(String(matchRow.id))||{}
+  const hasRealStats=Boolean(teamsWithRealStats?.has(matchRow.home_team)||teamsWithRealStats?.has(matchRow.away_team))
   const metrics=maybeJson(matchRow.metrics)||{}
   const markets=maybeJson(matchRow.markets)||{}
   const probabilities=maybeJson(matchRow.probabilities)||{}
@@ -151,7 +155,7 @@ function mergeMatchRow(matchRow,analysisMap){
   // Copa do Mundo defaults when form data is empty
   const leagueTier = getLeagueTierScore(matchRow.league);
   const hasData = avgGoals > 0 || avgShots > 0 || over25Prob > 0;
-  const isTopIntl = leagueTier >= 90 && !hasData;
+  const isTopIntl = !hasRealStats;
   const finalAvgGoals    = isTopIntl ? 2.35 : avgGoals;
   const finalAvgShots    = isTopIntl ? 22   : avgShots;
   const finalAvgSOT      = isTopIntl ? 7    : avgShotsOnTarget;
@@ -174,12 +178,12 @@ function mergeMatchRow(matchRow,analysisMap){
 async function loadActiveMatches(){
   const now=new Date()
   const minTime=new Date(now.getTime()-PAST_GRACE_HOURS*60*60*1000)
-  const{matches,analysis}=await loadBaseTables()
+  const{matches,analysis,teamsWithRealStats}=await loadBaseTables()
   console.log("DEBUG DATA HOJE:",getTodayInTZ())
   console.log("DEBUG TOTAL RAW MATCHES:",matches.length)
   console.log("DEBUG TOTAL ANALYSIS:",analysis.length)
   const analysisMap=new Map(analysis.map((row)=>[String(row.match_id),row]))
-  const merged=matches.map((row)=>mergeMatchRow(row,analysisMap))
+  const merged=matches.map((row)=>mergeMatchRow(row,analysisMap,teamsWithRealStats))
   const finalRows=merged.filter((row)=>{const kickoffDate=row.kickoff?new Date(row.kickoff):null;const kickoffValid=kickoffDate&&!Number.isNaN(kickoffDate.getTime());return kickoffValid&&kickoffDate.getTime()>=minTime.getTime()}).filter((row)=>row.home_team&&row.away_team&&row.league).filter((row)=>hasMinimumAnalysis(row)).sort(compareByKickoff)
   console.log("DEBUG TOTAL FILTRADOS ATIVOS:",finalRows.length)
   return finalRows
@@ -381,15 +385,25 @@ function chooseRadar(analyses){
   if(radar.length<RADAR_SIZE){
     const usedIds=new Set(topUp.used.matchIds)
     const usedExact={...topUp.used.exactMarkets}
+    const usedFam={...topUp.used.families}
     const backup=[...active].sort(compareByScoreThenKickoff)
     for(const item of backup){
       if(radar.length>=RADAR_SIZE)break
       if(usedIds.has(item.match_id))continue
-      // Mesmo limite de mercado das passes normais
+      // Mesmo limite de mercado E de família das passes normais
       if((usedExact[item.main_pick]||0)>=2)continue
+      const famCount=usedFam[item.main_family]||0
+      if(item.main_family==="gols"&&famCount>=4)continue
+      if(item.main_family==="resultado"&&famCount>=3)continue
+      if(item.main_family==="escanteios"&&famCount>=3)continue
+      if(item.main_family==="cards"&&famCount>=3)continue
+      if(item.main_family==="btts"&&famCount>=2)continue
+      if(item.main_family==="shots"&&famCount>=2)continue
+      if(item.main_family==="sot"&&famCount>=2)continue
       radar.push(item)
       usedIds.add(item.match_id)
       usedExact[item.main_pick]=(usedExact[item.main_pick]||0)+1
+      usedFam[item.main_family]=famCount+1
     }
   }
   const tierCount={1:0,2:0,3:0,4:0}
