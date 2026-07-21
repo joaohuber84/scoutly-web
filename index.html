@@ -1934,11 +1934,6 @@
   </div>
 
 
-  <div class="copa-banner" id="copaBanner">
-    <span class="copa-banner-dot"></span>
-    <span class="copa-banner-text">🌍 Copa do Mundo 2026 — picks em tempo real</span>
-  </div>
-
   <!-- ══ RADAR ════════════════════════════════════════════════════════ -->
   <div class="radar-panel-full">
     <div class="radar-full-head">
@@ -2112,222 +2107,6 @@
 </div>
 
 
-<!-- ══ COPA 2026 OVERLAY ══════════════════════════════════════════════ -->
-<div class="wc-overlay" id="wcOverlay">
-  <div class="wc-panel">
-    <div class="wc-panel-hd">
-      <div class="wc-panel-hd-left">
-        <img src="https://assets.football-logos.cc/logos/tournaments/1500x1500/fifa-world-cup-2026.31d2489d.png"
-             width="44" height="44"
-             style="object-fit:contain;flex-shrink:0;border-radius:8px;margin-top:4px"
-             onerror="this.outerHTML='<div style=&quot;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-top:4px&quot;>🏆</div>'">
-        <div>
-          <div class="eyebrow">Copa do Mundo 2026</div>
-          <h2 class="wc-panel-title">FIFA World Cup <span>2026</span></h2>
-          <div class="wc-panel-sub">
-            <img src="https://flagcdn.com/w40/us.png" width="16" style="border-radius:2px"> EUA ·
-            <img src="https://flagcdn.com/w40/ca.png" width="16" style="border-radius:2px"> Canadá ·
-            <img src="https://flagcdn.com/w40/mx.png" width="16" style="border-radius:2px"> México
-            &nbsp;·&nbsp; 48 seleções · 104 jogos · 11 jun – 19 jul 2026
-          </div>
-        </div>
-      </div>
-      <button class="close-btn" onclick="closeWC2026()" style="margin-top:8px">✕</button>
-    </div>
-
-    <div class="wc-panel-body" id="wcPanelBody">
-      <!-- TABS -->
-      <div class="wc-tabs">
-        <button class="wc-tab active" data-wctab="grupos">⚽ Grupos</button>
-        <button class="wc-tab" data-wctab="classificacao">📊 Classificação</button>
-        <button class="wc-tab" data-wctab="artilheiros">🥅 Artilheiros</button>
-        <button class="wc-tab" data-wctab="agenda">📅 Agenda</button>
-        <button class="wc-tab" data-wctab="curiosidades">🌍 Curiosidades</button>
-        <button class="wc-tab" data-wctab="quiz">🎯 Quiz</button>
-        <button class="wc-tab" data-wctab="selecoes">🔍 Seleções</button>
-      </div>
-
-      <!-- GRUPOS -->
-      <div class="wc-tab-content active" id="wctab-grupos">
-        <div style="margin-bottom:14px">
-          <div style="font-size:12px;color:var(--text-2);line-height:1.6">
-            A Copa de 2026 é a maior da história — 48 seleções divididas em 12 grupos de 4.
-            Os 2 primeiros de cada grupo + 8 melhores terceiros avançam.
-          </div>
-          <div style="margin-top:9px;display:flex;align-items:center;gap:7px;font-size:10px;color:var(--amber);font-weight:600">
-            <span style="background:var(--amber-dim);border:1px solid var(--amber-line);border-radius:4px;padding:2px 7px;">★ ESTREIA</span>
-            = primeira vez numa Copa do Mundo
-          </div>
-        </div>
-        <div class="wc-groups-grid" id="wcGroupsGrid"></div>
-      </div>
-
-      <!-- CLASSIFICAÇÃO -->
-      <div class="wc-tab-content" id="wctab-classificacao">
-        <div id="wcStandingsContent" style="min-height:120px">
-          <div class="loading-state" style="padding:20px;text-align:center;color:var(--text-3)">Toque para carregar a tabela…</div>
-        </div>
-      </div>
-
-      <!-- ARTILHEIROS -->
-      <div class="wc-tab-content" id="wctab-artilheiros">
-        <div id="wcScorersContent" style="min-height:120px">
-          <div class="loading-state" style="padding:20px;text-align:center;color:var(--text-3)">Toque para carregar artilheiros…</div>
-        </div>
-      </div>
-
-      <!-- AGENDA -->
-      <div class="wc-tab-content" id="wctab-agenda">
-        <div class="wc-agenda-filter">
-          <button class="wc-filter-btn active" data-filter="todos" onclick="filterWCAgenda('todos',this)">Todos os jogos</button>
-          <button class="wc-filter-btn" data-filter="brasil" onclick="filterWCAgenda('brasil',this)" style="display:flex;align-items:center;gap:5px">
-            <img src="https://flagcdn.com/w40/br.png" width="14" style="border-radius:2px"> Brasil
-          </button>
-          <button class="wc-filter-btn" data-filter="fase1" onclick="filterWCAgenda('fase1',this)">Fase de Grupos</button>
-        </div>
-        <div id="wcAgendaList"></div>
-      </div>
-
-      <!-- CURIOSIDADES -->
-      <div class="wc-tab-content" id="wctab-curiosidades">
-        <div class="wc-curiosidades-grid">
-          <div class="wc-curiosidade-card">
-            <div class="wc-cur-icon">🌎</div>
-            <div class="wc-cur-title">A Copa mais plural da história</div>
-            <div class="wc-cur-text">Com 48 seleções, a Copa de 2026 é a maior já realizada. Pela primeira vez, América do Norte sedia com 3 países — EUA (1994), Canadá e México (1970 e 1986).</div>
-          </div>
-          <div class="wc-curiosidade-card">
-            <div class="wc-cur-icon">🏟️</div>
-            <div class="wc-cur-title">MetLife Stadium — o palco da final</div>
-            <div class="wc-cur-text">A final será em East Rutherford, Nova Jersey, no MetLife Stadium — capacidade para 82.500 pessoas, casa dos Giants e Jets da NFL.</div>
-          </div>
-          <div class="wc-curiosidade-card">
-            <div class="wc-cur-icon">⭐</div>
-            <div class="wc-cur-title">Últimas Copas de ídolos</div>
-            <div class="wc-cur-text">Messi (38 anos), Cristiano Ronaldo (41) e Neymar Jr (34) vivem provavelmente sua última Copa. Três gerações num só torneio.</div>
-          </div>
-          <div class="wc-curiosidade-card">
-            <div class="wc-cur-icon">🆕</div>
-            <div class="wc-cur-title">Estreias históricas</div>
-            <div class="wc-cur-text">Curaçao, Bósnia Herzegovina, Cabo Verde, Jordânia, Uzbequistão e Iraque fazem sua estreia histórica numa Copa do Mundo em 2026.</div>
-          </div>
-          <div class="wc-curiosidade-card">
-            <div class="wc-cur-icon"><img src="https://flagcdn.com/w40/br.png" width="28" style="border-radius:4px"></div>
-            <div class="wc-cur-title">Brasil no Grupo C</div>
-            <div class="wc-cur-text">A Seleção foi sorteada no Grupo C com Marrocos, Haiti e Escócia. A estreia é contra o Haiti — adversário inédito para o Brasil numa fase de grupos.</div>
-          </div>
-          <div class="wc-curiosidade-card">
-            <div class="wc-cur-icon">⚽</div>
-            <div class="wc-cur-title">104 jogos em 39 dias</div>
-            <div class="wc-cur-text">Serão 104 partidas espalhadas por 16 cidades em 3 países — pelo menos 3 jogos por dia na fase de grupos. O maior calendário da história das Copas.</div>
-          </div>
-        </div>
-
-        <div style="margin-top:22px">
-          <div style="font-family:var(--font-head);font-size:15px;font-weight:800;color:var(--text);margin-bottom:3px">🏆 Maiores campeões mundiais</div>
-          <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">Seleções com mais títulos na história da Copa do Mundo FIFA</div>
-          <div class="wc-campoes">
-            <div class="wc-campao-card"><div class="wc-campao-flag"><img src="https://flagcdn.com/w40/br.png" width="24" height="18" style="border-radius:2px;object-fit:cover"></div><div class="wc-campao-titulos">5</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Brasil</div></div>
-            <div class="wc-campao-card"><div class="wc-campao-flag"><img src="https://flagcdn.com/w40/de.png" width="24" height="18" style="border-radius:2px;object-fit:cover"></div><div class="wc-campao-titulos">4</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Alemanha</div></div>
-            <div class="wc-campao-card"><div class="wc-campao-flag"><img src="https://flagcdn.com/w40/it.png" width="24" height="18" style="border-radius:2px;object-fit:cover"></div><div class="wc-campao-titulos">4</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Itália</div></div>
-            <div class="wc-campao-card"><div class="wc-campao-flag"><img src="https://flagcdn.com/w40/ar.png" width="24" height="18" style="border-radius:2px;object-fit:cover"></div><div class="wc-campao-titulos">3</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Argentina</div></div>
-            <div class="wc-campao-card"><div class="wc-campao-flag"><img src="https://flagcdn.com/w40/fr.png" width="24" height="18" style="border-radius:2px;object-fit:cover"></div><div class="wc-campao-titulos">2</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">França</div></div>
-            <div class="wc-campao-card"><div class="wc-campao-flag"><img src="https://flagcdn.com/w40/gb-eng.png" width="24" height="18" style="border-radius:2px;object-fit:cover"></div><div class="wc-campao-titulos">1</div><div class="wc-campao-label">título</div><div class="wc-campao-name">Inglaterra</div></div>
-            <div class="wc-campao-card"><div class="wc-campao-flag"><img src="https://flagcdn.com/w40/es.png" width="24" height="18" style="border-radius:2px;object-fit:cover"></div><div class="wc-campao-titulos">1</div><div class="wc-campao-label">título</div><div class="wc-campao-name">Espanha</div></div>
-            <div class="wc-campao-card"><div class="wc-campao-flag"><img src="https://flagcdn.com/w40/uy.png" width="24" height="18" style="border-radius:2px;object-fit:cover"></div><div class="wc-campao-titulos">2</div><div class="wc-campao-label">títulos</div><div class="wc-campao-name">Uruguai</div></div>
-          </div>
-        </div>
-
-        <div style="margin-top:22px">
-          <div style="font-family:var(--font-head);font-size:15px;font-weight:800;color:var(--text);margin-bottom:3px">✨ Estreias históricas em 2026</div>
-          <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">Seleções que disputarão sua primeira Copa do Mundo</div>
-          <div class="wc-estreantes">
-            <div class="wc-estreante-badge"><img src="https://flagcdn.com/w40/ca.png" width="16" height="12" style="border-radius:2px;object-fit:cover"> Canadá</div>
-            <div class="wc-estreante-badge"><img src="https://flagcdn.com/w40/ht.png" width="16" height="12" style="border-radius:2px;object-fit:cover"> Haiti</div>
-            <div class="wc-estreante-badge"><img src="https://flagcdn.com/w40/ao.png" width="16" height="12" style="border-radius:2px;object-fit:cover"> Angola</div>
-            <div class="wc-estreante-badge"><img src="https://flagcdn.com/w40/cd.png" width="16" height="12" style="border-radius:2px;object-fit:cover"> R.D. Congo</div>
-            <div class="wc-estreante-badge"><img src="https://flagcdn.com/w40/ci.png" width="16" height="12" style="border-radius:2px;object-fit:cover"> Costa do Marfim</div>
-            <div class="wc-estreante-badge"><img src="https://flagcdn.com/w40/na.png" width="16" height="12" style="border-radius:2px;object-fit:cover"> Namíbia</div>
-          </div>
-        </div>
-
-        <div style="margin-top:22px">
-          <div style="font-family:var(--font-head);font-size:15px;font-weight:800;color:var(--text);margin-bottom:3px">🌟 Últimas Copas de ídolos</div>
-          <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">Craques que podem dizer adeus ao Mundial em 2026</div>
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:11px">
-              <img src="https://flagcdn.com/w40/ar.png" width="24" style="border-radius:3px;flex-shrink:0">
-              <div><div style="font-size:12px;font-weight:800;color:var(--text)">Lionel Messi — 38 anos</div><div style="font-size:11px;color:var(--text-2);margin-top:2px">Campeão no Catar em 2022. Quer defender o título com a Argentina. Provavelmente sua última Copa.</div></div>
-            </div>
-            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:11px">
-              <img src="https://flagcdn.com/w40/pt.png" width="24" style="border-radius:3px;flex-shrink:0">
-              <div><div style="font-size:12px;font-weight:800;color:var(--text)">Cristiano Ronaldo — 41 anos</div><div style="font-size:11px;color:var(--text-2);margin-top:2px">Será o jogador mais velho da Copa. Sua 6ª Copa consecutiva — recorde absoluto na história.</div></div>
-            </div>
-            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:11px">
-              <img src="https://flagcdn.com/w40/br.png" width="24" style="border-radius:3px;flex-shrink:0">
-              <div><div style="font-size:12px;font-weight:800;color:var(--text)">Neymar Jr — 34 anos</div><div style="font-size:11px;color:var(--text-2);margin-top:2px">Convocado após longa recuperação. Sua 4ª Copa e a última chance de conquistar o título que ainda falta.</div></div>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top:22px">
-          <div style="font-family:var(--font-head);font-size:15px;font-weight:800;color:var(--text);margin-bottom:3px">⚽ Maiores artilheiros das Copas</div>
-          <div style="font-size:11px;color:var(--text-3);margin-bottom:10px">Top 5 goleadores de todos os tempos em Copas do Mundo FIFA</div>
-          <div style="display:flex;flex-direction:column;gap:6px">
-            <div style="background:var(--surface-2);border:1px solid var(--amber-line);border-radius:var(--radius-sm);padding:11px 14px;display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:10px">
-              <div style="font-family:var(--font-mono);font-size:14px;font-weight:900;color:var(--amber)">1º</div>
-              <div><div style="font-size:12px;font-weight:700;color:var(--text)">Miroslav Klose</div><div style="font-size:9px;color:var(--text-3);display:flex;align-items:center;gap:3px;margin-top:2px"><img src="https://flagcdn.com/w40/de.png" width="12" style="border-radius:1px"> Alemanha</div></div>
-              <div style="font-family:var(--font-mono);font-size:22px;font-weight:900;color:var(--amber)">16</div>
-            </div>
-            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:10px">
-              <div style="font-family:var(--font-mono);font-size:14px;font-weight:900;color:var(--text-3)">2º</div>
-              <div><div style="font-size:12px;font-weight:700;color:var(--text)">Ronaldo Fenômeno</div><div style="font-size:9px;color:var(--text-3);display:flex;align-items:center;gap:3px;margin-top:2px"><img src="https://flagcdn.com/w40/br.png" width="12" style="border-radius:1px"> Brasil</div></div>
-              <div style="font-family:var(--font-mono);font-size:22px;font-weight:900;color:var(--green)">15</div>
-            </div>
-            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:10px">
-              <div style="font-family:var(--font-mono);font-size:14px;font-weight:900;color:var(--text-3)">3º</div>
-              <div><div style="font-size:12px;font-weight:700;color:var(--text)">Gerd Müller</div><div style="font-size:9px;color:var(--text-3);display:flex;align-items:center;gap:3px;margin-top:2px"><img src="https://flagcdn.com/w40/de.png" width="12" style="border-radius:1px"> Alemanha</div></div>
-              <div style="font-family:var(--font-mono);font-size:22px;font-weight:900;color:var(--text-2)">14</div>
-            </div>
-            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:11px 14px;display:grid;grid-template-columns:28px 1fr auto;align-items:center;gap:10px">
-              <div style="font-family:var(--font-mono);font-size:14px;font-weight:900;color:var(--text-3)">4º</div>
-              <div><div style="font-size:12px;font-weight:700;color:var(--text)">Lionel Messi + Just Fontaine</div><div style="font-size:9px;color:var(--text-3);display:flex;align-items:center;gap:5px;margin-top:2px"><img src="https://flagcdn.com/w40/ar.png" width="12" style="border-radius:1px"> Argentina · <img src="https://flagcdn.com/w40/fr.png" width="12" style="border-radius:1px"> França</div></div>
-              <div style="font-family:var(--font-mono);font-size:22px;font-weight:900;color:var(--text-2)">13</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- QUIZ -->
-      <div class="wc-tab-content" id="wctab-quiz">
-        <div class="wc-quiz-card" id="wcQuizCard">
-          <div style="font-family:var(--font-head);font-size:17px;font-weight:800;color:var(--text);margin-bottom:3px">🎯 Quiz Copa 2026</div>
-          <div style="font-size:11px;color:var(--text-3);margin-bottom:14px">Teste seus conhecimentos sobre a Copa do Mundo 2026</div>
-          <div class="wc-quiz-progress" id="wcQuizProgress"></div>
-          <div id="wcQuizBody"></div>
-        </div>
-      </div>
-
-      <!-- TAB: SELEÇÕES -->
-      <div class="wc-tab-content" id="wctab-selecoes">
-        <div style="margin-bottom:14px">
-          <div style="font-size:12px;color:var(--text-2);line-height:1.6;margin-bottom:12px">
-            Forma recente das 48 seleções — últimos 10 jogos, médias e tendência. Selecione um grupo para ver a análise.
-          </div>
-          <div style="display:flex;gap:5px;flex-wrap:wrap" id="wcSelGruposBtns">
-            <!-- rendered by JS -->
-          </div>
-        </div>
-        <div id="wcSelContent">
-          <div style="text-align:center;padding:32px;color:var(--text-3);font-size:12px">
-            Selecione um grupo acima para ver a forma das seleções
-          </div>
-        </div>
-      </div>
-
-    </div><!-- /wc-panel-body -->
-  </div><!-- /wc-panel -->
-</div><!-- /wc-overlay -->
 
 <!-- ══ ANALYSIS OVERLAY ════════════════════════════════════════════════ -->
 <div class="analysis-overlay" id="analysisOverlay">
@@ -3701,21 +3480,22 @@ function getDayOffset(kickoff) {
   return Math.floor((startOfDay(d).getTime() - ts) / dayMs);
 }
 function buildRadarSnapshot(){
-  const eligible=getRadarEligibleMatches();const nowTs=Date.now();
+  const nowTs=Date.now();
   const fromDaily=state.dailyPicks.map(item=>{
     const m=getMatchById(item.match_id);
     if(!m||!isStillRelevantForRadar(m.kickoff)||shouldHideLeague(m.league, m.league_id))return null;
-    const pick=getPrimaryPick(m)||item.market;
-    if(!isRadarEligiblePick(m))return null;
+    const pick=item.market||getPrimaryPick(m);
+    if(!pick)return null;
     return{...m,league:normalizeLeagueName(m.league),home_team:normalizeTeamName(m.home_team),away_team:normalizeTeamName(m.away_team),
       radar_market:pick,radar_probability:Number(item.probability||getMatchProbability(m)),
       radar_rank:Number(item.rank||999),source:"daily"};
   }).filter(Boolean);
-  const fallback=eligible.filter(m=>!fromDaily.some(i=>String(i.id)===String(m.id))&&isRadarEligiblePick(m))
-    .map((m,idx)=>({...m,league:normalizeLeagueName(m.league),home_team:normalizeTeamName(m.home_team),away_team:normalizeTeamName(m.away_team),
-      radar_market:getPrimaryPick(m),radar_probability:getMatchProbability(m),radar_rank:fromDaily.length+idx+1,source:"fallback"}));
-
-  const pool=[...fromDaily,...fallback];
+  // Fallback client-side removido: ele pegava jogos que o Brain não validou (times com
+  // dados esparsos, ex. fases preliminares de copas europeias) e calculava o pick sozinho
+  // no navegador sem os filtros de qualidade do servidor — por isso "Menos de 3,5 gols"
+  // continuava dominando o radar mesmo depois do fix no backend. Agora o radar só mostra
+  // o que o Brain já validou em daily_picks.
+  const pool=[...fromDaily];
 
   // ── Ordenação única: dia (hoje/amanhã) → horário → liga só como desempate ──
   function sortKey(i){
@@ -5897,11 +5677,10 @@ function pushModalState(id) {
 window.addEventListener("popstate", (e) => {
   // Only handle if we pushed this state intentionally
   if (!e.state?.modal) return;
-  const overlays = ["analysisOverlay","wcOverlay","resultadosOverlay"];
+  const overlays = ["analysisOverlay","resultadosOverlay"];
   for (const id of overlays) {
     if (document.getElementById(id)?.classList.contains("open")) {
       if (id === "analysisOverlay") closeAnalysis();
-      else if (id === "wcOverlay") closeWC2026();
       else if (id === "resultadosOverlay") closeResultados();
       return;
     }
