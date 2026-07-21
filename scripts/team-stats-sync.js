@@ -214,26 +214,32 @@ async function run() {
         // Fase 3: últimos 6 jogos para exibição H2H (salvo no banco, sync não precisa chamar API)
         let recentFormJson = null
         try {
-          const recentFixtures = await apiGet(`/fixtures?team=${team.id}&league=${league.leagueId}&season=${SEASON}&status=FT&last=6`)
+          const recentFixtures = await apiGet(`/fixtures?team=${team.id}&league=${league.leagueId}&season=${SEASON}&last=6`)
           await sleep(DELAY)
           const scores = [], matches = []
           for (const f of recentFixtures) {
-            const isHome  = f.teams?.home?.id === team.id
-            const myGoals = isHome ? f.goals?.home : f.goals?.away
-            const ogGoals = isHome ? f.goals?.away : f.goals?.home
-            if (myGoals === null || myGoals === undefined) continue
-            const label = `${myGoals}-${ogGoals}`
-            scores.push(label)
-            matches.push({
-              score: label,
-              opponent: isHome ? f.teams?.away?.name : f.teams?.home?.name,
-              opponentLogo: isHome ? f.teams?.away?.logo : f.teams?.home?.logo,
-              isHome,
-              date: f.fixture?.date
-            })
+            try {
+              const isHome  = f.teams?.home?.id === team.id
+              const myGoals = isHome ? f.goals?.home : f.goals?.away
+              const ogGoals = isHome ? f.goals?.away : f.goals?.home
+              if (myGoals === null || myGoals === undefined) continue
+              const label = `${myGoals}-${ogGoals}`
+              scores.push(label)
+              matches.push({
+                score: label,
+                opponent: isHome ? f.teams?.away?.name : f.teams?.home?.name,
+                opponentLogo: isHome ? f.teams?.away?.logo : f.teams?.home?.logo,
+                isHome,
+                date: f.fixture?.date
+              })
+            } catch (fixtureErr) {
+              console.error(`      ⚠️ ${team.name}: fixture malformada ignorada — ${fixtureErr.message}`)
+            }
           }
           recentFormJson = JSON.stringify({ scores, matches })
-        } catch {}
+        } catch (formErr) {
+          console.error(`   ⚠️ ${team.name}: falha ao buscar últimos jogos (H2H) — ${formErr.message}`)
+        }
 
         const row = {
           team_id:              team.id,
