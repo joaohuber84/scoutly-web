@@ -370,12 +370,13 @@ function chooseRadar(analyses){
   // inteiro só porque tem mais jogos elegíveis. Reserva espaço pra Champions/Conference/
   // Libertadores/Sul-Americana (T2) e ligas menores (T3) mesmo quando T1 sozinho já bateria 15.
   const TIER_QUOTA = {1:9,2:5,3:2}
+  const freshExact=(used)=>({...used,exactMarkets:{}})
   const p1=buildRadarPass(pool,[1],[],{matchIds:[],exactMarkets:{},families:{},leagues:{}},TIER_QUOTA[1])
-  const p2=buildRadarPass(pool,[2],p1.radar,p1.used,p1.radar.length+TIER_QUOTA[2])
-  const p3=buildRadarPass(pool,[3],p2.radar,p2.used,p2.radar.length+TIER_QUOTA[3])
+  const p2=buildRadarPass(pool,[2],p1.radar,freshExact(p1.used),p1.radar.length+TIER_QUOTA[2])
+  const p3=buildRadarPass(pool,[3],p2.radar,freshExact(p2.used),p2.radar.length+TIER_QUOTA[3])
   // Top-up: se alguma cota não foi preenchida (ex: poucos jogos de T2 hoje), qualquer tier
   // elegível (1-3) preenche o resto até RADAR_SIZE, ainda respeitando os limites de mercado/liga.
-  const topUp=p3.radar.length<RADAR_SIZE?buildRadarPass(pool,[1,2,3],p3.radar,p3.used,RADAR_SIZE):p3
+  const topUp=p3.radar.length<RADAR_SIZE?buildRadarPass(pool,[1,2,3],p3.radar,freshExact(p3.used),RADAR_SIZE):p3
   let radar=topUp.radar
   if(radar.length<RADAR_SIZE){
     const usedIds=new Set(topUp.used.matchIds)
