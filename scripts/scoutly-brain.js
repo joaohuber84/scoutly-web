@@ -367,7 +367,7 @@ function chooseRadar(analyses){
   function buildRadarPass(pool,allowedTiers,currentRadar,currentUsed,maxSize){
     const cap=maxSize??RADAR_SIZE
     const radar=[...currentRadar];const usedMatchIds=new Set(currentUsed.matchIds);const usedExactMarkets={...currentUsed.exactMarkets};const usedFamilies={...currentUsed.families};const usedLeagues={...currentUsed.leagues}
-    for(const item of pool){if(radar.length>=cap)break;if(usedMatchIds.has(item.match_id))continue;const tier=LEAGUE_TIER[String(item.league||"")]??4;if(!allowedTiers.includes(tier))continue;const exactMarketCount=usedExactMarkets[item.main_pick]||0;const familyCount=usedFamilies[item.main_family]||0;const leagueCount=usedLeagues[item.league]||0;if(exactMarketCount>=2)continue;const leagueCap=RADAR_UNCAPPED_LEAGUES.has(String(item.league||""))?Infinity:2;if(leagueCount>=leagueCap)continue;if(item.main_family==="gols"&&familyCount>=4)continue;if(item.main_family==="resultado"&&familyCount>=3)continue;if(item.main_family==="escanteios"&&familyCount>=3)continue;if(item.main_family==="cards"&&familyCount>=3)continue;if(item.main_family==="btts"&&familyCount>=2)continue;if(item.main_family==="shots"&&familyCount>=2)continue;if(item.main_family==="sot"&&familyCount>=2)continue;radar.push(item);usedMatchIds.add(item.match_id);usedExactMarkets[item.main_pick]=exactMarketCount+1;usedFamilies[item.main_family]=familyCount+1;usedLeagues[item.league]=leagueCount+1}
+    for(const item of pool){if(radar.length>=cap)break;if(usedMatchIds.has(item.match_id))continue;const tier=LEAGUE_TIER[String(item.league||"")]??4;if(!allowedTiers.includes(tier))continue;const exactMarketCount=usedExactMarkets[item.main_pick]||0;const familyCount=usedFamilies[item.main_family]||0;const leagueCount=usedLeagues[item.league]||0;if(exactMarketCount>=2)continue;const leagueCap=RADAR_UNCAPPED_LEAGUES.has(String(item.league||""))?Infinity:2;if(leagueCount>=leagueCap)continue;if(item.main_family==="gols"&&familyCount>=4)continue;if(item.main_family==="resultado"&&familyCount>=3)continue;if(item.main_family==="escanteios"&&familyCount>=4)continue;if(item.main_family==="cards"&&familyCount>=4)continue;if(item.main_family==="btts"&&familyCount>=2)continue;if(item.main_family==="shots"&&familyCount>=2)continue;if(item.main_family==="sot"&&familyCount>=2)continue;radar.push(item);usedMatchIds.add(item.match_id);usedExactMarkets[item.main_pick]=exactMarketCount+1;usedFamilies[item.main_family]=familyCount+1;usedLeagues[item.league]=leagueCount+1}
     return{radar,used:{matchIds:Array.from(usedMatchIds),exactMarkets:usedExactMarkets,families:usedFamilies,leagues:usedLeagues}}
   }
   // Cotas mínimas por tier — Brasileirão (T1, sem cap de liga) não pode engolir o radar
@@ -395,8 +395,8 @@ function chooseRadar(analyses){
       const famCount=usedFam[item.main_family]||0
       if(item.main_family==="gols"&&famCount>=4)continue
       if(item.main_family==="resultado"&&famCount>=3)continue
-      if(item.main_family==="escanteios"&&famCount>=3)continue
-      if(item.main_family==="cards"&&famCount>=3)continue
+      if(item.main_family==="escanteios"&&famCount>=4)continue
+      if(item.main_family==="cards"&&famCount>=4)continue
       if(item.main_family==="btts"&&famCount>=2)continue
       if(item.main_family==="shots"&&famCount>=2)continue
       if(item.main_family==="sot"&&famCount>=2)continue
