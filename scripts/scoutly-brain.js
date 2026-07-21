@@ -369,7 +369,20 @@ function chooseRadar(analyses){
   const pass2=pass1.radar.length<RADAR_SIZE?buildRadarPass(pool,[2],pass1.radar,pass1.used):pass1
   const pass3=pass2.radar.length<RADAR_SIZE?buildRadarPass(pool,[3],pass2.radar,pass2.used):pass2
   let radar=pass3.radar
-  if(radar.length<RADAR_SIZE){const usedIds=new Set(pass3.used.matchIds);const backup=[...active].sort(compareByScoreThenKickoff);for(const item of backup){if(radar.length>=RADAR_SIZE)break;if(usedIds.has(item.match_id))continue;radar.push(item);usedIds.add(item.match_id)}}
+  if(radar.length<RADAR_SIZE){
+    const usedIds=new Set(pass3.used.matchIds)
+    const usedExact={...pass3.used.exactMarkets}
+    const backup=[...active].sort(compareByScoreThenKickoff)
+    for(const item of backup){
+      if(radar.length>=RADAR_SIZE)break
+      if(usedIds.has(item.match_id))continue
+      // Mesmo limite de mercado das passes normais
+      if((usedExact[item.main_pick]||0)>=2)continue
+      radar.push(item)
+      usedIds.add(item.match_id)
+      usedExact[item.main_pick]=(usedExact[item.main_pick]||0)+1
+    }
+  }
   const tierCount={1:0,2:0,3:0,4:0}
   radar.forEach(item=>{const t=LEAGUE_TIER[String(item.league||"")]??4;tierCount[t]=(tierCount[t]||0)+1})
   console.log(`📊 Distribuição por tier: T1=${tierCount[1]||0} T2=${tierCount[2]||0} T3=${tierCount[3]||0} T4=${tierCount[4]||0}`)
