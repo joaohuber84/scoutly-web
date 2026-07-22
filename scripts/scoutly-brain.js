@@ -374,7 +374,7 @@ function chooseRadar(analyses){
   // inteiro só porque tem mais jogos elegíveis. Reserva espaço pra Champions/Conference/
   // Libertadores/Sul-Americana (T2) e ligas menores (T3) mesmo quando T1 sozinho já bateria 15.
   const TIER_QUOTA = {1:9,2:5,3:2}
-  const freshExact=(used)=>({...used,exactMarkets:{}})
+  const freshExact=(used)=>({...used,exactMarkets:{},families:{}})
   const p1=buildRadarPass(pool,[1],[],{matchIds:[],exactMarkets:{},families:{},leagues:{}},TIER_QUOTA[1])
   const p2=buildRadarPass(pool,[2],p1.radar,freshExact(p1.used),p1.radar.length+TIER_QUOTA[2])
   const p3=buildRadarPass(pool,[3],p2.radar,freshExact(p2.used),p2.radar.length+TIER_QUOTA[3])
