@@ -677,6 +677,12 @@ async function buildTeamContext(teamId, leagueId = null) {
     const recentData = (() => {
       try { return JSON.parse(leagueStats.recent_form_json || '{}') } catch { return {} }
     })()
+    if (!global.__h2hDebugged && leagueStats.recent_form_json) {
+      global.__h2hDebugged = true
+      try {
+        await supabase.from('debug_log2').insert({ tag: 'h2h_read', payload: { teamId, leagueId, rawType: typeof leagueStats.recent_form_json, rawSample: String(leagueStats.recent_form_json).slice(0,300), parsedScoresLen: recentData.scores?.length ?? null } })
+      } catch (e) { try { await supabase.from('debug_log2').insert({ tag: 'h2h_read_err', payload: { message: e.message } }) } catch {} }
+    }
     if (recentData.scores?.length) {
       recentScores  = recentData.scores
       recentMatches = recentData.matches || []
