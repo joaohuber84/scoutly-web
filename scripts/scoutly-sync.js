@@ -1197,6 +1197,17 @@ async function buildAndStoreMatches(fixtureLists) {
       // NOTA: upsertMatchStats removido daqui — match_stats deve conter apenas
       // estatísticas reais de jogos CONCLUÍDOS (populado pelo verify.js após o jogo).
       // Salvar valores projetados aqui causava corners=1, shots=4 falsos para jogos futuros.
+      if (!global.__formDataDebugged) {
+        global.__formDataDebugged = true
+        try {
+          await supabase.from('debug_log2').insert({ tag: 'formdata_build', payload: {
+            homeTeamId, awayTeamId, leagueIdForStats,
+            homeGeneralRecentLen: homeContext?.general?.recentScores?.length ?? 'MISSING',
+            homeGeneralKeys: homeContext?.general ? Object.keys(homeContext.general) : 'NO_GENERAL',
+            awayGeneralRecentLen: awayContext?.general?.recentScores?.length ?? 'MISSING'
+          } })
+        } catch (e) { try { await supabase.from('debug_log2').insert({ tag: 'formdata_err', payload: { message: e.message } }) } catch {} }
+      }
       const formData={
         home_form_general:{matches:homeContext.general.matches,avgGoalsFor:homeContext.general.avgGoalsFor,avgGoalsAgainst:homeContext.general.avgGoalsAgainst,avgShots:homeContext.general.avgShots,avgCorners:homeContext.general.avgCorners,avgCards:homeContext.general.avgCards,avgFouls:homeContext.general.avgFouls,recentScores:homeContext.general.recentScores,recentMatches:homeContext.general.recentMatches||[],formStreak:homeContext.general.formStreak},
         home_form_home:{matches:homeContext.home.matches,avgGoalsFor:homeContext.home.avgGoalsFor,avgGoalsAgainst:homeContext.home.avgGoalsAgainst,avgShots:homeContext.home.avgShots,avgCorners:homeContext.home.avgCorners,avgCards:homeContext.home.avgCards,recentScores:homeContext.home.recentScores,recentMatches:homeContext.home.recentMatches||[],formStreak:homeContext.home.formStreak},
