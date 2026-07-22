@@ -86,7 +86,13 @@ async function fetchTeamsInLeague(leagueId) {
 
 async function fetchTeamStatsFromAPI(teamId, leagueId) {
   const data = await apiGet(`/teams/statistics?team=${teamId}&league=${leagueId}&season=${SEASON}`)
-  return data?.[0] || null
+  // /teams/statistics devolve um OBJETO único em response, não um array — data?.[0] sempre
+  // dava undefined aqui, fazendo TODO time ser tratado como "sem jogos" e pulado (bug desde
+  // pelo menos 29/jun). apiGet() já normaliza array-endpoints com json.response||[]; para este
+  // endpoint específico precisamos aceitar tanto objeto quanto array por segurança.
+  if (Array.isArray(data)) return data[0] || null
+  if (data && typeof data === 'object' && Object.keys(data).length) return data
+  return null
 }
 
 // NOVO: busca corners, shots e fouls de jogos reais recentes
