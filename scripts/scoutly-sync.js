@@ -686,6 +686,7 @@ async function buildTeamContext(teamId, leagueId = null) {
 
     const profile = {
       matches: leagueStats.matches_played,
+      statsMatches: leagueStats.matches_played,
       avgGoalsFor: goalsFor, avgGoalsAgainst: goalsAgainst,
       avgShots: shots || null, avgShotsOnTarget: shotsOT || null,
       avgCorners: cornersFor || null, avgCornersAgainst: cornersAga || null,
