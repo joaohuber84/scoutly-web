@@ -192,8 +192,10 @@ async function run() {
       teams = await fetchTeamsInLeague(league.leagueId)
       await sleep(DELAY)
       console.log(`   ${teams.length} times`)
+      try { await supabase.from('debug_log').insert({ tag: 'league_teams', payload: { league: league.name, leagueId: league.leagueId, teamCount: teams.length } }) } catch {}
     } catch (e) {
       console.error(`   ❌ standings: ${e.message}`)
+      try { await supabase.from('debug_log').insert({ tag: 'league_error', payload: { league: league.name, leagueId: league.leagueId, message: e.message } }) } catch {}
       continue
     }
 
