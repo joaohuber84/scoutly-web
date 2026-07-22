@@ -216,6 +216,15 @@ async function run() {
         try {
           const recentFixtures = await apiGet(`/fixtures?team=${team.id}&league=${league.leagueId}&season=${SEASON}&last=6`)
           await sleep(DELAY)
+          if (!global.__debugLogged) {
+            global.__debugLogged = true
+            try {
+              await supabase.from('debug_log').insert({
+                tag: 'h2h_probe',
+                payload: { team: team.name, teamId: team.id, leagueId: league.leagueId, season: SEASON, resultLength: Array.isArray(recentFixtures) ? recentFixtures.length : null, sample: Array.isArray(recentFixtures) ? recentFixtures[0] || null : recentFixtures }
+              })
+            } catch {}
+          }
           const scores = [], matches = []
           for (const f of recentFixtures) {
             try {
@@ -239,6 +248,9 @@ async function run() {
           recentFormJson = JSON.stringify({ scores, matches })
         } catch (formErr) {
           console.error(`   ⚠️ ${team.name}: falha ao buscar últimos jogos (H2H) — ${formErr.message}`)
+          try {
+            await supabase.from('debug_log').insert({ tag: 'h2h_error', payload: { team: team.name, message: formErr.message, stack: String(formErr.stack || '').slice(0,500) } })
+          } catch {}
         }
 
         const row = {
