@@ -697,6 +697,28 @@ async function buildTeamContext(teamId, leagueId = null) {
     // Fallback API para recentScores REMOVIDO — causava 640+ chamadas extras por sync
     // recentScores ficam vazios até team-stats-sync rodar (todo dia 05h BRT)
 
+    const homeProfile = {
+      matches: leagueStats.matches_played,
+      statsMatches: leagueStats.matches_played,
+      avgGoalsFor: safeNumber(leagueStats.home_goals_for_avg, goalsFor),
+      avgGoalsAgainst: safeNumber(leagueStats.home_goals_against_avg, goalsAgainst),
+      avgShots: shots || null, avgShotsOnTarget: shotsOT || null,
+      avgCorners: safeNumber(leagueStats.home_corners_for_avg, cornersFor) || null,
+      avgCornersAgainst: safeNumber(leagueStats.home_corners_against_avg, cornersAga) || null,
+      avgCards: cards, avgFouls: avgFouls,
+      recentScores, recentMatches, formStreak,
+    }
+    const awayProfile = {
+      matches: leagueStats.matches_played,
+      statsMatches: leagueStats.matches_played,
+      avgGoalsFor: safeNumber(leagueStats.away_goals_for_avg, goalsFor),
+      avgGoalsAgainst: safeNumber(leagueStats.away_goals_against_avg, goalsAgainst),
+      avgShots: shots || null, avgShotsOnTarget: shotsOT || null,
+      avgCorners: safeNumber(leagueStats.away_corners_for_avg, cornersFor) || null,
+      avgCornersAgainst: safeNumber(leagueStats.away_corners_against_avg, cornersAga) || null,
+      avgCards: cards, avgFouls: avgFouls,
+      recentScores, recentMatches, formStreak,
+    }
     const profile = {
       matches: leagueStats.matches_played,
       statsMatches: leagueStats.matches_played,
@@ -706,7 +728,7 @@ async function buildTeamContext(teamId, leagueId = null) {
       avgCards: cards, avgFouls: avgFouls,
       recentScores, recentMatches, formStreak,
     }
-    const payload = { general: profile, home: profile, away: profile }
+    const payload = { general: profile, home: homeProfile, away: awayProfile }
     teamContextCache.set(cacheKey, payload)
     return payload
   }
