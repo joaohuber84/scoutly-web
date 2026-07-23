@@ -616,7 +616,20 @@ async function fetchTeamStatisticsFromDB(teamId, leagueId) {
     .eq('league_id', leagueId)
     .eq('season', 2026)
     .single()
-  return error ? null : data
+  if (!error && data && (data.matches_played||0) >= 3) return data
+  // Fallback: times de copas continentais (Champions/Europa/Conference/Libertadores/Sul-Americana
+  // etc.) costumam ter poucos ou nenhum jogo ainda sob o league_id da própria copa no início do
+  // torneio, mesmo já tendo um histórico rico na liga doméstica (ex: Mjallby AIF tem 13 jogos no
+  // Allsvenskan mas só 1 na Champions League ainda). Usa a liga com mais jogos disponível pro time.
+  const { data: altRows, error: altError } = await supabase
+    .from('team_statistics')
+    .select('*')
+    .eq('team_id', teamId)
+    .eq('season', 2026)
+    .order('matches_played', { ascending: false })
+    .limit(1)
+  if (!altError && altRows && altRows.length) return altRows[0]
+  return (!error && data) ? data : null
 }
 
 // Extrai scores recentes de fixtures já buscados (sem chamadas extras de API)
@@ -1169,17 +1182,6 @@ async function buildAndStoreMatches(fixtureLists) {
       if(!homeTeamId||!awayTeamId){ stored.push(baseMatchPayload); console.log(`🟡 Sem análise (time_id ausente): ${leagueDisplay} | ${baseMatchPayload.home_team} x ${baseMatchPayload.away_team}`); continue }
       const homeContext=await buildTeamContext(homeTeamId,leagueIdForStats)
       const awayContext=await buildTeamContext(awayTeamId,leagueIdForStats)
-      if ([2,3,848,262].includes(Number(leagueIdForStats))) {
-        try {
-          await supabase.from('debug_log3').insert({ tag: 'cl_lookup', payload: {
-            homeTeam: baseMatchPayload.home_team, awayTeam: baseMatchPayload.away_team,
-            homeTeamId, awayTeamId, leagueIdForStats,
-            fixtureLeagueId: fixture?.league?.id, compLeagueId: comp?.leagueId, compSeason: comp?.season,
-            fixtureSeason: fixture?.league?.season,
-            homeMatches: homeContext?.general?.matches, awayMatches: awayContext?.general?.matches
-          } })
-        } catch {}
-      }
       if(!hasMinimumMatchData(homeContext,awayContext)){ stored.push(baseMatchPayload); console.log(`🟡 Sem análise (dados mínimos insuficientes): ${leagueDisplay} | ${baseMatchPayload.home_team} x ${baseMatchPayload.away_team}`); continue }
       const homeProfile=buildSideProfile(homeContext,"home")
       const awayProfile=buildSideProfile(awayContext,"away")
