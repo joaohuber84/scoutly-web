@@ -1187,6 +1187,8 @@ async function buildAndStoreMatches(fixtureLists) {
         // H2H (recentScores) não depende do mesmo limiar de "jogos suficientes na temporada
         // atual" que as médias precisam — são os últimos jogos da carreira do time, então
         // gravamos isso separadamente mesmo quando a análise completa (picks) é pulada.
+        // Update cirúrgico só na coluna 'data' (merge com o que já existir) — nunca toca em
+        // best_pick/prob_* para não arriscar apagar análise boa de execuções anteriores.
         const hasHomeRecent=(homeContext?.general?.recentScores?.length||0)>0
         const hasAwayRecent=(awayContext?.general?.recentScores?.length||0)>0
         if(hasHomeRecent||hasAwayRecent){
@@ -1196,7 +1198,12 @@ async function buildAndStoreMatches(fixtureLists) {
               away_form_general:{matches:awayContext.general.matches,avgGoalsFor:awayContext.general.avgGoalsFor,avgGoalsAgainst:awayContext.general.avgGoalsAgainst,avgShots:awayContext.general.avgShots,avgCorners:awayContext.general.avgCorners,avgCards:awayContext.general.avgCards,avgFouls:awayContext.general.avgFouls,recentScores:awayContext.general.recentScores,recentMatches:awayContext.general.recentMatches||[],formStreak:awayContext.general.formStreak},
               h2h:null,
             }
-            await upsertMatchAnalysis({ match_id: baseMatchPayload.id, form_data: partialFormData })
+            const{data:existing}=await supabase.from('match_analysis').select('match_id').eq('match_id',baseMatchPayload.id).maybeSingle()
+            if(existing){
+              await supabase.from('match_analysis').update({data:partialFormData}).eq('match_id',baseMatchPayload.id)
+            }else{
+              await supabase.from('match_analysis').insert({match_id:baseMatchPayload.id,data:partialFormData})
+            }
           }catch(e){ console.error(`   ⚠️ H2H parcial falhou: ${e.message}`) }
         }
         console.log(`🟡 Sem análise completa (dados mínimos insuficientes p/ picks, H2H gravado quando disponível): ${leagueDisplay} | ${baseMatchPayload.home_team} x ${baseMatchPayload.away_team}`)
