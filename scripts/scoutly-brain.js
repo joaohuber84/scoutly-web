@@ -375,24 +375,26 @@ function chooseRadar(analyses){
   }
   const TIER_QUOTA = {1:9,2:5,3:2}
   const freshExact=(used)=>({...used,exactMarkets:{},families:{}})
-  function runTierPasses(pool,startRadar,startUsed,exactCap){
-    const p1=buildRadarPass(pool,[1],startRadar,startUsed,startRadar.length+TIER_QUOTA[1],exactCap)
-    const p2=buildRadarPass(pool,[2],p1.radar,freshExact(p1.used),p1.radar.length+TIER_QUOTA[2],exactCap)
-    const p3=buildRadarPass(pool,[3],p2.radar,freshExact(p2.used),p2.radar.length+TIER_QUOTA[3],exactCap)
-    const topUp=p3.radar.length<RADAR_SIZE?buildRadarPass(pool,[1,2,3],p3.radar,freshExact(p3.used),RADAR_SIZE,exactCap):p3
+  function runTierPasses(pool,startRadar,startUsed,exactCap,overallCap){
+    const cap=overallCap??RADAR_SIZE
+    const p1=buildRadarPass(pool,[1],startRadar,startUsed,Math.min(cap,startRadar.length+TIER_QUOTA[1]),exactCap)
+    const p2=buildRadarPass(pool,[2],p1.radar,freshExact(p1.used),Math.min(cap,p1.radar.length+TIER_QUOTA[2]),exactCap)
+    const p3=buildRadarPass(pool,[3],p2.radar,freshExact(p2.used),Math.min(cap,p2.radar.length+TIER_QUOTA[3]),exactCap)
+    const topUp=p3.radar.length<cap?buildRadarPass(pool,[1,2,3],p3.radar,freshExact(p3.used),cap,exactCap):p3
     return topUp
   }
   // FASE 1 — HOJE primeiro, cap de mercado relaxado (4 em vez de 2). A prioridade é
   // esgotar os jogos de HOJE antes de sequer olhar pra amanhã — mesmo que isso signifique
   // repetir mais um mercado (ex: vários "Menos de 3.5" no mesmo dia). Diversidade de mercado
   // é secundária à prioridade do dia.
-  const todayPass=runTierPasses(todayPool,[],{matchIds:[],exactMarkets:{},families:{},leagues:{}},4)
+  const todayPass=runTierPasses(todayPool,[],{matchIds:[],exactMarkets:{},families:{},leagues:{}},4,RADAR_SIZE)
   // FASE 2 — só entra jogo de amanhã/depois se sobrou vaga depois de esgotar hoje de verdade.
   // Aqui sim aplica o cap normal (2) pra manter variedade nos jogos "extras" além de hoje.
+  // overallCap continua RADAR_SIZE — nunca soma por cima do que a fase 1 já usou.
   let radar=todayPass.radar
   let used=todayPass.used
   if(radar.length<RADAR_SIZE){
-    const fillPass=runTierPasses(fullPool,radar,freshExact(used),2)
+    const fillPass=runTierPasses(fullPool,radar,freshExact(used),2,RADAR_SIZE)
     radar=fillPass.radar
     used=fillPass.used
   }
