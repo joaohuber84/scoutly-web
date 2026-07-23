@@ -1182,7 +1182,26 @@ async function buildAndStoreMatches(fixtureLists) {
       if(!homeTeamId||!awayTeamId){ stored.push(baseMatchPayload); console.log(`🟡 Sem análise (time_id ausente): ${leagueDisplay} | ${baseMatchPayload.home_team} x ${baseMatchPayload.away_team}`); continue }
       const homeContext=await buildTeamContext(homeTeamId,leagueIdForStats)
       const awayContext=await buildTeamContext(awayTeamId,leagueIdForStats)
-      if(!hasMinimumMatchData(homeContext,awayContext)){ stored.push(baseMatchPayload); console.log(`🟡 Sem análise (dados mínimos insuficientes): ${leagueDisplay} | ${baseMatchPayload.home_team} x ${baseMatchPayload.away_team}`); continue }
+      if(!hasMinimumMatchData(homeContext,awayContext)){
+        stored.push(baseMatchPayload)
+        // H2H (recentScores) não depende do mesmo limiar de "jogos suficientes na temporada
+        // atual" que as médias precisam — são os últimos jogos da carreira do time, então
+        // gravamos isso separadamente mesmo quando a análise completa (picks) é pulada.
+        const hasHomeRecent=(homeContext?.general?.recentScores?.length||0)>0
+        const hasAwayRecent=(awayContext?.general?.recentScores?.length||0)>0
+        if(hasHomeRecent||hasAwayRecent){
+          try{
+            const partialFormData={
+              home_form_general:{matches:homeContext.general.matches,avgGoalsFor:homeContext.general.avgGoalsFor,avgGoalsAgainst:homeContext.general.avgGoalsAgainst,avgShots:homeContext.general.avgShots,avgCorners:homeContext.general.avgCorners,avgCards:homeContext.general.avgCards,avgFouls:homeContext.general.avgFouls,recentScores:homeContext.general.recentScores,recentMatches:homeContext.general.recentMatches||[],formStreak:homeContext.general.formStreak},
+              away_form_general:{matches:awayContext.general.matches,avgGoalsFor:awayContext.general.avgGoalsFor,avgGoalsAgainst:awayContext.general.avgGoalsAgainst,avgShots:awayContext.general.avgShots,avgCorners:awayContext.general.avgCorners,avgCards:awayContext.general.avgCards,avgFouls:awayContext.general.avgFouls,recentScores:awayContext.general.recentScores,recentMatches:awayContext.general.recentMatches||[],formStreak:awayContext.general.formStreak},
+              h2h:null,
+            }
+            await upsertMatchAnalysis({ match_id: baseMatchPayload.id, form_data: partialFormData })
+          }catch(e){ console.error(`   ⚠️ H2H parcial falhou: ${e.message}`) }
+        }
+        console.log(`🟡 Sem análise completa (dados mínimos insuficientes p/ picks, H2H gravado quando disponível): ${leagueDisplay} | ${baseMatchPayload.home_team} x ${baseMatchPayload.away_team}`)
+        continue
+      }
       const homeProfile=buildSideProfile(homeContext,"home")
       const awayProfile=buildSideProfile(awayContext,"away")
       const h2hProfile=await buildH2HProfile(homeTeamId,awayTeamId)
