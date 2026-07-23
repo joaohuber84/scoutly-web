@@ -1169,6 +1169,17 @@ async function buildAndStoreMatches(fixtureLists) {
       if(!homeTeamId||!awayTeamId){ stored.push(baseMatchPayload); console.log(`🟡 Sem análise (time_id ausente): ${leagueDisplay} | ${baseMatchPayload.home_team} x ${baseMatchPayload.away_team}`); continue }
       const homeContext=await buildTeamContext(homeTeamId,leagueIdForStats)
       const awayContext=await buildTeamContext(awayTeamId,leagueIdForStats)
+      if ([2,3,848,262].includes(Number(leagueIdForStats))) {
+        try {
+          await supabase.from('debug_log3').insert({ tag: 'cl_lookup', payload: {
+            homeTeam: baseMatchPayload.home_team, awayTeam: baseMatchPayload.away_team,
+            homeTeamId, awayTeamId, leagueIdForStats,
+            fixtureLeagueId: fixture?.league?.id, compLeagueId: comp?.leagueId, compSeason: comp?.season,
+            fixtureSeason: fixture?.league?.season,
+            homeMatches: homeContext?.general?.matches, awayMatches: awayContext?.general?.matches
+          } })
+        } catch {}
+      }
       if(!hasMinimumMatchData(homeContext,awayContext)){ stored.push(baseMatchPayload); console.log(`🟡 Sem análise (dados mínimos insuficientes): ${leagueDisplay} | ${baseMatchPayload.home_team} x ${baseMatchPayload.away_team}`); continue }
       const homeProfile=buildSideProfile(homeContext,"home")
       const awayProfile=buildSideProfile(awayContext,"away")
