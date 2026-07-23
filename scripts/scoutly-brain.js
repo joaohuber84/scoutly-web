@@ -363,29 +363,43 @@ function chooseRadar(analyses){
   const today=active.filter((item)=>getDayOffsetFromToday(item.kickoff)<=0)
   const future=active.filter((item)=>getDayOffsetFromToday(item.kickoff)>0)
   function sortPool(arr){return[...arr].sort((a,b)=>{const ta=getKickoffMs(a.kickoff),tb=getKickoffMs(b.kickoff);const blockA=Math.floor(ta/(30*60*1000)),blockB=Math.floor(tb/(30*60*1000));if(blockA!==blockB)return blockA-blockB;const tierA=LEAGUE_TIER[String(a.league||"")]??4,tierB=LEAGUE_TIER[String(b.league||"")]??4;if(tierA!==tierB)return tierA-tierB;return b.main_score-a.main_score})}
-  const pool=[...sortPool(today),...sortPool(future)]
-  function buildRadarPass(pool,allowedTiers,currentRadar,currentUsed,maxSize){
+  const todayPool=sortPool(today)
+  const futurePool=sortPool(future)
+  const fullPool=[...todayPool,...futurePool]
+  function buildRadarPass(pool,allowedTiers,currentRadar,currentUsed,maxSize,exactCap){
     const cap=maxSize??RADAR_SIZE
+    const marketCap=exactCap??2
     const radar=[...currentRadar];const usedMatchIds=new Set(currentUsed.matchIds);const usedExactMarkets={...currentUsed.exactMarkets};const usedFamilies={...currentUsed.families};const usedLeagues={...currentUsed.leagues}
-    for(const item of pool){if(radar.length>=cap)break;if(usedMatchIds.has(item.match_id))continue;const tier=LEAGUE_TIER[String(item.league||"")]??4;if(!allowedTiers.includes(tier))continue;const exactMarketCount=usedExactMarkets[item.main_pick]||0;const familyCount=usedFamilies[item.main_family]||0;const leagueCount=usedLeagues[item.league]||0;if(exactMarketCount>=2)continue;const leagueCap=RADAR_UNCAPPED_LEAGUES.has(String(item.league||""))?Infinity:2;if(leagueCount>=leagueCap)continue;if(item.main_family==="gols"&&familyCount>=4)continue;if(item.main_family==="resultado"&&familyCount>=3)continue;if(item.main_family==="escanteios"&&familyCount>=4)continue;if(item.main_family==="cards"&&familyCount>=4)continue;if(item.main_family==="btts"&&familyCount>=2)continue;if(item.main_family==="shots"&&familyCount>=2)continue;if(item.main_family==="sot"&&familyCount>=2)continue;radar.push(item);usedMatchIds.add(item.match_id);usedExactMarkets[item.main_pick]=exactMarketCount+1;usedFamilies[item.main_family]=familyCount+1;usedLeagues[item.league]=leagueCount+1}
+    for(const item of pool){if(radar.length>=cap)break;if(usedMatchIds.has(item.match_id))continue;const tier=LEAGUE_TIER[String(item.league||"")]??4;if(!allowedTiers.includes(tier))continue;const exactMarketCount=usedExactMarkets[item.main_pick]||0;const familyCount=usedFamilies[item.main_family]||0;const leagueCount=usedLeagues[item.league]||0;if(exactMarketCount>=marketCap)continue;const leagueCap=RADAR_UNCAPPED_LEAGUES.has(String(item.league||""))?Infinity:2;if(leagueCount>=leagueCap)continue;if(item.main_family==="gols"&&familyCount>=6)continue;if(item.main_family==="resultado"&&familyCount>=4)continue;if(item.main_family==="escanteios"&&familyCount>=5)continue;if(item.main_family==="cards"&&familyCount>=5)continue;if(item.main_family==="btts"&&familyCount>=3)continue;if(item.main_family==="shots"&&familyCount>=3)continue;if(item.main_family==="sot"&&familyCount>=3)continue;radar.push(item);usedMatchIds.add(item.match_id);usedExactMarkets[item.main_pick]=exactMarketCount+1;usedFamilies[item.main_family]=familyCount+1;usedLeagues[item.league]=leagueCount+1}
     return{radar,used:{matchIds:Array.from(usedMatchIds),exactMarkets:usedExactMarkets,families:usedFamilies,leagues:usedLeagues}}
   }
-  // Cotas mínimas por tier — Brasileirão (T1, sem cap de liga) não pode engolir o radar
-  // inteiro só porque tem mais jogos elegíveis. Reserva espaço pra Champions/Conference/
-  // Libertadores/Sul-Americana (T2) e ligas menores (T3) mesmo quando T1 sozinho já bateria 15.
   const TIER_QUOTA = {1:9,2:5,3:2}
   const freshExact=(used)=>({...used,exactMarkets:{},families:{}})
-  const p1=buildRadarPass(pool,[1],[],{matchIds:[],exactMarkets:{},families:{},leagues:{}},TIER_QUOTA[1])
-  const p2=buildRadarPass(pool,[2],p1.radar,freshExact(p1.used),p1.radar.length+TIER_QUOTA[2])
-  const p3=buildRadarPass(pool,[3],p2.radar,freshExact(p2.used),p2.radar.length+TIER_QUOTA[3])
-  // Top-up: se alguma cota não foi preenchida (ex: poucos jogos de T2 hoje), qualquer tier
-  // elegível (1-3) preenche o resto até RADAR_SIZE, ainda respeitando os limites de mercado/liga.
-  const topUp=p3.radar.length<RADAR_SIZE?buildRadarPass(pool,[1,2,3],p3.radar,freshExact(p3.used),RADAR_SIZE):p3
-  let radar=topUp.radar
+  function runTierPasses(pool,startRadar,startUsed,exactCap){
+    const p1=buildRadarPass(pool,[1],startRadar,startUsed,startRadar.length+TIER_QUOTA[1],exactCap)
+    const p2=buildRadarPass(pool,[2],p1.radar,freshExact(p1.used),p1.radar.length+TIER_QUOTA[2],exactCap)
+    const p3=buildRadarPass(pool,[3],p2.radar,freshExact(p2.used),p2.radar.length+TIER_QUOTA[3],exactCap)
+    const topUp=p3.radar.length<RADAR_SIZE?buildRadarPass(pool,[1,2,3],p3.radar,freshExact(p3.used),RADAR_SIZE,exactCap):p3
+    return topUp
+  }
+  // FASE 1 — HOJE primeiro, cap de mercado relaxado (4 em vez de 2). A prioridade é
+  // esgotar os jogos de HOJE antes de sequer olhar pra amanhã — mesmo que isso signifique
+  // repetir mais um mercado (ex: vários "Menos de 3.5" no mesmo dia). Diversidade de mercado
+  // é secundária à prioridade do dia.
+  const todayPass=runTierPasses(todayPool,[],{matchIds:[],exactMarkets:{},families:{},leagues:{}},4)
+  // FASE 2 — só entra jogo de amanhã/depois se sobrou vaga depois de esgotar hoje de verdade.
+  // Aqui sim aplica o cap normal (2) pra manter variedade nos jogos "extras" além de hoje.
+  let radar=todayPass.radar
+  let used=todayPass.used
   if(radar.length<RADAR_SIZE){
-    const usedIds=new Set(topUp.used.matchIds)
-    const usedExact={...topUp.used.exactMarkets}
-    const usedFam={...topUp.used.families}
+    const fillPass=runTierPasses(fullPool,radar,freshExact(used),2)
+    radar=fillPass.radar
+    used=fillPass.used
+  }
+  if(radar.length<RADAR_SIZE){
+    const usedIds=new Set(used.matchIds)
+    const usedExact={...used.exactMarkets}
+    const usedFam={...used.families}
     const backup=[...active].sort(compareByScoreThenKickoff)
     for(const item of backup){
       if(radar.length>=RADAR_SIZE)break
@@ -393,13 +407,13 @@ function chooseRadar(analyses){
       // Mesmo limite de mercado E de família das passes normais
       if((usedExact[item.main_pick]||0)>=2)continue
       const famCount=usedFam[item.main_family]||0
-      if(item.main_family==="gols"&&famCount>=4)continue
-      if(item.main_family==="resultado"&&famCount>=3)continue
-      if(item.main_family==="escanteios"&&famCount>=4)continue
-      if(item.main_family==="cards"&&famCount>=4)continue
-      if(item.main_family==="btts"&&famCount>=2)continue
-      if(item.main_family==="shots"&&famCount>=2)continue
-      if(item.main_family==="sot"&&famCount>=2)continue
+      if(item.main_family==="gols"&&famCount>=6)continue
+      if(item.main_family==="resultado"&&famCount>=4)continue
+      if(item.main_family==="escanteios"&&famCount>=5)continue
+      if(item.main_family==="cards"&&famCount>=5)continue
+      if(item.main_family==="btts"&&famCount>=3)continue
+      if(item.main_family==="shots"&&famCount>=3)continue
+      if(item.main_family==="sot"&&famCount>=3)continue
       radar.push(item)
       usedIds.add(item.match_id)
       usedExact[item.main_pick]=(usedExact[item.main_pick]||0)+1
@@ -408,8 +422,9 @@ function chooseRadar(analyses){
   }
   const tierCount={1:0,2:0,3:0,4:0}
   radar.forEach(item=>{const t=LEAGUE_TIER[String(item.league||"")]??4;tierCount[t]=(tierCount[t]||0)+1})
+  const todayInRadar=radar.filter(item=>getDayOffsetFromToday(item.kickoff)<=0).length
   console.log(`📊 Distribuição por tier: T1=${tierCount[1]||0} T2=${tierCount[2]||0} T3=${tierCount[3]||0} T4=${tierCount[4]||0}`)
-  console.log(`🏆 Pass1: ${p1.radar.length} | Pass2: ${p2.radar.length} | Pass3: ${p3.radar.length} | TopUp: ${topUp.radar.length}`)
+  console.log(`📅 Jogos de hoje no radar: ${todayInRadar} de ${radar.length} | Pool de hoje disponível: ${todayPool.length}`)
   return radar.sort(compareByKickoff)
 }
 
