@@ -115,9 +115,9 @@ async function loadBaseTables(){
   if(matchesError)throw matchesError
   const{data:analysis,error:analysisError}=await supabase.from("match_analysis").select(`match_id,home_strength,away_strength,expected_home_goals,expected_away_goals,expected_home_shots,expected_away_shots,expected_home_sot,expected_away_sot,expected_corners,expected_cards,prob_over25,prob_btts,prob_corners,prob_shots,prob_sot,prob_cards,best_pick_1,best_pick_2,best_pick_3,aggressive_pick,analysis_text`)
   if(analysisError)throw analysisError
-  const{data:teamStats,error:teamStatsError}=await supabase.from("team_statistics").select("team_name")
+  const{data:teamStats,error:teamStatsError}=await supabase.from("team_statistics").select("team_name,matches_played")
   if(teamStatsError)throw teamStatsError
-  const teamsWithRealStats=new Set((teamStats||[]).map((r)=>r.team_name))
+  const teamsWithRealStats=new Set((teamStats||[]).filter((r)=>Number(r.matches_played)>=3).map((r)=>r.team_name))
   return{matches:matches||[],analysis:analysis||[],teamsWithRealStats}
 }
 
