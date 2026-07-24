@@ -660,6 +660,17 @@ async function buildTeamContext(teamId, leagueId = null) {
     try { leagueStats = await fetchTeamStatisticsFromDB(teamId, leagueId) } catch {}
   }
 
+  // Últimos jogos (H2H): extraído aqui, fora do gate de matches_played>=3, porque recentScores
+  // é histórico de carreira e não depende de quantos jogos a temporada ATUAL já teve (ex: Liga
+  // MX com temporada recém-começada tinha só 1 jogo na média, mas o recent_form_json já existe).
+  let sharedRecentScores = [], sharedRecentMatches = []
+  if (leagueStats) {
+    try {
+      const parsed = JSON.parse(leagueStats.recent_form_json || '{}')
+      if (parsed.scores?.length) { sharedRecentScores = parsed.scores; sharedRecentMatches = parsed.matches || [] }
+    } catch {}
+  }
+
   if (leagueStats && leagueStats.matches_played >= 3) {
     const goalsFor    = safeNumber(leagueStats.goals_for_avg, 0)
     const goalsAgainst= safeNumber(leagueStats.goals_against_avg, 0)
@@ -684,18 +695,8 @@ async function buildTeamContext(teamId, leagueId = null) {
       return "irregular"
     })()
 
-    // Resultados recentes: tenta recent_form_json (semanal via team-stats-sync)
-    // Se vazio, busca via API (1 chamada por time — rápido, não busca estatísticas)
-    let recentScores = [], recentMatches = []
-    const recentData = (() => {
-      try { return JSON.parse(leagueStats.recent_form_json || '{}') } catch { return {} }
-    })()
-    if (recentData.scores?.length) {
-      recentScores  = recentData.scores
-      recentMatches = recentData.matches || []
-    }
-    // Fallback API para recentScores REMOVIDO — causava 640+ chamadas extras por sync
-    // recentScores ficam vazios até team-stats-sync rodar (todo dia 05h BRT)
+    // Resultados recentes: já extraído acima em sharedRecentScores/sharedRecentMatches
+    const recentScores = sharedRecentScores, recentMatches = sharedRecentMatches
 
     const homeProfile = {
       matches: leagueStats.matches_played,
@@ -739,7 +740,7 @@ async function buildTeamContext(teamId, leagueId = null) {
   const defaultProfile = {
     avgGoalsFor: 1.35, avgGoalsAgainst: 1.35, avgShots: null, avgShotsOnTarget: null,
     avgCorners: null, avgCornersAgainst: null, avgCards: 2.5, avgFouls: 13.0,
-    recentScores: [], recentMatches: [], formStreak: "sem dados", matches: 0
+    recentScores: sharedRecentScores, recentMatches: sharedRecentMatches, formStreak: "sem dados", matches: 0
   }
   const payload = { general: defaultProfile, home: defaultProfile, away: defaultProfile }
   teamContextCache.set(cacheKey, payload)
