@@ -146,7 +146,7 @@ async function refreshCopaAnalysis(fixtures) {
       // Usa RPC com COALESCE para preservar árbitro existente
       // PICKS: gerados EXCLUSIVAMENTE pelo Brain (não pelo Copa Sync)
       // Copa Sync só atualiza métricas e árbitro — nunca picks
-      const { error } = await supabase.rpc('upsert_match_analysis', {
+      const rpcPayload = {
         p_match_id: f.id,
         p_home_strength: Math.round((hGFor*1.4 + hCards*0.15) * 100)/100,
         p_away_strength: Math.round((aGFor*1.35 + aCards*0.14) * 100)/100,
@@ -168,7 +168,14 @@ async function refreshCopaAnalysis(fixtures) {
         p_referee_name:      refStats?.name || refName || null,
         p_referee_avg_cards: refStats?.avg_yellow_cards || null,
         p_referee_avg_fouls: refStats?.avg_fouls || null,
-      })
+      }
+      let { error } = await supabase.rpc('upsert_match_analysis', rpcPayload)
+      if (error && /duplicate key/i.test(error.message || '')) {
+        // Corrida rara no ON CONFLICT sob execução concorrente — a linha já existe agora,
+        // então a segunda tentativa cai no caminho de UPDATE normalmente.
+        await new Promise(r => setTimeout(r, 150))
+        ;({ error } = await supabase.rpc('upsert_match_analysis', rpcPayload))
+      }
 
       if (error) console.error(`❌ Análise ${home.name} x ${away.name}: ${error.message}`)
       else { updated++; console.log(`✅ Análise ${home.name} x ${away.name}: ${pick1} | árbitro: ${refStats?.name || refName || 'N/D'}`) }
