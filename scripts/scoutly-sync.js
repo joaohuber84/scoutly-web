@@ -802,7 +802,12 @@ function buildExpectedMetrics(homeProfile, awayProfile, h2hProfile = null) {
   // Ex: Juventude 5.2 + Ceará 5.4 = 10.6 total esperados (correto)
   // Fórmula anterior fazia média ponderada → resultado ~6.8 (errado)
   const rawCorners = (homeProfile.avgCorners||0) + (awayProfile.avgCorners||0)
-  const expectedCorners = clamp(round(rawCorners > 0 ? rawCorners : expectedShots*0.25+expectedSOT*0.18+pressureFactor*2), 5.0, 14.0)
+  // Fallback (sem dado real de escanteios — API não fornece corners_for_avg pra times
+  // brasileiros): antes usava coeficientes baixos (0.25/0.18) que davam ~3-4, sempre caindo
+  // no piso de 5.0 pra praticamente todo jogo — por isso tudo mostrava "5" igual. Agora centra
+  // em ~9 escanteios (média real de uma partida) e ainda varia com o volume de finalizações.
+  const fallbackCorners = 9.0 + (expectedShots-11)*0.18 + (expectedSOT-4)*0.25 + pressureFactor*3
+  const expectedCorners = clamp(round(rawCorners > 0 ? rawCorners : fallbackCorners), 6.0, 13.0)
   const expectedCards = clamp(round(homeProfile.avgCards*0.50+awayProfile.avgCards*0.50+(homeProfile.avgFouls+awayProfile.avgFouls)*0.025),1.2,7.0)
   const expectedFouls = clamp(round(homeProfile.avgFouls + awayProfile.avgFouls), 16, 42)
   return { expectedGoals, expectedHomeGoals, expectedAwayGoals, expectedHomeShots, expectedAwayShots, expectedHomeSOT, expectedAwaySOT, expectedShots, expectedSOT, expectedCorners, expectedCards, expectedFouls }
