@@ -33,7 +33,7 @@ jobs:
         with: { node-version: "22" }
       - run: npm install
       - name: Preenche análises faltando
-        run: curl -s --max-time 30 "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/fill-missing-analysis" || true
+        run: curl -s --max-time 180 "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/fill-missing-analysis" || true
       - name: Árbitros — busca nomes
         run: curl -s --max-time 60 "https://zngdcatlxlxamceqpxij.supabase.co/functions/v1/populate-referees" || true
       - name: Brain
