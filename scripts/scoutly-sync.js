@@ -1239,6 +1239,15 @@ async function buildAndStoreMatches(fixtureLists) {
       }
       const homeProfile=buildSideProfile(homeContext,"home")
       const awayProfile=buildSideProfile(awayContext,"away")
+      if (baseMatchPayload.home_team==='Flamengo' && baseMatchPayload.away_team==='Sao Paulo') {
+        try {
+          await supabase.from('debug_log4').insert({ tag: 'corners_trace', payload: {
+            homeContextGeneral: homeContext.general, homeContextHome: homeContext.home,
+            awayContextGeneral: awayContext.general, awayContextAway: awayContext.away,
+            homeProfile, awayProfile
+          } })
+        } catch (e) { try { await supabase.from('debug_log4').insert({ tag: 'corners_trace_err', payload: { message: e.message } }) } catch {} }
+      }
       const h2hProfile=await buildH2HProfile(homeTeamId,awayTeamId)
       const metricsExp=buildExpectedMetrics(homeProfile,awayProfile,h2hProfile)
       const probabilities=buildProbabilities(metricsExp)
