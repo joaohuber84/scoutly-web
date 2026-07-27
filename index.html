@@ -4572,21 +4572,26 @@ function renderFormDots(form) {
   }).join("");
 }
 
-function renderStandingsGroup(group, leagueId) {
+function renderStandingsGroup(group, leagueId, homeTeam, awayTeam) {
   const z = getZoneRules(leagueId);
+  const normHome = String(homeTeam||"").toLowerCase().trim();
+  const normAway = String(awayTeam||"").toLowerCase().trim();
   const rows = group.map(team => {
     const pos = team.rank;
     const zoneClass = getPosZoneClass(pos, leagueId);
     const zoneTitle = getPosZoneTitle(pos, leagueId);
+    const teamNameNorm = String(team.team?.name||"").toLowerCase().trim();
+    const isCurrentMatch = (normHome && (teamNameNorm===normHome || teamNameNorm.includes(normHome) || normHome.includes(teamNameNorm)))
+      || (normAway && (teamNameNorm===normAway || teamNameNorm.includes(normAway) || normAway.includes(teamNameNorm)));
     const logo = team.team?.logo
       ? `<img src="${escapeHtml(team.team.logo)}" class="st-logo" onerror="this.style.display='none'">`
       : `<div class="st-logo-fb">${escapeHtml(teamInitials(team.team?.name||""))}</div>`;
     const all = team.all || {};
     const goaldiff = (all.goals?.for||0) - (all.goals?.against||0);
     const gdStr = goaldiff > 0 ? `+${goaldiff}` : String(goaldiff);
-    return `<tr>
+    return `<tr${isCurrentMatch?' class="highlight"':''}>
       <td class="st-pos left ${zoneClass}" ${zoneTitle?`title="${escapeHtml(zoneTitle)}"`:""}>${pos}</td>
-      <td class="left"><div class="st-team">${logo}<span class="st-name" data-team="${escapeHtml(team.team?.name||"")}" data-logo="${escapeHtml(team.team?.logo||"")}" data-pos="${pos}" data-pts="${team.points||0}" data-played="${all.played||0}" data-form="${escapeHtml(team.form||"")}" onclick="openTeamPanel(this)">${escapeHtml(team.team?.name||"-")}</span></div></td>
+      <td class="left"><div class="st-team">${logo}<span class="st-name"${isCurrentMatch?' style="font-weight:800"':''} data-team="${escapeHtml(team.team?.name||"")}" data-logo="${escapeHtml(team.team?.logo||"")}" data-pos="${pos}" data-pts="${team.points||0}" data-played="${all.played||0}" data-form="${escapeHtml(team.form||"")}" onclick="openTeamPanel(this)">${escapeHtml(team.team?.name||"-")}</span></div></td>
       <td>${all.played||0}</td><td>${all.win||0}</td><td>${all.draw||0}</td><td>${all.lose||0}</td>
       <td>${all.goals?.for||0}</td><td>${all.goals?.against||0}</td><td>${gdStr}</td>
       <td class="st-pts">${team.points||0}</td>
@@ -4787,9 +4792,13 @@ function openTeamPanel(el) {
     const isHome = String(nextMatch.home_team||"").toLowerCase().trim() === normName;
     const opponent = isHome ? nextMatch.away_team : nextMatch.home_team;
     const pick = getPrimaryPick(nextMatch);
-    nextEl.innerHTML = `<strong>${escapeHtml(opponent)}</strong> · ${isHome?"Casa":"Fora"}<br><span style="color:var(--text-3)">${escapeHtml(formatKickoff(nextMatch.kickoff))} · ${escapeHtml(nextMatch.league||"")}</span>${pick&&pick!=="Mercado em revisão"?`<br><span style="color:var(--green);font-size:11px">📌 ${escapeHtml(pick)}</span>`:""}`;
+    nextEl.innerHTML = `<strong>${escapeHtml(opponent)}</strong> · ${isHome?"Casa":"Fora"}<br><span style="color:var(--text-3)">${escapeHtml(formatKickoff(nextMatch.kickoff))} · ${escapeHtml(nextMatch.league||"")}</span>${pick&&pick!=="Mercado em revisão"?`<br><span style="color:var(--green);font-size:11px">📌 ${escapeHtml(pick)}</span>`:""}<br><span style="color:var(--blue);font-size:11px;font-weight:700">Ver análise da partida →</span>`;
+    nextEl.style.cursor = "pointer";
+    nextEl.onclick = () => { closeTeamPanel(); openAnalysis(nextMatch.id); };
   } else {
     nextEl.innerHTML = `<span style="color:var(--text-3)">Nenhum jogo encontrado nos próximos dias</span>`;
+    nextEl.style.cursor = "default";
+    nextEl.onclick = null;
   }
   document.getElementById("teamPanelOverlay").classList.add("open");
 }
@@ -5511,7 +5520,7 @@ function switchModalGroup(idx, leagueId, e) {
   if (e?.target) e.target.classList.add("active");
   const content = document.getElementById("modalGroupContent");
   if (content && window._modalStandings?.[idx]) {
-    content.innerHTML = renderStandingsGroup(window._modalStandings[idx], window._modalLeagueId || leagueId);
+    content.innerHTML = renderStandingsGroup(window._modalStandings[idx], window._modalLeagueId || leagueId, window._modalHomeTeam, window._modalAwayTeam);
   }
 }
 function switchStandingsTab(tab, btn) {
@@ -5545,7 +5554,7 @@ async function loadModalStandings(match) {
     }
     return;
   }
-  const cacheKey = `${leagueId}_${CURRENT_SEASON}`;
+  const cacheKey = `${leagueId}_${CURRENT_SEASON}_${match.home_team||""}_${match.away_team||""}`;
   if (modalStandingsCache[cacheKey]) {
     el.innerHTML = modalStandingsCache[cacheKey];
     return;
@@ -5580,12 +5589,14 @@ async function loadModalStandings(match) {
       const label = gName.replace(/^(Group|Grupo|Gruppe)\s*/i, "").trim() || String.fromCharCode(65+i);
       return `<button onclick="switchModalGroup(${i},${leagueId},event)" class="standings-mg-tab${i===activeGroup?" active":""}" data-gi="${i}">${escapeHtml(label)}</button>`;
     }).join("");
-    content = `<div class="standings-mg-tabs">${tabs}</div><div id="modalGroupContent">${renderStandingsGroup(standings[activeGroup], leagueId)}</div>`;
+    content = `<div class="standings-mg-tabs">${tabs}</div><div id="modalGroupContent">${renderStandingsGroup(standings[activeGroup], leagueId, match.home_team, match.away_team)}</div>`;
     // Store all groups for tab switching
     window._modalStandings = standings;
     window._modalLeagueId = leagueId;
+    window._modalHomeTeam = match.home_team;
+    window._modalAwayTeam = match.away_team;
   } else {
-    content = renderStandingsGroup(standings[0], leagueId);
+    content = renderStandingsGroup(standings[0], leagueId, match.home_team, match.away_team);
   }
   const html = `<div style="overflow-x:auto;-webkit-overflow-scrolling:touch">${content}</div>`;
   modalStandingsCache[cacheKey] = html;
