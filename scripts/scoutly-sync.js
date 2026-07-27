@@ -698,25 +698,26 @@ async function buildTeamContext(teamId, leagueId = null) {
     // Resultados recentes: já extraído acima em sharedRecentScores/sharedRecentMatches
     const recentScores = sharedRecentScores, recentMatches = sharedRecentMatches
 
+    const orFallback = (v, fb) => (v === null || v === undefined) ? fb : safeNumber(v, fb)
     const homeProfile = {
       matches: leagueStats.matches_played,
       statsMatches: leagueStats.matches_played,
-      avgGoalsFor: safeNumber(leagueStats.home_goals_for_avg, goalsFor),
-      avgGoalsAgainst: safeNumber(leagueStats.home_goals_against_avg, goalsAgainst),
+      avgGoalsFor: orFallback(leagueStats.home_goals_for_avg, goalsFor),
+      avgGoalsAgainst: orFallback(leagueStats.home_goals_against_avg, goalsAgainst),
       avgShots: shots || null, avgShotsOnTarget: shotsOT || null,
-      avgCorners: safeNumber(leagueStats.home_corners_for_avg, cornersFor) || null,
-      avgCornersAgainst: safeNumber(leagueStats.home_corners_against_avg, cornersAga) || null,
+      avgCorners: orFallback(leagueStats.home_corners_for_avg, cornersFor) || null,
+      avgCornersAgainst: orFallback(leagueStats.home_corners_against_avg, cornersAga) || null,
       avgCards: cards, avgFouls: avgFouls,
       recentScores, recentMatches, formStreak,
     }
     const awayProfile = {
       matches: leagueStats.matches_played,
       statsMatches: leagueStats.matches_played,
-      avgGoalsFor: safeNumber(leagueStats.away_goals_for_avg, goalsFor),
-      avgGoalsAgainst: safeNumber(leagueStats.away_goals_against_avg, goalsAgainst),
+      avgGoalsFor: orFallback(leagueStats.away_goals_for_avg, goalsFor),
+      avgGoalsAgainst: orFallback(leagueStats.away_goals_against_avg, goalsAgainst),
       avgShots: shots || null, avgShotsOnTarget: shotsOT || null,
-      avgCorners: safeNumber(leagueStats.away_corners_for_avg, cornersFor) || null,
-      avgCornersAgainst: safeNumber(leagueStats.away_corners_against_avg, cornersAga) || null,
+      avgCorners: orFallback(leagueStats.away_corners_for_avg, cornersFor) || null,
+      avgCornersAgainst: orFallback(leagueStats.away_corners_against_avg, cornersAga) || null,
       avgCards: cards, avgFouls: avgFouls,
       recentScores, recentMatches, formStreak,
     }
@@ -1239,16 +1240,6 @@ async function buildAndStoreMatches(fixtureLists) {
       }
       const homeProfile=buildSideProfile(homeContext,"home")
       const awayProfile=buildSideProfile(awayContext,"away")
-      if (!global.__cornersDebugged && (homeContext?.general?.avgCorners||0) > 0) {
-        global.__cornersDebugged = true
-        try {
-          await supabase.from('debug_log4').insert({ tag: 'corners_trace', payload: {
-            homeContextGeneral: homeContext.general, homeContextHome: homeContext.home,
-            awayContextGeneral: awayContext.general, awayContextAway: awayContext.away,
-            homeProfile, awayProfile
-          } })
-        } catch (e) { try { await supabase.from('debug_log4').insert({ tag: 'corners_trace_err', payload: { message: e.message } }) } catch {} }
-      }
       const h2hProfile=await buildH2HProfile(homeTeamId,awayTeamId)
       const metricsExp=buildExpectedMetrics(homeProfile,awayProfile,h2hProfile)
       const probabilities=buildProbabilities(metricsExp)
