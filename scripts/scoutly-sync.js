@@ -1239,7 +1239,8 @@ async function buildAndStoreMatches(fixtureLists) {
       }
       const homeProfile=buildSideProfile(homeContext,"home")
       const awayProfile=buildSideProfile(awayContext,"away")
-      if (baseMatchPayload.home_team==='Flamengo' && baseMatchPayload.away_team==='Sao Paulo') {
+      if (!global.__cornersDebugged && (homeContext?.general?.avgCorners||0) > 0) {
+        global.__cornersDebugged = true
         try {
           await supabase.from('debug_log4').insert({ tag: 'corners_trace', payload: {
             homeContextGeneral: homeContext.general, homeContextHome: homeContext.home,
