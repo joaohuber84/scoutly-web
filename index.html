@@ -4574,15 +4574,22 @@ function renderFormDots(form) {
 
 function renderStandingsGroup(group, leagueId, homeTeam, awayTeam) {
   const z = getZoneRules(leagueId);
-  const normHome = String(homeTeam||"").toLowerCase().trim();
-  const normAway = String(awayTeam||"").toLowerCase().trim();
+  const stripAccents = (s) => String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").trim();
+  const teamsMatch = (a, b) => {
+    if (!a || !b) return false;
+    if (a === b) return true;
+    if (a.includes(b) || b.includes(a)) return true;
+    // Fallback: nomes com prefixo/sufixo de clube diferente (ex: "IFK Goteborg" vs "Goteborg")
+    return a.length>=5 && b.length>=5 && (a.slice(0,5)===b.slice(0,5) || a.includes(b.slice(0,5)) || b.includes(a.slice(0,5)));
+  };
+  const normHome = stripAccents(homeTeam);
+  const normAway = stripAccents(awayTeam);
   const rows = group.map(team => {
     const pos = team.rank;
     const zoneClass = getPosZoneClass(pos, leagueId);
     const zoneTitle = getPosZoneTitle(pos, leagueId);
-    const teamNameNorm = String(team.team?.name||"").toLowerCase().trim();
-    const isCurrentMatch = (normHome && (teamNameNorm===normHome || teamNameNorm.includes(normHome) || normHome.includes(teamNameNorm)))
-      || (normAway && (teamNameNorm===normAway || teamNameNorm.includes(normAway) || normAway.includes(teamNameNorm)));
+    const teamNameNorm = stripAccents(team.team?.name);
+    const isCurrentMatch = teamsMatch(teamNameNorm, normHome) || teamsMatch(teamNameNorm, normAway);
     const logo = team.team?.logo
       ? `<img src="${escapeHtml(team.team.logo)}" class="st-logo" onerror="this.style.display='none'">`
       : `<div class="st-logo-fb">${escapeHtml(teamInitials(team.team?.name||""))}</div>`;
@@ -4782,14 +4789,17 @@ function openTeamPanel(el) {
     resultsEl.innerHTML = `<span style="font-size:11px;color:var(--text-3)">Sem dados de forma</span>`;
   }
   const nextEl = document.getElementById("tpNext");
-  const normName = String(teamName).toLowerCase().trim();
+  const stripAccentsTP = (s) => String(s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g,"").trim();
+  const normName = stripAccentsTP(teamName);
   const nextMatch = (state.matches || []).filter(m => {
-    const h = String(m.home_team||"").toLowerCase().trim();
-    const a = String(m.away_team||"").toLowerCase().trim();
-    return (h===normName||a===normName) && new Date(m.kickoff) > new Date();
+    const h = stripAccentsTP(m.home_team);
+    const a = stripAccentsTP(m.away_team);
+    const matchesHome = h===normName || (h.length>=5 && normName.length>=5 && (h.includes(normName)||normName.includes(h)));
+    const matchesAway = a===normName || (a.length>=5 && normName.length>=5 && (a.includes(normName)||normName.includes(a)));
+    return (matchesHome||matchesAway) && new Date(m.kickoff) > new Date();
   }).sort((a,b) => new Date(a.kickoff)-new Date(b.kickoff))[0];
   if (nextMatch) {
-    const isHome = String(nextMatch.home_team||"").toLowerCase().trim() === normName;
+    const isHome = stripAccentsTP(nextMatch.home_team) === normName || (stripAccentsTP(nextMatch.home_team).length>=5 && normName.length>=5 && stripAccentsTP(nextMatch.home_team).includes(normName));
     const opponent = isHome ? nextMatch.away_team : nextMatch.home_team;
     const pick = getPrimaryPick(nextMatch);
     nextEl.innerHTML = `<strong>${escapeHtml(opponent)}</strong> · ${isHome?"Casa":"Fora"}<br><span style="color:var(--text-3)">${escapeHtml(formatKickoff(nextMatch.kickoff))} · ${escapeHtml(nextMatch.league||"")}</span>${pick&&pick!=="Mercado em revisão"?`<br><span style="color:var(--green);font-size:11px">📌 ${escapeHtml(pick)}</span>`:""}<br><span style="color:var(--blue);font-size:11px;font-weight:700">Ver análise da partida →</span>`;
