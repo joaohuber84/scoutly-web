@@ -496,6 +496,13 @@ async function runScoutlyBrain(){
   if(!analyses.length){console.log("⚠️ Nenhuma análise válida encontrada.");const now=new Date().toISOString();await supabase.from("daily_picks").delete().gte("kickoff",now);return}
   await updateMatchAnalysisFromBrain(analyses)
   const radar=chooseRadar(analyses)
+  try{
+    const famCounts={}
+    analyses.forEach(a=>{famCounts[a.main_family]=(famCounts[a.main_family]||0)+1})
+    await supabase.from("debug_log5").insert({tag:"radar_trace",payload:{
+      analysesLen:analyses.length, radarLen:radar.length, famCounts
+    }})
+  }catch(e){console.error("debug_log5 fail:",e.message)}
   const ticket=buildTicketFromRadar(radar)
   console.log("🎯 RADAR FINAL:")
   radar.forEach((item,index)=>{const tier=LEAGUE_TIER[item.league]??4;const alt2=item.best_pick_2?` | alt2: ${item.best_pick_2}`:" | alt2: NULL";const alt3=item.best_pick_3?` | alt3: ${item.best_pick_3}`:"";console.log(`  ${index+1}. [T${tier}] ${buildMatchLabel(item)} → ${item.main_pick}${alt2}${alt3} | score:${item.main_score}`)})
