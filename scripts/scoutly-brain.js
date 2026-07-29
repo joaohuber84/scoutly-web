@@ -370,7 +370,7 @@ function chooseRadar(analyses){
     const cap=maxSize??RADAR_SIZE
     const marketCap=exactCap??2
     const radar=[...currentRadar];const usedMatchIds=new Set(currentUsed.matchIds);const usedExactMarkets={...currentUsed.exactMarkets};const usedFamilies={...currentUsed.families};const usedLeagues={...currentUsed.leagues}
-    for(const item of pool){if(radar.length>=cap)break;if(usedMatchIds.has(item.match_id))continue;const tier=LEAGUE_TIER[String(item.league||"")]??4;if(!allowedTiers.includes(tier))continue;const exactMarketCount=usedExactMarkets[item.main_pick]||0;const familyCount=usedFamilies[item.main_family]||0;const leagueCount=usedLeagues[item.league]||0;if(exactMarketCount>=marketCap)continue;const leagueCap=RADAR_UNCAPPED_LEAGUES.has(String(item.league||""))?Infinity:2;if(leagueCount>=leagueCap)continue;if(item.main_family==="gols"&&familyCount>=6)continue;if(item.main_family==="resultado"&&familyCount>=4)continue;if(item.main_family==="escanteios"&&familyCount>=5)continue;if(item.main_family==="cards"&&familyCount>=5)continue;if(item.main_family==="btts"&&familyCount>=3)continue;if(item.main_family==="shots"&&familyCount>=3)continue;if(item.main_family==="sot"&&familyCount>=3)continue;radar.push(item);usedMatchIds.add(item.match_id);usedExactMarkets[item.main_pick]=exactMarketCount+1;usedFamilies[item.main_family]=familyCount+1;usedLeagues[item.league]=leagueCount+1}
+    for(const item of pool){if(radar.length>=cap)break;if(usedMatchIds.has(item.match_id))continue;const tier=LEAGUE_TIER[String(item.league||"")]??4;if(!allowedTiers.includes(tier))continue;const exactMarketCount=usedExactMarkets[item.main_pick]||0;const familyCount=usedFamilies[item.main_family]||0;const leagueCount=usedLeagues[item.league]||0;if(exactMarketCount>=marketCap)continue;const leagueCap=RADAR_UNCAPPED_LEAGUES.has(String(item.league||""))?Infinity:2;if(leagueCount>=leagueCap)continue;if(item.main_family==="gols"&&familyCount>=4)continue;if(item.main_family==="resultado"&&familyCount>=3)continue;if(item.main_family==="escanteios"&&familyCount>=4)continue;if(item.main_family==="cards"&&familyCount>=4)continue;if(item.main_family==="btts"&&familyCount>=2)continue;if(item.main_family==="shots"&&familyCount>=2)continue;if(item.main_family==="sot"&&familyCount>=2)continue;radar.push(item);usedMatchIds.add(item.match_id);usedExactMarkets[item.main_pick]=exactMarketCount+1;usedFamilies[item.main_family]=familyCount+1;usedLeagues[item.league]=leagueCount+1}
     return{radar,used:{matchIds:Array.from(usedMatchIds),exactMarkets:usedExactMarkets,families:usedFamilies,leagues:usedLeagues}}
   }
   const TIER_QUOTA = {1:9,2:5,3:2}
@@ -409,13 +409,13 @@ function chooseRadar(analyses){
       // Mesmo limite de mercado E de família das passes normais
       if((usedExact[item.main_pick]||0)>=2)continue
       const famCount=usedFam[item.main_family]||0
-      if(item.main_family==="gols"&&famCount>=6)continue
-      if(item.main_family==="resultado"&&famCount>=4)continue
-      if(item.main_family==="escanteios"&&famCount>=5)continue
-      if(item.main_family==="cards"&&famCount>=5)continue
-      if(item.main_family==="btts"&&famCount>=3)continue
-      if(item.main_family==="shots"&&famCount>=3)continue
-      if(item.main_family==="sot"&&famCount>=3)continue
+      if(item.main_family==="gols"&&famCount>=4)continue
+      if(item.main_family==="resultado"&&famCount>=3)continue
+      if(item.main_family==="escanteios"&&famCount>=4)continue
+      if(item.main_family==="cards"&&famCount>=4)continue
+      if(item.main_family==="btts"&&famCount>=2)continue
+      if(item.main_family==="shots"&&famCount>=2)continue
+      if(item.main_family==="sot"&&famCount>=2)continue
       radar.push(item)
       usedIds.add(item.match_id)
       usedExact[item.main_pick]=(usedExact[item.main_pick]||0)+1
@@ -440,7 +440,31 @@ function buildTicketFromRadar(radar){
 }
 
 async function updateMatchAnalysisFromBrain(analyses){
-  for(const item of analyses){const{error}=await supabase.from("match_analysis").update({best_pick_1:item.best_pick_1,best_pick_2:item.best_pick_2,best_pick_3:item.best_pick_3,aggressive_pick:item.aggressive_pick,analysis_text:item.insight}).eq("match_id",item.match_id);if(error)console.error(`Erro ao atualizar match_analysis ${item.match_id}:`,error.message)}
+  const matchIds=analyses.map((item)=>item.match_id)
+  const{data:existingRows}=await supabase.from("match_analysis").select("match_id,expected_home_goals,expected_away_goals,expected_corners,expected_cards").in("match_id",matchIds)
+  const existingMap=new Map((existingRows||[]).map((r)=>[String(r.match_id),r]))
+  for(const item of analyses){
+    const payload={best_pick_1:item.best_pick_1,best_pick_2:item.best_pick_2,best_pick_3:item.best_pick_3,aggressive_pick:item.aggressive_pick,analysis_text:item.insight}
+    const existing=existingMap.get(String(item.match_id))
+    // Só preenche projeção quando está NULA no banco — nunca sobrescreve dado real já calculado
+    // pelo scoutly-sync. Isso resolve o card de projeção aparecer em branco em jogos onde o
+    // Brain calculou um pick (ex: fallback genérico de times sem dado) mas a análise completa
+    // nunca chegou a rodar/gravar esses números.
+    if(existing&&(existing.expected_home_goals===null||existing.expected_home_goals===undefined)){
+      const avgGoals=toNumber(item.avg_goals)
+      if(avgGoals>0){payload.expected_home_goals=round2(avgGoals*0.55);payload.expected_away_goals=round2(avgGoals*0.45)}
+    }
+    if(existing&&(existing.expected_corners===null||existing.expected_corners===undefined)){
+      const avgCorners=toNumber(item.avg_corners)
+      if(avgCorners>0)payload.expected_corners=round2(avgCorners)
+    }
+    if(existing&&(existing.expected_cards===null||existing.expected_cards===undefined)){
+      const avgCards=toNumber(item.avg_cards)
+      if(avgCards>0)payload.expected_cards=round2(avgCards)
+    }
+    const{error}=await supabase.from("match_analysis").update(payload).eq("match_id",item.match_id)
+    if(error)console.error(`Erro ao atualizar match_analysis ${item.match_id}:`,error.message)
+  }
 }
 
 async function rebuildDailyPicks(radar,ticket){
