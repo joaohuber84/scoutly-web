@@ -374,7 +374,11 @@ function chooseRadar(analyses){
     return{radar,used:{matchIds:Array.from(usedMatchIds),exactMarkets:usedExactMarkets,families:usedFamilies,leagues:usedLeagues}}
   }
   const TIER_QUOTA = {1:9,2:5,3:2}
-  const freshExact=(used)=>({...used,exactMarkets:{},families:{}})
+  // families NUNCA reseta — cap de familia e' global pro radar inteiro, senao cada
+  // transicao de tier/dia dava um "orcamento" novo e a mesma familia (ex: gols) acabava
+  // dobrando de tamanho no total. Só o mercado EXATO reseta por tier/dia (permite repetir
+  // um pouco mais quando precisa preencher hoje, mas sem estourar a diversidade geral).
+  const freshExact=(used)=>({...used,exactMarkets:{}})
   function runTierPasses(pool,startRadar,startUsed,exactCap,overallCap){
     const cap=overallCap??RADAR_SIZE
     const p1=buildRadarPass(pool,[1],startRadar,startUsed,Math.min(cap,startRadar.length+TIER_QUOTA[1]),exactCap)
