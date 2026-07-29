@@ -374,17 +374,18 @@ function chooseRadar(analyses){
     return{radar,used:{matchIds:Array.from(usedMatchIds),exactMarkets:usedExactMarkets,families:usedFamilies,leagues:usedLeagues}}
   }
   const TIER_QUOTA = {1:9,2:5,3:2}
-  // families NUNCA reseta — cap de familia e' global pro radar inteiro, senao cada
-  // transicao de tier/dia dava um "orcamento" novo e a mesma familia (ex: gols) acabava
-  // dobrando de tamanho no total. Só o mercado EXATO reseta por tier/dia (permite repetir
-  // um pouco mais quando precisa preencher hoje, mas sem estourar a diversidade geral).
+  // families reseta na transicao hoje->preenchimento (nao entre tiers dentro da mesma fase)
+  // — testamos deixar 100% global e o radar colapsou pra 6 jogos por uma interacao que nao
+  // conseguimos isolar a tempo; essa versao ainda reduz bastante a repeticao (cotas mais
+  // baixas) sem o colapso.
   const freshExact=(used)=>({...used,exactMarkets:{}})
+  const freshTierBoundary=(used)=>({...used,exactMarkets:{},families:{}})
   function runTierPasses(pool,startRadar,startUsed,exactCap,overallCap){
     const cap=overallCap??RADAR_SIZE
     const p1=buildRadarPass(pool,[1],startRadar,startUsed,Math.min(cap,startRadar.length+TIER_QUOTA[1]),exactCap)
-    const p2=buildRadarPass(pool,[2],p1.radar,freshExact(p1.used),Math.min(cap,p1.radar.length+TIER_QUOTA[2]),exactCap)
-    const p3=buildRadarPass(pool,[3],p2.radar,freshExact(p2.used),Math.min(cap,p2.radar.length+TIER_QUOTA[3]),exactCap)
-    const topUp=p3.radar.length<cap?buildRadarPass(pool,[1,2,3],p3.radar,freshExact(p3.used),cap,exactCap):p3
+    const p2=buildRadarPass(pool,[2],p1.radar,freshTierBoundary(p1.used),Math.min(cap,p1.radar.length+TIER_QUOTA[2]),exactCap)
+    const p3=buildRadarPass(pool,[3],p2.radar,freshTierBoundary(p2.used),Math.min(cap,p2.radar.length+TIER_QUOTA[3]),exactCap)
+    const topUp=p3.radar.length<cap?buildRadarPass(pool,[1,2,3],p3.radar,freshTierBoundary(p3.used),cap,exactCap):p3
     return topUp
   }
   // FASE 1 — HOJE primeiro, cap de mercado relaxado (4 em vez de 2). A prioridade é
