@@ -2,7 +2,7 @@ name: Radar Refresh
 
 on:
   schedule:
-    - cron: '0 * * * *'   # a cada hora, todo santo dia
+    - cron: '30 * * * *'   # aos 30min de cada hora — evita coincidir com Scoutly Sync (06h/22h BRT = 09h/01h UTC em ponto)
   workflow_dispatch:
 
 jobs:
